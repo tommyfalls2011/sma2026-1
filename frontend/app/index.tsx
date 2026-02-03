@@ -328,14 +328,14 @@ export default function AntennaCalculator() {
           frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
           min_height: 10,
           max_height: 100,
-          step: 5,
+          step: 1,  // Test every foot
         }),
       });
       if (response.ok) {
         const data = await response.json();
         setHeightOptResult(data);
         setInputs(prev => ({ ...prev, height_from_ground: data.optimal_height.toString() }));
-        Alert.alert('Height Optimized', `Best height: ${data.optimal_height}' with SWR: ${data.optimal_swr.toFixed(2)}:1`);
+        Alert.alert('Height Optimized', `Best height: ${data.optimal_height}'\n\nSWR: ${data.optimal_swr.toFixed(2)}:1\nGain: ${data.optimal_gain} dBi\nF/B: ${data.optimal_fb_ratio} dB`);
       }
     } catch (err) { Alert.alert('Error', 'Height optimization failed'); }
     setOptimizingHeight(false);
