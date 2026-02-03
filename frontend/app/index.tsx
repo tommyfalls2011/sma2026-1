@@ -267,18 +267,30 @@ export default function AntennaCalculator() {
           frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
           taper: inputs.taper.enabled ? inputs.taper : null,
           corona_balls: inputs.corona_balls.enabled ? inputs.corona_balls : null,
+          use_reflector: inputs.use_reflector,
         }),
       });
       if (response.ok) {
         const data = await response.json();
-        // Apply optimized elements while preserving current diameters
-        const newElements = data.optimized_elements.map((e: any, idx: number) => ({
+        // Apply optimized elements while preserving current diameters and respecting use_reflector
+        let newElements = data.optimized_elements.map((e: any, idx: number) => ({
           element_type: e.element_type,
           length: e.length.toString(),
-          // Preserve existing diameter if we have taper enabled, or use existing element diameter
           diameter: inputs.elements[idx]?.diameter || e.diameter.toString(),
           position: e.position.toString(),
         }));
+        
+        // If no reflector mode, filter out reflector from results
+        if (!inputs.use_reflector) {
+          newElements = newElements.filter((e: any) => e.element_type !== 'reflector');
+          // Adjust positions so driven is at 0
+          const drivenPos = parseFloat(newElements.find((e: any) => e.element_type === 'driven')?.position || '0');
+          newElements = newElements.map((e: any) => ({
+            ...e,
+            position: (parseFloat(e.position) - drivenPos).toString()
+          }));
+        }
+        
         setInputs(prev => ({ ...prev, elements: newElements }));
         Alert.alert('Auto-Tune Complete', `Predicted SWR: ${data.predicted_swr}:1\nPredicted Gain: ${data.predicted_gain} dBi\n\n${data.optimization_notes.slice(0, 3).join('\n')}`);
       }
