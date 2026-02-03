@@ -143,10 +143,40 @@ export default function AntennaCalculator() {
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [tuning, setTuning] = useState(false);
+  const [elementUnit, setElementUnit] = useState<'inches' | 'meters'>('inches');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get max elements based on subscription
   const maxElements = user ? getMaxElements() : 3;
+
+  // Convert element values between inches and meters
+  const convertElementUnit = (newUnit: 'inches' | 'meters') => {
+    if (newUnit === elementUnit) return;
+    
+    const factor = newUnit === 'meters' ? 0.0254 : 39.3701; // inches to meters or meters to inches
+    const newElements = inputs.elements.map(elem => ({
+      ...elem,
+      length: (parseFloat(elem.length) * factor).toFixed(newUnit === 'meters' ? 3 : 1),
+      diameter: (parseFloat(elem.diameter) * factor).toFixed(newUnit === 'meters' ? 4 : 3),
+      position: (parseFloat(elem.position) * factor).toFixed(newUnit === 'meters' ? 3 : 1),
+    }));
+    
+    setInputs(prev => ({ ...prev, elements: newElements }));
+    setElementUnit(newUnit);
+  };
+
+  // Calculate boom length from element positions (last element position)
+  const calculateBoomLength = () => {
+    if (!inputs.elements.length) return { ft: 0, inches: 0, total_inches: 0 };
+    const lastPos = Math.max(...inputs.elements.map(e => parseFloat(e.position) || 0));
+    
+    // If in meters, convert to inches first
+    const posInInches = elementUnit === 'meters' ? lastPos * 39.3701 : lastPos;
+    const totalFt = Math.floor(posInInches / 12);
+    const remainingInches = posInInches % 12;
+    
+    return { ft: totalFt, inches: remainingInches, total_inches: posInInches };
+  };
 
   // Calculate on ANY input change
   const calculateAntenna = useCallback(async () => {
@@ -154,6 +184,21 @@ export default function AntennaCalculator() {
       if (!elem.length || parseFloat(elem.length) <= 0 || !elem.diameter || parseFloat(elem.diameter) <= 0) return;
     }
     if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0 || !inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) return;
+    
+    // Convert to inches for API if currently in meters
+    const elementsForApi = elementUnit === 'meters' 
+      ? inputs.elements.map(e => ({
+          element_type: e.element_type,
+          length: parseFloat(e.length) * 39.3701,
+          diameter: parseFloat(e.diameter) * 39.3701,
+          position: parseFloat(e.position) * 39.3701,
+        }))
+      : inputs.elements.map(e => ({
+          element_type: e.element_type,
+          length: parseFloat(e.length) || 0,
+          diameter: parseFloat(e.diameter) || 0,
+          position: parseFloat(e.position) || 0,
+        }));
     
     try {
       const response = await fetch(`${BACKEND_URL}/api/calculate`, {
