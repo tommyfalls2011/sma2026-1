@@ -185,7 +185,7 @@ export default function SubscriptionScreen() {
               </View>
             )}
           </View>
-          <Text style={styles.maxElements}>Max Elements: {tiers?.[user.subscription_tier]?.max_elements || 3}</Text>
+          <Text style={styles.maxElements}>Max Elements: {getMaxElements()}</Text>
         </View>
 
         {/* Upgrade Plans */}
