@@ -935,18 +935,23 @@ class HeightOptimizeRequest(BaseModel):
     frequency_mhz: Optional[float] = None
     min_height: int = 10
     max_height: int = 100
-    step: int = 5
+    step: int = 1  # Changed to 1 foot increments
 
 class HeightOptimizeOutput(BaseModel):
     optimal_height: int
     optimal_swr: float
+    optimal_gain: float
+    optimal_fb_ratio: float
     heights_tested: List[dict]
 
 @api_router.post("/optimize-height", response_model=HeightOptimizeOutput)
 async def optimize_height(request: HeightOptimizeRequest):
-    """Test heights from min to max and find best SWR match."""
+    """Test heights from min to max and find best overall performance (SWR, Gain, F/B)."""
     best_height = request.min_height
+    best_score = -999.0  # We'll maximize a combined score
     best_swr = 999.0
+    best_gain = 0.0
+    best_fb = 0.0
     heights_tested = []
     
     for height in range(request.min_height, request.max_height + 1, request.step):
@@ -965,19 +970,42 @@ async def optimize_height(request: HeightOptimizeRequest):
             corona_balls=None
         )
         
-        # Calculate for this height (await since it's async)
+        # Calculate for this height
         result = await calculate_antenna(calc_input)
         swr = result.swr
+        gain = result.gain_dbi
+        fb = result.fb_ratio
         
-        heights_tested.append({"height": height, "swr": round(swr, 2)})
+        # Calculate a combined performance score
+        # Lower SWR is better (penalty for high SWR)
+        # Higher gain is better
+        # Higher F/B is better
+        swr_score = max(0, 3 - swr) * 10  # SWR 1.0 = 20 pts, SWR 2.0 = 10 pts, SWR 3.0+ = 0 pts
+        gain_score = gain * 2  # Gain directly contributes
+        fb_score = fb * 0.5  # F/B contributes
         
-        if swr < best_swr:
-            best_swr = swr
+        total_score = swr_score + gain_score + fb_score
+        
+        heights_tested.append({
+            "height": height, 
+            "swr": round(swr, 2),
+            "gain": round(gain, 2),
+            "fb_ratio": round(fb, 1),
+            "score": round(total_score, 1)
+        })
+        
+        if total_score > best_score:
+            best_score = total_score
             best_height = height
+            best_swr = swr
+            best_gain = gain
+            best_fb = fb
     
     return HeightOptimizeOutput(
         optimal_height=best_height,
         optimal_swr=round(best_swr, 2),
+        optimal_gain=round(best_gain, 2),
+        optimal_fb_ratio=round(best_fb, 1),
         heights_tested=heights_tested
     )
 
