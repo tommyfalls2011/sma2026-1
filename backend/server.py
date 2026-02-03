@@ -832,6 +832,95 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     impedance_high = round(50 * swr, 1)  # If load is higher than 50 ohm
     impedance_low = round(50 / swr, 1)   # If load is lower than 50 ohm
     
+    # === TAKE-OFF ANGLE CALCULATION ===
+    # Take-off angle depends on height above ground (in wavelengths) and ground conditions
+    # Lower heights = higher take-off angles (NVIS-like)
+    # Higher heights = lower take-off angles (DX-favorable)
+    
+    # Ground conductivity affects take-off angle
+    ground_radials = input_data.ground_radials
+    ground_type = "average"
+    if ground_radials and ground_radials.enabled:
+        ground_type = ground_radials.ground_type
+    
+    # Ground conductivity factors (affects reflection and take-off angle)
+    ground_factors = {
+        "wet": {"conductivity": 0.03, "permittivity": 30, "reflection": 0.95, "angle_adj": -3},
+        "average": {"conductivity": 0.005, "permittivity": 13, "reflection": 0.85, "angle_adj": 0},
+        "dry": {"conductivity": 0.001, "permittivity": 5, "reflection": 0.70, "angle_adj": 5}
+    }
+    ground = ground_factors.get(ground_type, ground_factors["average"])
+    
+    # Base take-off angle calculation (simplified model)
+    # For a horizontal antenna, take-off angle ≈ arcsin(1/(4*h/λ)) for main lobe
+    if height_wavelengths >= 0.25:
+        # Main lobe angle decreases with height
+        base_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
+    else:
+        # Very low antennas have high take-off angles (nearly vertical)
+        base_takeoff = 70 + (0.25 - height_wavelengths) * 80
+    
+    # Adjust for ground type
+    takeoff_angle = round(max(5, min(90, base_takeoff + ground["angle_adj"])), 1)
+    
+    # Describe the take-off angle
+    if takeoff_angle < 15:
+        takeoff_desc = "Very Low (Excellent DX)"
+    elif takeoff_angle < 25:
+        takeoff_desc = "Low (Good DX)"
+    elif takeoff_angle < 35:
+        takeoff_desc = "Medium-Low (Good all-around)"
+    elif takeoff_angle < 50:
+        takeoff_desc = "Medium (Regional/DX mix)"
+    elif takeoff_angle < 70:
+        takeoff_desc = "High (Regional)"
+    else:
+        takeoff_desc = "Very High (NVIS/Local)"
+    
+    # === GROUND RADIAL CALCULATIONS ===
+    ground_radials_info = None
+    if ground_radials and ground_radials.enabled:
+        # Calculate quarter wavelength radial length
+        quarter_wave_m = wavelength / 4
+        quarter_wave_ft = quarter_wave_m * 3.28084
+        quarter_wave_in = quarter_wave_m * 39.3701
+        
+        # 8 radial directions
+        radial_directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+        
+        # Ground effect on antenna performance
+        ground_improvement = {
+            "wet": {"swr_improvement": 0.05, "gain_bonus": 1.5, "efficiency_bonus": 8},
+            "average": {"swr_improvement": 0.03, "gain_bonus": 0.8, "efficiency_bonus": 5},
+            "dry": {"swr_improvement": 0.01, "gain_bonus": 0.3, "efficiency_bonus": 2}
+        }
+        g_bonus = ground_improvement.get(ground_type, ground_improvement["average"])
+        
+        ground_radials_info = {
+            "enabled": True,
+            "ground_type": ground_type,
+            "ground_conductivity": ground["conductivity"],
+            "ground_permittivity": ground["permittivity"],
+            "ground_reflection_coeff": ground["reflection"],
+            "radial_length_m": round(quarter_wave_m, 2),
+            "radial_length_ft": round(quarter_wave_ft, 2),
+            "radial_length_in": round(quarter_wave_in, 1),
+            "wire_diameter_in": ground_radials.wire_diameter,
+            "num_radials": ground_radials.num_radials,
+            "radial_directions": radial_directions[:ground_radials.num_radials],
+            "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1),
+            "estimated_improvements": {
+                "swr_improvement": g_bonus["swr_improvement"],
+                "gain_bonus_db": g_bonus["gain_bonus"],
+                "efficiency_bonus_percent": g_bonus["efficiency_bonus"]
+            }
+        }
+        
+        # Apply ground radial benefits to calculations
+        swr = max(1.0, swr - g_bonus["swr_improvement"])
+        gain_dbi = round(gain_dbi + g_bonus["gain_bonus"], 2)
+        antenna_efficiency = min(99.9, antenna_efficiency + g_bonus["efficiency_bonus"])
+    
     # === SWR CURVE ===
     swr_curve = []
     for i in range(-30, 31):
