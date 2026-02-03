@@ -654,8 +654,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     gain_dbi = round(min(gain_dbi, 28.0), 2)
     
-    # === SWR CALCULATION (Now based on actual element dimensions) ===
-    swr = calculate_swr_from_elements(input_data.elements, wavelength, taper_enabled)
+    # === SWR CALCULATION (Now based on actual element dimensions and height) ===
+    swr = calculate_swr_from_elements(input_data.elements, wavelength, taper_enabled, height_wavelengths)
     
     # Apply taper effect
     if taper_enabled:
