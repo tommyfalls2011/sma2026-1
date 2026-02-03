@@ -620,8 +620,8 @@ export default function AntennaCalculator() {
     downloadCSV(csv, filename);
   };
 
-  // Download CSV (works on web and can be adapted for mobile)
-  const downloadCSV = (csvContent: string, filename: string) => {
+  // Download CSV (works on web and mobile)
+  const downloadCSV = async (csvContent: string, filename: string) => {
     if (Platform.OS === 'web') {
       // Web: Create blob and download
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -633,10 +633,29 @@ export default function AntennaCalculator() {
       URL.revokeObjectURL(url);
       Alert.alert('Exported', `File saved as ${filename}`);
     } else {
-      // Mobile: Show content in alert (for now - could integrate expo-file-system/sharing)
-      Alert.alert('CSV Data Ready', `Filename: ${filename}\n\nCSV data has been generated. On mobile, you can copy this or integrate with expo-sharing for file downloads.`, [
-        { text: 'OK' }
-      ]);
+      // Mobile: Save to device and share
+      try {
+        const fileUri = FileSystem.documentDirectory + filename;
+        await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+        
+        // Check if sharing is available
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(fileUri, {
+            mimeType: 'text/csv',
+            dialogTitle: `Export ${filename}`,
+            UTI: 'public.comma-separated-values-text',
+          });
+          Alert.alert('Success', `File exported: ${filename}`);
+        } else {
+          Alert.alert('File Saved', `File saved to app documents:\n${filename}\n\nSharing not available on this device.`);
+        }
+      } catch (error) {
+        console.error('Export error:', error);
+        Alert.alert('Export Error', 'Failed to save file. Please try again.');
+      }
     }
   };
 
