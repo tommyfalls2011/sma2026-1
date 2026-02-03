@@ -276,6 +276,18 @@ backend:
         - agent: "testing"
         - comment: "DESIGN SECURITY VERIFIED: All design endpoints correctly return 401 Unauthorized when accessed without authentication. Tested POST /api/designs/save, GET /api/designs, GET /api/designs/{id}, DELETE /api/designs/{id} - all properly secured with JWT Bearer token requirement."
 
+  - task: "Far-Field Radiation Pattern Fix - Reflector vs No Reflector"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "FAR-FIELD PATTERN FIX VERIFIED: Tested specific scenarios with/without reflector. WITH REFLECTOR (3 elements): Gain 11.3 dBi, F/B 20.0 dB, side lobes 1% (cardioid pattern). WITHOUT REFLECTOR (2 elements): Gain 6.8 dBi, F/B 6.0 dB, side lobes 46.5% (omnidirectional pattern). Patterns are significantly different with 23.6% average difference in back/side angles. Reflector provides 4.5 dB gain boost and 14 dB F/B improvement. Fix working correctly."
+
 frontend:
   - task: "Dynamic Element Inputs (Reflector, Driven, Directors)"
     implemented: true
