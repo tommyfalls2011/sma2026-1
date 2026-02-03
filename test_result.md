@@ -204,7 +204,19 @@ backend:
         - agent: "testing"
         - comment: "SUBSCRIPTION ENDPOINT VERIFIED: Returns all expected tiers (trial, bronze, silver, gold) with pricing and payment methods (paypal, cashapp). No authentication required for this endpoint."
 
-  - task: "POST /api/auth/register - Admin registration with backdoor email"
+  - task: "GET /api/admin/check - Admin status verification"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "ADMIN ENDPOINT VERIFIED: Admin status check working correctly. Returns admin/subadmin status and permissions for authenticated users."
+
+  - task: "POST /api/designs/save - Save antenna design with authentication"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -214,7 +226,55 @@ backend:
     status_history:
         - working: true
         - agent: "testing"
-        - comment: "ADMIN BACKDOOR VERIFIED: Admin registration working correctly. fallstommy@gmail.com gets subscription_tier='admin' with full access. Admin backdoor functionality confirmed."
+        - comment: "DESIGN SAVE ENDPOINT VERIFIED: Successfully saves antenna designs with authentication. Tested with 3-element Yagi design data including elements, height, boom diameter, band selection. Returns design ID, name, and success message. Requires valid JWT Bearer token."
+
+  - task: "GET /api/designs - List all saved designs for authenticated user"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "DESIGN LIST ENDPOINT VERIFIED: Successfully retrieves list of saved designs for authenticated user. Returns array with id, name, description, created_at, updated_at fields. Correctly filters designs by user_id. Requires valid JWT Bearer token."
+
+  - task: "GET /api/designs/{design_id} - Get specific saved design with full data"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "DESIGN RETRIEVE ENDPOINT VERIFIED: Successfully retrieves specific design by ID with complete design_data. Returns id, name, description, design_data, created_at fields. Correctly validates user ownership. Requires valid JWT Bearer token."
+
+  - task: "DELETE /api/designs/{design_id} - Delete saved design"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "DESIGN DELETE ENDPOINT VERIFIED: Successfully deletes saved designs by ID. Returns success message. Correctly validates user ownership before deletion. Verified design is removed from database. Requires valid JWT Bearer token."
+
+  - task: "Design Endpoints Authentication Security"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "DESIGN SECURITY VERIFIED: All design endpoints correctly return 401 Unauthorized when accessed without authentication. Tested POST /api/designs/save, GET /api/designs, GET /api/designs/{id}, DELETE /api/designs/{id} - all properly secured with JWT Bearer token requirement."
 
 frontend:
   - task: "Dynamic Element Inputs (Reflector, Driven, Directors)"
