@@ -942,8 +942,8 @@ async def optimize_height(request: HeightOptimizeRequest):
             corona_balls=None
         )
         
-        # Calculate for this height
-        result = calculate_antenna(calc_input)
+        # Calculate for this height (await since it's async)
+        result = await calculate_antenna(calc_input)
         swr = result.swr
         
         heights_tested.append({"height": height, "swr": round(swr, 2)})
