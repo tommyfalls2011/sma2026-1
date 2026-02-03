@@ -182,6 +182,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const getMaxElements = (): number => {
     if (!user) return 3;
+    // Admin and subadmin get 20 elements
+    if (user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') return 20;
     return user.max_elements || tiers?.[user.subscription_tier]?.max_elements || 3;
   };
 
