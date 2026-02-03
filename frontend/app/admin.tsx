@@ -514,14 +514,21 @@ export default function AdminScreen() {
         ) : (
           <>
             {/* Users Section */}
-            <Text style={styles.sectionTitle}>Manage Users ({users.length})</Text>
-            <Text style={styles.hint}>Tap a user to change their role. Sub-admins get full access but can't edit settings.</Text>
+            <View style={styles.usersSectionHeader}>
+              <Text style={styles.sectionTitle}>Manage Users ({users.length})</Text>
+              <TouchableOpacity style={styles.addUserBtn} onPress={() => setShowAddUserModal(true)}>
+                <Ionicons name="person-add" size={16} color="#fff" />
+                <Text style={styles.addUserBtnText}>Add User</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.hint}>Tap a user to change their role. Long press to delete. Sub-admins get full access but can't edit settings.</Text>
             
             {users.map(u => (
               <TouchableOpacity
                 key={u.id}
                 style={[styles.userCard, { borderLeftColor: TIER_COLORS[u.subscription_tier] || '#888' }]}
                 onPress={() => changeUserRole(u.id, u.subscription_tier, u.name)}
+                onLongPress={() => u.email.toLowerCase() !== 'fallstommy@gmail.com' && deleteUser(u.id, u.email)}
                 disabled={u.email.toLowerCase() === 'fallstommy@gmail.com'}
               >
                 <View style={styles.userInfo}>
@@ -532,13 +539,85 @@ export default function AdminScreen() {
                   <Text style={styles.userTierText}>{u.subscription_tier}</Text>
                 </View>
                 {u.email.toLowerCase() !== 'fallstommy@gmail.com' && (
-                  <Ionicons name="chevron-forward" size={18} color="#666" />
+                  <TouchableOpacity onPress={() => deleteUser(u.id, u.email)} style={styles.deleteUserBtn}>
+                    <Ionicons name="trash-outline" size={18} color="#f44336" />
+                  </TouchableOpacity>
                 )}
               </TouchableOpacity>
             ))}
           </>
         )}
       </ScrollView>
+      
+      {/* Add User Modal */}
+      <Modal visible={showAddUserModal} transparent animationType="fade" onRequestClose={() => setShowAddUserModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New User</Text>
+              <TouchableOpacity onPress={() => setShowAddUserModal(false)}>
+                <Ionicons name="close" size={24} color="#888" />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.modalLabel}>Email</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newUserEmail}
+              onChangeText={setNewUserEmail}
+              placeholder="user@example.com"
+              placeholderTextColor="#555"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            
+            <Text style={styles.modalLabel}>Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newUserName}
+              onChangeText={setNewUserName}
+              placeholder="John Doe"
+              placeholderTextColor="#555"
+            />
+            
+            <Text style={styles.modalLabel}>Password</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newUserPassword}
+              onChangeText={setNewUserPassword}
+              placeholder="••••••••"
+              placeholderTextColor="#555"
+              secureTextEntry
+            />
+            
+            <Text style={styles.modalLabel}>Subscription Tier</Text>
+            <View style={styles.tierSelector}>
+              {['trial', 'bronze', 'silver', 'gold', 'subadmin'].map(tier => (
+                <TouchableOpacity
+                  key={tier}
+                  style={[styles.tierOption, newUserTier === tier && { backgroundColor: TIER_COLORS[tier], borderColor: TIER_COLORS[tier] }]}
+                  onPress={() => setNewUserTier(tier)}
+                >
+                  <Text style={[styles.tierOptionText, newUserTier === tier && styles.tierOptionTextActive]}>
+                    {tier}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            <TouchableOpacity style={styles.createUserBtn} onPress={addNewUser} disabled={addingUser}>
+              {addingUser ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="person-add" size={18} color="#fff" />
+                  <Text style={styles.createUserBtnText}>Create User</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
