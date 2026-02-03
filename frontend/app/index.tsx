@@ -170,6 +170,14 @@ export default function AntennaCalculator() {
   const [tuning, setTuning] = useState(false);
   const [elementUnit, setElementUnit] = useState<'inches' | 'meters'>('inches');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Save/Load state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [designName, setDesignName] = useState('');
+  const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
+  const [savingDesign, setSavingDesign] = useState(false);
+  const [loadingDesigns, setLoadingDesigns] = useState(false);
 
   // Get max elements based on subscription
   const maxElements = user ? getMaxElements() : 3;
