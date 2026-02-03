@@ -31,8 +31,8 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'antenna-calc-secret-key-2024')
 JWT_ALGORITHM = "HS256"
 security = HTTPBearer(auto_error=False)
 
-# Admin email for backdoor access
-ADMIN_EMAIL = "fallstommy@gmail.com"
+# Admin email for backdoor access (from environment variable)
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'fallstommy@gmail.com')
 
 # Default Subscription Tiers Configuration (can be overridden from DB)
 DEFAULT_SUBSCRIPTION_TIERS = {
