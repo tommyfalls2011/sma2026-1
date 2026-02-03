@@ -312,16 +312,28 @@ export default function AntennaCalculator() {
     setOptimizingHeight(true);
     setHeightOptResult(null);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/optimize-height`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          num_elements: inputs.num_elements,
-          elements: inputs.elements.map(e => ({
+      // Convert to inches for API if currently in meters
+      const elementsForApi = elementUnit === 'meters' 
+        ? inputs.elements.map(e => ({
+            element_type: e.element_type,
+            length: parseFloat(e.length) * 39.3701,
+            diameter: parseFloat(e.diameter) * 39.3701,
+            position: parseFloat(e.position) * 39.3701,
+          }))
+        : inputs.elements.map(e => ({
             element_type: e.element_type,
             length: parseFloat(e.length) || 0,
             diameter: parseFloat(e.diameter) || 0,
             position: parseFloat(e.position) || 0,
-          })),
+          }));
+      
+      console.log('Optimize Height - Elements being sent:', JSON.stringify(elementsForApi));
+      
+      const response = await fetch(`${BACKEND_URL}/api/optimize-height`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          num_elements: inputs.num_elements,
+          elements: elementsForApi,
           boom_diameter: parseFloat(inputs.boom_diameter) || 2,
           boom_unit: inputs.boom_unit,
           band: inputs.band,
@@ -333,11 +345,17 @@ export default function AntennaCalculator() {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('Optimize Height - Result:', JSON.stringify(data));
         setHeightOptResult(data);
         setInputs(prev => ({ ...prev, height_from_ground: data.optimal_height.toString() }));
         Alert.alert('Height Optimized', `Best height: ${data.optimal_height}'\n\nSWR: ${data.optimal_swr.toFixed(2)}:1\nGain: ${data.optimal_gain} dBi\nF/B: ${data.optimal_fb_ratio} dB`);
+      } else {
+        console.log('Optimize Height - Error response:', response.status);
       }
-    } catch (err) { Alert.alert('Error', 'Height optimization failed'); }
+    } catch (err) { 
+      console.error('Optimize Height error:', err);
+      Alert.alert('Error', 'Height optimization failed'); 
+    }
     setOptimizingHeight(false);
   };
 
