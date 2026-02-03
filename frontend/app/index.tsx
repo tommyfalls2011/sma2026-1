@@ -341,7 +341,7 @@ export default function AntennaCalculator() {
           </View>
 
           {/* Elements */}
-          <View style={styles.section}>
+          <View style={[styles.section, { zIndex: 100 }]}>
             <View style={styles.rowSpaced}>
               <Text style={styles.sectionTitle}><Ionicons name="git-branch-outline" size={14} color="#4CAF50" /> Elements <Text style={styles.maxElementsHint}>(max: {maxElements})</Text></Text>
               <View style={styles.unitToggle}>
@@ -349,8 +349,8 @@ export default function AntennaCalculator() {
                 <TouchableOpacity style={[styles.unitBtn, elementUnit === 'meters' && styles.unitBtnActive]} onPress={() => convertElementUnit('meters')}><Text style={[styles.unitBtnText, elementUnit === 'meters' && styles.unitBtnTextActive]}>m</Text></TouchableOpacity>
               </View>
             </View>
-            <View style={[styles.rowSpaced, { marginTop: 6 }]}>
-              <View style={{ flex: 1, zIndex: 999 }}>
+            <View style={[styles.rowSpaced, { marginTop: 6, zIndex: 1000 }]}>
+              <View style={{ flex: 1, zIndex: 1000 }}>
                 <Dropdown value={inputs.num_elements.toString()} options={elementOptions} onChange={(v: string) => updateElementCount(parseInt(v))} />
               </View>
               <TouchableOpacity style={styles.autoTuneBtn} onPress={autoTune} disabled={tuning}>
