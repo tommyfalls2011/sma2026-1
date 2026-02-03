@@ -257,11 +257,12 @@ export default function AntennaCalculator() {
       });
       if (response.ok) {
         const data = await response.json();
-        // Apply optimized elements
-        const newElements = data.optimized_elements.map((e: any) => ({
+        // Apply optimized elements while preserving current diameters
+        const newElements = data.optimized_elements.map((e: any, idx: number) => ({
           element_type: e.element_type,
           length: e.length.toString(),
-          diameter: e.diameter.toString(),
+          // Preserve existing diameter if we have taper enabled, or use existing element diameter
+          diameter: inputs.elements[idx]?.diameter || e.diameter.toString(),
           position: e.position.toString(),
         }));
         setInputs(prev => ({ ...prev, elements: newElements }));
