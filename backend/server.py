@@ -1,17 +1,20 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 import random
-
+import hashlib
+import secrets
+import jwt
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -22,6 +25,181 @@ db = client[os.environ['DB_NAME']]
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
+
+# JWT Configuration
+JWT_SECRET = os.environ.get('JWT_SECRET', 'antenna-calc-secret-key-2024')
+JWT_ALGORITHM = "HS256"
+security = HTTPBearer(auto_error=False)
+
+# Admin email for backdoor access
+ADMIN_EMAIL = "fallstommy@gmail.com"
+
+# Subscription Tiers Configuration
+SUBSCRIPTION_TIERS = {
+    "trial": {
+        "name": "Trial",
+        "price": 0,
+        "max_elements": 3,
+        "duration_hours": 1,
+        "features": ["basic_calc", "swr_meter"],
+        "description": "1 hour free trial with basic features"
+    },
+    "bronze": {
+        "name": "Bronze",
+        "price": 29.99,
+        "max_elements": 3,
+        "duration_days": 30,
+        "features": ["basic_calc", "swr_meter", "band_selection"],
+        "description": "$29.99/month - 3 elements max"
+    },
+    "silver": {
+        "name": "Silver",
+        "price": 49.99,
+        "max_elements": 7,
+        "duration_days": 30,
+        "features": ["basic_calc", "swr_meter", "band_selection", "stacking", "taper"],
+        "description": "$49.99/month - 7 elements max"
+    },
+    "gold": {
+        "name": "Gold",
+        "price": 69.99,
+        "max_elements": 20,
+        "duration_days": 30,
+        "features": ["all"],
+        "description": "$69.99/month - Full access"
+    },
+    "admin": {
+        "name": "Admin",
+        "price": 0,
+        "max_elements": 20,
+        "duration_days": 36500,
+        "features": ["all"],
+        "description": "Admin full access"
+    }
+}
+
+# Payment Configuration
+PAYMENT_CONFIG = {
+    "paypal": {
+        "email": "tfcp2011@gmail.com",
+        "enabled": True
+    },
+    "cashapp": {
+        "tag": "$tfcp2011",
+        "enabled": True
+    }
+}
+
+
+# ==================== USER MODELS ====================
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str = Field(..., min_length=6)
+    name: str = Field(..., min_length=2)
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    subscription_tier: str
+    subscription_expires: Optional[datetime]
+    is_trial: bool
+    trial_started: Optional[datetime]
+    created_at: datetime
+
+class SubscriptionUpdate(BaseModel):
+    tier: str
+    payment_method: str
+    payment_reference: Optional[str] = None
+
+class PaymentRecord(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    amount: float
+    tier: str
+    payment_method: str
+    payment_reference: Optional[str]
+    status: str = "pending"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ==================== AUTH HELPERS ====================
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(password: str, hashed: str) -> bool:
+    return hash_password(password) == hashed
+
+def create_token(user_id: str, email: str) -> str:
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "exp": datetime.utcnow() + timedelta(days=7)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        user = await db.users.find_one({"id": payload["user_id"]})
+        return user
+    except:
+        return None
+
+async def require_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    payload = decode_token(credentials.credentials)
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
+
+def check_subscription_active(user: dict) -> tuple:
+    """Check if user has active subscription. Returns (is_active, tier_info, message)"""
+    if not user:
+        return False, None, "Not authenticated"
+    
+    # Admin backdoor
+    if user.get("email") == ADMIN_EMAIL:
+        return True, SUBSCRIPTION_TIERS["admin"], "Admin access"
+    
+    tier = user.get("subscription_tier", "trial")
+    
+    # Check trial
+    if tier == "trial":
+        trial_started = user.get("trial_started")
+        if trial_started:
+            if isinstance(trial_started, str):
+                trial_started = datetime.fromisoformat(trial_started.replace('Z', '+00:00'))
+            elapsed = datetime.utcnow() - trial_started.replace(tzinfo=None)
+            if elapsed > timedelta(hours=1):
+                return False, SUBSCRIPTION_TIERS["trial"], "Trial expired"
+        return True, SUBSCRIPTION_TIERS["trial"], "Trial active"
+    
+    # Check paid subscription
+    expires = user.get("subscription_expires")
+    if expires:
+        if isinstance(expires, str):
+            expires = datetime.fromisoformat(expires.replace('Z', '+00:00'))
+        if datetime.utcnow() > expires.replace(tzinfo=None):
+            return False, SUBSCRIPTION_TIERS.get(tier), "Subscription expired"
+    
+    return True, SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["trial"]), "Active"
 
 
 class StatusCheck(BaseModel):
