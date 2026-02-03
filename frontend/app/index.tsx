@@ -3,9 +3,19 @@ import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Activi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G } from 'react-native-svg';
+import { useRouter } from 'expo-router';
+import { useAuth } from './context/AuthContext';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { width: screenWidth } = Dimensions.get('window');
+
+const TIER_COLORS: Record<string, string> = {
+  trial: '#888',
+  bronze: '#CD7F32',
+  silver: '#C0C0C0',
+  gold: '#FFD700',
+  admin: '#9C27B0'
+};
 
 const BANDS = [
   { id: '11m_cb', name: '11m CB Band', center: 27.185 },
