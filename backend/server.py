@@ -413,8 +413,8 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     return value
 
 
-def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: float, taper_enabled: bool = False) -> float:
-    """Calculate SWR based on element dimensions relative to wavelength."""
+def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: float, taper_enabled: bool = False, height_wavelengths: float = 1.0) -> float:
+    """Calculate SWR based on element dimensions relative to wavelength and height."""
     driven = None
     reflector = None
     directors = []
@@ -476,6 +476,29 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
         ideal_spacing = wavelength * 0.2  # ~0.2 wavelength for reflector-driven
         spacing_deviation = abs(spacing_m - ideal_spacing) / ideal_spacing
         base_swr *= (1 + spacing_deviation * 0.3)
+    
+    # HEIGHT EFFECT ON SWR - Ground reflection affects feedpoint impedance
+    # Optimal heights are at 0.5, 1.0, 1.5 wavelengths (half-wave multiples)
+    # Worst heights are at 0.25, 0.75, 1.25 wavelengths (quarter-wave multiples)
+    height_factor = 1.0
+    # Calculate how close we are to an optimal (half-wave) height
+    fractional_height = height_wavelengths % 0.5
+    distance_from_optimal = min(fractional_height, 0.5 - fractional_height)
+    
+    # At optimal heights (0.5, 1.0, 1.5λ), SWR improves
+    # At worst heights (0.25, 0.75λ), SWR degrades
+    if distance_from_optimal < 0.1:  # Near optimal height
+        height_factor = 0.90 + (distance_from_optimal * 1.0)  # 0.90 to 1.0
+    elif distance_from_optimal < 0.2:  # Moderately good
+        height_factor = 1.0 + (distance_from_optimal - 0.1) * 1.5  # 1.0 to 1.15
+    else:  # Near quarter-wave heights (worst)
+        height_factor = 1.15 + (distance_from_optimal - 0.2) * 1.0  # 1.15 to 1.25
+    
+    # Very low heights (< 0.25λ) are always bad for SWR
+    if height_wavelengths < 0.25:
+        height_factor *= 1.3 + (0.25 - height_wavelengths) * 2
+    
+    base_swr *= height_factor
     
     # Taper helps SWR
     if taper_enabled:
