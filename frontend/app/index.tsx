@@ -205,7 +205,7 @@ export default function AntennaCalculator() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           num_elements: inputs.num_elements,
-          elements: inputs.elements.map(e => ({ element_type: e.element_type, length: parseFloat(e.length) || 0, diameter: parseFloat(e.diameter) || 0, position: parseFloat(e.position) || 0 })),
+          elements: elementsForApi,
           height_from_ground: parseFloat(inputs.height_from_ground) || 0, height_unit: inputs.height_unit,
           boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit,
           band: inputs.band, frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
@@ -216,7 +216,7 @@ export default function AntennaCalculator() {
       });
       if (response.ok) setResults(await response.json());
     } catch (err) { console.error(err); }
-  }, [inputs]);
+  }, [inputs, elementUnit]);
 
   // Debounced auto-calculate on every change
   useEffect(() => {
