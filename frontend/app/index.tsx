@@ -410,6 +410,94 @@ export default function AntennaCalculator() {
     setInputs(prev => { const s = [...prev.taper.sections]; s[idx] = { ...s[idx], [field]: value }; return { ...prev, taper: { ...prev.taper, sections: s } }; });
   };
 
+  // Save design
+  const saveDesign = async () => {
+    if (!token) {
+      Alert.alert('Login Required', 'Please login to save designs');
+      return;
+    }
+    if (!designName.trim()) {
+      Alert.alert('Error', 'Please enter a design name');
+      return;
+    }
+    setSavingDesign(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/designs/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: designName,
+          design_data: inputs
+        })
+      });
+      if (response.ok) {
+        Alert.alert('Success', 'Design saved successfully!');
+        setShowSaveModal(false);
+        setDesignName('');
+      } else {
+        Alert.alert('Error', 'Failed to save design');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Network error');
+    }
+    setSavingDesign(false);
+  };
+
+  // Load designs list
+  const loadDesignsList = async () => {
+    if (!token) {
+      Alert.alert('Login Required', 'Please login to view saved designs');
+      return;
+    }
+    setLoadingDesigns(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/designs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSavedDesigns(data);
+        setShowLoadModal(true);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to load designs');
+    }
+    setLoadingDesigns(false);
+  };
+
+  // Load a specific design
+  const loadDesign = async (designId: string) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/designs/${designId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInputs(data.design_data);
+        setShowLoadModal(false);
+        Alert.alert('Loaded', `Design "${data.name}" loaded successfully`);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to load design');
+    }
+  };
+
+  // Delete a design
+  const deleteDesign = async (designId: string, name: string) => {
+    Alert.alert('Delete Design', `Are you sure you want to delete "${name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await fetch(`${BACKEND_URL}/api/designs/${designId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setSavedDesigns(prev => prev.filter(d => d.id !== designId));
+        } catch (err) {}
+      }}
+    ]);
+  };
+
   // Generate element count options based on subscription (up to 20)
   const elementOptions = [];
   for (let i = 2; i <= 20; i++) {
