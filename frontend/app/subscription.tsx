@@ -5,12 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
 const TIER_COLORS: Record<string, string> = {
   trial: '#888',
   bronze: '#CD7F32',
   silver: '#C0C0C0',
   gold: '#FFD700',
-  admin: '#9C27B0'
+  subadmin: '#9C27B0',
+  admin: '#f44336'
 };
 
 const TIER_ICONS: Record<string, any> = {
@@ -18,16 +21,18 @@ const TIER_ICONS: Record<string, any> = {
   bronze: 'shield-outline',
   silver: 'shield-half-outline',
   gold: 'shield-checkmark',
+  subadmin: 'key-outline',
   admin: 'key'
 };
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { user, tiers, paymentMethods, upgradeSubscription, refreshUser, logout } = useAuth();
+  const { user, token, tiers, paymentMethods, upgradeSubscription, refreshUser, logout } = useAuth();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (user?.is_trial && user?.trial_started) {
@@ -43,6 +48,24 @@ export default function SubscriptionScreen() {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (token) {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/check`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setIsAdmin(data.is_admin);
+          }
+        } catch (e) {}
+      }
+    };
+    checkAdmin();
+  }, [token]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
