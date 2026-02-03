@@ -344,15 +344,21 @@ export default function AntennaCalculator() {
           <View style={styles.section}>
             <View style={styles.rowSpaced}>
               <Text style={styles.sectionTitle}><Ionicons name="git-branch-outline" size={14} color="#4CAF50" /> Elements <Text style={styles.maxElementsHint}>(max: {maxElements})</Text></Text>
+              <View style={styles.unitToggle}>
+                <TouchableOpacity style={[styles.unitBtn, elementUnit === 'inches' && styles.unitBtnActive]} onPress={() => convertElementUnit('inches')}><Text style={[styles.unitBtnText, elementUnit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.unitBtn, elementUnit === 'meters' && styles.unitBtnActive]} onPress={() => convertElementUnit('meters')}><Text style={[styles.unitBtnText, elementUnit === 'meters' && styles.unitBtnTextActive]}>m</Text></TouchableOpacity>
+              </View>
+            </View>
+            <View style={[styles.rowSpaced, { marginTop: 6 }]}>
+              <View style={{ flex: 1, zIndex: 999 }}>
+                <Dropdown value={inputs.num_elements.toString()} options={elementOptions} onChange={(v: string) => updateElementCount(parseInt(v))} />
+              </View>
               <TouchableOpacity style={styles.autoTuneBtn} onPress={autoTune} disabled={tuning}>
                 {tuning ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="flash" size={14} color="#fff" /><Text style={styles.autoTuneBtnText}>Auto-Tune</Text></>}
               </TouchableOpacity>
             </View>
-            <View style={{ zIndex: 999 }}>
-              <Dropdown value={inputs.num_elements.toString()} options={elementOptions} onChange={(v: string) => updateElementCount(parseInt(v))} />
-            </View>
             <View style={{ zIndex: 1 }}>
-              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} />)}
+              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} unit={elementUnit} />)}
             </View>
           </View>
 
