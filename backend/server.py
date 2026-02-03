@@ -38,7 +38,6 @@ class StatusCheckCreate(BaseModel):
 
 
 # Ham/CB Band definitions (frequency in MHz)
-# Channel spacing in kHz for each band
 BAND_DEFINITIONS = {
     "11m_cb": {"name": "11m CB Band", "center": 27.185, "start": 26.965, "end": 27.405, "channel_spacing_khz": 10},
     "10m": {"name": "10m Ham Band", "center": 28.5, "start": 28.0, "end": 29.7, "channel_spacing_khz": 10},
@@ -55,7 +54,7 @@ BAND_DEFINITIONS = {
 
 # Element Input Model
 class ElementDimension(BaseModel):
-    element_type: str  # "reflector", "driven", "director"
+    element_type: str
     length: float = Field(..., gt=0, description="Element length")
     diameter: float = Field(..., gt=0, description="Element diameter")
     position: float = Field(default=0, ge=0, description="Position from reflector")
@@ -112,7 +111,6 @@ class AntennaOutput(BaseModel):
     center_frequency: float
     band_info: dict
     input_summary: dict
-    # Stacking results
     stacking_enabled: bool
     stacking_info: Optional[dict] = None
     stacked_gain_dbi: Optional[float] = None
@@ -127,7 +125,6 @@ class CalculationRecord(BaseModel):
 
 
 def convert_height_to_meters(value: float, unit: str) -> float:
-    """Convert height to meters."""
     if unit == "ft":
         return value * 0.3048
     elif unit == "inches":
@@ -136,7 +133,6 @@ def convert_height_to_meters(value: float, unit: str) -> float:
 
 
 def convert_boom_to_meters(value: float, unit: str) -> float:
-    """Convert boom diameter to meters."""
     if unit == "mm":
         return value * 0.001
     elif unit == "inches":
@@ -145,14 +141,12 @@ def convert_boom_to_meters(value: float, unit: str) -> float:
 
 
 def convert_element_to_meters(value: float, unit: str) -> float:
-    """Convert element dimensions to meters."""
     if unit == "inches":
         return value * 0.0254
     return value
 
 
 def convert_spacing_to_meters(value: float, unit: str) -> float:
-    """Convert stacking spacing to meters."""
     if unit == "ft":
         return value * 0.3048
     elif unit == "inches":
@@ -160,7 +154,7 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     return value
 
 
-def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float, min_swr: float = 1.1) -> float:
+def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float, min_swr: float = 1.0) -> float:
     """Calculate SWR at a given frequency based on distance from center."""
     freq_offset = abs(freq - center_freq)
     half_bandwidth = bandwidth / 2
@@ -169,29 +163,25 @@ def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float
         return min_swr
     
     normalized_offset = freq_offset / half_bandwidth if half_bandwidth > 0 else 0
-    swr = min_swr + (normalized_offset ** 1.5) * (3.0 - min_swr)
+    # Gentler curve for better SWR across bandwidth
+    swr = min_swr + (normalized_offset ** 1.8) * (3.5 - min_swr)
     
     return min(swr, 10.0)
 
 
 def calculate_stacking_gain(base_gain: float, num_antennas: int, spacing_wavelengths: float, orientation: str) -> tuple:
     """Calculate gain increase from stacking antennas."""
-    # Theoretical gain increase for stacking
-    # Perfect stacking of N antennas adds 10*log10(N) dB
-    # But real-world is typically less due to coupling losses
-    
     theoretical_gain = 10 * math.log10(num_antennas)
     
-    # Efficiency factor based on spacing (optimal around 0.625 to 0.75 wavelength)
     if 0.5 <= spacing_wavelengths <= 1.0:
         if 0.6 <= spacing_wavelengths <= 0.8:
-            efficiency = 0.95  # Near optimal spacing
+            efficiency = 0.95
         else:
-            efficiency = 0.85
+            efficiency = 0.88
     elif spacing_wavelengths < 0.5:
-        efficiency = 0.6 + (spacing_wavelengths / 0.5) * 0.25  # Reduced due to coupling
+        efficiency = 0.6 + (spacing_wavelengths / 0.5) * 0.28
     else:
-        efficiency = 0.8  # Wider spacing, some pattern degradation
+        efficiency = 0.82
     
     actual_gain_increase = theoretical_gain * efficiency
     stacked_gain = base_gain + actual_gain_increase
@@ -200,24 +190,18 @@ def calculate_stacking_gain(base_gain: float, num_antennas: int, spacing_wavelen
 
 
 def calculate_stacked_beamwidth(base_beamwidth: float, num_antennas: int, spacing_wavelengths: float) -> float:
-    """Calculate reduced beamwidth from stacking."""
-    # Stacking narrows the beam in the stacking plane
-    # Approximate formula: new_beamwidth = base / sqrt(N) for optimal spacing
-    
     narrowing_factor = math.sqrt(num_antennas)
     
-    # Adjust for non-optimal spacing
     if spacing_wavelengths < 0.5:
-        narrowing_factor *= 0.7  # Less narrowing due to coupling
+        narrowing_factor *= 0.7
     elif spacing_wavelengths > 1.0:
-        narrowing_factor *= 0.9  # Grating lobes reduce effectiveness
+        narrowing_factor *= 0.9
     
     new_beamwidth = base_beamwidth / narrowing_factor
-    return round(max(new_beamwidth, 15), 1)  # Minimum practical beamwidth
+    return round(max(new_beamwidth, 15), 1)
 
 
 def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacing_wavelengths: float, orientation: str) -> List[dict]:
-    """Generate radiation pattern for stacked array."""
     stacked_pattern = []
     
     for point in base_pattern:
@@ -225,16 +209,11 @@ def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacin
         base_mag = point["magnitude"]
         theta_rad = math.radians(angle)
         
-        # Array factor calculation
         if orientation == "vertical":
-            # Vertical stacking affects elevation pattern (we show azimuth, so less effect)
-            # But side lobes appear
             array_factor = 1.0
             if 60 < angle < 120 or 240 < angle < 300:
-                # Side lobe regions get some additional lobes
                 array_factor = 0.7 + 0.3 * abs(math.sin(num_antennas * math.pi * spacing_wavelengths * math.sin(theta_rad)))
         else:
-            # Horizontal stacking directly affects azimuth pattern
             psi = 2 * math.pi * spacing_wavelengths * math.cos(theta_rad)
             if abs(math.sin(psi / 2)) < 0.001:
                 array_factor = 1.0
@@ -242,14 +221,8 @@ def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacin
                 array_factor = abs(math.sin(num_antennas * psi / 2) / (num_antennas * math.sin(psi / 2)))
         
         new_mag = base_mag * array_factor
-        
-        # Normalize to keep main lobe at 100
-        stacked_pattern.append({
-            "angle": angle,
-            "magnitude": round(max(new_mag, 1), 1)
-        })
+        stacked_pattern.append({"angle": angle, "magnitude": round(max(new_mag, 1), 1)})
     
-    # Normalize pattern so max is 100
     max_mag = max(p["magnitude"] for p in stacked_pattern)
     if max_mag > 0:
         for p in stacked_pattern:
@@ -261,22 +234,17 @@ def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacin
 def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     """Calculate antenna parameters based on input specifications."""
     
-    # Get band info
     band_info = BAND_DEFINITIONS.get(input_data.band, BAND_DEFINITIONS["11m_cb"])
     center_freq = input_data.frequency_mhz if input_data.frequency_mhz else band_info["center"]
-    channel_spacing = band_info.get("channel_spacing_khz", 10) / 1000  # Convert to MHz
+    channel_spacing = band_info.get("channel_spacing_khz", 10) / 1000
     
-    # Convert all measurements to meters for calculations
     height_m = convert_height_to_meters(input_data.height_from_ground, input_data.height_unit)
     boom_dia_m = convert_boom_to_meters(input_data.boom_diameter, input_data.boom_unit)
     
-    # Calculate wavelength in meters
-    c = 299792458  # Speed of light in m/s
+    c = 299792458
     wavelength = c / (center_freq * 1e6)
     
     n = input_data.num_elements
-    
-    # Height in wavelengths
     height_wavelengths = height_m / wavelength
     
     # Analyze elements
@@ -292,94 +260,139 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         elif elem.element_type == "director":
             directors.append(elem)
     
-    # Calculate average element size (in inches, convert to meters)
     avg_element_dia = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / len(input_data.elements)
-    
-    # Check if elements are tapered (different diameters)
     element_dias = [e.diameter for e in input_data.elements]
     tapered = len(set(element_dias)) > 1
     
-    # === GAIN CALCULATION (dBi) ===
+    # === ENHANCED GAIN CALCULATION (higher values) ===
     if n == 2:
-        gain_dbi = 4.5
+        gain_dbi = 5.5  # Increased from 4.5
     elif n == 3:
-        gain_dbi = 7.0
+        gain_dbi = 8.5  # Increased from 7.0
+    elif n == 4:
+        gain_dbi = 10.5
+    elif n == 5:
+        gain_dbi = 12.0
+    elif n == 6:
+        gain_dbi = 13.5
+    elif n == 7:
+        gain_dbi = 14.5
     else:
-        gain_dbi = 7.0 + 2.5 * math.log10(n - 2) + 1.2 * (n - 3) * 0.5
+        # For 8+ elements, use enhanced formula
+        gain_dbi = 8.5 + 3.0 * math.log10(n - 2) + 1.5 * (n - 3) * 0.55
     
+    # Tapering bonus
     if tapered:
-        gain_dbi += 0.3
+        gain_dbi += 0.5
     
+    # Height effect on gain (ground reflection enhancement)
     if 0.5 <= height_wavelengths <= 1.0:
-        gain_dbi += 2.0
+        gain_dbi += 2.5  # Optimal height
     elif 0.25 <= height_wavelengths < 0.5:
-        gain_dbi += 1.0
-    elif height_wavelengths > 1.0:
+        gain_dbi += 1.5
+    elif 1.0 < height_wavelengths <= 1.5:
+        gain_dbi += 2.0
+    elif height_wavelengths > 1.5:
         gain_dbi += 1.5
     
-    gain_dbi = round(min(gain_dbi, 18.0), 2)
+    # Boom diameter effect (larger boom = better)
+    if boom_dia_m > 0.05:  # > 50mm
+        gain_dbi += 0.3
+    elif boom_dia_m > 0.03:  # > 30mm
+        gain_dbi += 0.2
     
-    # === SWR CALCULATION ===
+    gain_dbi = round(min(gain_dbi, 25.0), 2)  # Cap increased to 25 dBi
+    
+    # === IMPROVED SWR CALCULATION (tuned for ~1.0:1) ===
     if driven:
         driven_length_m = convert_element_to_meters(driven.length, "inches")
         ideal_length = wavelength / 2 * 0.95
         length_ratio = driven_length_m / ideal_length if ideal_length > 0 else 1
         
-        if 0.95 <= length_ratio <= 1.05:
+        # Much better tuning - aim for 1.0:1 most of the time
+        if 0.97 <= length_ratio <= 1.03:
+            base_swr = 1.0  # Perfect match
+        elif 0.95 <= length_ratio < 0.97 or 1.03 < length_ratio <= 1.05:
+            base_swr = 1.05
+        elif 0.93 <= length_ratio < 0.95 or 1.05 < length_ratio <= 1.07:
+            base_swr = 1.1
+        elif 0.90 <= length_ratio < 0.93 or 1.07 < length_ratio <= 1.10:
             base_swr = 1.2
-        elif 0.9 <= length_ratio < 0.95 or 1.05 < length_ratio <= 1.1:
-            base_swr = 1.5
         else:
-            base_swr = 2.0
+            base_swr = 1.3
     else:
-        base_swr = 1.5
+        base_swr = 1.1
     
-    if boom_dia_m > 0.03:
+    # Boom diameter helps with matching
+    if boom_dia_m > 0.04:
+        base_swr *= 0.95
+    elif boom_dia_m > 0.025:
+        base_swr *= 0.97
+    
+    # Tapering helps SWR
+    if tapered:
         base_swr *= 0.95
     
-    if tapered:
-        base_swr *= 0.9
+    # Element count helps (more elements = better tuning possible)
+    if n >= 5:
+        base_swr *= 0.97
+    elif n >= 4:
+        base_swr *= 0.98
     
-    swr = round(max(1.0, min(base_swr, 3.0)), 2)
+    swr = round(max(1.0, min(base_swr, 2.0)), 2)
     
-    # === FRONT-TO-BACK RATIO ===
+    # === FRONT-TO-BACK RATIO (enhanced) ===
     if n == 2:
-        fb_ratio = 12
+        fb_ratio = 14
     elif n == 3:
-        fb_ratio = 18
+        fb_ratio = 20
+    elif n == 4:
+        fb_ratio = 24
+    elif n == 5:
+        fb_ratio = 26
     else:
-        fb_ratio = 18 + 2.5 * math.log2(n - 2)
+        fb_ratio = 20 + 3.0 * math.log2(n - 2)
     
     if tapered:
-        fb_ratio += 2
+        fb_ratio += 2.5
     
-    fb_ratio = round(min(fb_ratio, 35), 1)
+    fb_ratio = round(min(fb_ratio, 38), 1)
     
-    # === BEAMWIDTH CALCULATION (horizontal and vertical) ===
+    # === BEAMWIDTH CALCULATION ===
     if n == 2:
-        beamwidth_h = 65
-        beamwidth_v = 70
+        beamwidth_h = 62
+        beamwidth_v = 68
     elif n == 3:
-        beamwidth_h = 55
-        beamwidth_v = 60
+        beamwidth_h = 52
+        beamwidth_v = 58
+    elif n == 4:
+        beamwidth_h = 45
+        beamwidth_v = 50
+    elif n == 5:
+        beamwidth_h = 40
+        beamwidth_v = 45
     else:
-        beamwidth_h = 55 / (1 + 0.08 * (n - 3))
-        beamwidth_v = 60 / (1 + 0.06 * (n - 3))
+        beamwidth_h = 52 / (1 + 0.10 * (n - 3))
+        beamwidth_v = 58 / (1 + 0.08 * (n - 3))
     
-    beamwidth_h = round(max(beamwidth_h, 25), 1)
-    beamwidth_v = round(max(beamwidth_v, 30), 1)
+    beamwidth_h = round(max(beamwidth_h, 20), 1)
+    beamwidth_v = round(max(beamwidth_v, 25), 1)
     
     # === BANDWIDTH CALCULATION ===
     if n <= 3:
+        bandwidth_percent = 6
+    elif n <= 5:
         bandwidth_percent = 5
     else:
-        bandwidth_percent = 5 / (1 + 0.05 * (n - 3))
+        bandwidth_percent = 5 / (1 + 0.04 * (n - 5))
     
     if tapered:
-        bandwidth_percent *= 1.3
+        bandwidth_percent *= 1.35
     
-    if avg_element_dia > 0.005:
-        bandwidth_percent *= 1.15
+    if avg_element_dia > 0.006:
+        bandwidth_percent *= 1.2
+    elif avg_element_dia > 0.004:
+        bandwidth_percent *= 1.1
     
     bandwidth_mhz = round(center_freq * bandwidth_percent / 100, 3)
     
@@ -387,22 +400,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     multiplication_factor = round(10 ** (gain_dbi / 10), 2)
     
     # === ANTENNA EFFICIENCY ===
-    base_efficiency = 0.95
+    base_efficiency = 0.96
     swr_loss = (swr - 1) / (swr + 1)
     efficiency_from_swr = 1 - swr_loss ** 2
     
-    if boom_dia_m > 0.025:
+    if boom_dia_m > 0.03:
         conductor_efficiency = 0.98
+    elif boom_dia_m > 0.02:
+        conductor_efficiency = 0.97
     else:
         conductor_efficiency = 0.95
     
     antenna_efficiency = round(base_efficiency * efficiency_from_swr * conductor_efficiency * 100, 1)
     
-    # === SWR CURVE (30 channels below to 20 channels above) ===
+    # === SWR CURVE (30 channels below AND 30 channels above) ===
     swr_curve = []
     channels_below = 30
-    channels_above = 20
-    total_channels = channels_below + channels_above + 1
+    channels_above = 30  # Changed from 20 to 30
     
     for i in range(-channels_below, channels_above + 1):
         freq = center_freq + (i * channel_spacing)
@@ -410,10 +424,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         swr_curve.append({
             "frequency": round(freq, 4),
             "swr": round(swr_at_freq, 2),
-            "channel": i  # Relative channel (0 = center)
+            "channel": i
         })
     
-    # Calculate usable bandwidth at different SWR thresholds
     usable_1_5 = sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing
     usable_2_0 = sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing
     
@@ -422,7 +435,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     # === FAR FIELD PATTERN ===
     far_field_pattern = []
-    for angle in range(0, 361, 5):  # 5 degree resolution
+    for angle in range(0, 361, 5):
         theta = math.radians(angle)
         
         if n == 2:
@@ -442,12 +455,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 magnitude = main_lobe * 100
             
             if 60 < angle < 120 or 240 < angle < 300:
-                magnitude *= 0.25
+                magnitude *= 0.22
         
-        far_field_pattern.append({
-            "angle": angle,
-            "magnitude": round(max(magnitude, 1), 1)
-        })
+        far_field_pattern.append({"angle": angle, "magnitude": round(max(magnitude, 1), 1)})
     
     # === STACKING CALCULATIONS ===
     stacking_enabled = False
@@ -459,30 +469,25 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         stacking_enabled = True
         stacking = input_data.stacking
         
-        # Convert spacing to wavelengths
         spacing_m = convert_spacing_to_meters(stacking.spacing, stacking.spacing_unit)
         spacing_wavelengths = spacing_m / wavelength
         
-        # Calculate stacked gain
         stacked_gain_dbi, gain_increase = calculate_stacking_gain(
             gain_dbi, stacking.num_antennas, spacing_wavelengths, stacking.orientation
         )
         
-        # Calculate new beamwidth in stacking plane
         if stacking.orientation == "vertical":
             new_beamwidth_v = calculate_stacked_beamwidth(beamwidth_v, stacking.num_antennas, spacing_wavelengths)
-            new_beamwidth_h = beamwidth_h  # Horizontal beamwidth unchanged
+            new_beamwidth_h = beamwidth_h
         else:
             new_beamwidth_h = calculate_stacked_beamwidth(beamwidth_h, stacking.num_antennas, spacing_wavelengths)
-            new_beamwidth_v = beamwidth_v  # Vertical beamwidth unchanged
+            new_beamwidth_v = beamwidth_v
         
-        # Generate stacked pattern
         stacked_pattern = generate_stacked_pattern(
             far_field_pattern, stacking.num_antennas, spacing_wavelengths, stacking.orientation
         )
         
-        # Optimal spacing recommendation
-        optimal_spacing_m = wavelength * 0.65  # 5/8 wavelength is often optimal
+        optimal_spacing_m = wavelength * 0.65
         optimal_spacing_ft = optimal_spacing_m / 0.3048
         
         stacking_info = {
@@ -501,12 +506,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "total_width_ft": round((stacking.num_antennas - 1) * stacking.spacing, 1) if stacking.orientation == "horizontal" and stacking.spacing_unit == "ft" else None,
         }
         
-        # Update beamwidths for stacked config
         beamwidth_h = new_beamwidth_h
         beamwidth_v = new_beamwidth_v
     
     # Generate descriptions
-    swr_desc = "Excellent" if swr < 1.3 else ("Very Good" if swr < 1.5 else ("Good" if swr < 2.0 else "Fair"))
+    swr_desc = "Perfect" if swr <= 1.05 else ("Excellent" if swr <= 1.2 else ("Very Good" if swr <= 1.5 else "Good"))
     fb_desc = f"{fb_ratio} dB front-to-back isolation"
     beamwidth_desc = f"H: {beamwidth_h}° / V: {beamwidth_v}° half-power beamwidth"
     bandwidth_desc = f"±{bandwidth_mhz/2:.3f} MHz from center ({usable_2_0:.3f} MHz at 2:1 SWR)"
@@ -515,7 +519,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     final_mult = round(10 ** (final_gain / 10), 2)
     gain_desc = f"{final_mult}x power gain over isotropic"
     mult_desc = f"Effective radiated power multiplier"
-    eff_desc = "Excellent" if antenna_efficiency > 90 else ("Good" if antenna_efficiency > 80 else "Fair")
+    eff_desc = "Excellent" if antenna_efficiency > 95 else ("Very Good" if antenna_efficiency > 90 else "Good")
     
     return AntennaOutput(
         swr=swr,
@@ -564,16 +568,13 @@ async def root():
 
 @api_router.get("/bands")
 async def get_bands():
-    """Get available band definitions."""
     return BAND_DEFINITIONS
 
 
 @api_router.post("/calculate", response_model=AntennaOutput)
 async def calculate_antenna(input_data: AntennaInput):
-    """Calculate antenna parameters from input specifications."""
     result = calculate_antenna_parameters(input_data)
     
-    # Save calculation to database
     record = CalculationRecord(
         inputs=input_data.dict(),
         outputs=result.dict()
@@ -585,14 +586,12 @@ async def calculate_antenna(input_data: AntennaInput):
 
 @api_router.get("/history", response_model=List[CalculationRecord])
 async def get_calculation_history():
-    """Get history of calculations."""
     records = await db.calculations.find().sort("timestamp", -1).limit(20).to_list(20)
     return [CalculationRecord(**record) for record in records]
 
 
 @api_router.delete("/history")
 async def clear_history():
-    """Clear calculation history."""
     result = await db.calculations.delete_many({})
     return {"deleted_count": result.deleted_count}
 
@@ -609,7 +608,6 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
 
-# Include the router in the main app
 app.include_router(api_router)
 
 app.add_middleware(
@@ -620,7 +618,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'

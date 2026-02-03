@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import Svg, { Circle, Line, Path, Text as SvgText, Rect, G } from 'react-native-
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { width: screenWidth } = Dimensions.get('window');
 
-// Band definitions
 const BANDS = [
   { id: '11m_cb', name: '11m CB Band', center: 27.185 },
   { id: '10m', name: '10m Ham Band', center: 28.5 },
@@ -146,11 +145,9 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
   const maxFreq = Math.max(...data.map(d => d.frequency));
   const freqRange = maxFreq - minFreq;
 
-  // Scale functions
   const xScale = (freq: number) => padding.left + ((freq - minFreq) / freqRange) * chartWidth;
   const yScale = (swr: number) => padding.top + chartHeight - ((Math.min(swr, 3) - 1) / 2) * chartHeight;
 
-  // Create path for SWR curve
   const createSwrPath = () => {
     let pathData = '';
     data.forEach((point, index) => {
@@ -165,7 +162,6 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
     return pathData;
   };
 
-  // Find usable bandwidth zones
   const getUsableZone = (threshold: number) => {
     const usablePoints = data.filter(p => p.swr <= threshold);
     if (usablePoints.length === 0) return null;
@@ -177,38 +173,23 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
   const zone20 = getUsableZone(2.0);
   const zone15 = getUsableZone(1.5);
 
-  // Channel markers (every 10 channels)
+  // Channel markers every 10 channels
   const channelMarkers = data.filter(p => p.channel % 10 === 0);
 
   return (
     <View style={styles.swrContainer}>
       <Text style={styles.swrTitle}>SWR Bandwidth Meter</Text>
-      <Text style={styles.swrSubtitle}>30 CH below to 20 CH above center ({channelSpacing} kHz/CH)</Text>
+      <Text style={styles.swrSubtitle}>30 CH below / 30 CH above center ({channelSpacing} kHz/CH)</Text>
       <Svg width={width} height={height}>
-        {/* Background */}
         <Rect x={padding.left} y={padding.top} width={chartWidth} height={chartHeight} fill="#1a1a1a" />
         
-        {/* Usable bandwidth zones */}
         {zone20 && (
-          <Rect 
-            x={zone20.start} 
-            y={padding.top} 
-            width={zone20.end - zone20.start} 
-            height={chartHeight} 
-            fill="rgba(255, 193, 7, 0.15)" 
-          />
+          <Rect x={zone20.start} y={padding.top} width={zone20.end - zone20.start} height={chartHeight} fill="rgba(255, 193, 7, 0.15)" />
         )}
         {zone15 && (
-          <Rect 
-            x={zone15.start} 
-            y={padding.top} 
-            width={zone15.end - zone15.start} 
-            height={chartHeight} 
-            fill="rgba(76, 175, 80, 0.2)" 
-          />
+          <Rect x={zone15.start} y={padding.top} width={zone15.end - zone15.start} height={chartHeight} fill="rgba(76, 175, 80, 0.2)" />
         )}
 
-        {/* Grid lines for SWR levels */}
         {[1.0, 1.5, 2.0, 2.5, 3.0].map((swr) => (
           <G key={swr}>
             <Line
@@ -216,14 +197,14 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
               y1={yScale(swr)}
               x2={width - padding.right}
               y2={yScale(swr)}
-              stroke={swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : '#333'}
-              strokeWidth={swr === 1.5 || swr === 2.0 ? 1.5 : 1}
-              strokeDasharray={swr === 1.5 || swr === 2.0 ? '0' : '3,3'}
+              stroke={swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : swr === 1.0 ? '#00BCD4' : '#333'}
+              strokeWidth={swr === 1.0 || swr === 1.5 || swr === 2.0 ? 1.5 : 1}
+              strokeDasharray={swr === 1.0 || swr === 1.5 || swr === 2.0 ? '0' : '3,3'}
             />
             <SvgText
               x={padding.left - 6}
               y={yScale(swr) + 4}
-              fill={swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : '#666'}
+              fill={swr === 1.0 ? '#00BCD4' : swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : '#666'}
               fontSize="10"
               textAnchor="end"
             >
@@ -232,7 +213,6 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
           </G>
         ))}
 
-        {/* Channel markers */}
         {channelMarkers.map((point) => (
           <G key={point.channel}>
             <Line
@@ -255,44 +235,21 @@ const SwrMeter = ({ data, centerFreq, usable15, usable20, channelSpacing }: {
           </G>
         ))}
 
-        {/* Center frequency line */}
-        <Line
-          x1={xScale(centerFreq)}
-          y1={padding.top}
-          x2={xScale(centerFreq)}
-          y2={height - padding.bottom}
-          stroke="#2196F3"
-          strokeWidth="2"
-          strokeDasharray="4,4"
-        />
+        <Line x1={xScale(centerFreq)} y1={padding.top} x2={xScale(centerFreq)} y2={height - padding.bottom} stroke="#2196F3" strokeWidth="2" strokeDasharray="4,4" />
 
-        {/* SWR Curve */}
-        <Path
-          d={createSwrPath()}
-          fill="none"
-          stroke="#FF5722"
-          strokeWidth="2.5"
-        />
+        <Path d={createSwrPath()} fill="none" stroke="#FF5722" strokeWidth="2.5" />
 
-        {/* Frequency labels */}
-        <SvgText x={padding.left} y={height - 5} fill="#888" fontSize="9" textAnchor="start">
-          {minFreq.toFixed(3)}
-        </SvgText>
-        <SvgText x={xScale(centerFreq)} y={height - 32} fill="#2196F3" fontSize="9" textAnchor="middle">
-          {centerFreq.toFixed(3)} MHz
-        </SvgText>
-        <SvgText x={width - padding.right} y={height - 5} fill="#888" fontSize="9" textAnchor="end">
-          {maxFreq.toFixed(3)}
-        </SvgText>
-
-        {/* Y-axis label */}
-        <SvgText x={10} y={height / 2 - 10} fill="#666" fontSize="10" textAnchor="middle" rotation="-90" origin={`10, ${height / 2 - 10}`}>
-          SWR
-        </SvgText>
+        <SvgText x={padding.left} y={height - 5} fill="#888" fontSize="9" textAnchor="start">{minFreq.toFixed(3)}</SvgText>
+        <SvgText x={xScale(centerFreq)} y={height - 32} fill="#2196F3" fontSize="9" textAnchor="middle">{centerFreq.toFixed(3)} MHz</SvgText>
+        <SvgText x={width - padding.right} y={height - 5} fill="#888" fontSize="9" textAnchor="end">{maxFreq.toFixed(3)}</SvgText>
+        <SvgText x={10} y={height / 2 - 10} fill="#666" fontSize="10" textAnchor="middle" rotation="-90" origin={`10, ${height / 2 - 10}`}>SWR</SvgText>
       </Svg>
 
-      {/* Legend */}
       <View style={styles.swrLegend}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendColor, { backgroundColor: '#00BCD4' }]} />
+          <Text style={styles.legendText}>1.0:1 Target</Text>
+        </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendColor, { backgroundColor: 'rgba(76, 175, 80, 0.6)' }]} />
           <Text style={styles.legendText}>≤1.5:1 ({usable15.toFixed(3)} MHz)</Text>
@@ -335,9 +292,7 @@ const PolarPattern = ({ data, stackedData, isStacked }: {
 
   return (
     <View style={styles.polarContainer}>
-      <Text style={styles.polarTitle}>
-        {isStacked ? 'Stacked Array Pattern' : 'Far Field Pattern'} (Azimuth)
-      </Text>
+      <Text style={styles.polarTitle}>{isStacked ? 'Stacked Array Pattern' : 'Far Field Pattern'} (Azimuth)</Text>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         {[0.25, 0.5, 0.75, 1].map((scale) => (
           <Circle key={scale} cx={center} cy={center} r={maxRadius * scale} stroke="#333" strokeWidth="1" fill="none" />
@@ -349,37 +304,18 @@ const PolarPattern = ({ data, stackedData, isStacked }: {
         <SvgText x={center} y={size - 6} fill="#888" fontSize="10" textAnchor="middle">180°</SvgText>
         <SvgText x={10} y={center + 4} fill="#888" fontSize="10" textAnchor="middle">270°</SvgText>
         
-        {/* Single antenna pattern (dimmed if stacked) */}
-        <Path 
-          d={createPolarPath(data)} 
-          fill={isStacked ? 'rgba(100, 100, 100, 0.1)' : 'rgba(76, 175, 80, 0.3)'} 
-          stroke={isStacked ? '#555' : '#4CAF50'} 
-          strokeWidth={isStacked ? 1 : 2} 
-          strokeDasharray={isStacked ? '4,4' : '0'}
-        />
+        <Path d={createPolarPath(data)} fill={isStacked ? 'rgba(100, 100, 100, 0.1)' : 'rgba(76, 175, 80, 0.3)'} stroke={isStacked ? '#555' : '#4CAF50'} strokeWidth={isStacked ? 1 : 2} strokeDasharray={isStacked ? '4,4' : '0'} />
         
-        {/* Stacked pattern */}
         {isStacked && stackedData && (
-          <Path 
-            d={createPolarPath(stackedData)} 
-            fill="rgba(33, 150, 243, 0.3)" 
-            stroke="#2196F3" 
-            strokeWidth="2" 
-          />
+          <Path d={createPolarPath(stackedData)} fill="rgba(33, 150, 243, 0.3)" stroke="#2196F3" strokeWidth="2" />
         )}
         
         <Circle cx={center} cy={center} r={4} fill={isStacked ? '#2196F3' : '#4CAF50'} />
       </Svg>
       {isStacked && (
         <View style={styles.patternLegend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#555', borderStyle: 'dashed' }]} />
-            <Text style={styles.legendText}>Single Antenna</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#2196F3' }]} />
-            <Text style={styles.legendText}>Stacked Array</Text>
-          </View>
+          <View style={styles.legendItem}><View style={[styles.legendColor, { backgroundColor: '#555' }]} /><Text style={styles.legendText}>Single</Text></View>
+          <View style={styles.legendItem}><View style={[styles.legendColor, { backgroundColor: '#2196F3' }]} /><Text style={styles.legendText}>Stacked</Text></View>
         </View>
       )}
       <Text style={styles.polarSubtitle}>Main lobe: 0° (Forward)</Text>
@@ -399,11 +335,7 @@ const Dropdown = ({ label, value, options, onChange }: {
   return (
     <View style={styles.dropdownContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TouchableOpacity 
-        style={styles.dropdownButton} 
-        onPress={() => setIsOpen(!isOpen)}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.dropdownButton} onPress={() => setIsOpen(!isOpen)} activeOpacity={0.7}>
         <Text style={styles.dropdownButtonText}>{selectedOption?.label || 'Select...'}</Text>
         <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color="#888" />
       </TouchableOpacity>
@@ -414,14 +346,9 @@ const Dropdown = ({ label, value, options, onChange }: {
               <TouchableOpacity
                 key={option.value}
                 style={[styles.dropdownItem, value === option.value && styles.dropdownItemSelected]}
-                onPress={() => {
-                  onChange(option.value);
-                  setIsOpen(false);
-                }}
+                onPress={() => { onChange(option.value); setIsOpen(false); }}
               >
-                <Text style={[styles.dropdownItemText, value === option.value && styles.dropdownItemTextSelected]}>
-                  {option.label}
-                </Text>
+                <Text style={[styles.dropdownItemText, value === option.value && styles.dropdownItemTextSelected]}>{option.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -441,7 +368,6 @@ const ElementInput = ({ element, index, onChange }: {
     if (element.element_type === 'driven') return 'Driven Element';
     return `Director ${index - 1}`;
   };
-
   const getColor = () => {
     if (element.element_type === 'reflector') return '#FF9800';
     if (element.element_type === 'driven') return '#4CAF50';
@@ -454,38 +380,17 @@ const ElementInput = ({ element, index, onChange }: {
       <View style={styles.elementRow}>
         <View style={styles.elementField}>
           <Text style={styles.elementLabel}>Length (in)</Text>
-          <TextInput
-            style={styles.elementInput}
-            value={element.length}
-            onChangeText={(v) => onChange(index, 'length', v)}
-            keyboardType="decimal-pad"
-            placeholder="216"
-            placeholderTextColor="#555"
-          />
+          <TextInput style={styles.elementInput} value={element.length} onChangeText={(v) => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="216" placeholderTextColor="#555" />
         </View>
         <View style={styles.elementField}>
           <Text style={styles.elementLabel}>Diameter (in)</Text>
-          <TextInput
-            style={styles.elementInput}
-            value={element.diameter}
-            onChangeText={(v) => onChange(index, 'diameter', v)}
-            keyboardType="decimal-pad"
-            placeholder="0.5"
-            placeholderTextColor="#555"
-          />
+          <TextInput style={styles.elementInput} value={element.diameter} onChangeText={(v) => onChange(index, 'diameter', v)} keyboardType="decimal-pad" placeholder="0.5" placeholderTextColor="#555" />
         </View>
       </View>
       {element.element_type !== 'reflector' && (
         <View style={styles.elementField}>
           <Text style={styles.elementLabel}>Position from Reflector (in)</Text>
-          <TextInput
-            style={styles.elementInput}
-            value={element.position}
-            onChangeText={(v) => onChange(index, 'position', v)}
-            keyboardType="decimal-pad"
-            placeholder="48"
-            placeholderTextColor="#555"
-          />
+          <TextInput style={styles.elementInput} value={element.position} onChangeText={(v) => onChange(index, 'position', v)} keyboardType="decimal-pad" placeholder="48" placeholderTextColor="#555" />
         </View>
       )}
     </View>
@@ -495,137 +400,60 @@ const ElementInput = ({ element, index, onChange }: {
 const StackingCard = ({ stacking, onChange }: {
   stacking: StackingConfig;
   onChange: (field: keyof StackingConfig, value: any) => void;
-}) => {
-  return (
-    <View style={styles.section}>
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>
-          <Ionicons name="layers-outline" size={16} color="#9C27B0" /> Antenna Stacking
-        </Text>
-        <Switch
-          value={stacking.enabled}
-          onValueChange={(v) => onChange('enabled', v)}
-          trackColor={{ false: '#333', true: '#9C27B0' }}
-          thumbColor={stacking.enabled ? '#fff' : '#888'}
-        />
-      </View>
-      
-      {stacking.enabled && (
-        <>
-          {/* Orientation */}
-          <Text style={styles.inputLabel}>Stack Orientation</Text>
-          <View style={styles.orientationToggle}>
-            <TouchableOpacity
-              style={[styles.orientBtn, stacking.orientation === 'vertical' && styles.orientBtnActive]}
-              onPress={() => onChange('orientation', 'vertical')}
-            >
-              <Ionicons name="swap-vertical" size={20} color={stacking.orientation === 'vertical' ? '#fff' : '#888'} />
-              <Text style={[styles.orientBtnText, stacking.orientation === 'vertical' && styles.orientBtnTextActive]}>Vertical</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.orientBtn, stacking.orientation === 'horizontal' && styles.orientBtnActive]}
-              onPress={() => onChange('orientation', 'horizontal')}
-            >
-              <Ionicons name="swap-horizontal" size={20} color={stacking.orientation === 'horizontal' ? '#fff' : '#888'} />
-              <Text style={[styles.orientBtnText, stacking.orientation === 'horizontal' && styles.orientBtnTextActive]}>Horizontal</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Number of antennas */}
-          <Dropdown
-            label="Number of Antennas"
-            value={stacking.num_antennas.toString()}
-            options={[2,3,4,5,6,7,8].map(n => ({ value: n.toString(), label: `${n} Antennas` }))}
-            onChange={(v) => onChange('num_antennas', parseInt(v))}
-          />
-
-          {/* Spacing */}
-          <View style={styles.rowInput}>
-            <View style={styles.flexInput}>
-              <Text style={styles.inputLabel}>
-                {stacking.orientation === 'vertical' ? 'Vertical Spacing (between antennas)' : 'Horizontal Spacing'}
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={stacking.spacing}
-                onChangeText={(v) => onChange('spacing', v)}
-                keyboardType="decimal-pad"
-                placeholder="20"
-                placeholderTextColor="#555"
-              />
-            </View>
-            <View style={styles.unitToggle}>
-              <TouchableOpacity
-                style={[styles.unitBtn, stacking.spacing_unit === 'ft' && styles.unitBtnActive]}
-                onPress={() => onChange('spacing_unit', 'ft')}
-              >
-                <Text style={[styles.unitBtnText, stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.unitBtn, stacking.spacing_unit === 'inches' && styles.unitBtnActive]}
-                onPress={() => onChange('spacing_unit', 'inches')}
-              >
-                <Text style={[styles.unitBtnText, stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <Text style={styles.stackingHint}>
-            {stacking.orientation === 'vertical' 
-              ? 'Enter height above first antenna position'
-              : 'Enter horizontal distance between antennas'}
-          </Text>
-        </>
-      )}
-    </View>
-  );
-};
-
-const StackingResults = ({ info, baseGain, stackedGain }: { 
-  info: StackingInfo; 
-  baseGain: number;
-  stackedGain: number;
 }) => (
+  <View style={styles.section}>
+    <View style={styles.sectionHeaderRow}>
+      <Text style={styles.sectionTitle}><Ionicons name="layers-outline" size={16} color="#9C27B0" /> Antenna Stacking</Text>
+      <Switch value={stacking.enabled} onValueChange={(v) => onChange('enabled', v)} trackColor={{ false: '#333', true: '#9C27B0' }} thumbColor={stacking.enabled ? '#fff' : '#888'} />
+    </View>
+    {stacking.enabled && (
+      <>
+        <Text style={styles.inputLabel}>Stack Orientation</Text>
+        <View style={styles.orientationToggle}>
+          <TouchableOpacity style={[styles.orientBtn, stacking.orientation === 'vertical' && styles.orientBtnActive]} onPress={() => onChange('orientation', 'vertical')}>
+            <Ionicons name="swap-vertical" size={20} color={stacking.orientation === 'vertical' ? '#fff' : '#888'} />
+            <Text style={[styles.orientBtnText, stacking.orientation === 'vertical' && styles.orientBtnTextActive]}>Vertical</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.orientBtn, stacking.orientation === 'horizontal' && styles.orientBtnActive]} onPress={() => onChange('orientation', 'horizontal')}>
+            <Ionicons name="swap-horizontal" size={20} color={stacking.orientation === 'horizontal' ? '#fff' : '#888'} />
+            <Text style={[styles.orientBtnText, stacking.orientation === 'horizontal' && styles.orientBtnTextActive]}>Horizontal</Text>
+          </TouchableOpacity>
+        </View>
+        <Dropdown label="Number of Antennas" value={stacking.num_antennas.toString()} options={[2,3,4,5,6,7,8].map(n => ({ value: n.toString(), label: `${n} Antennas` }))} onChange={(v) => onChange('num_antennas', parseInt(v))} />
+        <View style={styles.rowInput}>
+          <View style={styles.flexInput}>
+            <Text style={styles.inputLabel}>{stacking.orientation === 'vertical' ? 'Vertical Spacing' : 'Horizontal Spacing'}</Text>
+            <TextInput style={styles.input} value={stacking.spacing} onChangeText={(v) => onChange('spacing', v)} keyboardType="decimal-pad" placeholder="20" placeholderTextColor="#555" />
+          </View>
+          <View style={styles.unitToggle}>
+            <TouchableOpacity style={[styles.unitBtn, stacking.spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => onChange('spacing_unit', 'ft')}>
+              <Text style={[styles.unitBtnText, stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.unitBtn, stacking.spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => onChange('spacing_unit', 'inches')}>
+              <Text style={[styles.unitBtnText, stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <Text style={styles.stackingHint}>{stacking.orientation === 'vertical' ? 'Height above first antenna' : 'Distance between antennas'}</Text>
+      </>
+    )}
+  </View>
+);
+
+const StackingResults = ({ info, baseGain, stackedGain }: { info: StackingInfo; baseGain: number; stackedGain: number; }) => (
   <View style={styles.stackingResults}>
-    <Text style={styles.stackingResultsTitle}>
-      <Ionicons name="layers" size={16} color="#9C27B0" /> Stacking Results ({info.num_antennas}x {info.orientation})
-    </Text>
+    <Text style={styles.stackingResultsTitle}><Ionicons name="layers" size={16} color="#9C27B0" /> Stacking ({info.num_antennas}x {info.orientation})</Text>
     <View style={styles.stackingGrid}>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>Base Gain</Text>
-        <Text style={styles.stackingValue}>{baseGain} dBi</Text>
-      </View>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>Stacked Gain</Text>
-        <Text style={[styles.stackingValue, { color: '#9C27B0' }]}>{stackedGain} dBi</Text>
-      </View>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>Gain Increase</Text>
-        <Text style={[styles.stackingValue, { color: '#4CAF50' }]}>+{info.gain_increase_db} dB</Text>
-      </View>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>Mult. Factor</Text>
-        <Text style={styles.stackingValue}>{info.stacked_multiplication_factor}x</Text>
-      </View>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>H Beamwidth</Text>
-        <Text style={styles.stackingValue}>{info.new_beamwidth_h}°</Text>
-      </View>
-      <View style={styles.stackingItem}>
-        <Text style={styles.stackingLabel}>V Beamwidth</Text>
-        <Text style={styles.stackingValue}>{info.new_beamwidth_v}°</Text>
-      </View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>Base</Text><Text style={styles.stackingValue}>{baseGain} dBi</Text></View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>Stacked</Text><Text style={[styles.stackingValue, { color: '#9C27B0' }]}>{stackedGain} dBi</Text></View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>Gain+</Text><Text style={[styles.stackingValue, { color: '#4CAF50' }]}>+{info.gain_increase_db} dB</Text></View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>Mult.</Text><Text style={styles.stackingValue}>{info.stacked_multiplication_factor}x</Text></View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>H-BW</Text><Text style={styles.stackingValue}>{info.new_beamwidth_h}°</Text></View>
+      <View style={styles.stackingItem}><Text style={styles.stackingLabel}>V-BW</Text><Text style={styles.stackingValue}>{info.new_beamwidth_v}°</Text></View>
     </View>
-    <View style={styles.stackingInfoRow}>
-      <Text style={styles.stackingInfoLabel}>Spacing: {info.spacing} {info.spacing_unit} ({info.spacing_wavelengths}λ)</Text>
-      <Text style={styles.stackingInfoLabel}>Optimal: ~{info.optimal_spacing_ft} ft (0.65λ)</Text>
-    </View>
-    {info.total_height_ft && (
-      <Text style={styles.stackingInfoLabel}>Total array height: {info.total_height_ft} ft from ground</Text>
-    )}
-    {info.total_width_ft && (
-      <Text style={styles.stackingInfoLabel}>Total array width: {info.total_width_ft} ft</Text>
-    )}
+    <Text style={styles.stackingInfoLabel}>Spacing: {info.spacing} {info.spacing_unit} ({info.spacing_wavelengths}λ) | Optimal: ~{info.optimal_spacing_ft} ft</Text>
+    {info.total_height_ft && <Text style={styles.stackingInfoLabel}>Total height: {info.total_height_ft} ft</Text>}
+    {info.total_width_ft && <Text style={styles.stackingInfoLabel}>Total width: {info.total_width_ft} ft</Text>}
   </View>
 );
 
@@ -643,105 +471,27 @@ export default function AntennaCalculator() {
     boom_unit: 'inches',
     band: '11m_cb',
     frequency_mhz: '27.185',
-    stacking: {
-      enabled: false,
-      orientation: 'vertical',
-      num_antennas: 2,
-      spacing: '20',
-      spacing_unit: 'ft',
-    },
+    stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
   });
 
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showResults, setShowResults] = useState(false);
+  const [autoUpdate, setAutoUpdate] = useState(true);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const updateElementCount = (newCount: number) => {
-    const count = Math.max(2, Math.min(20, newCount));
-    const newElements: ElementDimension[] = [];
-    
-    newElements.push(
-      inputs.elements.find(e => e.element_type === 'reflector') || 
-      { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' }
-    );
-    
-    newElements.push(
-      inputs.elements.find(e => e.element_type === 'driven') || 
-      { element_type: 'driven', length: '204', diameter: '0.5', position: '48' }
-    );
-    
-    const numDirectors = count - 2;
-    const existingDirectors = inputs.elements.filter(e => e.element_type === 'director');
-    
-    for (let i = 0; i < numDirectors; i++) {
-      if (existingDirectors[i]) {
-        newElements.push(existingDirectors[i]);
-      } else {
-        const basePosition = 96 + (i * 48);
-        const baseLength = 195 - (i * 3);
-        newElements.push({
-          element_type: 'director',
-          length: baseLength.toString(),
-          diameter: '0.5',
-          position: basePosition.toString(),
-        });
-      }
-    }
-    
-    setInputs(prev => ({ ...prev, num_elements: count, elements: newElements }));
-  };
-
-  const updateElement = (index: number, field: keyof ElementDimension, value: string) => {
-    setInputs(prev => {
-      const newElements = [...prev.elements];
-      newElements[index] = { ...newElements[index], [field]: value };
-      return { ...prev, elements: newElements };
-    });
-  };
-
-  const updateStacking = (field: keyof StackingConfig, value: any) => {
-    setInputs(prev => ({
-      ...prev,
-      stacking: { ...prev.stacking, [field]: value }
-    }));
-  };
-
-  const handleBandChange = (bandId: string) => {
-    const band = BANDS.find(b => b.id === bandId);
-    setInputs(prev => ({
-      ...prev,
-      band: bandId,
-      frequency_mhz: band ? band.center.toString() : prev.frequency_mhz,
-    }));
-  };
-
-  const calculateAntenna = useCallback(async () => {
+  // Auto-calculate when inputs change
+  const calculateAntenna = useCallback(async (showLoading = true) => {
+    // Validate inputs
     for (const elem of inputs.elements) {
-      if (!elem.length || parseFloat(elem.length) <= 0) {
-        setError(`Please enter valid length for ${elem.element_type}`);
-        return;
-      }
-      if (!elem.diameter || parseFloat(elem.diameter) <= 0) {
-        setError(`Please enter valid diameter for ${elem.element_type}`);
-        return;
-      }
+      if (!elem.length || parseFloat(elem.length) <= 0) return;
+      if (!elem.diameter || parseFloat(elem.diameter) <= 0) return;
     }
+    if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0) return;
+    if (!inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) return;
+    if (inputs.stacking.enabled && (!inputs.stacking.spacing || parseFloat(inputs.stacking.spacing) <= 0)) return;
 
-    if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0) {
-      setError('Height from ground must be positive');
-      return;
-    }
-    if (!inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) {
-      setError('Boom diameter must be positive');
-      return;
-    }
-    if (inputs.stacking.enabled && (!inputs.stacking.spacing || parseFloat(inputs.stacking.spacing) <= 0)) {
-      setError('Stacking spacing must be positive');
-      return;
-    }
-
-    setLoading(true);
+    if (showLoading) setLoading(true);
     setError(null);
 
     try {
@@ -752,13 +502,13 @@ export default function AntennaCalculator() {
           num_elements: inputs.num_elements,
           elements: inputs.elements.map(e => ({
             element_type: e.element_type,
-            length: parseFloat(e.length),
-            diameter: parseFloat(e.diameter),
+            length: parseFloat(e.length) || 0,
+            diameter: parseFloat(e.diameter) || 0,
             position: parseFloat(e.position) || 0,
           })),
-          height_from_ground: parseFloat(inputs.height_from_ground),
+          height_from_ground: parseFloat(inputs.height_from_ground) || 0,
           height_unit: inputs.height_unit,
-          boom_diameter: parseFloat(inputs.boom_diameter),
+          boom_diameter: parseFloat(inputs.boom_diameter) || 0,
           boom_unit: inputs.boom_unit,
           band: inputs.band,
           frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
@@ -766,7 +516,7 @@ export default function AntennaCalculator() {
             enabled: true,
             orientation: inputs.stacking.orientation,
             num_antennas: inputs.stacking.num_antennas,
-            spacing: parseFloat(inputs.stacking.spacing),
+            spacing: parseFloat(inputs.stacking.spacing) || 0,
             spacing_unit: inputs.stacking.spacing_unit,
           } : null,
         }),
@@ -779,13 +529,70 @@ export default function AntennaCalculator() {
 
       const data: AntennaOutput = await response.json();
       setResults(data);
-      setShowResults(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (showLoading) setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, [inputs]);
+
+  // Debounced auto-update
+  useEffect(() => {
+    if (!autoUpdate) return;
+    
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      calculateAntenna(false);
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [inputs, autoUpdate]);
+
+  // Initial calculation
+  useEffect(() => {
+    calculateAntenna(true);
+  }, []);
+
+  const updateElementCount = (newCount: number) => {
+    const count = Math.max(2, Math.min(20, newCount));
+    const newElements: ElementDimension[] = [];
+    newElements.push(inputs.elements.find(e => e.element_type === 'reflector') || { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' });
+    newElements.push(inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' });
+    const numDirectors = count - 2;
+    const existingDirectors = inputs.elements.filter(e => e.element_type === 'director');
+    for (let i = 0; i < numDirectors; i++) {
+      if (existingDirectors[i]) {
+        newElements.push(existingDirectors[i]);
+      } else {
+        newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
+      }
+    }
+    setInputs(prev => ({ ...prev, num_elements: count, elements: newElements }));
+  };
+
+  const updateElement = (index: number, field: keyof ElementDimension, value: string) => {
+    setInputs(prev => {
+      const newElements = [...prev.elements];
+      newElements[index] = { ...newElements[index], [field]: value };
+      return { ...prev, elements: newElements };
+    });
+  };
+
+  const updateStacking = (field: keyof StackingConfig, value: any) => {
+    setInputs(prev => ({ ...prev, stacking: { ...prev.stacking, [field]: value } }));
+  };
+
+  const handleBandChange = (bandId: string) => {
+    const band = BANDS.find(b => b.id === bandId);
+    setInputs(prev => ({ ...prev, band: bandId, frequency_mhz: band ? band.center.toString() : prev.frequency_mhz }));
+  };
 
   const resetForm = () => {
     setInputs({
@@ -804,15 +611,10 @@ export default function AntennaCalculator() {
       stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
     });
     setResults(null);
-    setShowResults(false);
     setError(null);
   };
 
-  const elementOptions = Array.from({ length: 19 }, (_, i) => ({
-    value: (i + 2).toString(),
-    label: `${i + 2} Elements`,
-  }));
-
+  const elementOptions = Array.from({ length: 19 }, (_, i) => ({ value: (i + 2).toString(), label: `${i + 2} Elements` }));
   const bandOptions = BANDS.map(b => ({ value: b.id, label: b.name }));
 
   return (
@@ -826,36 +628,26 @@ export default function AntennaCalculator() {
             <Text style={styles.headerSubtitle}>Yagi-Uda Analysis with Stacking</Text>
           </View>
 
+          {/* Auto-Update Toggle */}
+          <View style={styles.autoUpdateRow}>
+            <Text style={styles.autoUpdateLabel}><Ionicons name="sync" size={14} color="#4CAF50" /> Live Update</Text>
+            <Switch value={autoUpdate} onValueChange={setAutoUpdate} trackColor={{ false: '#333', true: '#4CAF50' }} thumbColor={autoUpdate ? '#fff' : '#888'} />
+          </View>
+
           {/* Band Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              <Ionicons name="radio" size={14} color="#4CAF50" /> Band Selection
-            </Text>
+            <Text style={styles.sectionTitle}><Ionicons name="radio" size={14} color="#4CAF50" /> Band Selection</Text>
             <Dropdown label="Operating Band" value={inputs.band} options={bandOptions} onChange={handleBandChange} />
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Center Frequency (MHz)</Text>
-              <TextInput
-                style={styles.input}
-                value={inputs.frequency_mhz}
-                onChangeText={(v) => setInputs(prev => ({ ...prev, frequency_mhz: v }))}
-                keyboardType="decimal-pad"
-                placeholder="27.185"
-                placeholderTextColor="#555"
-              />
+              <TextInput style={styles.input} value={inputs.frequency_mhz} onChangeText={(v) => setInputs(prev => ({ ...prev, frequency_mhz: v }))} keyboardType="decimal-pad" placeholder="27.185" placeholderTextColor="#555" />
             </View>
           </View>
 
           {/* Element Configuration */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              <Ionicons name="git-branch-outline" size={14} color="#4CAF50" /> Element Configuration
-            </Text>
-            <Dropdown
-              label="Number of Elements"
-              value={inputs.num_elements.toString()}
-              options={elementOptions}
-              onChange={(v) => updateElementCount(parseInt(v))}
-            />
+            <Text style={styles.sectionTitle}><Ionicons name="git-branch-outline" size={14} color="#4CAF50" /> Element Configuration</Text>
+            <Dropdown label="Number of Elements" value={inputs.num_elements.toString()} options={elementOptions} onChange={(v) => updateElementCount(parseInt(v))} />
             {inputs.elements.map((elem, index) => (
               <ElementInput key={`${elem.element_type}-${index}`} element={elem} index={index} onChange={updateElement} />
             ))}
@@ -863,49 +655,25 @@ export default function AntennaCalculator() {
 
           {/* Physical Setup */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              <Ionicons name="construct-outline" size={14} color="#4CAF50" /> Physical Setup
-            </Text>
+            <Text style={styles.sectionTitle}><Ionicons name="construct-outline" size={14} color="#4CAF50" /> Physical Setup</Text>
             <View style={styles.rowInput}>
               <View style={styles.flexInput}>
                 <Text style={styles.inputLabel}>Height from Ground</Text>
-                <TextInput
-                  style={styles.input}
-                  value={inputs.height_from_ground}
-                  onChangeText={(v) => setInputs(prev => ({ ...prev, height_from_ground: v }))}
-                  keyboardType="decimal-pad"
-                  placeholder="35"
-                  placeholderTextColor="#555"
-                />
+                <TextInput style={styles.input} value={inputs.height_from_ground} onChangeText={(v) => setInputs(prev => ({ ...prev, height_from_ground: v }))} keyboardType="decimal-pad" placeholder="35" placeholderTextColor="#555" />
               </View>
               <View style={styles.unitToggle}>
-                <TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, height_unit: 'ft' }))}>
-                  <Text style={[styles.unitBtnText, inputs.height_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, height_unit: 'inches' }))}>
-                  <Text style={[styles.unitBtnText, inputs.height_unit === 'inches' && styles.unitBtnTextActive]}>in</Text>
-                </TouchableOpacity>
+                <TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, height_unit: 'ft' }))}><Text style={[styles.unitBtnText, inputs.height_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, height_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.height_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity>
               </View>
             </View>
             <View style={styles.rowInput}>
               <View style={styles.flexInput}>
                 <Text style={styles.inputLabel}>Boom Diameter</Text>
-                <TextInput
-                  style={styles.input}
-                  value={inputs.boom_diameter}
-                  onChangeText={(v) => setInputs(prev => ({ ...prev, boom_diameter: v }))}
-                  keyboardType="decimal-pad"
-                  placeholder="2"
-                  placeholderTextColor="#555"
-                />
+                <TextInput style={styles.input} value={inputs.boom_diameter} onChangeText={(v) => setInputs(prev => ({ ...prev, boom_diameter: v }))} keyboardType="decimal-pad" placeholder="2" placeholderTextColor="#555" />
               </View>
               <View style={styles.unitToggle}>
-                <TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'mm' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, boom_unit: 'mm' }))}>
-                  <Text style={[styles.unitBtnText, inputs.boom_unit === 'mm' && styles.unitBtnTextActive]}>mm</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, boom_unit: 'inches' }))}>
-                  <Text style={[styles.unitBtnText, inputs.boom_unit === 'inches' && styles.unitBtnTextActive]}>in</Text>
-                </TouchableOpacity>
+                <TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'mm' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, boom_unit: 'mm' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'mm' && styles.unitBtnTextActive]}>mm</Text></TouchableOpacity>
+                <TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(prev => ({ ...prev, boom_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity>
               </View>
             </View>
           </View>
@@ -921,15 +689,23 @@ export default function AntennaCalculator() {
             </View>
           )}
 
-          {/* Calculate Button */}
-          <TouchableOpacity style={[styles.calculateButton, loading && styles.buttonDisabled]} onPress={calculateAntenna} disabled={loading} activeOpacity={0.8}>
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : (
-              <><Ionicons name="calculator" size={20} color="#fff" /><Text style={styles.calculateButtonText}>Calculate Parameters</Text></>
-            )}
-          </TouchableOpacity>
+          {/* Manual Calculate Button */}
+          {!autoUpdate && (
+            <TouchableOpacity style={[styles.calculateButton, loading && styles.buttonDisabled]} onPress={() => calculateAntenna(true)} disabled={loading} activeOpacity={0.8}>
+              {loading ? <ActivityIndicator color="#fff" size="small" /> : (<><Ionicons name="calculator" size={20} color="#fff" /><Text style={styles.calculateButtonText}>Calculate Parameters</Text></>)}
+            </TouchableOpacity>
+          )}
+
+          {/* Loading indicator for auto-update */}
+          {loading && autoUpdate && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color="#4CAF50" size="small" />
+              <Text style={styles.loadingText}>Calculating...</Text>
+            </View>
+          )}
 
           {/* Results */}
-          {showResults && results && (
+          {results && (
             <View style={styles.resultsSection}>
               <View style={styles.resultsHeader}>
                 <Text style={styles.sectionTitle}><Ionicons name="analytics" size={14} color="#4CAF50" /> Analysis Results</Text>
@@ -944,32 +720,20 @@ export default function AntennaCalculator() {
                 <Text style={styles.bandInfoText}>Center: {results.center_frequency.toFixed(3)} MHz | {results.band_info.channel_spacing_khz} kHz/CH</Text>
               </View>
 
-              {/* Stacking Results */}
               {results.stacking_enabled && results.stacking_info && (
                 <StackingResults info={results.stacking_info} baseGain={results.gain_dbi} stackedGain={results.stacked_gain_dbi!} />
               )}
 
-              {/* SWR Bandwidth Meter */}
-              <SwrMeter 
-                data={results.swr_curve} 
-                centerFreq={results.center_frequency}
-                usable15={results.usable_bandwidth_1_5}
-                usable20={results.usable_bandwidth_2_0}
-                channelSpacing={results.band_info.channel_spacing_khz}
-              />
+              <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info.channel_spacing_khz} />
 
               <ResultCard title="Gain" value={`${results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi} dBi`} description={results.gain_description} icon="trending-up" color="#4CAF50" />
-              <ResultCard title="SWR at Center" value={`${results.swr}:1`} description={results.swr_description} icon="pulse" color="#2196F3" />
+              <ResultCard title="SWR at Center" value={`${results.swr}:1`} description={results.swr_description} icon="pulse" color={results.swr <= 1.1 ? '#00BCD4' : results.swr <= 1.5 ? '#4CAF50' : '#FFC107'} />
               <ResultCard title="F/B Ratio" value={`${results.fb_ratio} dB`} description={results.fb_ratio_description} icon="swap-horizontal" color="#9C27B0" />
               <ResultCard title="Beamwidth" value={`H: ${results.beamwidth_h}° / V: ${results.beamwidth_v}°`} description={results.beamwidth_description} icon="radio-button-on" color="#FF9800" />
               <ResultCard title="Usable BW (≤1.5:1)" value={`${results.usable_bandwidth_1_5.toFixed(3)} MHz`} description={`At 2:1: ${results.usable_bandwidth_2_0.toFixed(3)} MHz`} icon="resize" color="#00BCD4" />
               <ResultCard title="Efficiency" value={`${results.antenna_efficiency}%`} description={results.efficiency_description} icon="speedometer" color="#8BC34A" />
 
-              <PolarPattern 
-                data={results.far_field_pattern} 
-                stackedData={results.stacked_pattern || undefined}
-                isStacked={results.stacking_enabled}
-              />
+              <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern || undefined} isStacked={results.stacking_enabled} />
             </View>
           )}
         </ScrollView>
@@ -983,9 +747,11 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { padding: 14, paddingBottom: 40 },
-  header: { alignItems: 'center', marginBottom: 14, paddingVertical: 10 },
+  header: { alignItems: 'center', marginBottom: 10, paddingVertical: 8 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginTop: 4 },
   headerSubtitle: { fontSize: 12, color: '#888', marginTop: 2 },
+  autoUpdateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 10, padding: 12, marginBottom: 12 },
+  autoUpdateLabel: { fontSize: 14, color: '#4CAF50', fontWeight: '500' },
   section: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 12, marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: '600', color: '#fff', marginBottom: 10 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -1025,6 +791,8 @@ const styles = StyleSheet.create({
   calculateButton: { backgroundColor: '#4CAF50', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 14, borderRadius: 10, marginBottom: 14, gap: 8 },
   buttonDisabled: { opacity: 0.7 },
   calculateButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, gap: 8 },
+  loadingText: { color: '#4CAF50', fontSize: 13 },
   resultsSection: { marginBottom: 14 },
   resultsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   resetButton: { flexDirection: 'row', alignItems: 'center', padding: 6, gap: 4 },
@@ -1040,7 +808,7 @@ const styles = StyleSheet.create({
   swrContainer: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 12, marginBottom: 10, alignItems: 'center' },
   swrTitle: { fontSize: 14, fontWeight: '600', color: '#fff', marginBottom: 2 },
   swrSubtitle: { fontSize: 10, color: '#666', marginBottom: 10 },
-  swrLegend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8, gap: 12 },
+  swrLegend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8, gap: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendColor: { width: 12, height: 12, borderRadius: 2 },
   legendText: { fontSize: 10, color: '#888' },
@@ -1054,6 +822,5 @@ const styles = StyleSheet.create({
   stackingItem: { width: '30%', backgroundColor: '#252525', borderRadius: 8, padding: 8, alignItems: 'center' },
   stackingLabel: { fontSize: 9, color: '#888', marginBottom: 2 },
   stackingValue: { fontSize: 14, fontWeight: '600', color: '#fff' },
-  stackingInfoRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
-  stackingInfoLabel: { fontSize: 10, color: '#888' },
+  stackingInfoLabel: { fontSize: 10, color: '#888', marginTop: 8 },
 });
