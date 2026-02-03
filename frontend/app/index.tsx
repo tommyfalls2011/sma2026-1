@@ -877,8 +877,29 @@ export default function AntennaCalculator() {
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Boom Length</Text><Text style={styles.secondaryValue}>{calculateBoomLength().ft}' {calculateBoomLength().inches.toFixed(1)}"</Text></View>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Beamwidth</Text><Text style={styles.secondaryValue}>H:{results.beamwidth_h}° V:{results.beamwidth_v}°</Text></View>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Efficiency</Text><Text style={styles.secondaryValue}>{results.antenna_efficiency}%</Text></View>
+                <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Take-off</Text><Text style={[styles.secondaryValue, { color: (results.takeoff_angle || 0) < 25 ? '#4CAF50' : '#FF9800' }]}>{results.takeoff_angle}°</Text></View>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>BW @1.5</Text><Text style={styles.secondaryValue}>{results.usable_bandwidth_1_5?.toFixed(2)} MHz</Text></View>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Mult</Text><Text style={styles.secondaryValue}>{results.multiplication_factor}x</Text></View>
+              </View>
+              
+              {/* Take-off Angle Detail Card */}
+              <View style={styles.takeoffCard}>
+                <View style={styles.takeoffHeader}>
+                  <Ionicons name="arrow-up-outline" size={16} color="#FF5722" />
+                  <Text style={styles.takeoffTitle}>Take-off Angle</Text>
+                </View>
+                <View style={styles.takeoffContent}>
+                  <Text style={styles.takeoffValue}>{results.takeoff_angle}°</Text>
+                  <Text style={styles.takeoffDesc}>{results.takeoff_angle_description}</Text>
+                </View>
+                <View style={styles.takeoffBar}>
+                  <View style={[styles.takeoffBarFill, { width: `${Math.min((90 - (results.takeoff_angle || 45)) / 85 * 100, 100)}%` }]} />
+                </View>
+                <View style={styles.takeoffScale}>
+                  <Text style={styles.takeoffScaleText}>5° DX</Text>
+                  <Text style={styles.takeoffScaleText}>45° Regional</Text>
+                  <Text style={styles.takeoffScaleText}>90° NVIS</Text>
+                </View>
               </View>
               
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
