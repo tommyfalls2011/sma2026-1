@@ -156,6 +156,66 @@ backend:
         - agent: "testing"
         - comment: "Verified working in previous test"
 
+  - task: "POST /api/auth/register - User registration with trial subscription"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "AUTHENTICATION ENDPOINT VERIFIED: User registration working correctly. Returns JWT token and user object with subscription_tier='trial'. Tested with testuser@example.com - registration successful."
+
+  - task: "POST /api/auth/login - User login authentication"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "AUTHENTICATION ENDPOINT VERIFIED: User login working correctly. Returns JWT token and user info. Tested with testuser@example.com credentials - login successful."
+
+  - task: "GET /api/auth/me - Get current user with authentication"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "AUTHENTICATION ENDPOINT VERIFIED: Protected endpoint working correctly. Returns user info with subscription status when valid Bearer token provided. All required fields present: id, email, name, subscription_tier, is_active."
+
+  - task: "GET /api/subscription/tiers - Get available subscription tiers"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "SUBSCRIPTION ENDPOINT VERIFIED: Returns all expected tiers (trial, bronze, silver, gold) with pricing and payment methods (paypal, cashapp). No authentication required for this endpoint."
+
+  - task: "POST /api/auth/register - Admin registration with backdoor email"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "ADMIN BACKDOOR VERIFIED: Admin registration working correctly. fallstommy@gmail.com gets subscription_tier='admin' with full access. Admin backdoor functionality confirmed."
+
 frontend:
   - task: "Dynamic Element Inputs (Reflector, Driven, Directors)"
     implemented: true
