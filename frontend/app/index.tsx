@@ -161,8 +161,11 @@ export default function AntennaCalculator() {
     stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
     taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '24', start_diameter: '0.5', end_diameter: '0.375' }, { length: '18', start_diameter: '0.375', end_diameter: '0.25' }] },
     corona_balls: { enabled: false, diameter: '1.0' },
+    use_reflector: true,
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
+  const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
+  const [optimizingHeight, setOptimizingHeight] = useState(false);
   const [loading, setLoading] = useState(false);
   const [tuning, setTuning] = useState(false);
   const [elementUnit, setElementUnit] = useState<'inches' | 'meters'>('inches');
