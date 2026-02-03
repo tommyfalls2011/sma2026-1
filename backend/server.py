@@ -660,7 +660,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if boom_dia_m > 0.05: gain_dbi += 0.3
     elif boom_dia_m > 0.03: gain_dbi += 0.2
     
-    gain_dbi = round(min(gain_dbi, 28.0), 2)
+    gain_dbi = round(min(gain_dbi, 45.0), 2)
     
     # === SWR CALCULATION (Now based on actual element dimensions and height) ===
     swr = calculate_swr_from_elements(input_data.elements, wavelength, taper_enabled, height_wavelengths)
