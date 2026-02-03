@@ -46,7 +46,7 @@ class AdminEndpointTester:
         register_url = f"{self.base_url}/auth/register"
         register_payload = {
             "email": "fallstommy@gmail.com",
-            "password": "testpass123",
+            "password": "admin123",
             "name": "Admin User"
         }
         
