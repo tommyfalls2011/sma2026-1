@@ -517,6 +517,127 @@ export default function AntennaCalculator() {
     ]);
   };
 
+  // Generate timestamp for filenames
+  const getTimestamp = () => {
+    const now = new Date();
+    return now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  };
+
+  // Export height optimization data to CSV
+  const exportHeightData = async () => {
+    if (!heightOptResult || !heightOptResult.heights_tested) {
+      Alert.alert('No Data', 'Run height optimization first');
+      return;
+    }
+    
+    const timestamp = getTimestamp();
+    const userEmail = user?.email || 'guest';
+    const filename = `height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}.csv`;
+    
+    // Create CSV content
+    let csv = 'Height (ft),SWR,Gain (dBi),F/B Ratio (dB),Score,Is Optimal\n';
+    heightOptResult.heights_tested.forEach((h: any) => {
+      const isOptimal = h.height === heightOptResult.optimal_height ? 'YES' : '';
+      csv += `${h.height},${h.swr},${h.gain},${h.fb_ratio},${h.score},${isOptimal}\n`;
+    });
+    
+    // Add summary
+    csv += '\nSUMMARY\n';
+    csv += `Optimal Height,${heightOptResult.optimal_height} ft\n`;
+    csv += `Best SWR,${heightOptResult.optimal_swr}\n`;
+    csv += `Best Gain,${heightOptResult.optimal_gain} dBi\n`;
+    csv += `Best F/B,${heightOptResult.optimal_fb_ratio} dB\n`;
+    csv += `Total Heights Tested,${heightOptResult.heights_tested.length}\n`;
+    csv += `Export Date,${new Date().toLocaleString()}\n`;
+    csv += `User,${userEmail}\n`;
+    
+    downloadCSV(csv, filename);
+  };
+
+  // Export all antenna results to CSV
+  const exportAllData = async () => {
+    if (!results) {
+      Alert.alert('No Data', 'Calculate antenna first');
+      return;
+    }
+    
+    const timestamp = getTimestamp();
+    const userEmail = user?.email || 'guest';
+    const filename = `antenna_results_${timestamp}_${userEmail.replace('@', '_at_')}.csv`;
+    
+    // Create CSV content
+    let csv = 'ANTENNA CALCULATION RESULTS\n';
+    csv += `Export Date,${new Date().toLocaleString()}\n`;
+    csv += `User,${userEmail}\n\n`;
+    
+    // Input parameters
+    csv += 'INPUT PARAMETERS\n';
+    csv += `Band,${inputs.band}\n`;
+    csv += `Frequency,${inputs.frequency_mhz} MHz\n`;
+    csv += `Height,${inputs.height_from_ground} ${inputs.height_unit}\n`;
+    csv += `Boom Diameter,${inputs.boom_diameter} ${inputs.boom_unit}\n`;
+    csv += `Number of Elements,${inputs.num_elements}\n`;
+    csv += `Uses Reflector,${inputs.use_reflector ? 'Yes' : 'No'}\n\n`;
+    
+    // Element details
+    csv += 'ELEMENT DIMENSIONS\n';
+    csv += 'Type,Length,Diameter,Position\n';
+    inputs.elements.forEach(e => {
+      csv += `${e.element_type},${e.length},${e.diameter},${e.position}\n`;
+    });
+    csv += '\n';
+    
+    // Results
+    csv += 'PERFORMANCE RESULTS\n';
+    csv += `Gain,${results.gain_dbi} dBi\n`;
+    csv += `SWR,${results.swr}:1\n`;
+    csv += `F/B Ratio,${results.fb_ratio} dB\n`;
+    csv += `F/S Ratio,${results.fs_ratio} dB\n`;
+    csv += `Horizontal Beamwidth,${results.beamwidth_h}°\n`;
+    csv += `Vertical Beamwidth,${results.beamwidth_v}°\n`;
+    csv += `Bandwidth @1.5 SWR,${results.usable_bandwidth_1_5} MHz\n`;
+    csv += `Bandwidth @2.0 SWR,${results.usable_bandwidth_2_0} MHz\n`;
+    csv += `Efficiency,${results.antenna_efficiency}%\n`;
+    csv += `Multiplication Factor,${results.multiplication_factor}x\n\n`;
+    
+    // Far-field pattern
+    csv += 'FAR-FIELD PATTERN\n';
+    csv += 'Angle (degrees),Magnitude (%)\n';
+    results.far_field_pattern?.forEach((p: any) => {
+      csv += `${p.angle},${p.magnitude}\n`;
+    });
+    csv += '\n';
+    
+    // SWR curve
+    csv += 'SWR CURVE\n';
+    csv += 'Frequency (MHz),SWR,Channel\n';
+    results.swr_curve?.forEach((s: any) => {
+      csv += `${s.frequency},${s.swr},${s.channel}\n`;
+    });
+    
+    downloadCSV(csv, filename);
+  };
+
+  // Download CSV (works on web and can be adapted for mobile)
+  const downloadCSV = (csvContent: string, filename: string) => {
+    if (Platform.OS === 'web') {
+      // Web: Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+      Alert.alert('Exported', `File saved as ${filename}`);
+    } else {
+      // Mobile: Show content in alert (for now - could integrate expo-file-system/sharing)
+      Alert.alert('CSV Data Ready', `Filename: ${filename}\n\nCSV data has been generated. On mobile, you can copy this or integrate with expo-sharing for file downloads.`, [
+        { text: 'OK' }
+      ]);
+    }
+  };
+
   // Generate element count options based on subscription (up to 20)
   const elementOptions = [];
   for (let i = 2; i <= 20; i++) {
