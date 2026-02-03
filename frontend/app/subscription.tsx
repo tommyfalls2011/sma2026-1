@@ -154,6 +154,15 @@ export default function SubscriptionScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Admin Panel Button (only for admin) */}
+        {isAdmin && (
+          <TouchableOpacity style={styles.adminPanelBtn} onPress={() => router.push('/admin')}>
+            <Ionicons name="settings" size={18} color="#fff" />
+            <Text style={styles.adminPanelBtnText}>Admin Panel</Text>
+            <Ionicons name="chevron-forward" size={18} color="#fff" />
+          </TouchableOpacity>
+        )}
+
         {/* Current Status */}
         <View style={[styles.statusCard, { borderColor: TIER_COLORS[user.subscription_tier] }]}>
           <View style={styles.statusHeader}>
