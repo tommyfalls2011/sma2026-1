@@ -789,6 +789,49 @@ class AuthenticationTester:
             return False
 
 if __name__ == "__main__":
-    tester = AuthenticationTester()
-    success = tester.run_all_tests()
-    sys.exit(0 if success else 1)
+    print("=" * 80)
+    print("🚀 ANTENNA CALCULATOR BACKEND API COMPREHENSIVE TESTS")
+    print("=" * 80)
+    print(f"Backend URL: {BACKEND_URL}")
+    print(f"Test Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("=" * 80)
+    
+    # Test backend connectivity first
+    try:
+        response = requests.get(f"{BACKEND_URL}/", timeout=10)
+        if response.status_code == 200:
+            print(f"✅ Backend connectivity - API is reachable at {BACKEND_URL}")
+        else:
+            print(f"❌ Backend connectivity - HTTP {response.status_code}")
+            sys.exit(1)
+    except Exception as e:
+        print(f"❌ Backend connectivity - Error: {e}")
+        sys.exit(1)
+    
+    # Run authentication tests
+    print("\n" + "🔐 AUTHENTICATION & SUBSCRIPTION TESTS".center(80, "="))
+    auth_tester = AuthenticationTester()
+    auth_success = auth_tester.run_all_tests()
+    
+    # Run design endpoint tests
+    print("\n" + "💾 DESIGN MANAGEMENT ENDPOINT TESTS".center(80, "="))
+    design_tester = DesignEndpointTester()
+    design_success = design_tester.run_design_tests()
+    
+    # Overall summary
+    print("\n" + "=" * 80)
+    print("🏁 OVERALL TEST SUMMARY")
+    print("=" * 80)
+    
+    auth_status = "✅ PASSED" if auth_success else "❌ FAILED"
+    design_status = "✅ PASSED" if design_success else "❌ FAILED"
+    
+    print(f"Authentication & Subscription Tests: {auth_status}")
+    print(f"Design Management Tests: {design_status}")
+    
+    if auth_success and design_success:
+        print(f"\n🎉 ALL TESTS PASSED! Backend API is fully functional.")
+        sys.exit(0)
+    else:
+        print(f"\n💥 SOME TESTS FAILED! Check the results above.")
+        sys.exit(1)
