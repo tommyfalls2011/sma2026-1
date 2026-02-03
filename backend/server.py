@@ -379,6 +379,16 @@ class AntennaOutput(BaseModel):
     stacked_pattern: Optional[List[dict]] = None
     taper_info: Optional[dict] = None
     corona_info: Optional[dict] = None
+    # Reflected power data
+    reflection_coefficient: Optional[float] = None
+    return_loss_db: Optional[float] = None
+    mismatch_loss_db: Optional[float] = None
+    reflected_power_100w: Optional[float] = None
+    reflected_power_1kw: Optional[float] = None
+    forward_power_100w: Optional[float] = None
+    forward_power_1kw: Optional[float] = None
+    impedance_high: Optional[float] = None
+    impedance_low: Optional[float] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
