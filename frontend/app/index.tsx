@@ -30,7 +30,7 @@ const BANDS = [
 
 interface ElementDimension { element_type: 'reflector' | 'driven' | 'director'; length: string; diameter: string; position: string; }
 interface TaperSection { length: string; start_diameter: string; end_diameter: string; }
-interface TaperConfig { enabled: boolean; num_tapers: number; sections: TaperSection[]; }
+interface TaperConfig { enabled: boolean; num_tapers: number; center_length: string; sections: TaperSection[]; }
 interface CoronaBallConfig { enabled: boolean; diameter: string; }
 interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; }
 interface AntennaInput { num_elements: number; elements: ElementDimension[]; height_from_ground: string; height_unit: 'ft' | 'inches'; boom_diameter: string; boom_unit: 'mm' | 'inches'; band: string; frequency_mhz: string; stacking: StackingConfig; taper: TaperConfig; corona_balls: CoronaBallConfig; }
