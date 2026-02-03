@@ -719,12 +719,97 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     multiplication_factor = round(10 ** (gain_dbi / 10), 2)
     
-    # === EFFICIENCY ===
-    base_efficiency = 0.96
-    swr_loss = (swr - 1) / (swr + 1)
-    efficiency_from_swr = 1 - swr_loss ** 2
-    conductor_efficiency = 0.98 if boom_dia_m > 0.03 else (0.97 if boom_dia_m > 0.02 else 0.95)
-    antenna_efficiency = round(base_efficiency * efficiency_from_swr * conductor_efficiency * 100, 1)
+    # === EFFICIENCY CALCULATION (Comprehensive) ===
+    # 1. Base efficiency depends on element count and design complexity
+    if n <= 3:
+        base_efficiency = 0.92
+    elif n <= 5:
+        base_efficiency = 0.94
+    elif n <= 7:
+        base_efficiency = 0.95
+    else:
+        base_efficiency = 0.96
+    
+    # 2. SWR mismatch loss - power reflected back to transmitter
+    swr_reflection_coeff = (swr - 1) / (swr + 1)  # Gamma (reflection coefficient)
+    swr_mismatch_loss = 1 - (swr_reflection_coeff ** 2)  # Power transmitted
+    
+    # 3. Conductor/material losses based on element diameter
+    avg_element_dia_m = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / n
+    if avg_element_dia_m > 0.02:  # > 20mm (thick elements)
+        conductor_efficiency = 0.99
+    elif avg_element_dia_m > 0.015:  # 15-20mm
+        conductor_efficiency = 0.98
+    elif avg_element_dia_m > 0.01:  # 10-15mm
+        conductor_efficiency = 0.97
+    elif avg_element_dia_m > 0.005:  # 5-10mm
+        conductor_efficiency = 0.95
+    else:  # < 5mm (thin wire)
+        conductor_efficiency = 0.92
+    
+    # 4. Boom losses
+    if boom_dia_m > 0.05:  # > 50mm boom
+        boom_efficiency = 0.99
+    elif boom_dia_m > 0.03:  # 30-50mm
+        boom_efficiency = 0.98
+    else:
+        boom_efficiency = 0.97
+    
+    # 5. Height-related ground losses
+    if height_wavelengths < 0.25:
+        height_efficiency = 0.85  # Very low - significant ground absorption
+    elif height_wavelengths < 0.5:
+        height_efficiency = 0.92
+    elif height_wavelengths < 1.0:
+        height_efficiency = 0.97
+    else:
+        height_efficiency = 0.99  # High enough for minimal ground interaction
+    
+    # 6. Element spacing efficiency
+    driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    spacing_efficiency = 0.98
+    if driven_elem and reflector_elem:
+        spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
+        ideal_spacing = wavelength * 0.2
+        spacing_deviation = abs(spacing_m - ideal_spacing) / ideal_spacing
+        if spacing_deviation > 0.3:
+            spacing_efficiency = 0.92
+        elif spacing_deviation > 0.2:
+            spacing_efficiency = 0.95
+        elif spacing_deviation > 0.1:
+            spacing_efficiency = 0.97
+    
+    # 7. Taper bonus (tapered elements have better efficiency)
+    taper_efficiency = 1.02 if taper_enabled else 1.0
+    
+    # Calculate total efficiency
+    antenna_efficiency = (base_efficiency * swr_mismatch_loss * conductor_efficiency * 
+                         boom_efficiency * height_efficiency * spacing_efficiency * taper_efficiency)
+    antenna_efficiency = round(min(antenna_efficiency * 100, 99.9), 1)
+    
+    # === REFLECTED POWER CALCULATIONS ===
+    # Reflection coefficient (Gamma)
+    reflection_coefficient = round(swr_reflection_coeff, 4)
+    
+    # Return Loss in dB (how much power is reflected back)
+    if reflection_coefficient > 0:
+        return_loss_db = round(-20 * math.log10(reflection_coefficient), 2)
+    else:
+        return_loss_db = 99.99  # Perfect match (infinite return loss)
+    
+    # Mismatch Loss in dB (power lost due to reflection)
+    mismatch_loss_db = round(-10 * math.log10(swr_mismatch_loss), 3) if swr_mismatch_loss > 0 else 0
+    
+    # Calculate reflected power for common transmit powers
+    reflected_power_100w = round(100 * (reflection_coefficient ** 2), 2)
+    reflected_power_1kw = round(1000 * (reflection_coefficient ** 2), 1)
+    forward_power_100w = round(100 - reflected_power_100w, 2)
+    forward_power_1kw = round(1000 - reflected_power_1kw, 1)
+    
+    # VSWR to Impedance mismatch (assuming 50 ohm system)
+    impedance_high = round(50 * swr, 1)  # If load is higher than 50 ohm
+    impedance_low = round(50 / swr, 1)   # If load is lower than 50 ohm
     
     # === SWR CURVE ===
     swr_curve = []
