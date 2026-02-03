@@ -27,7 +27,7 @@ const TIER_ICONS: Record<string, any> = {
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { user, token, tiers, paymentMethods, upgradeSubscription, refreshUser, logout } = useAuth();
+  const { user, token, tiers, paymentMethods, upgradeSubscription, refreshUser, logout, getMaxElements } = useAuth();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
