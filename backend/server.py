@@ -902,6 +902,63 @@ async def auto_tune(request: AutoTuneRequest):
     """Auto-tune antenna elements for optimal performance."""
     return auto_tune_antenna(request)
 
+
+class HeightOptimizeRequest(BaseModel):
+    num_elements: int
+    elements: List[ElementInput]
+    boom_diameter: float
+    boom_unit: str = "inches"
+    band: str = "11m_cb"
+    frequency_mhz: Optional[float] = None
+    min_height: int = 10
+    max_height: int = 100
+    step: int = 5
+
+class HeightOptimizeOutput(BaseModel):
+    optimal_height: int
+    optimal_swr: float
+    heights_tested: List[dict]
+
+@api_router.post("/optimize-height", response_model=HeightOptimizeOutput)
+async def optimize_height(request: HeightOptimizeRequest):
+    """Test heights from min to max and find best SWR match."""
+    best_height = request.min_height
+    best_swr = 999.0
+    heights_tested = []
+    
+    for height in range(request.min_height, request.max_height + 1, request.step):
+        # Create a calculation request for this height
+        calc_input = AntennaInput(
+            num_elements=request.num_elements,
+            elements=request.elements,
+            height_from_ground=height,
+            height_unit="ft",
+            boom_diameter=request.boom_diameter,
+            boom_unit=request.boom_unit,
+            band=request.band,
+            frequency_mhz=request.frequency_mhz,
+            stacking=None,
+            taper=None,
+            corona_balls=None
+        )
+        
+        # Calculate for this height
+        result = calculate_antenna(calc_input)
+        swr = result.swr
+        
+        heights_tested.append({"height": height, "swr": round(swr, 2)})
+        
+        if swr < best_swr:
+            best_swr = swr
+            best_height = height
+    
+    return HeightOptimizeOutput(
+        optimal_height=best_height,
+        optimal_swr=round(best_swr, 2),
+        heights_tested=heights_tested
+    )
+
+
 @api_router.get("/history", response_model=List[CalculationRecord])
 async def get_calculation_history():
     records = await db.calculations.find().sort("timestamp", -1).limit(20).to_list(20)
