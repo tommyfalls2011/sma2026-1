@@ -852,6 +852,177 @@ async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**sc) for sc in status_checks]
 
+
+# ==================== AUTH ENDPOINTS ====================
+@api_router.post("/auth/register")
+async def register_user(user_data: UserCreate):
+    """Register a new user with 1-hour trial"""
+    # Check if email exists
+    existing = await db.users.find_one({"email": user_data.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # Determine tier (admin gets full access)
+    is_admin = user_data.email.lower() == ADMIN_EMAIL.lower()
+    tier = "admin" if is_admin else "trial"
+    
+    user = {
+        "id": str(uuid.uuid4()),
+        "email": user_data.email.lower(),
+        "password": hash_password(user_data.password),
+        "name": user_data.name,
+        "subscription_tier": tier,
+        "subscription_expires": datetime.utcnow() + timedelta(days=36500) if is_admin else None,
+        "is_trial": not is_admin,
+        "trial_started": datetime.utcnow() if not is_admin else None,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.users.insert_one(user)
+    token = create_token(user["id"], user["email"])
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["name"],
+            "subscription_tier": user["subscription_tier"],
+            "subscription_expires": user["subscription_expires"],
+            "is_trial": user["is_trial"],
+            "trial_started": user["trial_started"]
+        }
+    }
+
+@api_router.post("/auth/login")
+async def login_user(credentials: UserLogin):
+    """Login existing user"""
+    user = await db.users.find_one({"email": credentials.email.lower()})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not verify_password(credentials.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    token = create_token(user["id"], user["email"])
+    
+    # Check subscription status
+    is_active, tier_info, status_msg = check_subscription_active(user)
+    
+    return {
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["name"],
+            "subscription_tier": user["subscription_tier"],
+            "subscription_expires": user.get("subscription_expires"),
+            "is_trial": user.get("is_trial", False),
+            "trial_started": user.get("trial_started"),
+            "is_active": is_active,
+            "status_message": status_msg
+        }
+    }
+
+@api_router.get("/auth/me")
+async def get_current_user_info(user: dict = Depends(require_user)):
+    """Get current user info and subscription status"""
+    is_active, tier_info, status_msg = check_subscription_active(user)
+    
+    return {
+        "id": user["id"],
+        "email": user["email"],
+        "name": user["name"],
+        "subscription_tier": user["subscription_tier"],
+        "subscription_expires": user.get("subscription_expires"),
+        "is_trial": user.get("is_trial", False),
+        "trial_started": user.get("trial_started"),
+        "is_active": is_active,
+        "status_message": status_msg,
+        "tier_info": tier_info,
+        "max_elements": tier_info["max_elements"] if tier_info else 3
+    }
+
+
+# ==================== SUBSCRIPTION ENDPOINTS ====================
+@api_router.get("/subscription/tiers")
+async def get_subscription_tiers():
+    """Get available subscription tiers"""
+    tiers = {k: v for k, v in SUBSCRIPTION_TIERS.items() if k != "admin"}
+    return {"tiers": tiers, "payment_methods": PAYMENT_CONFIG}
+
+@api_router.post("/subscription/upgrade")
+async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends(require_user)):
+    """Upgrade user subscription (after payment verification)"""
+    if upgrade.tier not in SUBSCRIPTION_TIERS:
+        raise HTTPException(status_code=400, detail="Invalid tier")
+    
+    tier_info = SUBSCRIPTION_TIERS[upgrade.tier]
+    
+    # Record payment
+    payment = PaymentRecord(
+        user_id=user["id"],
+        amount=tier_info["price"],
+        tier=upgrade.tier,
+        payment_method=upgrade.payment_method,
+        payment_reference=upgrade.payment_reference,
+        status="pending"
+    )
+    await db.payments.insert_one(payment.dict())
+    
+    # Update user subscription (in production, verify payment first)
+    duration_days = tier_info.get("duration_days", 30)
+    expires = datetime.utcnow() + timedelta(days=duration_days)
+    
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "subscription_tier": upgrade.tier,
+            "subscription_expires": expires,
+            "is_trial": False
+        }}
+    )
+    
+    # Mark payment complete
+    await db.payments.update_one(
+        {"id": payment.id},
+        {"$set": {"status": "completed"}}
+    )
+    
+    return {
+        "success": True,
+        "message": f"Upgraded to {tier_info['name']}",
+        "subscription_tier": upgrade.tier,
+        "subscription_expires": expires,
+        "max_elements": tier_info["max_elements"]
+    }
+
+@api_router.get("/subscription/status")
+async def get_subscription_status(user: dict = Depends(require_user)):
+    """Get current subscription status"""
+    is_active, tier_info, status_msg = check_subscription_active(user)
+    
+    # Calculate trial time remaining if on trial
+    trial_remaining = None
+    if user.get("is_trial") and user.get("trial_started"):
+        trial_started = user["trial_started"]
+        if isinstance(trial_started, str):
+            trial_started = datetime.fromisoformat(trial_started.replace('Z', '+00:00'))
+        elapsed = datetime.utcnow() - trial_started.replace(tzinfo=None)
+        remaining = timedelta(hours=1) - elapsed
+        trial_remaining = max(0, remaining.total_seconds())
+    
+    return {
+        "is_active": is_active,
+        "status_message": status_msg,
+        "tier": user["subscription_tier"],
+        "tier_info": tier_info,
+        "expires": user.get("subscription_expires"),
+        "trial_remaining_seconds": trial_remaining,
+        "max_elements": tier_info["max_elements"] if tier_info else 3
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
