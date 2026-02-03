@@ -101,6 +101,66 @@ DEFAULT_PAYMENT_CONFIG = {
     }
 }
 
+# In-memory cache for payment config (loaded from DB on startup)
+PAYMENT_CONFIG = DEFAULT_PAYMENT_CONFIG.copy()
+
+
+# ==================== ADMIN MODELS ====================
+class PricingUpdate(BaseModel):
+    bronze_price: float
+    bronze_max_elements: int
+    silver_price: float
+    silver_max_elements: int
+    gold_price: float
+    gold_max_elements: int
+
+class PaymentConfigUpdate(BaseModel):
+    paypal_email: str
+    cashapp_tag: str
+
+class UserRoleUpdate(BaseModel):
+    role: str  # 'trial', 'bronze', 'silver', 'gold', 'subadmin'
+
+
+# ==================== HELPER FUNCTIONS ====================
+async def load_settings_from_db():
+    """Load pricing and payment settings from database"""
+    global SUBSCRIPTION_TIERS, PAYMENT_CONFIG
+    
+    settings = await db.settings.find_one({"type": "pricing"})
+    if settings:
+        SUBSCRIPTION_TIERS["bronze"]["price"] = settings.get("bronze_price", 29.99)
+        SUBSCRIPTION_TIERS["bronze"]["max_elements"] = settings.get("bronze_max_elements", 3)
+        SUBSCRIPTION_TIERS["silver"]["price"] = settings.get("silver_price", 49.99)
+        SUBSCRIPTION_TIERS["silver"]["max_elements"] = settings.get("silver_max_elements", 7)
+        SUBSCRIPTION_TIERS["gold"]["price"] = settings.get("gold_price", 69.99)
+        SUBSCRIPTION_TIERS["gold"]["max_elements"] = settings.get("gold_max_elements", 20)
+        # Update descriptions
+        SUBSCRIPTION_TIERS["bronze"]["description"] = f"${SUBSCRIPTION_TIERS['bronze']['price']}/month - {SUBSCRIPTION_TIERS['bronze']['max_elements']} elements max"
+        SUBSCRIPTION_TIERS["silver"]["description"] = f"${SUBSCRIPTION_TIERS['silver']['price']}/month - {SUBSCRIPTION_TIERS['silver']['max_elements']} elements max"
+        SUBSCRIPTION_TIERS["gold"]["description"] = f"${SUBSCRIPTION_TIERS['gold']['price']}/month - Full access"
+    
+    payment_settings = await db.settings.find_one({"type": "payment"})
+    if payment_settings:
+        PAYMENT_CONFIG["paypal"]["email"] = payment_settings.get("paypal_email", "tfcp2011@gmail.com")
+        PAYMENT_CONFIG["cashapp"]["tag"] = payment_settings.get("cashapp_tag", "$tfcp2011")
+
+async def is_admin(user: dict) -> bool:
+    """Check if user is main admin"""
+    return user and user.get("email", "").lower() == ADMIN_EMAIL.lower()
+
+async def require_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Require main admin access"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    payload = decode_token(credentials.credentials)
+    user = await db.users.find_one({"id": payload["user_id"]})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if user.get("email", "").lower() != ADMIN_EMAIL.lower():
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
 
 # ==================== USER MODELS ====================
 class UserCreate(BaseModel):
