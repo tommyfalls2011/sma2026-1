@@ -842,27 +842,48 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     # Optimal driven element: ~0.473 wavelength
     driven_length = round(wavelength_in * 0.473, 1)
     
-    # Optimal reflector: ~5% longer than driven, 0.2 wavelength behind
-    reflector_length = round(driven_length * 1.05, 1)
-    reflector_spacing = round(wavelength_in * 0.2, 1)
+    # Determine if we should include reflector
+    use_reflector = getattr(request, 'use_reflector', True)
     
-    # Add reflector
-    elements.append({
-        "element_type": "reflector",
-        "length": reflector_length,
-        "diameter": 0.5,
-        "position": 0
-    })
-    notes.append(f"Reflector: {reflector_length}\" (5% longer than driven)")
-    
-    # Add driven element
-    elements.append({
-        "element_type": "driven",
-        "length": driven_length,
-        "diameter": 0.5,
-        "position": reflector_spacing
-    })
-    notes.append(f"Driven: {driven_length}\" at {reflector_spacing}\" from reflector")
+    if use_reflector:
+        # Optimal reflector: ~5% longer than driven, 0.2 wavelength behind
+        reflector_length = round(driven_length * 1.05, 1)
+        reflector_spacing = round(wavelength_in * 0.2, 1)
+        
+        # Add reflector
+        elements.append({
+            "element_type": "reflector",
+            "length": reflector_length,
+            "diameter": 0.5,
+            "position": 0
+        })
+        notes.append(f"Reflector: {reflector_length}\" (5% longer than driven)")
+        
+        # Add driven element
+        elements.append({
+            "element_type": "driven",
+            "length": driven_length,
+            "diameter": 0.5,
+            "position": reflector_spacing
+        })
+        notes.append(f"Driven: {driven_length}\" at {reflector_spacing}\" from reflector")
+        
+        # Add directors
+        num_directors = n - 2
+        current_position = reflector_spacing
+    else:
+        # No reflector mode - driven element at position 0
+        elements.append({
+            "element_type": "driven",
+            "length": driven_length,
+            "diameter": 0.5,
+            "position": 0
+        })
+        notes.append(f"Driven: {driven_length}\" at position 0 (no reflector)")
+        
+        # All remaining elements are directors
+        num_directors = n - 1
+        current_position = 0
     
     # Add directors (each ~3% shorter, spaced 0.2-0.25 wavelength)
     num_directors = n - 2
