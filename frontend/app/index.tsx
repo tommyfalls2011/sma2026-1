@@ -148,7 +148,7 @@ const ElementInput = ({ element, index, onChange, unit, taperEnabled, taperConfi
 
 export default function AntennaCalculator() {
   const router = useRouter();
-  const { user, loading: authLoading, getMaxElements, isFeatureAvailable, tiers } = useAuth();
+  const { user, token, loading: authLoading, getMaxElements, isFeatureAvailable, tiers } = useAuth();
   
   const [inputs, setInputs] = useState<AntennaInput>({
     num_elements: 3,
