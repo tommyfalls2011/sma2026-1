@@ -1,0 +1,514 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useAuth } from './context/AuthContext';
+
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+const TIER_COLORS: Record<string, string> = {
+  trial: '#888',
+  bronze: '#CD7F32',
+  silver: '#C0C0C0',
+  gold: '#FFD700',
+  subadmin: '#9C27B0',
+  admin: '#f44336'
+};
+
+interface PricingData {
+  bronze: { price: number; max_elements: number };
+  silver: { price: number; max_elements: number };
+  gold: { price: number; max_elements: number };
+  payment: { paypal_email: string; cashapp_tag: string };
+}
+
+interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  subscription_tier: string;
+  created_at: string;
+}
+
+export default function AdminScreen() {
+  const router = useRouter();
+  const { user, token } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'pricing' | 'users'>('pricing');
+  
+  // Pricing state
+  const [pricing, setPricing] = useState<PricingData | null>(null);
+  const [bronzePrice, setBronzePrice] = useState('');
+  const [bronzeElements, setBronzeElements] = useState('');
+  const [silverPrice, setSilverPrice] = useState('');
+  const [silverElements, setSilverElements] = useState('');
+  const [goldPrice, setGoldPrice] = useState('');
+  const [goldElements, setGoldElements] = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [cashappTag, setCashappTag] = useState('');
+  
+  // Users state
+  const [users, setUsers] = useState<UserData[]>([]);
+
+  useEffect(() => {
+    checkAdminAndLoad();
+  }, [token]);
+
+  const checkAdminAndLoad = async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Check admin status
+      const checkRes = await fetch(`${BACKEND_URL}/api/admin/check`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (checkRes.ok) {
+        const status = await checkRes.json();
+        setIsAdmin(status.is_admin);
+        
+        if (status.is_admin) {
+          await loadData();
+        }
+      }
+    } catch (error) {
+      console.error('Admin check failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadData = async () => {
+    try {
+      // Load pricing
+      const pricingRes = await fetch(`${BACKEND_URL}/api/admin/pricing`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (pricingRes.ok) {
+        const data = await pricingRes.json();
+        setPricing(data);
+        setBronzePrice(data.bronze.price.toString());
+        setBronzeElements(data.bronze.max_elements.toString());
+        setSilverPrice(data.silver.price.toString());
+        setSilverElements(data.silver.max_elements.toString());
+        setGoldPrice(data.gold.price.toString());
+        setGoldElements(data.gold.max_elements.toString());
+        setPaypalEmail(data.payment.paypal_email);
+        setCashappTag(data.payment.cashapp_tag);
+      }
+
+      // Load users
+      const usersRes = await fetch(`${BACKEND_URL}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        setUsers(usersData);
+      }
+    } catch (error) {
+      console.error('Failed to load admin data:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  const savePricing = async () => {
+    setSaving(true);
+    try {
+      // Save pricing
+      const pricingRes = await fetch(`${BACKEND_URL}/api/admin/pricing`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bronze_price: parseFloat(bronzePrice),
+          bronze_max_elements: parseInt(bronzeElements),
+          silver_price: parseFloat(silverPrice),
+          silver_max_elements: parseInt(silverElements),
+          gold_price: parseFloat(goldPrice),
+          gold_max_elements: parseInt(goldElements)
+        })
+      });
+
+      // Save payment config
+      const paymentRes = await fetch(`${BACKEND_URL}/api/admin/payment`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          paypal_email: paypalEmail,
+          cashapp_tag: cashappTag
+        })
+      });
+
+      if (pricingRes.ok && paymentRes.ok) {
+        Alert.alert('Success', 'Settings saved successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to save settings');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const changeUserRole = async (userId: string, currentRole: string, userName: string) => {
+    const roles = ['trial', 'bronze', 'silver', 'gold', 'subadmin'];
+    
+    Alert.alert(
+      `Change Role: ${userName}`,
+      `Current: ${currentRole}\n\nSelect new role:`,
+      [
+        ...roles.map(role => ({
+          text: role === currentRole ? `${role} (current)` : role,
+          onPress: role === currentRole ? undefined : async () => {
+            try {
+              const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}/role`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ role })
+              });
+
+              if (res.ok) {
+                Alert.alert('Success', `${userName} is now ${role}`);
+                await loadData();
+              } else {
+                const error = await res.json();
+                Alert.alert('Error', error.detail || 'Failed to update role');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Network error');
+            }
+          }
+        })),
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#4CAF50" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Admin Panel</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.centered}>
+          <Ionicons name="lock-closed" size={60} color="#f44336" />
+          <Text style={styles.accessDenied}>Access Denied</Text>
+          <Text style={styles.accessDeniedSub}>Admin privileges required</Text>
+          <TouchableOpacity style={styles.loginBtn} onPress={() => router.replace('/login')}>
+            <Text style={styles.loginBtnText}>Go to Login</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Admin Panel</Text>
+        <View style={styles.adminBadge}>
+          <Ionicons name="shield-checkmark" size={16} color="#f44336" />
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabs}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'pricing' && styles.tabActive]}
+          onPress={() => setActiveTab('pricing')}
+        >
+          <Ionicons name="pricetag" size={18} color={activeTab === 'pricing' ? '#4CAF50' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'pricing' && styles.tabTextActive]}>Pricing</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'users' && styles.tabActive]}
+          onPress={() => setActiveTab('users')}
+        >
+          <Ionicons name="people" size={18} color={activeTab === 'users' ? '#4CAF50' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'users' && styles.tabTextActive]}>Users</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4CAF50" />}
+      >
+        {activeTab === 'pricing' ? (
+          <>
+            {/* Pricing Section */}
+            <Text style={styles.sectionTitle}>Subscription Pricing</Text>
+            
+            {/* Bronze */}
+            <View style={[styles.tierCard, { borderLeftColor: TIER_COLORS.bronze }]}>
+              <View style={styles.tierHeader}>
+                <Ionicons name="shield-outline" size={20} color={TIER_COLORS.bronze} />
+                <Text style={[styles.tierName, { color: TIER_COLORS.bronze }]}>Bronze</Text>
+              </View>
+              <View style={styles.tierFields}>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={bronzePrice}
+                    onChangeText={setBronzePrice}
+                    keyboardType="decimal-pad"
+                    placeholder="29.99"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Max Elements</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={bronzeElements}
+                    onChangeText={setBronzeElements}
+                    keyboardType="number-pad"
+                    placeholder="3"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Silver */}
+            <View style={[styles.tierCard, { borderLeftColor: TIER_COLORS.silver }]}>
+              <View style={styles.tierHeader}>
+                <Ionicons name="shield-half-outline" size={20} color={TIER_COLORS.silver} />
+                <Text style={[styles.tierName, { color: TIER_COLORS.silver }]}>Silver</Text>
+              </View>
+              <View style={styles.tierFields}>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={silverPrice}
+                    onChangeText={setSilverPrice}
+                    keyboardType="decimal-pad"
+                    placeholder="49.99"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Max Elements</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={silverElements}
+                    onChangeText={setSilverElements}
+                    keyboardType="number-pad"
+                    placeholder="7"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Gold */}
+            <View style={[styles.tierCard, { borderLeftColor: TIER_COLORS.gold }]}>
+              <View style={styles.tierHeader}>
+                <Ionicons name="shield-checkmark" size={20} color={TIER_COLORS.gold} />
+                <Text style={[styles.tierName, { color: TIER_COLORS.gold }]}>Gold</Text>
+              </View>
+              <View style={styles.tierFields}>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={goldPrice}
+                    onChangeText={setGoldPrice}
+                    keyboardType="decimal-pad"
+                    placeholder="69.99"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Max Elements</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={goldElements}
+                    onChangeText={setGoldElements}
+                    keyboardType="number-pad"
+                    placeholder="20"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Payment Config */}
+            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Payment Settings</Text>
+            
+            <View style={styles.paymentCard}>
+              <View style={styles.paymentRow}>
+                <Ionicons name="logo-paypal" size={24} color="#003087" />
+                <View style={styles.paymentField}>
+                  <Text style={styles.fieldLabel}>PayPal Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={paypalEmail}
+                    onChangeText={setPaypalEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    placeholder="your@email.com"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+              </View>
+              <View style={styles.paymentRow}>
+                <View style={styles.cashAppIcon}>
+                  <Text style={styles.cashAppText}>$</Text>
+                </View>
+                <View style={styles.paymentField}>
+                  <Text style={styles.fieldLabel}>Cash App Tag</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={cashappTag}
+                    onChangeText={setCashappTag}
+                    autoCapitalize="none"
+                    placeholder="$yourtag"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* Save Button */}
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+              onPress={savePricing}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="save" size={18} color="#fff" />
+                  <Text style={styles.saveBtnText}>Save Changes</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </>
+        ) : (
+          <>
+            {/* Users Section */}
+            <Text style={styles.sectionTitle}>Manage Users ({users.length})</Text>
+            <Text style={styles.hint}>Tap a user to change their role. Sub-admins get full access but can't edit settings.</Text>
+            
+            {users.map(u => (
+              <TouchableOpacity
+                key={u.id}
+                style={[styles.userCard, { borderLeftColor: TIER_COLORS[u.subscription_tier] || '#888' }]}
+                onPress={() => changeUserRole(u.id, u.subscription_tier, u.name)}
+                disabled={u.email.toLowerCase() === 'fallstommy@gmail.com'}
+              >
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{u.name}</Text>
+                  <Text style={styles.userEmail}>{u.email}</Text>
+                </View>
+                <View style={[styles.userTierBadge, { backgroundColor: TIER_COLORS[u.subscription_tier] || '#888' }]}>
+                  <Text style={styles.userTierText}>{u.subscription_tier}</Text>
+                </View>
+                {u.email.toLowerCase() !== 'fallstommy@gmail.com' && (
+                  <Ionicons name="chevron-forward" size={18} color="#666" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#121212' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#222' },
+  backBtn: { padding: 4 },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
+  adminBadge: { backgroundColor: 'rgba(244,67,54,0.15)', padding: 8, borderRadius: 20 },
+  
+  tabs: { flexDirection: 'row', backgroundColor: '#1a1a1a', paddingVertical: 4, paddingHorizontal: 8 },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, gap: 6, borderRadius: 8 },
+  tabActive: { backgroundColor: 'rgba(76,175,80,0.15)' },
+  tabText: { fontSize: 14, color: '#888', fontWeight: '500' },
+  tabTextActive: { color: '#4CAF50' },
+  
+  scrollView: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
+  
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12 },
+  hint: { fontSize: 12, color: '#888', marginBottom: 16 },
+  
+  tierCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4 },
+  tierHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  tierName: { fontSize: 18, fontWeight: '700' },
+  tierFields: { flexDirection: 'row', gap: 12 },
+  field: { flex: 1 },
+  fieldLabel: { fontSize: 11, color: '#888', marginBottom: 4 },
+  input: { backgroundColor: '#252525', borderRadius: 8, padding: 12, fontSize: 14, color: '#fff', borderWidth: 1, borderColor: '#333' },
+  
+  paymentCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16 },
+  paymentRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  paymentField: { flex: 1 },
+  cashAppIcon: { width: 24, height: 24, backgroundColor: '#00D632', borderRadius: 4, justifyContent: 'center', alignItems: 'center' },
+  cashAppText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CAF50', borderRadius: 12, padding: 16, marginTop: 20, gap: 8 },
+  saveBtnDisabled: { backgroundColor: '#333' },
+  saveBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  
+  userCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 4 },
+  userInfo: { flex: 1 },
+  userName: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  userEmail: { fontSize: 12, color: '#888', marginTop: 2 },
+  userTierBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 },
+  userTierText: { fontSize: 11, fontWeight: '700', color: '#000', textTransform: 'capitalize' },
+  
+  accessDenied: { fontSize: 24, fontWeight: 'bold', color: '#f44336', marginTop: 16 },
+  accessDeniedSub: { fontSize: 14, color: '#888', marginTop: 8 },
+  loginBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 20 },
+  loginBtnText: { color: '#fff', fontWeight: '600' },
+});
