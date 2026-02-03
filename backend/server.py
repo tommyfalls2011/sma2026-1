@@ -684,6 +684,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         fb_ratio = 20 + 3.0 * math.log2(n - 2)
         fs_ratio = 12 + 2.5 * math.log2(n - 2)
     
+    # Without reflector, F/B and F/S are significantly reduced
+    if not has_reflector:
+        fb_ratio = max(6, fb_ratio - 12)  # Much worse F/B without reflector
+        fs_ratio = max(4, fs_ratio - 6)   # Side rejection also worse
+    
     fb_ratio += taper_effects["fb_bonus"]
     fs_ratio += taper_effects["fs_bonus"]
     fb_ratio = round(min(fb_ratio, 40), 1)
