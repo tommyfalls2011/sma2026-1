@@ -490,4 +490,5 @@ const styles = StyleSheet.create({
   secondaryResults: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', backgroundColor: '#1a1a1a', borderRadius: 8, padding: 8, marginBottom: 6 }, secondaryResultItem: { width: '48%', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }, secondaryLabel: { fontSize: 10, color: '#888' }, secondaryValue: { fontSize: 10, color: '#fff', fontWeight: '500' },
   polarContainer: { backgroundColor: '#1a1a1a', borderRadius: 8, padding: 8, alignItems: 'center' }, polarTitle: { fontSize: 12, fontWeight: '600', color: '#fff', marginBottom: 6 },
   taperHint: { fontSize: 10, color: '#E91E63', marginBottom: 8, fontStyle: 'italic' },
+  inputDisabled: { backgroundColor: '#1a1a1a', color: '#666', borderColor: '#222' },
 });
