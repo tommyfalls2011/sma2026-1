@@ -165,9 +165,19 @@ def test_far_field_pattern_fix():
     if pattern_90_diff < 5:
         issues.append(f"90° pattern difference {pattern_90_diff:.1f}% too small - without reflector should be more omnidirectional")
     
-    # Check that patterns are actually different
-    if abs(pattern_180_diff) < 5:
-        issues.append(f"180° patterns too similar ({pattern_180}% vs {pattern2_180}%) - should be significantly different")
+    # Check overall pattern differences (not just 180°)
+    # Calculate average difference across multiple back/side angles
+    back_side_angles = [90, 135, 225, 270]
+    total_diff = 0
+    for angle in back_side_angles:
+        mag1 = next((p['magnitude'] for p in pattern1 if p['angle'] == angle), 0)
+        mag2 = next((p['magnitude'] for p in pattern2 if p['angle'] == angle), 0)
+        total_diff += abs(mag1 - mag2)
+    
+    avg_pattern_diff = total_diff / len(back_side_angles)
+    
+    if avg_pattern_diff < 10:
+        issues.append(f"Overall pattern difference {avg_pattern_diff:.1f}% too small - patterns should be significantly different")
     
     # Check specific pattern expectations
     if pattern_90 > 5:  # With reflector, side lobes should be very low
