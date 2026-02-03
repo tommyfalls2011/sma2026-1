@@ -701,6 +701,115 @@ export default function AntennaCalculator() {
               </View>
               
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
+              
+              {/* Pattern Data Table */}
+              <View style={styles.patternDataSection}>
+                <Text style={styles.patternDataTitle}><Ionicons name="analytics-outline" size={14} color="#4CAF50" /> Pattern Analysis</Text>
+                <View style={styles.patternDataGrid}>
+                  <View style={styles.patternDataRow}>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>0° (Fwd)</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[0]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>45°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[9]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>90°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[18]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>135°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[27]?.magnitude || 0}%</Text></View>
+                  </View>
+                  <View style={styles.patternDataRow}>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>180° (Back)</Text><Text style={[styles.patternValue, { color: '#f44336' }]}>{results.far_field_pattern?.[36]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>225°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[45]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>270°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[54]?.magnitude || 0}%</Text></View>
+                    <View style={styles.patternDataCell}><Text style={styles.patternAngle}>315°</Text><Text style={styles.patternValue}>{results.far_field_pattern?.[63]?.magnitude || 0}%</Text></View>
+                  </View>
+                </View>
+                
+                {/* -3dB Beamwidth indicator */}
+                <View style={styles.beamwidthIndicator}>
+                  <View style={styles.beamwidthItem}>
+                    <Ionicons name="swap-horizontal" size={14} color="#2196F3" />
+                    <Text style={styles.beamwidthLabel}>-3dB H-Plane</Text>
+                    <Text style={styles.beamwidthValue}>{results.beamwidth_h}°</Text>
+                  </View>
+                  <View style={styles.beamwidthItem}>
+                    <Ionicons name="swap-vertical" size={14} color="#9C27B0" />
+                    <Text style={styles.beamwidthLabel}>-3dB V-Plane</Text>
+                    <Text style={styles.beamwidthValue}>{results.beamwidth_v}°</Text>
+                  </View>
+                  <View style={styles.beamwidthItem}>
+                    <Ionicons name="radio" size={14} color="#4CAF50" />
+                    <Text style={styles.beamwidthLabel}>Capture Area</Text>
+                    <Text style={styles.beamwidthValue}>{(results.beamwidth_h * results.beamwidth_v / 100).toFixed(1)} sr</Text>
+                  </View>
+                </View>
+              </View>
+              
+              {/* Gain & F/B Performance Card */}
+              <View style={styles.performanceCard}>
+                <Text style={styles.performanceTitle}><Ionicons name="bar-chart-outline" size={14} color="#FF9800" /> Performance Metrics</Text>
+                <View style={styles.performanceGrid}>
+                  <View style={styles.perfItem}>
+                    <Text style={styles.perfLabel}>Gain</Text>
+                    <View style={styles.perfBar}>
+                      <View style={[styles.perfBarFill, { width: `${Math.min((results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi) / 20 * 100, 100)}%`, backgroundColor: '#4CAF50' }]} />
+                    </View>
+                    <Text style={styles.perfValue}>{results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi} dBi</Text>
+                  </View>
+                  <View style={styles.perfItem}>
+                    <Text style={styles.perfLabel}>F/B Ratio</Text>
+                    <View style={styles.perfBar}>
+                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fb_ratio / 35 * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
+                    </View>
+                    <Text style={styles.perfValue}>{results.fb_ratio} dB</Text>
+                  </View>
+                  <View style={styles.perfItem}>
+                    <Text style={styles.perfLabel}>F/S Ratio</Text>
+                    <View style={styles.perfBar}>
+                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fs_ratio / 25 * 100, 100)}%`, backgroundColor: '#9C27B0' }]} />
+                    </View>
+                    <Text style={styles.perfValue}>{results.fs_ratio} dB</Text>
+                  </View>
+                  <View style={styles.perfItem}>
+                    <Text style={styles.perfLabel}>Efficiency</Text>
+                    <View style={styles.perfBar}>
+                      <View style={[styles.perfBarFill, { width: `${results.antenna_efficiency}%`, backgroundColor: '#FF9800' }]} />
+                    </View>
+                    <Text style={styles.perfValue}>{results.antenna_efficiency}%</Text>
+                  </View>
+                </View>
+                
+                {/* Gain to Power Conversion */}
+                <View style={styles.powerConversion}>
+                  <Text style={styles.powerTitle}>Power Multiplication</Text>
+                  <View style={styles.powerRow}>
+                    <View style={styles.powerItem}><Text style={styles.powerLabel}>Linear</Text><Text style={styles.powerValue}>{results.multiplication_factor}x</Text></View>
+                    <View style={styles.powerItem}><Text style={styles.powerLabel}>100W ERP</Text><Text style={styles.powerValue}>{(100 * results.multiplication_factor).toFixed(0)}W</Text></View>
+                    <View style={styles.powerItem}><Text style={styles.powerLabel}>1kW ERP</Text><Text style={styles.powerValue}>{(results.multiplication_factor / 1000).toFixed(1)}kW</Text></View>
+                  </View>
+                </View>
+              </View>
+              
+              {/* Height vs Performance Data (if height optimizer was run) */}
+              {heightOptResult && heightOptResult.heights_tested && heightOptResult.heights_tested.length > 0 && (
+                <View style={styles.heightPerfCard}>
+                  <Text style={styles.heightPerfTitle}><Ionicons name="trending-up" size={14} color="#00BCD4" /> Height vs Performance</Text>
+                  <View style={styles.heightPerfTable}>
+                    <View style={styles.heightPerfHeader}>
+                      <Text style={styles.heightPerfHeaderText}>Height</Text>
+                      <Text style={styles.heightPerfHeaderText}>SWR</Text>
+                      <Text style={styles.heightPerfHeaderText}>Gain</Text>
+                      <Text style={styles.heightPerfHeaderText}>F/B</Text>
+                      <Text style={styles.heightPerfHeaderText}>Score</Text>
+                    </View>
+                    {heightOptResult.heights_tested.slice(0, 10).map((h: any, i: number) => (
+                      <View key={i} style={[styles.heightPerfRow, h.height === heightOptResult.optimal_height && styles.heightPerfRowOptimal]}>
+                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.height}'</Text>
+                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.swr}</Text>
+                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.gain}</Text>
+                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.fb_ratio}</Text>
+                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.score}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <Text style={styles.heightPerfNote}>★ Optimal height highlighted - Best combined SWR, Gain & F/B</Text>
+                </View>
+              )}
             </View>
           )}
         </ScrollView>
