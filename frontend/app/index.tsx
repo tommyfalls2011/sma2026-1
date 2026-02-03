@@ -115,7 +115,9 @@ const ElementInput = ({ element, index, onChange, unit, taperEnabled, taperConfi
   
   // Calculate effective tip diameter when taper is enabled
   let tipDiameter = element.diameter;
+  let centerDia = element.diameter;
   if (taperEnabled && taperConfig?.sections?.length > 0) {
+    centerDia = taperConfig.sections[0]?.start_diameter || element.diameter;
     const lastSection = taperConfig.sections[taperConfig.sections.length - 1];
     tipDiameter = lastSection?.end_diameter || element.diameter;
   }
@@ -126,8 +128,16 @@ const ElementInput = ({ element, index, onChange, unit, taperEnabled, taperConfi
       <View style={styles.elementRow}>
         <View style={styles.elementField}><Text style={styles.elementLabel}>Length{unitLabel}</Text><TextInput style={styles.elementInput} value={element.length} onChangeText={v => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
         <View style={styles.elementField}>
-          <Text style={styles.elementLabel}>Dia{unitLabel} {taperEnabled && <Text style={{color: '#E91E63', fontSize: 8}}>→{tipDiameter}"</Text>}</Text>
-          <TextInput style={styles.elementInput} value={element.diameter} onChangeText={v => onChange(index, 'diameter', v)} keyboardType="decimal-pad" placeholder="0.5" placeholderTextColor="#555" />
+          <Text style={styles.elementLabel}>{taperEnabled ? `Ø ${centerDia}"→${tipDiameter}"` : `Dia${unitLabel}`}</Text>
+          <TextInput 
+            style={[styles.elementInput, taperEnabled && styles.inputDisabled]} 
+            value={taperEnabled ? centerDia : element.diameter} 
+            onChangeText={v => onChange(index, 'diameter', v)} 
+            keyboardType="decimal-pad" 
+            placeholder="0.5" 
+            placeholderTextColor="#555"
+            editable={!taperEnabled}
+          />
         </View>
         <View style={styles.elementField}><Text style={styles.elementLabel}>Pos{unitLabel}</Text><TextInput style={styles.elementInput} value={element.position} onChangeText={v => onChange(index, 'position', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
       </View>
