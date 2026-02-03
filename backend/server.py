@@ -691,7 +691,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     fb_ratio += taper_effects["fb_bonus"]
     fs_ratio += taper_effects["fs_bonus"]
-    fb_ratio = round(min(fb_ratio, 40), 1)
+    fb_ratio = round(min(fb_ratio, 65), 1)
     fs_ratio = round(min(fs_ratio, 30), 1)
     
     # === BEAMWIDTH ===
