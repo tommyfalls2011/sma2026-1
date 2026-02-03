@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Authentication and Subscription API Testing
-Tests the new authentication and subscription endpoints
+Backend API Testing for Antenna Calculator
+Tests authentication, subscription, and design management endpoints
 """
 
 import requests
@@ -25,6 +25,10 @@ def get_backend_url():
     return "http://localhost:8001/api"
 
 BACKEND_URL = get_backend_url()
+
+# Test credentials for design endpoints
+ADMIN_EMAIL = "fallstommy@gmail.com"
+ADMIN_PASSWORD = "admin123"
 
 class AuthenticationTester:
     def __init__(self):
