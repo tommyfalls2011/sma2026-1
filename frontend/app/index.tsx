@@ -808,6 +808,42 @@ export default function AntennaCalculator() {
             {inputs.corona_balls.enabled && <View style={{ marginTop: 8 }}><Text style={styles.inputLabel}>Diameter (in)</Text><TextInput style={styles.input} value={inputs.corona_balls.diameter} onChangeText={v => setInputs(p => ({ ...p, corona_balls: { ...p.corona_balls, diameter: v } }))} keyboardType="decimal-pad" /></View>}
           </View>
 
+          {/* Ground Radials */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-network-outline" size={14} color="#8BC34A" /> Ground Radials</Text><Switch value={inputs.ground_radials.enabled} onValueChange={v => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, enabled: v } }))} trackColor={{ false: '#333', true: '#8BC34A' }} thumbColor="#fff" /></View>
+            {inputs.ground_radials.enabled && (
+              <View style={{ marginTop: 8 }}>
+                <Text style={styles.inputLabel}>Ground Type</Text>
+                <View style={styles.groundTypeSelector}>
+                  {['wet', 'average', 'dry'].map(gt => (
+                    <TouchableOpacity 
+                      key={gt} 
+                      style={[styles.groundTypeBtn, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnActive]}
+                      onPress={() => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, ground_type: gt } }))}
+                    >
+                      <Ionicons name={gt === 'wet' ? 'water' : gt === 'dry' ? 'sunny' : 'partly-sunny'} size={14} color={inputs.ground_radials.ground_type === gt ? '#fff' : '#888'} />
+                      <Text style={[styles.groundTypeBtnText, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnTextActive]}>{gt.charAt(0).toUpperCase() + gt.slice(1)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.groundRadialHint}>8 radials (N, NE, E, SE, S, SW, W, NW) • ¼λ length • 0.5" dia wire</Text>
+                {results?.ground_radials_info && (
+                  <View style={styles.groundRadialInfo}>
+                    <Text style={styles.groundRadialInfoText}>
+                      Radial Length: {results.ground_radials_info.radial_length_ft}' ({results.ground_radials_info.radial_length_in}")
+                    </Text>
+                    <Text style={styles.groundRadialInfoText}>
+                      Total Wire: {results.ground_radials_info.total_wire_length_ft}' • Conductivity: {results.ground_radials_info.ground_conductivity} S/m
+                    </Text>
+                    <Text style={[styles.groundRadialInfoText, { color: '#4CAF50' }]}>
+                      Bonus: +{results.ground_radials_info.estimated_improvements.gain_bonus_db}dB gain, +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% efficiency
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+
           {/* Stacking */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="layers-outline" size={14} color="#9C27B0" /> Stacking</Text><Switch value={inputs.stacking.enabled} onValueChange={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, enabled: v } }))} trackColor={{ false: '#333', true: '#9C27B0' }} thumbColor="#fff" /></View>
