@@ -743,24 +743,26 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     far_field_pattern = []
     for angle in range(0, 361, 5):
         theta = math.radians(angle)
+        cos_theta = math.cos(theta)
         
         if not has_reflector:
             # No reflector: More omnidirectional pattern with reduced F/B
             # Pattern is more like a dipole with directors providing some directionality
             if n == 2:
                 # Just driven + 1 director: slight forward bias
-                main_lobe = 0.6 + 0.4 * math.cos(theta)
+                main_lobe = 0.6 + 0.4 * cos_theta
                 magnitude = (max(0.2, main_lobe) ** 1.5) * 100
             else:
                 # Driven + multiple directors: forward gain but weak back rejection
-                forward_gain = max(0, math.cos(theta) ** 1.5)
+                # Use abs to avoid complex numbers from negative cosine raised to fractional power
+                forward_gain = max(0, cos_theta) ** 1.5 if cos_theta >= 0 else 0
                 # Without reflector, back lobe is only ~6-10dB down (vs 20+ with reflector)
-                back_level = 0.3 + 0.1 * (n - 2)  # More directors = slightly better rejection
+                back_level = 0.3 + 0.1 * min(n - 2, 5)  # More directors = slightly better rejection, cap at 5
                 
                 if 90 < angle < 270:  # Back hemisphere
                     magnitude = max(forward_gain, back_level) * 100
                 else:  # Front hemisphere
-                    magnitude = forward_gain * 100
+                    magnitude = max(forward_gain, 0.1) * 100
                 
                 # Side lobes are also larger without reflector
                 if 60 < angle < 120 or 240 < angle < 300:
@@ -768,10 +770,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else:
             # With reflector: Standard Yagi pattern with good F/B
             if n == 2:
-                main_lobe = (math.cos(theta) + 0.3) / 1.3
+                main_lobe = (cos_theta + 0.3) / 1.3
                 magnitude = (max(0, main_lobe) ** 2) * 100
             else:
-                main_lobe = max(0, math.cos(theta) ** 2)
+                main_lobe = max(0, cos_theta ** 2)
                 back_attenuation = 10 ** (-fb_ratio / 20)
                 side_attenuation = 10 ** (-fs_ratio / 20)
                 if 90 < angle < 270:
