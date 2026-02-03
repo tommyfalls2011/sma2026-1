@@ -396,6 +396,10 @@ class AntennaOutput(BaseModel):
     forward_power_1kw: Optional[float] = None
     impedance_high: Optional[float] = None
     impedance_low: Optional[float] = None
+    # Take-off angle and ground radials
+    takeoff_angle: Optional[float] = None
+    takeoff_angle_description: Optional[str] = None
+    ground_radials_info: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
