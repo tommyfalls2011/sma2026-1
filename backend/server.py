@@ -959,7 +959,17 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         stacked_gain_dbi=stacked_gain_dbi,
         stacked_pattern=stacked_pattern,
         taper_info=taper_info,
-        corona_info=corona_effects if corona_effects.get("enabled") else None
+        corona_info=corona_effects if corona_effects.get("enabled") else None,
+        # Reflected power data
+        reflection_coefficient=reflection_coefficient,
+        return_loss_db=return_loss_db,
+        mismatch_loss_db=mismatch_loss_db,
+        reflected_power_100w=reflected_power_100w,
+        reflected_power_1kw=reflected_power_1kw,
+        forward_power_100w=forward_power_100w,
+        forward_power_1kw=forward_power_1kw,
+        impedance_high=impedance_high,
+        impedance_low=impedance_low
     )
 
 
