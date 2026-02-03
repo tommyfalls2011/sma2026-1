@@ -382,7 +382,15 @@ export default function AntennaCalculator() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' }, flex: { flex: 1 }, scrollView: { flex: 1 }, scrollContent: { padding: 10, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  userHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 4, marginBottom: 8 },
+  userHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  userBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, gap: 6 },
+  tierDot: { width: 8, height: 8, borderRadius: 4 },
+  userBadgeText: { fontSize: 11, color: '#fff', fontWeight: '500', textTransform: 'capitalize' },
+  loginBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(76,175,80,0.15)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, gap: 6, borderWidth: 1, borderColor: '#4CAF50' },
+  loginBadgeText: { fontSize: 12, color: '#4CAF50', fontWeight: '600' },
+  maxElementsHint: { fontSize: 10, color: '#888', fontWeight: '400' },
   section: { backgroundColor: '#1a1a1a', borderRadius: 10, padding: 10, marginBottom: 8 }, sectionTitle: { fontSize: 13, fontWeight: '600', color: '#fff', marginBottom: 6 }, sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rowSpaced: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   inputLabel: { fontSize: 10, color: '#aaa', marginBottom: 3 }, input: { backgroundColor: '#252525', borderRadius: 6, padding: 8, fontSize: 13, color: '#fff', borderWidth: 1, borderColor: '#333' },
