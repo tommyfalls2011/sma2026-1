@@ -1,194 +1,137 @@
 <analysis>
+
 <original_problem_statement>
-The user wants to build a mobile application for antenna specification analysis.
+The user wants to build a mobile application for antenna specification analysis. The application has evolved through multiple phases, adding features like dynamic element inputs, unit conversions, band selection, SWR visualization, antenna stacking, tapering, and real-time calculations.
 
-**PRODUCT REQUIREMENTS:**
+The current focus is on commercializing the app and adding more advanced features.
 
-**Phase 1 (MVP - Completed):**
-- **Inputs:** Number of elements, height from ground, boom diameter, element sizes, tapered/non-tapered, unit selection (meters/inches).
-- **Outputs:** SWR, F/B ratio, beamwidth, bandwidth, gain (dBi), multiplication factor, far-field pattern view, antenna efficiency.
+**PRODUCT REQUIREMENTS (current and future):**
 
-**Phase 2 (Enhancements - Completed):**
-- Dynamic input fields for reflector, driven element, and directors based on element count.
-- Unit conversions for height (ft/inches) and boom diameter (mm/inches).
-- Band selection (default 11m CB, plus other ham bands).
-- SWR bandwidth meter with a visual curve.
+**Phase 4/5 (Bug Fixes & UX Improvements):**
+- **Reflector Issues (In Progress):**
+    - The Auto-tune feature should not re-add the reflector if the No Reflector option is selected.
+    - The far-field radiation plot must update correctly when the No Reflector option is chosen.
+- **Tapered Element UX (In Progress):**
+    - Taper settings should be preserved after using Auto-tune.
+    - The UI should clearly reflect tapered dimensions on the main element cards.
+    - An input for the center section length (before tapering starts) is required.
+- **Height Optimization (In Progress):**
+    - An Optimize Height button to find the best height for the lowest SWR between 10' and 100'.
+- **Save/Load Designs (In Progress):**
+    - Users should be able to save their antenna designs and load them later.
 
-**Phase 3 (Stacking & SWR Spread - Completed):**
-- SWR meter frequency spread from 30 channels below to 30 channels above the center frequency.
-- Antenna stacking calculations: vertical/horizontal options, with updated pattern and gain.
-
-**Phase 4 (Real-time & Tuning - In Progress):**
-- Results must update in real-time as any input field is changed.
-- SWR should not be stuck at 1.0:1 and must dynamically reflect changes in element length and spacing.
-- An Auto-tune button to calculate and suggest optimal element lengths/spacing for best performance.
-
-**Phase 5 (Advanced Calculations - Completed):**
-- Add Front-to-Side (F/S) ratio to results.
-- Add tapered element options (on/off toggle, number of tapers, dimensions).
-- Add a corona balls option.
-
-**Phase 6 (Commercialization & New Features - Not Started):**
-- User-based signup with email.
-- Monthly subscription charges.
-- Payment integration with Cash App and PayPal.
-- Option to generate and sell antenna plans (make the planes for purches).
-- An admin backdoor for testing and evaluation.
+**Phase 6 (Commercialization & New Features - In Progress):**
+- **User Authentication:** Email-based signup/login.
+- **Subscription Tiers:**
+    - **Bronze (9.99/mo):** Max 3 elements.
+    - **Silver (9.99/mo):** Max 7 elements.
+    - **Gold (9.99/mo):** Full access.
+    - **Trial:** 1-hour limit with basic functions.
+- **Payment Integration:** PayPal () and Cash App ().
+- **Admin Features:**
+    - An admin backdoor for  with full access.
+    - An admin panel to edit subscription pricing.
+    - Ability to grant sub-admin status to selected users (full access, but cannot view/edit pricing).
+- **Future:** Option to generate and sell antenna plans.
 
 </original_problem_statement>
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack Expo (React Native) and FastAPI application for antenna calculations. The frontend provides a comprehensive UI with numerous input fields for antenna design, including element dimensions, stacking, tapering, and band selection. It displays calculated results like Gain, SWR, F/B, F/S ratios, and visualizes data with an SWR bandwidth meter and antenna patterns. The FastAPI backend contains all the complex engineering formulas to perform these calculations based on the frontend inputs.
+A full-stack Expo (React Native) and FastAPI application for antenna design and analysis. The application includes a sophisticated UI for configuring antenna parameters and a backend that performs complex engineering calculations.
+
+**Key Features Implemented:**
+-   **Core Calculator:** Dynamic inputs for elements, tapering, stacking, band selection, and unit conversions.
+-   **Results Display:** Real-time calculation of Gain, SWR, F/B, F/S ratios, beamwidth, and efficiency. Visualizations for SWR bandwidth and radiation patterns.
+-   **Advanced Tools:** Auto-tune for optimizing element dimensions and Optimize Height for finding the best ground clearance.
+-   **User System:** A complete user authentication system with JWT, allowing users to sign up, log in, and have their access controlled by subscription tiers.
+-   **Subscription Model:** Three tiers (Bronze, Silver, Gold) that limit the maximum number of antenna elements a user can simulate.
+-   **Admin Panel:** A dedicated  page (accessible to admin users) for editing subscription prices and managing user roles (promoting users to sub-admin).
+-   **UI/UX:** Features like a No Reflector option and unit toggles (in/m) for element dimensions have been added.
 
 **Last working item**:
-    - Last item agent was working: The agent was fixing two critical bugs reported by the user and implementing a new feature.
-        1.  **Bug Fix:** Real-time updates were not triggering for all input fields (like element dimensions and spacing).
-        2.  **Bug Fix:** The SWR calculation was stuck at a static 1.0:1 and wasn't dynamically changing when element lengths were adjusted.
-        3.  **Feature:** Implementing an Auto-tune button to optimize antenna performance.
-      The agent has written new code for both the frontend () and backend () to address these points and was about to restart services to test the changes.
+    - Last item agent was working: The agent was implementing the Save/Load Designs feature and fixing bugs related to the No Reflector option. The agent had just added the backend endpoints and frontend state/functions for saving and loading but had not yet implemented the UI components (buttons and modals).
     - Status: IN PROGRESS
     - Agent Testing Done: N
     - Which testing method agent to use? both
-        - First, use  to test the  endpoint on the backend. Send different element lengths and verify that the returned  value changes from 1.0. Test the new auto-tune functionality by sending a request with an  flag.
-        - After backend verification, use the  on the frontend. Change an element length and check if the result values update automatically. Click the Auto-tune button and verify the results change.
+        - **Backend:** Use  to test the new endpoints: , , and . Ensure they require authentication and correctly save/retrieve/delete data from the MongoDB  collection.
+        - **Frontend:** Use the  to test the full user flow once the UI is built. Verify that the Save and Load buttons appear for logged-in users, that the save modal works, the load modal lists saved designs, and that loading a design correctly populates all input fields in the app.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Real-time updates and dynamic SWR calculations are broken. (P0)
-  - Issue 2: The  has recurring difficulty scrolling down the long page to capture all results, sometimes causing the page to appear to reset. (P2)
+  - Issue 1: Auto-tune incorrectly re-enables the reflector. (P0)
+  - Issue 2: The far-field radiation plot does not update when the reflector is removed. (P0)
   
   Issues Detail:
   - Issue 1: 
-     - Attempted fixes: The agent has just performed a  operation to update both  and . The backend logic was modified to make SWR calculations more sensitive to input changes, and the frontend logic was updated to ensure all input changes trigger a recalculation request. These changes have not yet been tested.
+     - Attempted fixes: The agent modified the  function in  to pass the  state to the backend API call. This fix has been written but not yet tested by the user.
      - Next debug checklist: 
-        1. Restart  and 
-  Usage: expo [command] [options]
-
-  Options:
-  
-    -V, --version                     output the version number
-    --non-interactive                 Fail, if an interactive prompt would be required to continue.
-    -h, --help                        output usage information
-  
-  Commands:
-
-    init [name]                       Create a new Expo project
-    start [path]                      Start a local dev server for the app
-    start:web [path]                  Start a Webpack dev server for the web app
-    export [path]                     Export the static files of the app for hosting it on a web server
-    install [packages...]             Install a module or other package to a project
-    run:android [path]                Run the Android app binary locally
-    run:ios [path]                    Run the iOS app binary locally
-    send [path]                       Share the project's URL to an email address
-
-    login                             Login to an Expo account
-    logout                            Logout of an Expo account
-    register                          Sign up for a new Expo account
-    whoami                            Return the currently authenticated account
-
-    client:install:ios                Install Expo Go for iOS on the simulator
-    client:install:android            Install Expo Go for Android on a connected device or emulator
-
-    config [path]                     Show the project config
-    doctor [path]                     Diagnose issues with the project
-    upgrade [sdk-version]             Upgrade the project packages and config for the given SDK version
-
-    customize:web [path]              Eject the default web files for customization
-    prebuild [path]                   Create native iOS and Android project files before building natively.
-                                      Learn more: https://docs.expo.dev/workflow/customizing/
-
-    build:web [path]                  Build the web app for production
-
-    credentials:manager [path]        Superseded by eas credentials in eas-cli
-
-    url [path]                        Log a URL for opening the project in Expo Go
-    url:ipa [path]                    Log the download URL for the standalone iOS binary
-    url:apk [path]                    Log the download URL for the standalone Android binary
-
-    webhooks [path]                   List all webhooks for a project
-    webhooks:add [path]               Add a webhook to a project
-    webhooks:remove [path]            Delete a webhook
-    webhooks:update [path]            Update an existing webhook
-
-    build:ios [path]                  Superseded by eas build in eas-cli
-    build:android [path]              Superseded by eas build in eas-cli
-    build:status [path]               Superseded by eas build:list in eas-cli
-    eject [path]                      Superseded by expo prebuild
-    fetch:ios:certs [path]            Superseded by eas credentials in eas-cli
-    fetch:android:keystore [path]     Superseded by eas credentials in eas-cli
-    fetch:android:hashes [path]       Superseded by eas credentials in eas-cli
-    fetch:android:upload-cert [path]  Superseded by eas credentials in eas-cli
-    publish [path]                    Superseded by eas update in eas-cli
-    publish:set [path]                Superseded by eas update:republish in eas-cli
-    publish:rollback [path]           Superseded by eas update:republish in eas-cli
-    publish:history [path]            Superseded by eas update:list in eas-cli
-    publish:details [path]            Superseded by eas update:view in eas-cli
-    push:android:upload [path]        Superseded by eas credentials in eas-cli
-    push:android:show [path]          Superseded by eas credentials in eas-cli
-    push:android:clear [path]         Superseded by eas credentials in eas-cli
-    upload:android [path]             Superseded by eas submit in eas-cli
-    upload:ios [path]                 Superseded by eas submit in eas-cli
-    client:ios [path]                 Superseded by Expo Dev Clients
-
-[03:42:26]   Run a command with --help for more info 💡
-[03:42:26]     $ expo start --help
-[03:42:26] services.
-        2. Execute a  command against the  endpoint. Send a payload with specific element dimensions.
-        3. Execute a second  command with slightly different element dimensions.
-        4. Compare the  value in the two responses. They should be different.
-        5. On the frontend, use the  to visually verify that changing an input field (e.g., Reflector Length) causes the Results section to update without a manual button press.
-     - Why fix this issue and what will be achieved with the fix? This is a core functionality regression. Fixing it will restore the app's interactive nature, allowing the user to see the immediate impact of their design choices, which is critical for antenna tuning.
+        1. Log in to the app.
+        2. Select the No Reflector option.
+        3. Click the Auto-tune button.
+        4. Verify that the reflector element does *not* reappear in the element list.
+     - Why fix this issue and what will be achieved with the fix? This is a logic bug that breaks a user-facing feature. Fixing it will ensure the Auto-tune function respects the user's choice to design an antenna without a reflector.
      - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? frontend
+     - Blocked on other issue: None
+
+  - Issue 2: 
+     - Attempted fixes: None. This issue was reported by the user but the agent has not yet started working on a fix.
+     - Next debug checklist:
+        1. Examine the  function in .
+        2. Ensure the  flag and the modified  array are being sent to the backend  endpoint.
+        3. Check the  function in  to verify that the absence of a reflector element correctly influences the far-field pattern calculation. The pattern data returned to the frontend should be different.
+     - Why fix this issue and what will be achieved with this? The radiation plot is a critical output for antenna analysis. If it doesn't reflect the antenna's actual configuration, it provides misleading information to the user.
+     - Status: NOT STARTED
      - Is recurring issue? N
      - Should Test frontend/backend/both after fix? both
      - Blocked on other issue: None
 
-  - Issue 2: 
-     - Attempted fixes: The agent has previously tried increasing wait times and using keyboard-based scrolling () with the . These have had mixed success.
-     - Next debug checklist: If scrolling issues persist, try capturing smaller sections of the page in separate  calls instead of one full-page scroll.
-     - Why fix this issue and what will be achieved with this? This is an internal tooling issue, not a user-facing bug. Resolving it will make the agent's development and verification process more reliable and efficient.
-     - Status: NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? NA
-     - Blocked on other issue: None
-
 **In progress Task List**:
-  - Task 1: Implement Auto-tune button (P0)
- 
+  - Task 1: Implement Save/Load feature for user designs. (P0)
+
  Task Detail:
   - Task 1: 
-     - Where to resume: The agent has added the button to the frontend and the corresponding logic to the backend in the last code write. The next step is to test its functionality.
-     - What will be achieved with this? This will provide a powerful one-click feature for users to find the optimal antenna configuration for the best performance, saving them significant manual trial-and-error.
+     - Where to resume: The agent has created the backend API in  () and added the necessary state variables (, , etc.) and handler functions (, , ) to . The next step is to add the UI elements:
+        1. Add Save and Load buttons to the user header bar (next to the login/logout button). These should only be visible when a user is logged in.
+        2. Create the modal component for saving a new design (prompting for a name).
+        3. Create the modal component for loading designs, which should display a list of the user's saved designs with options to load or delete them.
+     - What will be achieved with this? This will allow users to persist their work, a critical feature for a complex design tool.
      - Status: IN PROGRESS
      - Should Test frontend/backend/both after fix? both
-     - Blocked on something: Blocked on the resolution of Issue 1, as the results of auto-tuning need to be displayed correctly and dynamically.
+     - Blocked on something: None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - **P1:** Implement user authentication system (email-based signup/login). This will require creating new frontend screens for login/registration and backend endpoints for user management. A database (MongoDB) will need to be properly configured and used for the first time.
-    - **P1:** Implement an Auto-tune feature. The button and logic have been added, but it needs to be fully tested and verified.
+    - **P0:** Complete the Save/Load design feature (UI implementation).
+    - **P0:** Fix the two bugs related to the No Reflector option (Issue 1 & 2).
 
     Future Tasks:
-    - **P2:** Implement a subscription and payment system. This is a complex task. The agent has already asked the user for clarifying details on pricing tiers and payment provider credentials (PayPal/Cash App). This will likely require integrating a third-party payment SDK.
-    - **P2:** Implement a feature to generate and sell/download antenna construction plans.
-    - **P3:** Create an admin backdoor for testing and evaluation purposes.
+    - **P1:** Implement a feature to generate and sell/download antenna construction plans.
+    - **P2:** Implement payment history tracking for users.
+    - **P2:** Add email notifications for events like registration or subscription changes.
 
 **Completed work in this session**
-- **Initial App Creation**: Built the foundational full-stack application.
-- **Dynamic Element Inputs**: Implemented UI that dynamically adds input fields for antenna elements.
-- **Unit Selection**: Added toggles for ft/in and mm/in units.
-- **Band & Frequency Selection**: Added dropdown for radio bands.
-- **SWR Bandwidth Meter**: Created a chart to visualize the SWR curve across a frequency range.
-- **Antenna Stacking**: Implemented logic and UI for calculating the performance of stacked antennas (both vertical and horizontal).
-- **Advanced Metrics**: Added Front-to-Side (F/S) Ratio.
-- **Advanced Options**: Added UI and backend logic for Tapered Elements and Corona Balls.
-- **Real-time Updates (Partial)**: Implemented an initial version of real-time updates with a debounce mechanism.
+- **Bug Fixes:**
+  - Fixed real-time updates and dynamic SWR calculations.
+  - Resolved multiple z-index issues causing dropdowns (for Elements and Tapers) to appear behind other components.
+- **Feature Implementation:**
+  - Implemented and verified the Auto-Tune feature.
+  - Implemented a full user authentication and subscription system (Login, Signup, Admin backdoor).
+  - Created an Admin Panel for pricing management and sub-admin promotion.
+  - Added Boom Length to the results display.
+  - Added a unit toggle (in/m) for element dimensions.
+  - Improved the Tapered Elements feature with a center section length and grayed-out diameter inputs when active.
+  - Added an option to design an antenna without a reflector.
+  - Implemented and fixed an Optimize Height feature that finds the best SWR over a range of heights.
+- **Configuration:**
+  - Increased the max number of elements in the dropdown to 20 and ensured admin users have access to all 20.
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: The  consistently struggles to scroll through the entire application page, which is very long. This forces the agent to use workarounds like taking multiple screenshots or using keyboard controls, which are not always reliable. This is an internal tooling/testing process issue.
-     - Debug checklist: Experiment with different  parameters, or break down full-page verification into smaller, targeted component screenshots.
-     - Why to solve this issue and what will be achieved with this? To streamline the agent's verification workflow and get more reliable visual confirmation of UI changes.
+   - Issue 1: The  has recurring difficulty scrolling down the long page to capture all results, sometimes causing the page to appear to reset. This is an internal tooling issue.
+     - Debug checklist: Experiment with taking multiple, smaller screenshots of specific components rather than attempting a full-page scroll.
+     - Why to solve this issue and what will be achieved with this? To improve the reliability and efficiency of the agent's internal testing and verification process.
      - Should Test frontend/backend/both after fix: NA
      - Is recurring issue? Y
 
@@ -199,65 +142,89 @@ A full-stack Expo (React Native) and FastAPI application for antenna calculation
 
 
 **Key Technical Concepts**
-- **Frontend**: Expo, React Native, ,  for visualization. State is managed locally with .
-- **Backend**: FastAPI, Python. All calculations are stateless API calls.
-- **Database**: None currently in use. MongoDB is available in the stack but has not been integrated yet.
-- **Core Logic**: The backend implements antenna engineering formulas (likely based on Yagi-Uda principles) to calculate antenna performance characteristics.
+- **Frontend**: Expo (React Native), , , . State is managed via  and a React  ().
+- **Backend**: FastAPI, Python, MongoDB (via ). JWT for stateless authentication ().
+- **Database**: MongoDB is now used for , , and a  collection.
+- **Authentication**: JWT-based. A token is stored in  on the client and sent in the  header for protected requests.
 
 **key DB schema**
-  - No database schema is defined yet. User authentication will require a  table/collection.
+  - **users**: 
+  - **designs**: 
+  - **payments_config**: Singleton document 
 
 **changes in tech stack**
-  - None.
+- **Backend**: Added , , and  for authentication.
+- **Frontend**: Added  for file-based routing,  for token persistence, and  for inspecting tokens.
 
 **All files of reference**
-- : **Updated**. Contains the entire backend logic for all antenna calculations. It was just modified to fix SWR calculations and add auto-tune logic.
-- : **Updated**. The single source file for the entire frontend. It was just modified to fix real-time updates and add the auto-tune button.
-- : Used for coordinating with the testing agent. Last updated before the recent feature enhancements.
+- : **Updated**. Contains all backend logic, including new auth, subscription, admin, and design endpoints.
+- : **Updated**. The main application UI. Heavily modified to integrate auth, subscription limits, and new features.
+- : **New**. Provides user authentication state and functions to the entire app.
+- : **New**. The login and registration screen.
+- : **New**. Screen for viewing/upgrading subscription tiers.
+- : **New**. Screen for admin-only functions like price editing.
+- : **New**. Root layout file for  that sets up the auth context provider.
 
 **Areas that need refactoring**
-- The file  is extremely large and monolithic. It handles state, UI rendering, and API calls for all features. It should be broken down into smaller, reusable components (e.g., , , , ).
-- The extensive use of  could become difficult to manage. Migrating to a state management library like  would be beneficial, especially before adding authentication.
+- The  file is now over 600 lines long and manages the state and UI for the entire calculator. It urgently needs to be broken down into smaller, reusable components (e.g., , , , , ). The complexity is becoming unmanageable.
+- State management with  and prop drilling is becoming cumbersome. Migrating the complex  state to a more robust solution like  would simplify the codebase.
 
 **key api endpoints**
-- : The single endpoint that takes all antenna parameters in a JSON body and returns the calculated results.
+- : (POST) Runs antenna simulation.
+- : (POST) Optimizes element dimensions.
+- : (POST) Finds optimal height from ground.
+- : (POST) Creates a new user.
+- : (POST) Authenticates a user and returns a JWT.
+- : (GET) Returns current user's profile.
+- : (GET) Returns public pricing info.
+- : (GET/PUT) Manage subscription prices.
+- : (GET) List all users for admin.
+- : (POST) Update a user's subscription tier.
+- : (GET/POST) List and save user designs.
+- : (DELETE) Delete a saved design.
 
 **Critical Info for New Agent**
-- The user has requested a major pivot to a commercial SaaS model (authentication, subscriptions, payments). The previous agent correctly paused on this and asked for clarification. **Do not proceed with these commercial features until the user provides the requested details.**
-- The immediate priority is to **test and verify the latest bug fixes** for real-time updates and dynamic SWR calculations, as well as the new Auto-tune feature. The app is currently in a broken state until these are fixed.
+- Your immediate priority is to complete the **Save/Load feature** by building the UI (buttons and modals) in .
+- After that, you must address the **two pending bugs related to the No Reflector option**. The auto-tune fix has been attempted but needs verification, and the radiation plot fix has not been started.
+- Be aware that  is extremely large. When adding the Save/Load UI, consider creating new component files to avoid making it even larger. The technical debt in this file is significant.
+- The user has provided credentials for PayPal and Cash App, but no actual payment gateway SDK has been integrated. The current implementation only displays this information.
 
 **documents created in this job**
-  - /app/test_result.md
+  - /app/test_result.md (Continuously updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
-- : **(LATEST - PENDING ACTION)** Reported that real-time updates are broken, SWR is stuck at 1.0, and requested an auto-tune button. Also requested major new features: user signup, monthly charges via Cash App/PayPal, sellable plans, and an admin backdoor.
-- : **(Agent Reply - PENDING USER RESPONSE)** Agent acknowledged the bugs and auto-tune request and started work on them. Crucially, the agent asked for specific details on subscription plans, payment credentials, and admin email before starting the commercial features.
-- : Requested Front-to-Side ratio, tapered element options, and corona balls option. (Completed)
-- : Requested SWR meter range change to +/- 30 channels, real-time updates, tuning for 1.0:1 SWR, and higher gain calculations. (Completed, but introduced bugs)
-- : Requested SWR meter to show a specific channel spread and added the antenna stacking feature request. (Completed)
-- : Requested dynamic element inputs, more unit options (ft/in, mm/in), band selection, and an SWR bandwidth meter. (Completed)
+ - : (LATEST) Requested save/load feature. Reported two bugs: auto-tune re-adds the reflector, and the far-plot doesn't update when the reflector is removed. (IN PROGRESS)
+ - : Requested an option to not use a reflector and a button to optimize height from ground. (COMPLETED)
+ - : Reported z-index issue with taper dropdown. Reported that element diameter inputs should be disabled/grayed out when tapering is active. (COMPLETED)
+ - : Reported taper issues: element cards didn't show taper diameters, auto-tune reset tapers, and requested a center section length input. (COMPLETED)
+ - : Reported z-index issue with elements dropdown. Reported dropdown should show up to 20 elements. Reported admin was only getting 3 max elements. (COMPLETED)
+ - : Requested boom length in results and a unit toggle (in/m) for elements. (COMPLETED)
+ - : Requested an admin page to edit pricing and a sub-admin role. (COMPLETED)
+ - : Reported they could not access the admin backdoor with their email. (COMPLETED/RESOLVED)
+ - : Confirmed to proceed with the subscription/payment system implementation. (COMPLETED)
+ - : Provided subscription tier details, pricing, and credentials for PayPal, Cash App, and admin backdoor. (COMPLETED)
 
 **Project Health Check:**
 - **Broken**:
-    - Real-time result updates upon input change.
-    - Dynamic SWR calculation based on element geometry.
+    - Auto-tune functionality when No Reflector is active.
+    - Far-field radiation plot visualization when No Reflector is active.
 - **Mocked**:
     - None.
 
 **3rd Party Integrations**
-- None currently implemented.
-- **Future integrations requested:** PayPal, Cash App.
+- **PayPal**: Credentials () stored in backend config, but no SDK/API integration.
+- **Cash App**: Credentials () stored in backend config, but no SDK/API integration.
 
 **Testing status**
-  - Testing agent used after significant changes: YES (Backend testing was used).
+  - Testing agent used after significant changes: YES (Backend testing was used frequently and successfully).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: Real-time updates and dynamic SWR calculations were working at one point but are now broken after recent feature additions.
+  - Known regressions: The No Reflector feature introduced two bugs (auto-tune and far-field plot).
 
 **Credentials to test flow:**
-N/A
+- **Admin User:** . The user created their own password during signup.
 
 **What agent forgot to execute**
-The agent has not forgotten any user requests. It correctly prioritized fixing bugs from the user's latest message while waiting for clarification on the more complex, new feature requests from that same message.
+- The agent was in the process of implementing the user's latest requests. It started fixing the auto-tune/reflector bug and implementing save/load, but has not yet addressed the second bug from the same user message: making the far-field plot update correctly when the reflector is removed. This is listed in the pending issues.
 
 </analysis>
