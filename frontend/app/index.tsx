@@ -1120,7 +1120,9 @@ const styles = StyleSheet.create({
   powerValue: { fontSize: 14, fontWeight: 'bold', color: '#4CAF50' },
   // Height Performance Table
   heightPerfCard: { backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginTop: 6 },
-  heightPerfTitle: { fontSize: 12, fontWeight: '600', color: '#00BCD4', marginBottom: 8 },
+  heightPerfTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  heightPerfTitle: { fontSize: 12, fontWeight: '600', color: '#00BCD4' },
+  heightPerfScrollView: { maxHeight: 300 },
   heightPerfTable: { borderRadius: 6, overflow: 'hidden' },
   heightPerfHeader: { flexDirection: 'row', backgroundColor: '#252525', paddingVertical: 6, paddingHorizontal: 4 },
   heightPerfHeaderText: { flex: 1, fontSize: 9, fontWeight: '600', color: '#888', textAlign: 'center' },
@@ -1129,4 +1131,9 @@ const styles = StyleSheet.create({
   heightPerfCell: { flex: 1, fontSize: 10, color: '#ccc', textAlign: 'center' },
   heightPerfCellOptimal: { color: '#4CAF50', fontWeight: '600' },
   heightPerfNote: { fontSize: 9, color: '#4CAF50', marginTop: 8, textAlign: 'center', fontStyle: 'italic' },
+  // Export Buttons
+  exportBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#00BCD4', borderRadius: 4, paddingVertical: 4, paddingHorizontal: 8, gap: 4 },
+  exportBtnText: { fontSize: 10, color: '#fff', fontWeight: '600' },
+  exportAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#9C27B0', borderRadius: 8, paddingVertical: 12, marginTop: 10, gap: 8 },
+  exportAllBtnText: { fontSize: 13, color: '#fff', fontWeight: '600' },
 });
