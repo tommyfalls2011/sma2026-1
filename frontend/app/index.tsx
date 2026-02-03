@@ -937,6 +937,39 @@ export default function AntennaCalculator() {
                       <Text style={styles.exportBtnText}>CSV</Text>
                     </TouchableOpacity>
                   </View>
+                  
+                  {/* Top 5 Best Heights */}
+                  <View style={styles.top5Section}>
+                    <Text style={styles.top5Title}><Ionicons name="trophy" size={12} color="#FFD700" /> Top 5 Best Heights</Text>
+                    <View style={styles.top5Table}>
+                      <View style={styles.top5Header}>
+                        <Text style={styles.top5HeaderText}>#</Text>
+                        <Text style={styles.top5HeaderText}>Height</Text>
+                        <Text style={styles.top5HeaderText}>SWR</Text>
+                        <Text style={styles.top5HeaderText}>Gain</Text>
+                        <Text style={styles.top5HeaderText}>F/B</Text>
+                        <Text style={styles.top5HeaderText}>Score</Text>
+                      </View>
+                      {[...heightOptResult.heights_tested]
+                        .sort((a: any, b: any) => b.score - a.score)
+                        .slice(0, 5)
+                        .map((h: any, i: number) => (
+                          <View key={i} style={[styles.top5Row, i === 0 && styles.top5RowBest]}>
+                            <Text style={[styles.top5Cell, styles.top5Rank, i === 0 && styles.top5CellBest]}>
+                              {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`}
+                            </Text>
+                            <Text style={[styles.top5Cell, i === 0 && styles.top5CellBest]}>{h.height}'</Text>
+                            <Text style={[styles.top5Cell, i === 0 && styles.top5CellBest]}>{h.swr}</Text>
+                            <Text style={[styles.top5Cell, i === 0 && styles.top5CellBest]}>{h.gain}</Text>
+                            <Text style={[styles.top5Cell, i === 0 && styles.top5CellBest]}>{h.fb_ratio}</Text>
+                            <Text style={[styles.top5Cell, i === 0 && styles.top5CellBest]}>{h.score}</Text>
+                          </View>
+                        ))}
+                    </View>
+                  </View>
+                  
+                  {/* Full Height Table (scrollable) */}
+                  <Text style={styles.fullTableTitle}>All Heights (scroll)</Text>
                   <ScrollView style={styles.heightPerfScrollView} nestedScrollEnabled>
                     <View style={styles.heightPerfTable}>
                       <View style={styles.heightPerfHeader}>
