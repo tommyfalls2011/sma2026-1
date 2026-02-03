@@ -1050,14 +1050,24 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
     predicted_swr = base_predicted_swr if use_reflector else base_predicted_swr + 0.1
     
-    base_gain = {2: 5.5, 3: 8.5, 4: 10.5, 5: 12.0, 6: 13.5, 7: 14.5}.get(n, 8.5 + 3.0 * math.log10(n - 2))
+    # Use safe calculation that handles n=2 case
+    if n <= 7:
+        base_gain = {2: 5.5, 3: 8.5, 4: 10.5, 5: 12.0, 6: 13.5, 7: 14.5}.get(n, 8.5)
+    else:
+        base_gain = 8.5 + 3.0 * math.log10(max(n - 2, 1))
+    
     if not use_reflector:
         base_gain -= 1.5  # Less gain without reflector
     if request.taper and request.taper.enabled:
         base_gain += 0.3 * request.taper.num_tapers
     predicted_gain = round(base_gain + 2.0, 1)  # Add height gain estimate
     
-    predicted_fb = {2: 14, 3: 20, 4: 24, 5: 26}.get(n, 20 + 3 * math.log2(n - 2))
+    # Safe F/B calculation
+    if n <= 5:
+        predicted_fb = {2: 14, 3: 20, 4: 24, 5: 26}.get(n, 14)
+    else:
+        predicted_fb = 20 + 3 * math.log2(max(n - 2, 1))
+    
     if not use_reflector:
         predicted_fb -= 8  # Worse F/B without reflector
     if request.taper and request.taper.enabled:
