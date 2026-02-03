@@ -1486,6 +1486,92 @@ async def check_admin_status(user: dict = Depends(require_user)):
         "has_full_access": is_main_admin or is_subadmin
     }
 
+class AdminCreateUser(BaseModel):
+    email: str
+    name: str
+    password: str
+    subscription_tier: str = "trial"
+
+@api_router.post("/admin/users/create")
+async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(require_admin)):
+    """Create a new user (admin only)"""
+    # Validate email
+    email = user_data.email.lower().strip()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email address")
+    
+    # Check if user already exists
+    existing = await db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+    
+    # Validate tier
+    valid_tiers = ["trial", "bronze", "silver", "gold", "subadmin"]
+    if user_data.subscription_tier not in valid_tiers:
+        raise HTTPException(status_code=400, detail=f"Invalid tier. Must be one of: {valid_tiers}")
+    
+    # Hash password
+    password_hash = pwd_context.hash(user_data.password)
+    
+    # Set expiration based on tier
+    expires = None
+    is_trial = False
+    trial_started = None
+    
+    if user_data.subscription_tier == "trial":
+        is_trial = True
+        trial_started = datetime.utcnow()
+    elif user_data.subscription_tier == "subadmin":
+        expires = datetime.utcnow() + timedelta(days=36500)  # 100 years
+    elif user_data.subscription_tier in ["bronze", "silver", "gold"]:
+        expires = datetime.utcnow() + timedelta(days=30)
+    
+    # Create user
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "email": email,
+        "name": user_data.name.strip(),
+        "password_hash": password_hash,
+        "subscription_tier": user_data.subscription_tier,
+        "subscription_expires": expires,
+        "is_trial": is_trial,
+        "trial_started": trial_started,
+        "created_at": datetime.utcnow(),
+        "created_by_admin": admin["email"]
+    }
+    
+    await db.users.insert_one(new_user)
+    
+    return {
+        "success": True,
+        "message": f"User {email} created successfully",
+        "user": {
+            "id": new_user["id"],
+            "email": new_user["email"],
+            "name": new_user["name"],
+            "subscription_tier": new_user["subscription_tier"]
+        }
+    }
+
+@api_router.delete("/admin/users/{user_id}")
+async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
+    """Delete a user (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Don't allow deleting main admin
+    if user.get("email", "").lower() == ADMIN_EMAIL.lower():
+        raise HTTPException(status_code=403, detail="Cannot delete main admin account")
+    
+    # Delete user's designs too
+    await db.designs.delete_many({"user_id": user_id})
+    
+    # Delete the user
+    await db.users.delete_one({"id": user_id})
+    
+    return {"success": True, "message": f"User {user['email']} deleted successfully"}
+
 
 app.include_router(api_router)
 
