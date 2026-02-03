@@ -1094,6 +1094,150 @@ async def get_subscription_status(user: dict = Depends(require_user)):
     }
 
 
+# ==================== ADMIN ENDPOINTS ====================
+@api_router.get("/admin/pricing")
+async def get_admin_pricing(admin: dict = Depends(require_admin)):
+    """Get current pricing settings (admin only)"""
+    return {
+        "bronze": {
+            "price": SUBSCRIPTION_TIERS["bronze"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["bronze"]["max_elements"]
+        },
+        "silver": {
+            "price": SUBSCRIPTION_TIERS["silver"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["silver"]["max_elements"]
+        },
+        "gold": {
+            "price": SUBSCRIPTION_TIERS["gold"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["gold"]["max_elements"]
+        },
+        "payment": {
+            "paypal_email": PAYMENT_CONFIG["paypal"]["email"],
+            "cashapp_tag": PAYMENT_CONFIG["cashapp"]["tag"]
+        }
+    }
+
+@api_router.put("/admin/pricing")
+async def update_pricing(pricing: PricingUpdate, admin: dict = Depends(require_admin)):
+    """Update subscription pricing (admin only)"""
+    global SUBSCRIPTION_TIERS
+    
+    # Update in-memory
+    SUBSCRIPTION_TIERS["bronze"]["price"] = pricing.bronze_price
+    SUBSCRIPTION_TIERS["bronze"]["max_elements"] = pricing.bronze_max_elements
+    SUBSCRIPTION_TIERS["bronze"]["description"] = f"${pricing.bronze_price}/month - {pricing.bronze_max_elements} elements max"
+    
+    SUBSCRIPTION_TIERS["silver"]["price"] = pricing.silver_price
+    SUBSCRIPTION_TIERS["silver"]["max_elements"] = pricing.silver_max_elements
+    SUBSCRIPTION_TIERS["silver"]["description"] = f"${pricing.silver_price}/month - {pricing.silver_max_elements} elements max"
+    
+    SUBSCRIPTION_TIERS["gold"]["price"] = pricing.gold_price
+    SUBSCRIPTION_TIERS["gold"]["max_elements"] = pricing.gold_max_elements
+    SUBSCRIPTION_TIERS["gold"]["description"] = f"${pricing.gold_price}/month - Full access"
+    
+    # Save to database
+    await db.settings.update_one(
+        {"type": "pricing"},
+        {"$set": {
+            "type": "pricing",
+            "bronze_price": pricing.bronze_price,
+            "bronze_max_elements": pricing.bronze_max_elements,
+            "silver_price": pricing.silver_price,
+            "silver_max_elements": pricing.silver_max_elements,
+            "gold_price": pricing.gold_price,
+            "gold_max_elements": pricing.gold_max_elements,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Pricing updated successfully"}
+
+@api_router.put("/admin/payment")
+async def update_payment_config(config: PaymentConfigUpdate, admin: dict = Depends(require_admin)):
+    """Update payment configuration (admin only)"""
+    global PAYMENT_CONFIG
+    
+    PAYMENT_CONFIG["paypal"]["email"] = config.paypal_email
+    PAYMENT_CONFIG["cashapp"]["tag"] = config.cashapp_tag
+    
+    await db.settings.update_one(
+        {"type": "payment"},
+        {"$set": {
+            "type": "payment",
+            "paypal_email": config.paypal_email,
+            "cashapp_tag": config.cashapp_tag,
+            "updated_at": datetime.utcnow()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Payment config updated successfully"}
+
+@api_router.get("/admin/users")
+async def get_all_users(admin: dict = Depends(require_admin)):
+    """Get all users (admin only)"""
+    users = await db.users.find().to_list(1000)
+    return [{
+        "id": u["id"],
+        "email": u["email"],
+        "name": u["name"],
+        "subscription_tier": u["subscription_tier"],
+        "subscription_expires": u.get("subscription_expires"),
+        "is_trial": u.get("is_trial", False),
+        "created_at": u.get("created_at")
+    } for u in users]
+
+@api_router.put("/admin/users/{user_id}/role")
+async def update_user_role(user_id: str, role_update: UserRoleUpdate, admin: dict = Depends(require_admin)):
+    """Update user role/subscription (admin only)"""
+    valid_roles = ["trial", "bronze", "silver", "gold", "subadmin"]
+    if role_update.role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {valid_roles}")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Don't allow changing main admin
+    if user.get("email", "").lower() == ADMIN_EMAIL.lower():
+        raise HTTPException(status_code=403, detail="Cannot modify main admin account")
+    
+    # Set expiration for paid tiers
+    expires = None
+    is_trial = False
+    if role_update.role == "subadmin":
+        expires = datetime.utcnow() + timedelta(days=36500)  # 100 years
+    elif role_update.role == "trial":
+        is_trial = True
+    elif role_update.role in ["bronze", "silver", "gold"]:
+        expires = datetime.utcnow() + timedelta(days=30)
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "subscription_tier": role_update.role,
+            "subscription_expires": expires,
+            "is_trial": is_trial
+        }}
+    )
+    
+    return {"success": True, "message": f"User role updated to {role_update.role}"}
+
+@api_router.get("/admin/check")
+async def check_admin_status(user: dict = Depends(require_user)):
+    """Check if current user is admin or subadmin"""
+    is_main_admin = user.get("email", "").lower() == ADMIN_EMAIL.lower()
+    is_subadmin = user.get("subscription_tier") == "subadmin"
+    
+    return {
+        "is_admin": is_main_admin,
+        "is_subadmin": is_subadmin,
+        "can_edit_settings": is_main_admin,
+        "has_full_access": is_main_admin or is_subadmin
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
