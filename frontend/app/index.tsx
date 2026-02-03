@@ -442,6 +442,25 @@ export default function AntennaCalculator() {
                 <TouchableOpacity style={[styles.unitBtn, elementUnit === 'meters' && styles.unitBtnActive]} onPress={() => convertElementUnit('meters')}><Text style={[styles.unitBtnText, elementUnit === 'meters' && styles.unitBtnTextActive]}>m</Text></TouchableOpacity>
               </View>
             </View>
+            {/* Reflector Toggle */}
+            <View style={[styles.rowSpaced, { marginVertical: 6 }]}>
+              <View style={styles.reflectorToggle}>
+                <TouchableOpacity 
+                  style={[styles.reflectorBtn, inputs.use_reflector && styles.reflectorBtnActive]} 
+                  onPress={() => toggleReflector(true)}
+                >
+                  <Ionicons name="checkmark-circle" size={14} color={inputs.use_reflector ? '#fff' : '#666'} />
+                  <Text style={[styles.reflectorBtnText, inputs.use_reflector && styles.reflectorBtnTextActive]}>With Reflector</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.reflectorBtn, !inputs.use_reflector && styles.reflectorBtnActive]} 
+                  onPress={() => toggleReflector(false)}
+                >
+                  <Ionicons name="close-circle" size={14} color={!inputs.use_reflector ? '#fff' : '#666'} />
+                  <Text style={[styles.reflectorBtnText, !inputs.use_reflector && styles.reflectorBtnTextActive]}>No Reflector</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
             <View style={[styles.rowSpaced, { marginTop: 6, zIndex: 1000 }]}>
               <View style={{ flex: 1, zIndex: 1000 }}>
                 <Dropdown value={inputs.num_elements.toString()} options={elementOptions} onChange={(v: string) => updateElementCount(parseInt(v))} />
