@@ -53,6 +53,14 @@ export default function AdminScreen() {
   
   // Users state
   const [users, setUsers] = useState<UserData[]>([]);
+  
+  // Add User Modal state
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [newUserTier, setNewUserTier] = useState('trial');
+  const [addingUser, setAddingUser] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoad();
