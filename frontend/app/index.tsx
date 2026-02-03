@@ -927,6 +927,49 @@ export default function AntennaCalculator() {
                 </View>
               </View>
               
+              {/* Reflected Power Card */}
+              <View style={styles.reflectedPowerCard}>
+                <Text style={styles.reflectedPowerTitle}><Ionicons name="git-compare-outline" size={14} color="#f44336" /> Reflected Power Analysis</Text>
+                
+                <View style={styles.reflectedPowerGrid}>
+                  <View style={styles.reflectedPowerItem}>
+                    <Text style={styles.reflectedPowerLabel}>Reflection Coef (Γ)</Text>
+                    <Text style={styles.reflectedPowerValue}>{results.reflection_coefficient?.toFixed(4) || '0'}</Text>
+                  </View>
+                  <View style={styles.reflectedPowerItem}>
+                    <Text style={styles.reflectedPowerLabel}>Return Loss</Text>
+                    <Text style={styles.reflectedPowerValue}>{results.return_loss_db?.toFixed(1) || '∞'} dB</Text>
+                  </View>
+                  <View style={styles.reflectedPowerItem}>
+                    <Text style={styles.reflectedPowerLabel}>Mismatch Loss</Text>
+                    <Text style={styles.reflectedPowerValue}>{results.mismatch_loss_db?.toFixed(3) || '0'} dB</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.reflectedPowerTable}>
+                  <View style={styles.reflectedPowerTableHeader}>
+                    <Text style={styles.reflectedPowerTableHeaderText}>Input</Text>
+                    <Text style={styles.reflectedPowerTableHeaderText}>Forward</Text>
+                    <Text style={styles.reflectedPowerTableHeaderText}>Reflected</Text>
+                  </View>
+                  <View style={styles.reflectedPowerTableRow}>
+                    <Text style={styles.reflectedPowerTableCell}>100W</Text>
+                    <Text style={[styles.reflectedPowerTableCell, { color: '#4CAF50' }]}>{results.forward_power_100w?.toFixed(1) || '100'}W</Text>
+                    <Text style={[styles.reflectedPowerTableCell, { color: '#f44336' }]}>{results.reflected_power_100w?.toFixed(2) || '0'}W</Text>
+                  </View>
+                  <View style={styles.reflectedPowerTableRow}>
+                    <Text style={styles.reflectedPowerTableCell}>1000W</Text>
+                    <Text style={[styles.reflectedPowerTableCell, { color: '#4CAF50' }]}>{results.forward_power_1kw?.toFixed(0) || '1000'}W</Text>
+                    <Text style={[styles.reflectedPowerTableCell, { color: '#f44336' }]}>{results.reflected_power_1kw?.toFixed(1) || '0'}W</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.impedanceRow}>
+                  <Text style={styles.impedanceLabel}>Impedance Range (50Ω):</Text>
+                  <Text style={styles.impedanceValue}>{results.impedance_low?.toFixed(1) || '50'}Ω - {results.impedance_high?.toFixed(1) || '50'}Ω</Text>
+                </View>
+              </View>
+              
               {/* Height vs Performance Data (if height optimizer was run) */}
               {heightOptResult && heightOptResult.heights_tested && heightOptResult.heights_tested.length > 0 && (
                 <View style={styles.heightPerfCard}>
