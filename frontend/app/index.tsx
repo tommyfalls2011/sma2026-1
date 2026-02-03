@@ -103,7 +103,7 @@ const Dropdown = ({ label, value, options, onChange }: any) => {
         <Text style={styles.dropdownButtonText}>{options.find((o: any) => o.value === value)?.label || 'Select'}</Text>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color="#888" />
       </TouchableOpacity>
-      {open && <View style={styles.dropdownList}><ScrollView style={{ maxHeight: 150 }} nestedScrollEnabled>{options.map((o: any) => (<TouchableOpacity key={o.value} style={[styles.dropdownItem, value === o.value && styles.dropdownItemSelected]} onPress={() => { onChange(o.value); setOpen(false); }}><Text style={[styles.dropdownItemText, value === o.value && styles.dropdownItemTextSelected]}>{o.label}</Text></TouchableOpacity>))}</ScrollView></View>}
+      {open && <View style={styles.dropdownList}><ScrollView style={{ maxHeight: 250 }} nestedScrollEnabled>{options.map((o: any) => (<TouchableOpacity key={o.value} style={[styles.dropdownItem, value === o.value && styles.dropdownItemSelected]} onPress={() => { onChange(o.value); setOpen(false); }}><Text style={[styles.dropdownItemText, value === o.value && styles.dropdownItemTextSelected]}>{o.label}</Text></TouchableOpacity>))}</ScrollView></View>}
     </View>
   );
 };
