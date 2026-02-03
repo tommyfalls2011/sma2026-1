@@ -667,6 +667,26 @@ const styles = StyleSheet.create({
   userEmail: { fontSize: 12, color: '#888', marginTop: 2 },
   userTierBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginRight: 8 },
   userTierText: { fontSize: 11, fontWeight: '700', color: '#000', textTransform: 'capitalize' },
+  deleteUserBtn: { padding: 8 },
+  
+  // Users section header
+  usersSectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  addUserBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4CAF50', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 12, gap: 6 },
+  addUserBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  
+  // Modal styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#1a1a1a', borderRadius: 16, padding: 20, width: '100%', maxWidth: 360 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
+  modalLabel: { fontSize: 12, color: '#888', marginBottom: 6, marginTop: 12 },
+  modalInput: { backgroundColor: '#252525', borderRadius: 8, padding: 12, fontSize: 14, color: '#fff', borderWidth: 1, borderColor: '#333' },
+  tierSelector: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  tierOption: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#444', backgroundColor: '#252525' },
+  tierOptionText: { fontSize: 12, color: '#888', textTransform: 'capitalize' },
+  tierOptionTextActive: { color: '#000', fontWeight: '600' },
+  createUserBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CAF50', borderRadius: 12, padding: 14, marginTop: 20, gap: 8 },
+  createUserBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   
   accessDenied: { fontSize: 24, fontWeight: 'bold', color: '#f44336', marginTop: 16 },
   accessDeniedSub: { fontSize: 14, color: '#888', marginTop: 8 },
