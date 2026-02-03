@@ -346,6 +346,7 @@ class AutoTuneRequest(BaseModel):
     frequency_mhz: Optional[float] = Field(default=None)
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
+    use_reflector: bool = Field(default=True)  # Added to support no-reflector mode
 
 class AntennaOutput(BaseModel):
     swr: float
