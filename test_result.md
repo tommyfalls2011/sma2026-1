@@ -116,6 +116,21 @@ backend:
         - working: true
         - agent: "main"
         - comment: "Enhanced to accept individual element dimensions (reflector, driven, directors), band selection, SWR curve generation, usable bandwidth calculations at 1.5:1 and 2.0:1"
+        - working: true
+        - agent: "testing"
+        - comment: "CRITICAL BUG FIX VERIFIED: Dynamic SWR calculation now working correctly. Tested with 3 different driven element lengths (204\", 220\", 190\") and got 3 different SWR values (1.17, 3.13, 3.27). SWR now changes dynamically based on element dimensions as expected."
+
+  - task: "POST /api/auto-tune - Auto-tune antenna elements for optimal performance"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "NEW ENDPOINT VERIFIED: Auto-tune functionality working perfectly. Tested 3-element (SWR=1.1, Gain=10.5dBi) and 5-element configurations. Returns optimized element dimensions with proper reflector/driven/director progression. All required fields present: optimized_elements, predicted_swr, predicted_gain, optimization_notes."
 
   - task: "GET /api/bands - Get available bands"
     implemented: true
