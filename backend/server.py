@@ -725,22 +725,50 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
     
     # === FAR FIELD PATTERN ===
+    # Check if antenna has a reflector
+    has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
+    
     far_field_pattern = []
     for angle in range(0, 361, 5):
         theta = math.radians(angle)
-        if n == 2:
-            main_lobe = (math.cos(theta) + 0.3) / 1.3
-            magnitude = (max(0, main_lobe) ** 2) * 100
-        else:
-            main_lobe = max(0, math.cos(theta) ** 2)
-            back_attenuation = 10 ** (-fb_ratio / 20)
-            side_attenuation = 10 ** (-fs_ratio / 20)
-            if 90 < angle < 270:
-                magnitude = main_lobe * back_attenuation * 100
+        
+        if not has_reflector:
+            # No reflector: More omnidirectional pattern with reduced F/B
+            # Pattern is more like a dipole with directors providing some directionality
+            if n == 2:
+                # Just driven + 1 director: slight forward bias
+                main_lobe = 0.6 + 0.4 * math.cos(theta)
+                magnitude = (max(0.2, main_lobe) ** 1.5) * 100
             else:
-                magnitude = main_lobe * 100
-            if 60 < angle < 120 or 240 < angle < 300:
-                magnitude *= side_attenuation
+                # Driven + multiple directors: forward gain but weak back rejection
+                forward_gain = max(0, math.cos(theta) ** 1.5)
+                # Without reflector, back lobe is only ~6-10dB down (vs 20+ with reflector)
+                back_level = 0.3 + 0.1 * (n - 2)  # More directors = slightly better rejection
+                
+                if 90 < angle < 270:  # Back hemisphere
+                    magnitude = max(forward_gain, back_level) * 100
+                else:  # Front hemisphere
+                    magnitude = forward_gain * 100
+                
+                # Side lobes are also larger without reflector
+                if 60 < angle < 120 or 240 < angle < 300:
+                    magnitude = max(magnitude, 25)  # Higher side lobes
+        else:
+            # With reflector: Standard Yagi pattern with good F/B
+            if n == 2:
+                main_lobe = (math.cos(theta) + 0.3) / 1.3
+                magnitude = (max(0, main_lobe) ** 2) * 100
+            else:
+                main_lobe = max(0, math.cos(theta) ** 2)
+                back_attenuation = 10 ** (-fb_ratio / 20)
+                side_attenuation = 10 ** (-fs_ratio / 20)
+                if 90 < angle < 270:
+                    magnitude = main_lobe * back_attenuation * 100
+                else:
+                    magnitude = main_lobe * 100
+                if 60 < angle < 120 or 240 < angle < 300:
+                    magnitude *= side_attenuation
+        
         far_field_pattern.append({"angle": angle, "magnitude": round(max(magnitude, 1), 1)})
     
     # === STACKING ===
