@@ -788,27 +788,43 @@ export default function AntennaCalculator() {
               {/* Height vs Performance Data (if height optimizer was run) */}
               {heightOptResult && heightOptResult.heights_tested && heightOptResult.heights_tested.length > 0 && (
                 <View style={styles.heightPerfCard}>
-                  <Text style={styles.heightPerfTitle}><Ionicons name="trending-up" size={14} color="#00BCD4" /> Height vs Performance</Text>
-                  <View style={styles.heightPerfTable}>
-                    <View style={styles.heightPerfHeader}>
-                      <Text style={styles.heightPerfHeaderText}>Height</Text>
-                      <Text style={styles.heightPerfHeaderText}>SWR</Text>
-                      <Text style={styles.heightPerfHeaderText}>Gain</Text>
-                      <Text style={styles.heightPerfHeaderText}>F/B</Text>
-                      <Text style={styles.heightPerfHeaderText}>Score</Text>
-                    </View>
-                    {heightOptResult.heights_tested.slice(0, 10).map((h: any, i: number) => (
-                      <View key={i} style={[styles.heightPerfRow, h.height === heightOptResult.optimal_height && styles.heightPerfRowOptimal]}>
-                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.height}'</Text>
-                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.swr}</Text>
-                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.gain}</Text>
-                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.fb_ratio}</Text>
-                        <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.score}</Text>
-                      </View>
-                    ))}
+                  <View style={styles.heightPerfTitleRow}>
+                    <Text style={styles.heightPerfTitle}><Ionicons name="trending-up" size={14} color="#00BCD4" /> Height vs Performance ({heightOptResult.heights_tested.length} heights tested)</Text>
+                    <TouchableOpacity style={styles.exportBtn} onPress={() => exportHeightData()}>
+                      <Ionicons name="download-outline" size={14} color="#fff" />
+                      <Text style={styles.exportBtnText}>CSV</Text>
+                    </TouchableOpacity>
                   </View>
-                  <Text style={styles.heightPerfNote}>★ Optimal height highlighted - Best combined SWR, Gain & F/B</Text>
+                  <ScrollView style={styles.heightPerfScrollView} nestedScrollEnabled>
+                    <View style={styles.heightPerfTable}>
+                      <View style={styles.heightPerfHeader}>
+                        <Text style={styles.heightPerfHeaderText}>Height</Text>
+                        <Text style={styles.heightPerfHeaderText}>SWR</Text>
+                        <Text style={styles.heightPerfHeaderText}>Gain</Text>
+                        <Text style={styles.heightPerfHeaderText}>F/B</Text>
+                        <Text style={styles.heightPerfHeaderText}>Score</Text>
+                      </View>
+                      {heightOptResult.heights_tested.map((h: any, i: number) => (
+                        <View key={i} style={[styles.heightPerfRow, h.height === heightOptResult.optimal_height && styles.heightPerfRowOptimal]}>
+                          <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.height}'</Text>
+                          <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.swr}</Text>
+                          <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.gain}</Text>
+                          <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.fb_ratio}</Text>
+                          <Text style={[styles.heightPerfCell, h.height === heightOptResult.optimal_height && styles.heightPerfCellOptimal]}>{h.score}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </ScrollView>
+                  <Text style={styles.heightPerfNote}>★ Optimal: {heightOptResult.optimal_height}' - SWR: {heightOptResult.optimal_swr}, Gain: {heightOptResult.optimal_gain}dBi, F/B: {heightOptResult.optimal_fb_ratio}dB</Text>
                 </View>
+              )}
+              
+              {/* Export All Data Button */}
+              {results && (
+                <TouchableOpacity style={styles.exportAllBtn} onPress={() => exportAllData()}>
+                  <Ionicons name="document-text-outline" size={16} color="#fff" />
+                  <Text style={styles.exportAllBtnText}>Export All Results to CSV</Text>
+                </TouchableOpacity>
               )}
             </View>
           )}
