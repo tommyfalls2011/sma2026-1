@@ -107,39 +107,48 @@ user_problem_statement: Build an antenna calculator app that allows users to inp
 backend:
   - task: "POST /api/calculate - Calculate antenna parameters"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented antenna calculation endpoint with Yagi-Uda formulas for gain, SWR, F/B ratio, beamwidth, bandwidth, multiplication factor, efficiency, and far field pattern generation"
+        - working: true
+        - agent: "testing"
+        - comment: "PASSED - Tested with valid meters input (5 elements, 144MHz): SWR=2.0, Gain=6.6dBi. Tested with valid inches input (3 elements, 432MHz): SWR=1.8, Gain=4.54dBi. Correctly validates input (rejects negative values and missing fields). All required response fields present: swr, fb_ratio, beamwidth, bandwidth, gain_dbi, multiplication_factor, antenna_efficiency, far_field_pattern with proper structure."
 
   - task: "GET /api/history - Get calculation history"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented history endpoint to retrieve past calculations from MongoDB"
+        - working: true
+        - agent: "testing"
+        - comment: "PASSED - Successfully retrieves calculation history as JSON array. Tested with existing records and empty history. Returns proper list format with calculation records including inputs and outputs."
 
   - task: "DELETE /api/history - Clear calculation history"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "Implemented clear history endpoint"
+        - working: true
+        - agent: "testing"
+        - comment: "PASSED - Successfully clears calculation history and returns deleted_count. Tested sequential operations: clear->check empty->add calculation->verify history contains 1 record. All operations working correctly."
 
 frontend:
   - task: "Antenna Calculator Input Form"
