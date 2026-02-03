@@ -250,8 +250,12 @@ export default function AntennaCalculator() {
                 {tuning ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="flash" size={14} color="#fff" /><Text style={styles.autoTuneBtnText}>Auto-Tune</Text></>}
               </TouchableOpacity>
             </View>
-            <Dropdown value={inputs.num_elements.toString()} options={[2,3,4,5,6,7,8].map(n => ({ value: n.toString(), label: `${n} Elements` }))} onChange={(v: string) => updateElementCount(parseInt(v))} />
-            {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} />)}
+            <View style={{ zIndex: 999 }}>
+              <Dropdown value={inputs.num_elements.toString()} options={[2,3,4,5,6,7,8].map(n => ({ value: n.toString(), label: `${n} Elements` }))} onChange={(v: string) => updateElementCount(parseInt(v))} />
+            </View>
+            <View style={{ zIndex: 1 }}>
+              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} />)}
+            </View>
           </View>
 
           {/* Physical Setup */}
