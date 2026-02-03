@@ -283,7 +283,7 @@ export default function SubscriptionScreen() {
         )}
 
         {/* Gold/Admin Message */}
-        {(user.subscription_tier === 'gold' || user.subscription_tier === 'admin') && (
+        {(user.subscription_tier === 'gold' || user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') && (
           <View style={styles.maxTierCard}>
             <Ionicons name="star" size={40} color="#FFD700" />
             <Text style={styles.maxTierTitle}>You have full access!</Text>
@@ -311,6 +311,9 @@ const styles = StyleSheet.create({
   backBtn: { padding: 8 },
   headerTitle: { flex: 1, fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
   logoutBtn: { padding: 8 },
+  
+  adminPanelBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f44336', borderRadius: 12, padding: 14, marginBottom: 16, gap: 8 },
+  adminPanelBtnText: { color: '#fff', fontSize: 15, fontWeight: '600', flex: 1 },
 
   statusCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 2 },
   statusHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
