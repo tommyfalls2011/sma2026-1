@@ -369,7 +369,7 @@ export default function AntennaCalculator() {
               </TouchableOpacity>
             </View>
             <View style={{ zIndex: 1 }}>
-              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} unit={elementUnit} />)}
+              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} unit={elementUnit} taperEnabled={inputs.taper.enabled} taperConfig={inputs.taper} />)}
             </View>
           </View>
 
