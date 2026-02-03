@@ -633,6 +633,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     avg_element_dia = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / len(input_data.elements)
     
+    # Check if antenna has a reflector
+    has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
+    
     # === GAIN CALCULATION ===
     if n == 2: gain_dbi = 5.5
     elif n == 3: gain_dbi = 8.5
@@ -641,6 +644,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     elif n == 6: gain_dbi = 13.5
     elif n == 7: gain_dbi = 14.5
     else: gain_dbi = 8.5 + 3.0 * math.log10(n - 2) + 1.5 * (n - 3) * 0.55
+    
+    # Without reflector, gain is reduced by ~1.5-2 dB
+    if not has_reflector:
+        gain_dbi -= 1.5
     
     gain_dbi += taper_effects["gain_bonus"]
     gain_dbi += corona_effects.get("gain_effect", 0)
