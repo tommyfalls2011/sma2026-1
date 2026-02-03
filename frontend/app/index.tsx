@@ -515,24 +515,37 @@ export default function AntennaCalculator() {
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
           {/* User Header */}
-          <TouchableOpacity style={styles.userHeader} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
-            <View style={styles.userHeaderLeft}>
+          <View style={styles.userHeader}>
+            <TouchableOpacity style={styles.userHeaderLeft} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
               <Ionicons name="radio-outline" size={24} color="#4CAF50" />
-              <Text style={styles.headerTitle}>Antenna Calculator</Text>
-            </View>
+              <Text style={styles.headerTitle}>Antenna Calc</Text>
+            </TouchableOpacity>
+            
+            {/* Save/Load buttons - only shown when logged in */}
+            {user && (
+              <View style={styles.saveLoadButtons}>
+                <TouchableOpacity style={styles.saveBtn} onPress={() => setShowSaveModal(true)}>
+                  <Ionicons name="save-outline" size={16} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.loadBtn} onPress={loadDesignsList} disabled={loadingDesigns}>
+                  {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={16} color="#fff" />}
+                </TouchableOpacity>
+              </View>
+            )}
+            
             {user ? (
-              <View style={styles.userBadge}>
+              <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/subscription')}>
                 <View style={[styles.tierDot, { backgroundColor: TIER_COLORS[user.subscription_tier] || '#888' }]} />
                 <Text style={styles.userBadgeText}>{user.subscription_tier}</Text>
                 <Ionicons name="chevron-forward" size={14} color="#888" />
-              </View>
+              </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.loginBadge} onPress={() => router.push('/login')}>
                 <Text style={styles.loginBadgeText}>Login</Text>
                 <Ionicons name="log-in-outline" size={16} color="#4CAF50" />
               </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
           
           {/* Band & Frequency */}
           <View style={styles.section}>
