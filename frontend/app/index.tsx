@@ -215,7 +215,14 @@ export default function AntennaCalculator() {
   };
 
   const updateElementCount = (count: number) => {
-    const c = Math.max(2, Math.min(12, count));
+    const c = Math.max(2, Math.min(maxElements, count));
+    if (count > maxElements) {
+      Alert.alert('Upgrade Required', `Your ${user?.subscription_tier || 'trial'} plan allows up to ${maxElements} elements. Upgrade to unlock more!`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Upgrade', onPress: () => router.push('/subscription') }
+      ]);
+      return;
+    }
     const newElements: ElementDimension[] = [
       inputs.elements.find(e => e.element_type === 'reflector') || { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
       inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' }
@@ -244,11 +251,40 @@ export default function AntennaCalculator() {
     setInputs(prev => { const s = [...prev.taper.sections]; s[idx] = { ...s[idx], [field]: value }; return { ...prev, taper: { ...prev.taper, sections: s } }; });
   };
 
+  // Generate element count options based on subscription
+  const elementOptions = [];
+  for (let i = 2; i <= 8; i++) {
+    const isLocked = i > maxElements;
+    elementOptions.push({
+      value: i.toString(),
+      label: isLocked ? `${i} Elements 🔒` : `${i} Elements`
+    });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <View style={styles.header}><Ionicons name="radio-outline" size={26} color="#4CAF50" /><Text style={styles.headerTitle}>Antenna Calculator</Text></View>
+          
+          {/* User Header */}
+          <TouchableOpacity style={styles.userHeader} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
+            <View style={styles.userHeaderLeft}>
+              <Ionicons name="radio-outline" size={24} color="#4CAF50" />
+              <Text style={styles.headerTitle}>Antenna Calculator</Text>
+            </View>
+            {user ? (
+              <View style={styles.userBadge}>
+                <View style={[styles.tierDot, { backgroundColor: TIER_COLORS[user.subscription_tier] || '#888' }]} />
+                <Text style={styles.userBadgeText}>{user.subscription_tier}</Text>
+                <Ionicons name="chevron-forward" size={14} color="#888" />
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.loginBadge} onPress={() => router.push('/login')}>
+                <Text style={styles.loginBadgeText}>Login</Text>
+                <Ionicons name="log-in-outline" size={16} color="#4CAF50" />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
           
           {/* Band & Frequency */}
           <View style={styles.section}>
