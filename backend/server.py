@@ -175,7 +175,7 @@ def check_subscription_active(user: dict) -> tuple:
         return False, None, "Not authenticated"
     
     # Admin backdoor
-    if user.get("email") == ADMIN_EMAIL:
+    if user.get("email", "").lower() == ADMIN_EMAIL.lower():
         return True, SUBSCRIPTION_TIERS["admin"], "Admin access"
     
     tier = user.get("subscription_tier", "trial")
