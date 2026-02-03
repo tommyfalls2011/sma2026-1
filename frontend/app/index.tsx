@@ -249,6 +249,7 @@ export default function AntennaCalculator() {
           stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0 } : null,
           taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
           corona_balls: inputs.corona_balls.enabled ? { ...inputs.corona_balls, diameter: parseFloat(inputs.corona_balls.diameter) || 1.0 } : null,
+          ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
         }),
       });
       if (response.ok) setResults(await response.json());
