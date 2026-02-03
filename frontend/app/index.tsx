@@ -286,6 +286,64 @@ export default function AntennaCalculator() {
     setTuning(false);
   };
 
+  // Optimize height from ground (10' to 100')
+  const optimizeHeight = async () => {
+    setOptimizingHeight(true);
+    setHeightOptResult(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/optimize-height`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          num_elements: inputs.num_elements,
+          elements: inputs.elements.map(e => ({
+            element_type: e.element_type,
+            length: parseFloat(e.length) || 0,
+            diameter: parseFloat(e.diameter) || 0,
+            position: parseFloat(e.position) || 0,
+          })),
+          boom_diameter: parseFloat(inputs.boom_diameter) || 2,
+          boom_unit: inputs.boom_unit,
+          band: inputs.band,
+          frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+          min_height: 10,
+          max_height: 100,
+          step: 5,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setHeightOptResult(data);
+        setInputs(prev => ({ ...prev, height_from_ground: data.optimal_height.toString() }));
+        Alert.alert('Height Optimized', `Best height: ${data.optimal_height}' with SWR: ${data.optimal_swr.toFixed(2)}:1`);
+      }
+    } catch (err) { Alert.alert('Error', 'Height optimization failed'); }
+    setOptimizingHeight(false);
+  };
+
+  // Toggle reflector on/off
+  const toggleReflector = (useReflector: boolean) => {
+    if (useReflector) {
+      // Add reflector back
+      const driven = inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' };
+      const dirs = inputs.elements.filter(e => e.element_type === 'director');
+      const newElements: ElementDimension[] = [
+        { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
+        { ...driven, position: '48' },
+        ...dirs.map((d, i) => ({ ...d, position: (96 + i * 48).toString() }))
+      ];
+      setInputs(prev => ({ ...prev, use_reflector: true, elements: newElements }));
+    } else {
+      // Remove reflector
+      const driven = inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '0' };
+      const dirs = inputs.elements.filter(e => e.element_type === 'director');
+      const newElements: ElementDimension[] = [
+        { ...driven, position: '0' },
+        ...dirs.map((d, i) => ({ ...d, position: (48 + i * 48).toString() }))
+      ];
+      setInputs(prev => ({ ...prev, use_reflector: false, elements: newElements }));
+    }
+  };
+
   const updateElementCount = (count: number) => {
     const c = Math.max(2, Math.min(maxElements, count));
     if (count > maxElements) {
@@ -295,12 +353,21 @@ export default function AntennaCalculator() {
       ]);
       return;
     }
-    const newElements: ElementDimension[] = [
-      inputs.elements.find(e => e.element_type === 'reflector') || { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
-      inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' }
-    ];
-    const dirs = inputs.elements.filter(e => e.element_type === 'director');
-    for (let i = 0; i < c - 2; i++) newElements.push(dirs[i] || { element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
+    
+    const newElements: ElementDimension[] = [];
+    
+    if (inputs.use_reflector) {
+      newElements.push(inputs.elements.find(e => e.element_type === 'reflector') || { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' });
+      newElements.push(inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' });
+      const dirs = inputs.elements.filter(e => e.element_type === 'director');
+      for (let i = 0; i < c - 2; i++) newElements.push(dirs[i] || { element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
+    } else {
+      // No reflector - driven + directors only
+      newElements.push(inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '0' });
+      const dirs = inputs.elements.filter(e => e.element_type === 'director');
+      for (let i = 0; i < c - 1; i++) newElements.push(dirs[i] || { element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (48 + i * 48).toString() });
+    }
+    
     setInputs(prev => ({ ...prev, num_elements: c, elements: newElements }));
   };
 
