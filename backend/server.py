@@ -323,6 +323,12 @@ class StackingConfig(BaseModel):
     spacing: float = Field(default=20, gt=0)
     spacing_unit: str = Field(default="ft")
 
+class GroundRadialConfig(BaseModel):
+    enabled: bool = Field(default=False)
+    ground_type: str = Field(default="average")  # wet, dry, average
+    wire_diameter: float = Field(default=0.5)  # inches
+    num_radials: int = Field(default=8)  # 8 directions: N, S, E, W, NE, NW, SE, SW
+
 class AntennaInput(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
     elements: List[ElementDimension] = Field(...)
@@ -335,6 +341,7 @@ class AntennaInput(BaseModel):
     stacking: Optional[StackingConfig] = Field(default=None)
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
+    ground_radials: Optional[GroundRadialConfig] = Field(default=None)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
