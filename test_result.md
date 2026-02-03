@@ -355,6 +355,18 @@ metadata:
   test_sequence: 5
   run_ui: false
 
+  - task: "No Reflector Mode Fixes - Calculate and Optimize Height"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+        - agent: "testing"
+        - comment: "NO REFLECTOR MODE FIXES VERIFIED: All 3 test scenarios passed perfectly. Test 1 (Calculate without reflector): Gain 9.8 dBi (expected ~9-10), F/B 8.0 dB (expected ~8), far-field pattern at 90°=25% and 180°=40% as expected. Test 2 (Optimize height without reflector): Optimal height 20' (not always 10'), SWR varies across heights (1.21 to 1.0), all required fields present. Test 3 (Compare with reflector): Gain 11.3 dBi, F/B 20.0 dB, confirming significant difference from no-reflector mode. All endpoints return 200 status (no 500 errors). The fixes are working correctly."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
@@ -382,3 +394,5 @@ agent_communication:
     - message: "✅ SPECIFIC FIXES TESTING COMPLETE - Tested 3 critical fixes requested in review: 1) HEIGHT OPTIMIZER FIX: /api/optimize-height now correctly finds optimal height of 35' (not 10') using combined SWR+Gain+F/B scoring, tests 9 heights from 10-50' with step=5. 2) AUTO-TUNE NO REFLECTOR: /api/auto-tune with use_reflector=false returns 1 driven + 2 directors (NO reflector), driven at position 0. 3) AUTO-TUNE WITH REFLECTOR: /api/auto-tune defaults to reflector mode, returns reflector+driven+director with proper element progression. All fixes working correctly with expected performance metrics."
     - agent: "testing"
     - message: "✅ FAR-FIELD PATTERN FIX TESTING COMPLETE - Verified the far-field radiation pattern fix for reflector vs no-reflector configurations. WITH REFLECTOR (3 elements): Gain 11.3 dBi, F/B 20.0 dB, cardioid pattern with 1% side lobes. WITHOUT REFLECTOR (2 elements): Gain 6.8 dBi, F/B 6.0 dB, omnidirectional pattern with 46.5% side lobes. Patterns show 23.6% average difference in back/side angles, confirming the fix works correctly. Reflector provides expected 4.5 dB gain boost and 14 dB F/B improvement. The two patterns are visually and mathematically distinct as required."
+    - agent: "testing"
+    - message: "✅ NO REFLECTOR MODE FIXES TESTING COMPLETE - Tested all 3 specific scenarios requested in review. Test 1 (Calculate 3 elements without reflector): ✅ No 500 error, Gain 9.8 dBi (expected ~9-10), F/B 8.0 dB (expected ~8), far-field at 90°=25% and 180°=40% as expected. Test 2 (Optimize height without reflector): ✅ No 500 error, optimal height 20' (not always 10'), SWR varies from 1.0-1.21 across heights 10-50'. Test 3 (Compare with reflector): ✅ Gain 11.3 dBi, F/B 20.0 dB, confirming significant performance difference. All fixes working perfectly - no 500 errors, expected performance metrics achieved, proper differentiation between reflector/no-reflector modes."
