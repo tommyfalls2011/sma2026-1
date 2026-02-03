@@ -905,7 +905,7 @@ async def auto_tune(request: AutoTuneRequest):
 
 class HeightOptimizeRequest(BaseModel):
     num_elements: int
-    elements: List[ElementInput]
+    elements: List[ElementDimension]
     boom_diameter: float
     boom_unit: str = "inches"
     band: str = "11m_cb"
