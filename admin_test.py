@@ -60,7 +60,7 @@ class AdminEndpointTester:
         login_url = f"{self.base_url}/auth/login"
         login_payload = {
             "email": "fallstommy@gmail.com",
-            "password": "testpass123"
+            "password": "admin123"
         }
         
         try:
