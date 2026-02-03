@@ -685,6 +685,76 @@ export default function AntennaCalculator() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      {/* Save Design Modal */}
+      <Modal visible={showSaveModal} transparent animationType="fade" onRequestClose={() => setShowSaveModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Save Design</Text>
+              <TouchableOpacity onPress={() => setShowSaveModal(false)}><Ionicons name="close" size={24} color="#888" /></TouchableOpacity>
+            </View>
+            <Text style={styles.modalLabel}>Design Name</Text>
+            <TextInput 
+              style={styles.modalInput} 
+              value={designName} 
+              onChangeText={setDesignName} 
+              placeholder="My Antenna Design" 
+              placeholderTextColor="#555"
+              autoFocus
+            />
+            <View style={styles.modalInfo}>
+              <Ionicons name="information-circle-outline" size={14} color="#888" />
+              <Text style={styles.modalInfoText}>Saves current element configuration, band, and all settings</Text>
+            </View>
+            <TouchableOpacity style={styles.modalSaveBtn} onPress={saveDesign} disabled={savingDesign}>
+              {savingDesign ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="save" size={16} color="#fff" /><Text style={styles.modalSaveBtnText}>Save Design</Text></>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      {/* Load Design Modal */}
+      <Modal visible={showLoadModal} transparent animationType="fade" onRequestClose={() => setShowLoadModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Load Design</Text>
+              <TouchableOpacity onPress={() => setShowLoadModal(false)}><Ionicons name="close" size={24} color="#888" /></TouchableOpacity>
+            </View>
+            {savedDesigns.length === 0 ? (
+              <View style={styles.emptyDesigns}>
+                <Ionicons name="folder-open-outline" size={48} color="#444" />
+                <Text style={styles.emptyDesignsText}>No saved designs yet</Text>
+                <Text style={styles.emptyDesignsHint}>Save your first design using the save button</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={savedDesigns}
+                keyExtractor={item => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.designItem}>
+                    <TouchableOpacity style={styles.designItemContent} onPress={() => loadDesign(item.id)}>
+                      <View style={styles.designItemLeft}>
+                        <Ionicons name="document-outline" size={20} color="#4CAF50" />
+                        <View>
+                          <Text style={styles.designItemName}>{item.name}</Text>
+                          <Text style={styles.designItemDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color="#888" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.designDeleteBtn} onPress={() => deleteDesign(item.id, item.name)}>
+                      <Ionicons name="trash-outline" size={18} color="#f44336" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+                showsVerticalScrollIndicator={false}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
