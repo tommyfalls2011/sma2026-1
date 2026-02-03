@@ -1510,8 +1510,8 @@ async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(re
     if user_data.subscription_tier not in valid_tiers:
         raise HTTPException(status_code=400, detail=f"Invalid tier. Must be one of: {valid_tiers}")
     
-    # Hash password
-    password_hash = pwd_context.hash(user_data.password)
+    # Hash password using the existing hash_password function
+    password_hashed = hash_password(user_data.password)
     
     # Set expiration based on tier
     expires = None
@@ -1531,7 +1531,7 @@ async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(re
         "id": str(uuid.uuid4()),
         "email": email,
         "name": user_data.name.strip(),
-        "password_hash": password_hash,
+        "password": password_hashed,
         "subscription_tier": user_data.subscription_tier,
         "subscription_expires": expires,
         "is_trial": is_trial,
