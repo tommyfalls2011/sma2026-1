@@ -215,6 +215,80 @@ export default function AdminScreen() {
     );
   };
 
+  const addNewUser = async () => {
+    if (!newUserEmail.trim() || !newUserName.trim() || !newUserPassword.trim()) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    
+    setAddingUser(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: newUserEmail.trim(),
+          name: newUserName.trim(),
+          password: newUserPassword,
+          subscription_tier: newUserTier
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        Alert.alert('Success', `User ${newUserEmail} created successfully!`);
+        setShowAddUserModal(false);
+        setNewUserEmail('');
+        setNewUserName('');
+        setNewUserPassword('');
+        setNewUserTier('trial');
+        await loadData();
+      } else {
+        const error = await res.json();
+        Alert.alert('Error', error.detail || 'Failed to create user');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error');
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
+  const deleteUser = async (userId: string, userEmail: string) => {
+    Alert.alert(
+      'Delete User',
+      `Are you sure you want to delete ${userEmail}?\n\nThis will also delete all their saved designs.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+              });
+
+              if (res.ok) {
+                Alert.alert('Success', `User ${userEmail} deleted`);
+                await loadData();
+              } else {
+                const error = await res.json();
+                Alert.alert('Error', error.detail || 'Failed to delete user');
+              }
+            } catch (error) {
+              Alert.alert('Error', 'Network error');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
