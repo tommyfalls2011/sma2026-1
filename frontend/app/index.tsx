@@ -108,16 +108,17 @@ const Dropdown = ({ label, value, options, onChange }: any) => {
   );
 };
 
-const ElementInput = ({ element, index, onChange }: any) => {
+const ElementInput = ({ element, index, onChange, unit }: any) => {
   const title = element.element_type === 'reflector' ? 'Reflector' : element.element_type === 'driven' ? 'Driven' : `Dir ${index - 1}`;
   const color = element.element_type === 'reflector' ? '#FF9800' : element.element_type === 'driven' ? '#4CAF50' : '#2196F3';
+  const unitLabel = unit === 'meters' ? 'm' : '"';
   return (
     <View style={[styles.elementCard, { borderLeftColor: color }]}>
       <Text style={[styles.elementTitle, { color }]}>{title}</Text>
       <View style={styles.elementRow}>
-        <View style={styles.elementField}><Text style={styles.elementLabel}>Length"</Text><TextInput style={styles.elementInput} value={element.length} onChangeText={v => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
-        <View style={styles.elementField}><Text style={styles.elementLabel}>Dia"</Text><TextInput style={styles.elementInput} value={element.diameter} onChangeText={v => onChange(index, 'diameter', v)} keyboardType="decimal-pad" placeholder="0.5" placeholderTextColor="#555" /></View>
-        <View style={styles.elementField}><Text style={styles.elementLabel}>Pos"</Text><TextInput style={styles.elementInput} value={element.position} onChangeText={v => onChange(index, 'position', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
+        <View style={styles.elementField}><Text style={styles.elementLabel}>Length{unitLabel}</Text><TextInput style={styles.elementInput} value={element.length} onChangeText={v => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
+        <View style={styles.elementField}><Text style={styles.elementLabel}>Dia{unitLabel}</Text><TextInput style={styles.elementInput} value={element.diameter} onChangeText={v => onChange(index, 'diameter', v)} keyboardType="decimal-pad" placeholder="0.5" placeholderTextColor="#555" /></View>
+        <View style={styles.elementField}><Text style={styles.elementLabel}>Pos{unitLabel}</Text><TextInput style={styles.elementInput} value={element.position} onChangeText={v => onChange(index, 'position', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
       </View>
     </View>
   );
