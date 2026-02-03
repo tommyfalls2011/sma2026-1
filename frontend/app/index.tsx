@@ -297,9 +297,9 @@ export default function AntennaCalculator() {
     setInputs(prev => { const s = [...prev.taper.sections]; s[idx] = { ...s[idx], [field]: value }; return { ...prev, taper: { ...prev.taper, sections: s } }; });
   };
 
-  // Generate element count options based on subscription
+  // Generate element count options based on subscription (up to 20)
   const elementOptions = [];
-  for (let i = 2; i <= 8; i++) {
+  for (let i = 2; i <= 20; i++) {
     const isLocked = i > maxElements;
     elementOptions.push({
       value: i.toString(),
