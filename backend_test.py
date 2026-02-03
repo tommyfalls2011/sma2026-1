@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Antenna Calculator Application
-Tests all backend endpoints with comprehensive validation
+Backend Authentication and Subscription API Testing
+Tests the new authentication and subscription endpoints
 """
 
 import requests
 import json
-import os
-from typing import Dict, Any
 import sys
+from datetime import datetime
 
 # Get backend URL from frontend environment
 def get_backend_url():
@@ -26,9 +25,8 @@ def get_backend_url():
     return "http://localhost:8001/api"
 
 BACKEND_URL = get_backend_url()
-print(f"Testing backend at: {BACKEND_URL}")
 
-class AntennaCalculatorTester:
+class AuthenticationTester:
     def __init__(self):
         self.base_url = BACKEND_URL
         self.test_results = {
