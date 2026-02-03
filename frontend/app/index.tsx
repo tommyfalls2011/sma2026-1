@@ -178,6 +178,7 @@ export default function AntennaCalculator() {
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
   const [savingDesign, setSavingDesign] = useState(false);
   const [loadingDesigns, setLoadingDesigns] = useState(false);
+  const [deletingDesignId, setDeletingDesignId] = useState<string | null>(null);
 
   // Get max elements based on subscription
   const maxElements = user ? getMaxElements() : 3;
