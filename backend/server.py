@@ -1069,7 +1069,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         forward_power_100w=forward_power_100w,
         forward_power_1kw=forward_power_1kw,
         impedance_high=impedance_high,
-        impedance_low=impedance_low
+        impedance_low=impedance_low,
+        # Take-off angle and ground radials
+        takeoff_angle=takeoff_angle,
+        takeoff_angle_description=takeoff_desc,
+        ground_radials_info=ground_radials_info
     )
 
 
