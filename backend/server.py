@@ -959,6 +959,79 @@ async def optimize_height(request: HeightOptimizeRequest):
     )
 
 
+# ==================== SAVED DESIGNS ENDPOINTS ====================
+class SavedDesign(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    name: str
+    description: Optional[str] = ""
+    design_data: dict
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SaveDesignRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    design_data: dict
+
+class SaveDesignResponse(BaseModel):
+    id: str
+    name: str
+    message: str
+
+@api_router.post("/designs/save", response_model=SaveDesignResponse)
+async def save_design(request: SaveDesignRequest, user: dict = Depends(require_user)):
+    """Save a design for the current user"""
+    design = SavedDesign(
+        user_id=user["id"],
+        name=request.name,
+        description=request.description,
+        design_data=request.design_data
+    )
+    
+    await db.saved_designs.insert_one(design.dict())
+    
+    return SaveDesignResponse(
+        id=design.id,
+        name=design.name,
+        message="Design saved successfully"
+    )
+
+@api_router.get("/designs")
+async def get_user_designs(user: dict = Depends(require_user)):
+    """Get all saved designs for the current user"""
+    designs = await db.saved_designs.find({"user_id": user["id"]}).sort("created_at", -1).to_list(100)
+    return [{
+        "id": d["id"],
+        "name": d["name"],
+        "description": d.get("description", ""),
+        "created_at": d["created_at"],
+        "updated_at": d.get("updated_at", d["created_at"])
+    } for d in designs]
+
+@api_router.get("/designs/{design_id}")
+async def get_design(design_id: str, user: dict = Depends(require_user)):
+    """Get a specific saved design"""
+    design = await db.saved_designs.find_one({"id": design_id, "user_id": user["id"]})
+    if not design:
+        raise HTTPException(status_code=404, detail="Design not found")
+    return {
+        "id": design["id"],
+        "name": design["name"],
+        "description": design.get("description", ""),
+        "design_data": design["design_data"],
+        "created_at": design["created_at"]
+    }
+
+@api_router.delete("/designs/{design_id}")
+async def delete_design(design_id: str, user: dict = Depends(require_user)):
+    """Delete a saved design"""
+    result = await db.saved_designs.delete_one({"id": design_id, "user_id": user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Design not found")
+    return {"message": "Design deleted successfully"}
+
+
 @api_router.get("/history", response_model=List[CalculationRecord])
 async def get_calculation_history():
     records = await db.calculations.find().sort("timestamp", -1).limit(20).to_list(20)
