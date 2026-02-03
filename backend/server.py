@@ -34,8 +34,8 @@ security = HTTPBearer(auto_error=False)
 # Admin email for backdoor access
 ADMIN_EMAIL = "fallstommy@gmail.com"
 
-# Subscription Tiers Configuration
-SUBSCRIPTION_TIERS = {
+# Default Subscription Tiers Configuration (can be overridden from DB)
+DEFAULT_SUBSCRIPTION_TIERS = {
     "trial": {
         "name": "Trial",
         "price": 0,
@@ -68,6 +68,14 @@ SUBSCRIPTION_TIERS = {
         "features": ["all"],
         "description": "$69.99/month - Full access"
     },
+    "subadmin": {
+        "name": "Sub-Admin",
+        "price": 0,
+        "max_elements": 20,
+        "duration_days": 36500,
+        "features": ["all"],
+        "description": "Sub-Admin full access"
+    },
     "admin": {
         "name": "Admin",
         "price": 0,
@@ -78,8 +86,11 @@ SUBSCRIPTION_TIERS = {
     }
 }
 
-# Payment Configuration
-PAYMENT_CONFIG = {
+# In-memory cache for tiers (loaded from DB on startup)
+SUBSCRIPTION_TIERS = DEFAULT_SUBSCRIPTION_TIERS.copy()
+
+# Default Payment Configuration
+DEFAULT_PAYMENT_CONFIG = {
     "paypal": {
         "email": "tfcp2011@gmail.com",
         "enabled": True
