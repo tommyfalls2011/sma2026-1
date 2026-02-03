@@ -886,9 +886,6 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         current_position = 0
     
     # Add directors (each ~3% shorter, spaced 0.2-0.25 wavelength)
-    num_directors = n - 2
-    current_position = reflector_spacing
-    
     for i in range(num_directors):
         director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)  # Gradually increase spacing
         current_position += director_spacing
@@ -902,27 +899,34 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         })
         notes.append(f"Director {i+1}: {director_length}\" at {current_position}\"")
     
-    # Predict performance
-    predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
+    # Predict performance (slightly worse without reflector)
+    base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
+    predicted_swr = base_predicted_swr if use_reflector else base_predicted_swr + 0.1
     
     base_gain = {2: 5.5, 3: 8.5, 4: 10.5, 5: 12.0, 6: 13.5, 7: 14.5}.get(n, 8.5 + 3.0 * math.log10(n - 2))
+    if not use_reflector:
+        base_gain -= 1.5  # Less gain without reflector
     if request.taper and request.taper.enabled:
         base_gain += 0.3 * request.taper.num_tapers
     predicted_gain = round(base_gain + 2.0, 1)  # Add height gain estimate
     
     predicted_fb = {2: 14, 3: 20, 4: 24, 5: 26}.get(n, 20 + 3 * math.log2(n - 2))
+    if not use_reflector:
+        predicted_fb -= 8  # Worse F/B without reflector
     if request.taper and request.taper.enabled:
         predicted_fb += 1.5 * request.taper.num_tapers
     
     notes.append(f"")
     notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
     notes.append(f"Total boom length: ~{round(current_position, 1)}\"")
+    if not use_reflector:
+        notes.append(f"Note: No reflector mode - reduced F/B ratio")
     
     return AutoTuneOutput(
         optimized_elements=elements,
         predicted_swr=predicted_swr,
         predicted_gain=predicted_gain,
-        predicted_fb_ratio=round(predicted_fb, 1),
+        predicted_fb_ratio=round(max(predicted_fb, 6), 1),
         optimization_notes=notes
     )
 
