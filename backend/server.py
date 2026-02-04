@@ -1804,6 +1804,9 @@ async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(re
     if user_data.subscription_tier == "trial":
         is_trial = True
         trial_started = datetime.utcnow()
+        # Set trial expiration based on trial_days
+        trial_days = user_data.trial_days if user_data.trial_days else 7
+        expires = datetime.utcnow() + timedelta(days=trial_days)
     elif user_data.subscription_tier == "subadmin":
         expires = datetime.utcnow() + timedelta(days=36500)  # 100 years
     elif user_data.subscription_tier in ["bronze", "silver", "gold"]:
