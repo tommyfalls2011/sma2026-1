@@ -1854,6 +1854,59 @@ async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
     return {"success": True, "message": f"User {user['email']} deleted successfully"}
 
 
+# ==================== ADMIN DESIGNS MANAGEMENT ====================
+@api_router.get("/admin/designs")
+async def admin_get_all_designs(admin: dict = Depends(require_admin)):
+    """Get all saved designs from all users (admin only)"""
+    designs = await db.designs.find().to_list(length=500)
+    
+    # Get user info for each design
+    result = []
+    for design in designs:
+        user = await db.users.find_one({"id": design.get("user_id")})
+        result.append({
+            "id": design.get("id"),
+            "name": design.get("name"),
+            "user_id": design.get("user_id"),
+            "user_email": user.get("email") if user else "Unknown",
+            "user_name": user.get("name") if user else "Unknown",
+            "created_at": design.get("created_at"),
+            "updated_at": design.get("updated_at"),
+            "element_count": design.get("design_data", {}).get("num_elements", 0)
+        })
+    
+    return {"designs": result, "total": len(result)}
+
+@api_router.delete("/admin/designs/{design_id}")
+async def admin_delete_design(design_id: str, admin: dict = Depends(require_admin)):
+    """Delete a specific design (admin only)"""
+    design = await db.designs.find_one({"id": design_id})
+    if not design:
+        raise HTTPException(status_code=404, detail="Design not found")
+    
+    await db.designs.delete_one({"id": design_id})
+    
+    return {"success": True, "message": f"Design '{design.get('name', 'Unnamed')}' deleted successfully"}
+
+@api_router.delete("/admin/designs/bulk/all")
+async def admin_delete_all_designs(admin: dict = Depends(require_admin)):
+    """Delete ALL designs from all users (admin only) - use with caution!"""
+    result = await db.designs.delete_many({})
+    
+    return {"success": True, "message": f"Deleted {result.deleted_count} designs"}
+
+@api_router.delete("/admin/designs/bulk/user/{user_id}")
+async def admin_delete_user_designs(user_id: str, admin: dict = Depends(require_admin)):
+    """Delete all designs from a specific user (admin only)"""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = await db.designs.delete_many({"user_id": user_id})
+    
+    return {"success": True, "message": f"Deleted {result.deleted_count} designs from {user.get('email', 'Unknown')}"}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
