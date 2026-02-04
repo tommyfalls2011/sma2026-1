@@ -946,4 +946,19 @@ const styles = StyleSheet.create({
   trialDayText: { fontSize: 13, color: '#888', fontWeight: '600' },
   trialDayTextActive: { color: '#fff' },
   trialDurationHint: { fontSize: 10, color: '#9C27B0', marginTop: 8, textAlign: 'center' },
+  
+  // Edit User Modal styles
+  editUserInfo: { alignItems: 'center', marginBottom: 20, padding: 16, backgroundColor: '#1a1a1a', borderRadius: 12 },
+  editUserName: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  editUserEmail: { fontSize: 13, color: '#888', marginTop: 4 },
+  currentTierBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, marginTop: 10 },
+  currentTierText: { fontSize: 11, color: '#fff', fontWeight: '600', textTransform: 'capitalize' },
+  tierChangeWarning: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, padding: 10, backgroundColor: 'rgba(255,152,0,0.1)', borderRadius: 8 },
+  tierChangeWarningText: { fontSize: 12, color: '#FF9800' },
+  editUserButtons: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  cancelBtn: { flex: 1, padding: 14, backgroundColor: '#333', borderRadius: 12, alignItems: 'center' },
+  cancelBtnText: { fontSize: 14, color: '#888', fontWeight: '600' },
+  saveRoleBtn: { flex: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 14, backgroundColor: '#4CAF50', borderRadius: 12 },
+  saveRoleBtnDisabled: { backgroundColor: '#333' },
+  saveRoleBtnText: { fontSize: 14, color: '#fff', fontWeight: '600' },
 });
