@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "sma-antenna-analyzer",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
     "android": {
       "package": "com.smaantennaanalyzer.app",
@@ -16,12 +16,10 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#121212"
       },
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"
-      ],
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.smaantennaanalyzer.app"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,11 +29,7 @@
       "shortName": "SMA Antenna",
       "description": "Professional antenna design and analysis tool",
       "themeColor": "#121212",
-      "backgroundColor": "#121212",
-      "display": "standalone",
-      "orientation": "portrait",
-      "startUrl": "/",
-      "scope": "/"
+      "backgroundColor": "#121212"
     },
     "plugins": [
       "expo-router",
@@ -48,14 +42,6 @@
           "backgroundColor": "#121212"
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "sma-antenna-analyzer"
-      }
-    }
+    ]
   }
 }
