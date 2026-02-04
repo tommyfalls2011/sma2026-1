@@ -810,6 +810,62 @@ export default function AntennaCalculator() {
               </View>
             )}
           </View>
+          
+          {/* Boom Lock & Spacing Lock */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}><Ionicons name="lock-closed-outline" size={14} color="#FF9800" /> Tuning Locks</Text>
+            <Text style={styles.lockHint}>Control what Auto-Tune can modify</Text>
+            
+            {/* Boom Lock */}
+            <View style={styles.lockRow}>
+              <View style={styles.lockLeft}>
+                <Switch value={boomLockEnabled} onValueChange={setBoomLockEnabled} trackColor={{ false: '#333', true: '#FF9800' }} thumbColor="#fff" />
+                <View style={styles.lockLabelContainer}>
+                  <Text style={styles.lockLabel}>Boom Lock</Text>
+                  <Text style={styles.lockDesc}>Limit max boom length</Text>
+                </View>
+              </View>
+              {boomLockEnabled && (
+                <View style={styles.lockInputContainer}>
+                  <TextInput 
+                    style={styles.lockInput} 
+                    value={maxBoomLength} 
+                    onChangeText={setMaxBoomLength} 
+                    keyboardType="decimal-pad" 
+                    placeholder="120"
+                    placeholderTextColor="#555"
+                  />
+                  <Text style={styles.lockInputUnit}>{elementUnit === 'meters' ? 'm' : '"'}</Text>
+                </View>
+              )}
+            </View>
+            
+            {/* Current Boom Display */}
+            <View style={styles.currentBoomInfo}>
+              <Ionicons name="resize-outline" size={12} color="#888" />
+              <Text style={styles.currentBoomText}>Current boom: {calculateBoomLength().ft}' {calculateBoomLength().inches.toFixed(1)}" ({calculateBoomLength().total_inches.toFixed(0)}")</Text>
+              {boomLockEnabled && parseFloat(maxBoomLength) < calculateBoomLength().total_inches && (
+                <Text style={styles.boomWarning}> ⚠️ Over limit!</Text>
+              )}
+            </View>
+            
+            {/* Spacing Lock */}
+            <View style={[styles.lockRow, { marginTop: 12 }]}>
+              <View style={styles.lockLeft}>
+                <Switch value={spacingLockEnabled} onValueChange={setSpacingLockEnabled} trackColor={{ false: '#333', true: '#2196F3' }} thumbColor="#fff" />
+                <View style={styles.lockLabelContainer}>
+                  <Text style={styles.lockLabel}>Spacing Lock</Text>
+                  <Text style={styles.lockDesc}>Only tune lengths, keep positions</Text>
+                </View>
+              </View>
+              {spacingLockEnabled && (
+                <View style={styles.lockBadge}>
+                  <Ionicons name="lock-closed" size={10} color="#2196F3" />
+                  <Text style={styles.lockBadgeText}>Positions locked</Text>
+                </View>
+              )}
+            </View>
+          </View>
 
           {/* Taper */}
           <View style={[styles.section, { zIndex: 50 }]}>
