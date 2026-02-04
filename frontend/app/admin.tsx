@@ -744,6 +744,27 @@ export default function AdminScreen() {
               ))}
             </View>
             
+            {/* Trial Duration - only show when trial is selected */}
+            {newUserTier === 'trial' && (
+              <View style={styles.trialDurationSection}>
+                <Text style={styles.modalLabel}>Trial Duration</Text>
+                <View style={styles.trialDurationSelector}>
+                  {['3', '7', '14', '30', '60'].map(days => (
+                    <TouchableOpacity
+                      key={days}
+                      style={[styles.trialDayOption, newUserTrialDays === days && styles.trialDayOptionActive]}
+                      onPress={() => setNewUserTrialDays(days)}
+                    >
+                      <Text style={[styles.trialDayText, newUserTrialDays === days && styles.trialDayTextActive]}>
+                        {days}d
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.trialDurationHint}>Trial will expire in {newUserTrialDays} days</Text>
+              </View>
+            )}
+            
             <TouchableOpacity style={styles.createUserBtn} onPress={addNewUser} disabled={addingUser}>
               {addingUser ? (
                 <ActivityIndicator color="#fff" />
