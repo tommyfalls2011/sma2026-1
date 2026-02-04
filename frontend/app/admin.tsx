@@ -213,41 +213,40 @@ export default function AdminScreen() {
     }
   };
 
-  const changeUserRole = async (userId: string, currentRole: string, userName: string) => {
-    const roles = ['trial', 'bronze', 'silver', 'gold', 'subadmin'];
-    
-    Alert.alert(
-      `Change Role: ${userName}`,
-      `Current: ${currentRole}\n\nSelect new role:`,
-      [
-        ...roles.map(role => ({
-          text: role === currentRole ? `${role} (current)` : role,
-          onPress: role === currentRole ? undefined : async () => {
-            try {
-              const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}/role`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ role })
-              });
+  const changeUserRole = (user: any) => {
+    setEditingUser(user);
+    setEditUserTier(user.subscription_tier);
+    setShowEditUserModal(true);
+  };
 
-              if (res.ok) {
-                Alert.alert('Success', `${userName} is now ${role}`);
-                await loadData();
-              } else {
-                const error = await res.json();
-                Alert.alert('Error', error.detail || 'Failed to update role');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Network error');
-            }
-          }
-        })),
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
+  const saveUserRole = async () => {
+    if (!editingUser) return;
+    
+    setSavingUserRole(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/users/${editingUser.id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: editUserTier })
+      });
+
+      if (res.ok) {
+        Alert.alert('Success', `${editingUser.name} is now ${editUserTier}`);
+        setShowEditUserModal(false);
+        setEditingUser(null);
+        await loadData();
+      } else {
+        const error = await res.json();
+        Alert.alert('Error', error.detail || 'Failed to update role');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error');
+    } finally {
+      setSavingUserRole(false);
+    }
   };
 
   const addNewUser = async () => {
