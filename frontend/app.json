@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Antenna Analyzer",
-    "slug": "antenna-analyzer",
+    "name": "SMA Antenna Analyzer",
+    "slug": "sma-antenna-analyzer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "antenna-analyzer",
+    "scheme": "sma-antenna-analyzer",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
-    "githubUrl": "https://github.com/antenna-analyzer",
+    "githubUrl": "https://github.com/sma-antenna-analyzer",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.antennaanalyzer.app",
+      "bundleIdentifier": "com.smaantennaanalyzer.app",
       "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "Scan QR codes for antenna configurations",
@@ -20,7 +20,7 @@
       }
     },
     "android": {
-      "package": "com.antennaanalyzer.app",
+      "package": "com.smaantennaanalyzer.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -31,14 +31,14 @@
         "android.permission.INTERNET",
         "android.permission.ACCESS_NETWORK_STATE"
       ],
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.antennaanalyzer.app"
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.smaantennaanalyzer.app"
     },
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "name": "Antenna Analyzer",
-      "shortName": "Antenna",
+      "name": "SMA Antenna Analyzer",
+      "shortName": "SMA Antenna",
       "description": "Professional antenna design and analysis tool",
       "themeColor": "#121212",
       "backgroundColor": "#121212",
@@ -64,7 +64,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "antenna-analyzer"
+        "projectId": "sma-antenna-analyzer"
       }
     }
   }
