@@ -126,6 +126,16 @@ export default function AdminScreen() {
         const usersData = await usersRes.json();
         setUsers(usersData);
       }
+      
+      // Load designs
+      const designsRes = await fetch(`${BACKEND_URL}/api/admin/designs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (designsRes.ok) {
+        const designsData = await designsRes.json();
+        setDesigns(designsData.designs || []);
+      }
     } catch (error) {
       console.error('Failed to load admin data:', error);
     }
