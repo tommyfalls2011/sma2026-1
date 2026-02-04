@@ -635,7 +635,9 @@ export default function AdminScreen() {
               </TouchableOpacity>
             ))}
           </>
-        ) : activeTab === 'designs' ? (
+        ) : null}
+        
+        {activeTab === 'designs' && (
           <>
             {/* Designs Section */}
             <View style={styles.usersSectionHeader}>
@@ -681,7 +683,7 @@ export default function AdminScreen() {
               ))
             )}
           </>
-        ) : null}
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
