@@ -824,6 +824,34 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1 }}><Dropdown label="Band" value={inputs.band} options={BANDS.map(b => ({ value: b.id, label: b.name }))} onChange={handleBandChange} /></View>
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Freq (MHz)</Text><TextInput style={styles.input} value={inputs.frequency_mhz} onChangeText={v => setInputs(p => ({ ...p, frequency_mhz: v }))} keyboardType="decimal-pad" /></View>
             </View>
+            
+            {/* Antenna Orientation */}
+            <View style={styles.orientationSection}>
+              <Text style={styles.orientationLabel}><Ionicons name="compass-outline" size={12} color="#888" /> Antenna Orientation</Text>
+              <View style={styles.orientationToggle}>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.antenna_orientation === 'horizontal' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, antenna_orientation: 'horizontal' }))}
+                >
+                  <Text style={styles.orientationIcon}>—</Text>
+                  <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'horizontal' && styles.orientationBtnTextActive]}>Flat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.antenna_orientation === 'vertical' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, antenna_orientation: 'vertical' }))}
+                >
+                  <Text style={styles.orientationIcon}>|</Text>
+                  <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'vertical' && styles.orientationBtnTextActive]}>Vertical</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.antenna_orientation === 'angle45' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, antenna_orientation: 'angle45' }))}
+                >
+                  <Text style={styles.orientationIcon}>/</Text>
+                  <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'angle45' && styles.orientationBtnTextActive]}>45°</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           {/* Elements */}
