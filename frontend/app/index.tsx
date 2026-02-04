@@ -97,80 +97,110 @@ const PolarPattern = ({ data, stackedData, isStacked }: any) => {
   );
 };
 
-// Elevation/Side View Pattern - shows take-off angle lobe
-const ElevationPattern = ({ takeoffAngle, gain }: { takeoffAngle: number, gain: number }) => {
+// Elevation/Side View Pattern - shows take-off angle lobe for beam antenna
+const ElevationPattern = ({ takeoffAngle, gain, orientation }: { takeoffAngle: number, gain: number, orientation?: string }) => {
   const width = Math.min(screenWidth - 48, 300);
-  const height = 140;
-  const groundY = height - 20;
-  const antennaX = 40;
-  const maxLobeLength = width - 60;
+  const height = 160;
+  const groundY = height - 25;
+  const centerX = width / 2;
+  const centerY = groundY - 50;
   
-  // Calculate lobe shape based on takeoff angle
-  const angleRad = (90 - takeoffAngle) * Math.PI / 180;  // Convert to radians from horizontal
-  const lobeEndX = antennaX + Math.cos(angleRad) * maxLobeLength * 0.8;
-  const lobeEndY = groundY - Math.sin(angleRad) * (groundY - 20) * 0.8;
+  // Calculate main lobe dimensions based on gain
+  const mainLobeLength = Math.min(width * 0.35, 80 + gain * 3);
+  const mainLobeWidth = Math.max(15, 40 - gain);  // Narrower for higher gain
   
-  // Create a simplified radiation lobe path
-  const lobePath = `M ${antennaX} ${groundY - 30} 
-    Q ${antennaX + 30} ${lobeEndY - 20}, ${lobeEndX} ${lobeEndY}
-    Q ${antennaX + 60} ${groundY - 60}, ${antennaX} ${groundY - 30}`;
+  // Calculate back lobe size (smaller for better F/B)
+  const backLobeSize = Math.max(15, 45 - gain);
   
-  // Secondary (back) lobe for directional antennas
-  const backLobeSize = Math.max(20, 60 - gain);
+  // Take-off angle determines vertical direction of main lobe
+  const angleRad = takeoffAngle * Math.PI / 180;
+  
+  // Adjust pattern based on antenna orientation
+  const orientationAngle = orientation === 'vertical' ? 90 : orientation === 'angle45' ? 45 : 0;
+  const effectiveAngle = angleRad;
+  
+  // Main lobe end points
+  const mainLobeEndX = centerX + Math.cos(effectiveAngle) * mainLobeLength;
+  const mainLobeEndY = centerY - Math.sin(effectiveAngle) * mainLobeLength;
+  
+  // Create main lobe path (teardrop shape pointing at take-off angle)
+  const mainLobePath = `
+    M ${centerX} ${centerY}
+    Q ${centerX + mainLobeLength * 0.3} ${centerY - mainLobeWidth},
+      ${mainLobeEndX} ${mainLobeEndY}
+    Q ${centerX + mainLobeLength * 0.3} ${centerY + mainLobeWidth * 0.5},
+      ${centerX} ${centerY}
+  `;
+  
+  // Back lobe (opposite direction, smaller)
+  const backLobeEndX = centerX - backLobeSize;
   
   return (
     <View style={styles.elevationContainer}>
-      <Text style={styles.elevationTitle}>Side View (Elevation)</Text>
+      <Text style={styles.elevationTitle}>
+        <Ionicons name="radio-outline" size={12} color="#FF5722" /> Side View (Elevation Pattern)
+      </Text>
       <Svg width={width} height={height}>
-        {/* Sky gradient background */}
-        <Rect x={0} y={0} width={width} height={groundY} fill="#0a1525" />
+        {/* Sky background */}
+        <Rect x={0} y={0} width={width} height={groundY} fill="#0d1520" />
         
         {/* Ground */}
-        <Rect x={0} y={groundY} width={width} height={20} fill="#2d4a1c" />
-        <Line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#4a7c31" strokeWidth="2" />
+        <Rect x={0} y={groundY} width={width} height={25} fill="#1a2f15" />
+        <Line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#3d6b2a" strokeWidth="2" />
         
-        {/* Elevation angle lines */}
-        {[15, 30, 45, 60, 75].map(angle => {
+        {/* Elevation angle reference lines */}
+        {[10, 20, 30, 45, 60].map(angle => {
           const rad = angle * Math.PI / 180;
-          const lineEndX = antennaX + Math.cos(rad) * (width - 50);
-          const lineEndY = groundY - Math.sin(rad) * (groundY - 10);
+          const lineLen = width * 0.4;
+          const endX = centerX + Math.cos(rad) * lineLen;
+          const endY = centerY - Math.sin(rad) * lineLen;
           return (
             <G key={angle}>
-              <Line x1={antennaX} y1={groundY - 30} x2={lineEndX} y2={lineEndY} stroke="#333" strokeWidth="0.5" strokeDasharray="3,3" />
-              <SvgText x={lineEndX + 2} y={lineEndY + 4} fill="#555" fontSize="8">{angle}°</SvgText>
+              <Line x1={centerX} y1={centerY} x2={endX} y2={endY} stroke="#2a3d4a" strokeWidth="0.5" strokeDasharray="4,4" />
+              <SvgText x={endX + 3} y={endY} fill="#4a6070" fontSize="8">{angle}°</SvgText>
             </G>
           );
         })}
         
+        {/* Horizontal reference (0°) */}
+        <Line x1={centerX - 20} y1={centerY} x2={width - 20} y2={centerY} stroke="#2a3d4a" strokeWidth="0.5" strokeDasharray="4,4" />
+        
         {/* Main radiation lobe */}
-        <Path d={lobePath} fill="rgba(76,175,80,0.4)" stroke="#4CAF50" strokeWidth="2" />
+        <Path d={mainLobePath} fill="rgba(76,175,80,0.5)" stroke="#4CAF50" strokeWidth="2" />
         
-        {/* Back lobe (smaller) */}
-        <Circle cx={antennaX - backLobeSize/2} cy={groundY - 30} r={backLobeSize/2} fill="rgba(255,152,0,0.3)" stroke="#FF9800" strokeWidth="1" />
+        {/* Back lobe */}
+        <Ellipse cx={centerX - backLobeSize/2} cy={centerY} rx={backLobeSize/2} ry={backLobeSize/3} fill="rgba(255,152,0,0.4)" stroke="#FF9800" strokeWidth="1.5" />
         
-        {/* Antenna mast */}
-        <Line x1={antennaX} y1={groundY} x2={antennaX} y2={groundY - 35} stroke="#888" strokeWidth="3" />
-        <Line x1={antennaX - 15} y1={groundY - 30} x2={antennaX + 15} y2={groundY - 30} stroke="#4CAF50" strokeWidth="2" />
+        {/* Antenna boom (horizontal beam representation) */}
+        <Line x1={centerX - 25} y1={centerY} x2={centerX + 25} y2={centerY} stroke="#888" strokeWidth="3" />
         
-        {/* Take-off angle indicator */}
-        <Line x1={antennaX} y1={groundY - 30} x2={lobeEndX * 0.6} y2={lobeEndY + (groundY - 30 - lobeEndY) * 0.4} stroke="#FF5722" strokeWidth="2" strokeDasharray="5,3" />
+        {/* Mast */}
+        <Line x1={centerX} y1={centerY} x2={centerX} y2={groundY} stroke="#666" strokeWidth="2" />
+        
+        {/* Direction arrow for main lobe */}
+        <Line x1={centerX} y1={centerY} x2={mainLobeEndX * 0.85 + centerX * 0.15} y2={mainLobeEndY * 0.85 + centerY * 0.15} stroke="#FF5722" strokeWidth="2" />
+        <Circle cx={mainLobeEndX * 0.85 + centerX * 0.15} cy={mainLobeEndY * 0.85 + centerY * 0.15} r={4} fill="#FF5722" />
         
         {/* Labels */}
-        <SvgText x={width - 60} y={15} fill="#4CAF50" fontSize="11" fontWeight="bold">Main Lobe</SvgText>
-        <SvgText x={5} y={groundY - 50} fill="#FF9800" fontSize="9">Back</SvgText>
-        <SvgText x={antennaX + 45} y={groundY - 15} fill="#FF5722" fontSize="10">Take-off: {takeoffAngle}°</SvgText>
+        <SvgText x={centerX + 45} y={20} fill="#4CAF50" fontSize="10" fontWeight="bold">Main Beam</SvgText>
+        <SvgText x={10} y={centerY + 4} fill="#FF9800" fontSize="9">Back Lobe</SvgText>
+        <SvgText x={centerX + 5} y={groundY - 5} fill="#FF5722" fontSize="10" fontWeight="bold">{takeoffAngle}° take-off</SvgText>
         
-        {/* DX/Local indicators */}
-        <SvgText x={width - 40} y={groundY - 8} fill="#2196F3" fontSize="8">DX →</SvgText>
-        <SvgText x={width - 40} y={25} fill="#9C27B0" fontSize="8">NVIS ↑</SvgText>
+        {/* DX indicator */}
+        <SvgText x={width - 35} y={centerY + 4} fill="#2196F3" fontSize="8" fontWeight="bold">DX →</SvgText>
+        <SvgText x={centerX - 10} y={15} fill="#9C27B0" fontSize="8">NVIS ↑</SvgText>
       </Svg>
       <View style={styles.elevationLegend}>
-        <Text style={styles.elevationLegendText}>
-          {takeoffAngle < 20 ? '🌍 Excellent for DX' : 
-           takeoffAngle < 35 ? '🌐 Good all-around' : 
-           takeoffAngle < 50 ? '📡 Regional coverage' : 
-           '📻 NVIS / Local'}
-        </Text>
+        <View style={styles.elevationLegendRow}>
+          <View style={[styles.elevationLegendDot, { backgroundColor: '#4CAF50' }]} />
+          <Text style={styles.elevationLegendText}>
+            {takeoffAngle < 15 ? '🌍 Excellent DX (skip zone)' : 
+             takeoffAngle < 25 ? '🌐 Great DX propagation' : 
+             takeoffAngle < 35 ? '📡 Good all-around' : 
+             takeoffAngle < 50 ? '📻 Regional/medium range' : 
+             '🏠 NVIS / Local coverage'}
+          </Text>
+        </View>
       </View>
     </View>
   );
