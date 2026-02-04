@@ -273,6 +273,16 @@ export default function AntennaCalculator() {
   const autoTune = async () => {
     setTuning(true);
     try {
+      // Prepare locked positions if spacing lock is enabled
+      const lockedPositions = spacingLockEnabled 
+        ? inputs.elements.map(e => parseFloat(e.position) || 0)
+        : null;
+      
+      // Convert max boom length to inches if in meters
+      const maxBoomInches = boomLockEnabled 
+        ? (elementUnit === 'meters' ? parseFloat(maxBoomLength) * 39.3701 : parseFloat(maxBoomLength))
+        : null;
+      
       const response = await fetch(`${BACKEND_URL}/api/auto-tune`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -286,6 +296,10 @@ export default function AntennaCalculator() {
           taper: inputs.taper.enabled ? inputs.taper : null,
           corona_balls: inputs.corona_balls.enabled ? inputs.corona_balls : null,
           use_reflector: inputs.use_reflector,
+          boom_lock_enabled: boomLockEnabled,
+          max_boom_length: maxBoomInches,
+          spacing_lock_enabled: spacingLockEnabled,
+          locked_positions: lockedPositions,
         }),
       });
       if (response.ok) {
@@ -295,7 +309,7 @@ export default function AntennaCalculator() {
           element_type: e.element_type,
           length: e.length.toString(),
           diameter: inputs.elements[idx]?.diameter || e.diameter.toString(),
-          position: e.position.toString(),
+          position: spacingLockEnabled ? inputs.elements[idx]?.position || e.position.toString() : e.position.toString(),
         }));
         
         // If no reflector mode, filter out reflector from results
@@ -310,7 +324,14 @@ export default function AntennaCalculator() {
         }
         
         setInputs(prev => ({ ...prev, elements: newElements }));
-        Alert.alert('Auto-Tune Complete', `Predicted SWR: ${data.predicted_swr}:1\nPredicted Gain: ${data.predicted_gain} dBi\n\n${data.optimization_notes.slice(0, 3).join('\n')}`);
+        
+        // Build alert message with lock info
+        let alertMsg = `Predicted SWR: ${data.predicted_swr}:1\nPredicted Gain: ${data.predicted_gain} dBi`;
+        if (boomLockEnabled) alertMsg += `\n\n🔒 Boom constrained to ${maxBoomLength}${elementUnit === 'meters' ? 'm' : '"'}`;
+        if (spacingLockEnabled) alertMsg += `\n🔒 Element spacing preserved`;
+        alertMsg += `\n\n${data.optimization_notes.slice(0, 3).join('\n')}`;
+        
+        Alert.alert('Auto-Tune Complete', alertMsg);
       }
     } catch (err) { Alert.alert('Error', 'Auto-tune failed'); }
     setTuning(false);
