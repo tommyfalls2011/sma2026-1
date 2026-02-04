@@ -281,6 +281,7 @@ export default function AdminScreen() {
         setNewUserName('');
         setNewUserPassword('');
         setNewUserTier('trial');
+        setNewUserTrialDays('7');
         await loadData();
       } else {
         const error = await res.json();
