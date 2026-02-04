@@ -600,7 +600,7 @@ export default function AdminScreen() {
               )}
             </TouchableOpacity>
           </>
-        ) : (
+        ) : activeTab === 'users' ? (
           <>
             {/* Users Section */}
             <View style={styles.usersSectionHeader}>
