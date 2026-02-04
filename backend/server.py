@@ -1772,9 +1772,11 @@ class AdminCreateUser(BaseModel):
     name: str
     password: str
     subscription_tier: str = "trial"
+    trial_days: Optional[int] = Field(default=7)  # Default 7 days trial
 
 @api_router.post("/admin/users/create")
 async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(require_admin)):
+    """Create a new user (admin only)"""
     """Create a new user (admin only)"""
     # Validate email
     email = user_data.email.lower().strip()
