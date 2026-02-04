@@ -20,9 +20,6 @@
       "distribution": "store",
       "android": {
         "buildType": "app-bundle"
-      },
-      "ios": {
-        "resourceClass": "m-medium"
       }
     }
   },
@@ -31,10 +28,6 @@
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",
         "track": "production"
-      },
-      "ios": {
-        "appleId": "your-apple-id@email.com",
-        "ascAppId": "your-app-store-connect-app-id"
       }
     }
   }
