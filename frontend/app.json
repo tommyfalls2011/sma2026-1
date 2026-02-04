@@ -9,16 +9,6 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
-    "githubUrl": "https://github.com/sma-antenna-analyzer",
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.smaantennaanalyzer.app",
-      "buildNumber": "1",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Scan QR codes for antenna configurations",
-        "NSPhotoLibraryUsageDescription": "Save antenna diagrams to gallery"
-      }
-    },
     "android": {
       "package": "com.smaantennaanalyzer.app",
       "versionCode": 1,
