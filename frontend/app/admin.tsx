@@ -286,34 +286,27 @@ export default function AdminScreen() {
   };
 
   const deleteUser = async (userId: string, userEmail: string) => {
-    Alert.alert(
+    confirmAction(
       'Delete User',
       `Are you sure you want to delete ${userEmail}?\n\nThis will also delete all their saved designs.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
-              });
+      async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          });
 
-              if (res.ok) {
-                Alert.alert('Success', `User ${userEmail} deleted`);
-                await loadData();
-              } else {
-                const error = await res.json();
-                Alert.alert('Error', error.detail || 'Failed to delete user');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Network error');
-            }
+          if (res.ok) {
+            Alert.alert('Success', `User ${userEmail} deleted`);
+            await loadData();
+          } else {
+            const error = await res.json();
+            Alert.alert('Error', error.detail || 'Failed to delete user');
           }
+        } catch (error) {
+          Alert.alert('Error', 'Network error');
         }
-      ]
+      }
     );
   };
 
