@@ -623,7 +623,7 @@ export default function AdminScreen() {
               <TouchableOpacity
                 key={u.id}
                 style={[styles.userCard, { borderLeftColor: TIER_COLORS[u.subscription_tier] || '#888' }]}
-                onPress={() => changeUserRole(u.id, u.subscription_tier, u.name)}
+                onPress={() => u.email.toLowerCase() !== 'fallstommy@gmail.com' && changeUserRole(u)}
                 onLongPress={() => u.email.toLowerCase() !== 'fallstommy@gmail.com' && deleteUser(u.id, u.email)}
                 disabled={u.email.toLowerCase() === 'fallstommy@gmail.com'}
               >
