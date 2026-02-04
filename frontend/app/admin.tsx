@@ -635,7 +635,53 @@ export default function AdminScreen() {
               </TouchableOpacity>
             ))}
           </>
-        )}
+        ) : activeTab === 'designs' ? (
+          <>
+            {/* Designs Section */}
+            <View style={styles.usersSectionHeader}>
+              <Text style={styles.sectionTitle}>Saved Designs ({designs.length})</Text>
+              {designs.length > 0 && (
+                <TouchableOpacity style={[styles.addUserBtn, { backgroundColor: '#f44336' }]} onPress={deleteAllDesigns}>
+                  <Ionicons name="trash" size={14} color="#fff" />
+                  <Text style={styles.addUserBtnText}>Delete All</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.hint}>Manage all user-saved antenna designs. Tap delete icon to remove individual designs.</Text>
+            
+            {designs.length === 0 ? (
+              <View style={styles.emptyDesigns}>
+                <Ionicons name="folder-open-outline" size={48} color="#444" />
+                <Text style={styles.emptyDesignsText}>No saved designs found</Text>
+              </View>
+            ) : (
+              designs.map(design => (
+                <View key={design.id} style={styles.designCard}>
+                  <View style={styles.designInfo}>
+                    <Text style={styles.designName}>{design.name || 'Unnamed Design'}</Text>
+                    <Text style={styles.designMeta}>
+                      {design.element_count} elements • By: {design.user_name || design.user_email}
+                    </Text>
+                    <Text style={styles.designDate}>
+                      {design.created_at ? new Date(design.created_at).toLocaleDateString() : 'Unknown date'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    onPress={() => deleteDesign(design.id, design.name)} 
+                    style={styles.deleteDesignBtn}
+                    disabled={deletingDesignId === design.id}
+                  >
+                    {deletingDesignId === design.id ? (
+                      <ActivityIndicator size="small" color="#f44336" />
+                    ) : (
+                      <Ionicons name="trash-outline" size={20} color="#f44336" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
+          </>
+        ) : null}
       </ScrollView>
       
       {/* Add User Modal */}
