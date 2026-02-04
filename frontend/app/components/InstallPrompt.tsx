@@ -124,7 +124,7 @@ const InstallPrompt: React.FC = () => {
           <Ionicons name="radio-outline" size={28} color="#4CAF50" />
         </View>
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Install Antenna Analyzer</Text>
+          <Text style={styles.title}>Install SMA Antenna Analyzer</Text>
           <Text style={styles.subtitle}>Add to home screen for quick access</Text>
         </View>
       </View>
