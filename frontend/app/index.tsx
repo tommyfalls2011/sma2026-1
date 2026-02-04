@@ -1065,6 +1065,11 @@ export default function AntennaCalculator() {
               
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
               
+              {/* Side View / Elevation Pattern */}
+              {results.takeoff_angle && (
+                <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} />
+              )}
+              
               {/* Pattern Data Table */}
               <View style={styles.patternDataSection}>
                 <Text style={styles.patternDataTitle}><Ionicons name="analytics-outline" size={14} color="#4CAF50" /> Pattern Analysis</Text>
