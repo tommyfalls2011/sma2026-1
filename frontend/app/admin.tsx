@@ -38,7 +38,7 @@ export default function AdminScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pricing' | 'users'>('pricing');
+  const [activeTab, setActiveTab] = useState<'pricing' | 'users' | 'designs'>('pricing');
   
   // Pricing state
   const [pricing, setPricing] = useState<PricingData | null>(null);
@@ -53,6 +53,10 @@ export default function AdminScreen() {
   
   // Users state
   const [users, setUsers] = useState<UserData[]>([]);
+  
+  // Designs state
+  const [designs, setDesigns] = useState<any[]>([]);
+  const [deletingDesignId, setDeletingDesignId] = useState<string | null>(null);
   
   // Add User Modal state
   const [showAddUserModal, setShowAddUserModal] = useState(false);
