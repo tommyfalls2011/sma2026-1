@@ -783,6 +783,76 @@ export default function AdminScreen() {
           </View>
         </View>
       </Modal>
+      
+      {/* Edit User Role Modal */}
+      <Modal visible={showEditUserModal} transparent animationType="fade" onRequestClose={() => setShowEditUserModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit User Access</Text>
+              <TouchableOpacity onPress={() => setShowEditUserModal(false)}>
+                <Ionicons name="close" size={24} color="#888" />
+              </TouchableOpacity>
+            </View>
+            
+            {editingUser && (
+              <>
+                <View style={styles.editUserInfo}>
+                  <Text style={styles.editUserName}>{editingUser.name}</Text>
+                  <Text style={styles.editUserEmail}>{editingUser.email}</Text>
+                  <View style={[styles.currentTierBadge, { backgroundColor: TIER_COLORS[editingUser.subscription_tier] || '#888' }]}>
+                    <Text style={styles.currentTierText}>Current: {editingUser.subscription_tier}</Text>
+                  </View>
+                </View>
+                
+                <Text style={styles.modalLabel}>Change Subscription Tier</Text>
+                <View style={styles.tierSelector}>
+                  {['trial', 'bronze', 'silver', 'gold', 'subadmin'].map(tier => (
+                    <TouchableOpacity
+                      key={tier}
+                      style={[styles.tierOption, editUserTier === tier && { backgroundColor: TIER_COLORS[tier], borderColor: TIER_COLORS[tier] }]}
+                      onPress={() => setEditUserTier(tier)}
+                    >
+                      <Text style={[styles.tierOptionText, editUserTier === tier && styles.tierOptionTextActive]}>
+                        {tier}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                
+                {editUserTier !== editingUser.subscription_tier && (
+                  <View style={styles.tierChangeWarning}>
+                    <Ionicons name="information-circle" size={16} color="#FF9800" />
+                    <Text style={styles.tierChangeWarningText}>
+                      Changing from {editingUser.subscription_tier} → {editUserTier}
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={styles.editUserButtons}>
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowEditUserModal(false)}>
+                    <Text style={styles.cancelBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.saveRoleBtn, editUserTier === editingUser.subscription_tier && styles.saveRoleBtnDisabled]} 
+                    onPress={saveUserRole}
+                    disabled={savingUserRole || editUserTier === editingUser.subscription_tier}
+                  >
+                    {savingUserRole ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark" size={18} color="#fff" />
+                        <Text style={styles.saveRoleBtnText}>Save Changes</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
