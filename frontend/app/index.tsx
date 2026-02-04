@@ -948,6 +948,71 @@ export default function AntennaCalculator() {
                   <View style={styles.heightOptItem}><Text style={styles.heightOptLabel}>Gain</Text><Text style={styles.heightOptValue}>{heightOptResult.optimal_gain}dBi</Text></View>
                   <View style={styles.heightOptItem}><Text style={styles.heightOptLabel}>F/B</Text><Text style={styles.heightOptValue}>{heightOptResult.optimal_fb_ratio}dB</Text></View>
                 </View>
+                
+                {/* Sort Options */}
+                <View style={styles.heightSortSection}>
+                  <Text style={styles.heightSortLabel}>Sort Heights By:</Text>
+                  <View style={styles.heightSortOptions}>
+                    <TouchableOpacity 
+                      style={[styles.heightSortBtn, heightSortBy === 'default' && styles.heightSortBtnActive]}
+                      onPress={() => setHeightSortBy('default')}
+                    >
+                      <Text style={[styles.heightSortBtnText, heightSortBy === 'default' && styles.heightSortBtnTextActive]}>Score</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.heightSortBtn, heightSortBy === 'takeoff' && styles.heightSortBtnActive]}
+                      onPress={() => setHeightSortBy('takeoff')}
+                    >
+                      <Text style={[styles.heightSortBtnText, heightSortBy === 'takeoff' && styles.heightSortBtnTextActive]}>Take-off</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.heightSortBtn, heightSortBy === 'gain' && styles.heightSortBtnActive]}
+                      onPress={() => setHeightSortBy('gain')}
+                    >
+                      <Text style={[styles.heightSortBtnText, heightSortBy === 'gain' && styles.heightSortBtnTextActive]}>Gain</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.heightSortBtn, heightSortBy === 'fb' && styles.heightSortBtnActive]}
+                      onPress={() => setHeightSortBy('fb')}
+                    >
+                      <Text style={[styles.heightSortBtnText, heightSortBy === 'fb' && styles.heightSortBtnTextActive]}>F/B</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                
+                {/* Sorted Heights List */}
+                {heightOptResult.heights_tested && (
+                  <View style={styles.sortedHeightsList}>
+                    <Text style={styles.sortedHeightsTitle}>
+                      Top 10 Heights by {heightSortBy === 'default' ? 'Combined Score' : heightSortBy === 'takeoff' ? 'Take-off Angle (Low→High)' : heightSortBy === 'gain' ? 'Gain (High→Low)' : 'F/B Ratio (High→Low)'}
+                    </Text>
+                    <View style={styles.sortedHeightsHeader}>
+                      <Text style={[styles.sortedHeightsCell, { flex: 0.8 }]}>Ht</Text>
+                      <Text style={[styles.sortedHeightsCell, { flex: 1 }]}>Take-off</Text>
+                      <Text style={[styles.sortedHeightsCell, { flex: 1 }]}>Gain</Text>
+                      <Text style={[styles.sortedHeightsCell, { flex: 1 }]}>F/B</Text>
+                      <Text style={[styles.sortedHeightsCell, { flex: 0.8 }]}>SWR</Text>
+                    </View>
+                    {[...heightOptResult.heights_tested]
+                      .sort((a: any, b: any) => {
+                        if (heightSortBy === 'takeoff') return (a.takeoff_angle || 90) - (b.takeoff_angle || 90);
+                        if (heightSortBy === 'gain') return b.gain - a.gain;
+                        if (heightSortBy === 'fb') return b.fb_ratio - a.fb_ratio;
+                        return b.score - a.score;  // default: best score first
+                      })
+                      .slice(0, 10)
+                      .map((h: any, idx: number) => (
+                        <View key={h.height} style={[styles.sortedHeightsRow, idx === 0 && styles.sortedHeightsRowTop]}>
+                          <Text style={[styles.sortedHeightsCell, styles.sortedHeightsCellValue, { flex: 0.8 }]}>{h.height}'</Text>
+                          <Text style={[styles.sortedHeightsCell, styles.sortedHeightsCellValue, { flex: 1, color: (h.takeoff_angle || 0) < 25 ? '#4CAF50' : '#888' }]}>{h.takeoff_angle || '-'}°</Text>
+                          <Text style={[styles.sortedHeightsCell, styles.sortedHeightsCellValue, { flex: 1 }]}>{h.gain}dBi</Text>
+                          <Text style={[styles.sortedHeightsCell, styles.sortedHeightsCellValue, { flex: 1 }]}>{h.fb_ratio}dB</Text>
+                          <Text style={[styles.sortedHeightsCell, styles.sortedHeightsCellValue, { flex: 0.8 }]}>{h.swr.toFixed(1)}</Text>
+                        </View>
+                      ))
+                    }
+                  </View>
+                )}
               </View>
             )}
           </View>
