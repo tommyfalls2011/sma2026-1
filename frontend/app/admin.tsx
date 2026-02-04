@@ -252,18 +252,25 @@ export default function AdminScreen() {
     
     setAddingUser(true);
     try {
+      const payload: any = {
+        email: newUserEmail.trim(),
+        name: newUserName.trim(),
+        password: newUserPassword,
+        subscription_tier: newUserTier
+      };
+      
+      // Add trial_days if trial tier is selected
+      if (newUserTier === 'trial') {
+        payload.trial_days = parseInt(newUserTrialDays) || 7;
+      }
+      
       const res = await fetch(`${BACKEND_URL}/api/admin/users/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          email: newUserEmail.trim(),
-          name: newUserName.trim(),
-          password: newUserPassword,
-          subscription_tier: newUserTier
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
