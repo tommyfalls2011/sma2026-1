@@ -354,6 +354,11 @@ class AutoTuneRequest(BaseModel):
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
     use_reflector: bool = Field(default=True)  # Added to support no-reflector mode
+    # Boom and Spacing Lock options
+    boom_lock_enabled: bool = Field(default=False)
+    max_boom_length: Optional[float] = Field(default=None)  # Max boom length in inches
+    spacing_lock_enabled: bool = Field(default=False)
+    locked_positions: Optional[List[float]] = Field(default=None)  # Positions to preserve when spacing lock is on
 
 class AntennaOutput(BaseModel):
     swr: float
