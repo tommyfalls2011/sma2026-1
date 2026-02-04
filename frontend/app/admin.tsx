@@ -827,4 +827,14 @@ const styles = StyleSheet.create({
   accessDeniedSub: { fontSize: 14, color: '#888', marginTop: 8 },
   loginBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 20 },
   loginBtnText: { color: '#fff', fontWeight: '600' },
+  
+  // Designs styles
+  designCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', borderRadius: 12, padding: 14, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#FF9800' },
+  designInfo: { flex: 1 },
+  designName: { fontSize: 15, fontWeight: '600', color: '#fff' },
+  designMeta: { fontSize: 11, color: '#4CAF50', marginTop: 2 },
+  designDate: { fontSize: 10, color: '#666', marginTop: 2 },
+  deleteDesignBtn: { padding: 10 },
+  emptyDesigns: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
+  emptyDesignsText: { color: '#666', fontSize: 14, marginTop: 12 },
 });
