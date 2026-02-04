@@ -363,15 +363,6 @@ export default function AdminScreen() {
       }
     );
   };
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Network error');
-            }
-          }
-        }
-      ]
-    );
-  };
 
   if (loading) {
     return (
