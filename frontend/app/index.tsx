@@ -174,6 +174,11 @@ export default function AntennaCalculator() {
   const [elementUnit, setElementUnit] = useState<'inches' | 'meters'>('inches');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Boom Lock and Spacing Lock state
+  const [boomLockEnabled, setBoomLockEnabled] = useState(false);
+  const [maxBoomLength, setMaxBoomLength] = useState('120');  // Default 10 feet in inches
+  const [spacingLockEnabled, setSpacingLockEnabled] = useState(false);
+  
   // Save/Load state
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [showLoadModal, setShowLoadModal] = useState(false);
