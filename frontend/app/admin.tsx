@@ -78,6 +78,7 @@ export default function AdminScreen() {
   const [newUserName, setNewUserName] = useState('');
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserTier, setNewUserTier] = useState('trial');
+  const [newUserTrialDays, setNewUserTrialDays] = useState('7');  // Default 7 days
   const [addingUser, setAddingUser] = useState(false);
 
   useEffect(() => {
