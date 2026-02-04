@@ -311,63 +311,58 @@ export default function AdminScreen() {
   };
 
   const deleteDesign = async (designId: string, designName: string) => {
-    Alert.alert(
+    confirmAction(
       'Delete Design',
       `Are you sure you want to delete "${designName}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingDesignId(designId);
-            try {
-              const res = await fetch(`${BACKEND_URL}/api/admin/designs/${designId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
-              });
+      async () => {
+        setDeletingDesignId(designId);
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/designs/${designId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          });
 
-              if (res.ok) {
-                Alert.alert('Success', `Design "${designName}" deleted`);
-                await loadData();
-              } else {
-                const error = await res.json();
-                Alert.alert('Error', error.detail || 'Failed to delete design');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'Network error');
-            } finally {
-              setDeletingDesignId(null);
-            }
+          if (res.ok) {
+            Alert.alert('Success', `Design "${designName}" deleted`);
+            await loadData();
+          } else {
+            const error = await res.json();
+            Alert.alert('Error', error.detail || 'Failed to delete design');
           }
+        } catch (error) {
+          Alert.alert('Error', 'Network error');
+        } finally {
+          setDeletingDesignId(null);
         }
-      ]
+      }
     );
   };
 
   const deleteAllDesigns = async () => {
-    Alert.alert(
+    confirmAction(
       'Delete ALL Designs',
       `Are you sure you want to delete ALL ${designs.length} saved designs? This cannot be undone!`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete All',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await fetch(`${BACKEND_URL}/api/admin/designs/bulk/all`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
-              });
+      async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/designs/bulk/all`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+          });
 
-              if (res.ok) {
-                const data = await res.json();
-                Alert.alert('Success', data.message);
-                await loadData();
-              } else {
-                const error = await res.json();
-                Alert.alert('Error', error.detail || 'Failed to delete designs');
+          if (res.ok) {
+            const data = await res.json();
+            Alert.alert('Success', data.message);
+            await loadData();
+          } else {
+            const error = await res.json();
+            Alert.alert('Error', error.detail || 'Failed to delete designs');
+          }
+        } catch (error) {
+          Alert.alert('Error', 'Network error');
+        }
+      }
+    );
+  };
               }
             } catch (error) {
               Alert.alert('Error', 'Network error');
