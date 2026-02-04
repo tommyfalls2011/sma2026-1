@@ -1,6 +1,6 @@
 # 📱 Play Store & Mobile Distribution Guide
 
-## Antenna Analyzer App - Publishing Instructions
+## SMA Antenna Analyzer App - Publishing Instructions
 
 ---
 
@@ -41,22 +41,26 @@ Your app already supports PWA installation! Users can install it directly from t
 
 You'll need these files ready:
 
-#### Required Images:
-| Asset | Size | Format |
+#### Required Images (Already Created! ✅):
+| Asset | Size | Status |
 |-------|------|--------|
-| App Icon | 512x512 px | PNG (no transparency) |
-| Feature Graphic | 1024x500 px | PNG or JPG |
-| Screenshots (min 2) | varies | PNG or JPG |
-| Adaptive Icon Foreground | 108x108 dp | PNG |
+| App Icon | 512x512 px | ✅ Created |
+| Adaptive Icon | 432x432 px | ✅ Created |
+| Favicon | 32x32 px | ✅ Created |
+| Feature Graphic | 1024x500 px | Need to create |
+| Screenshots (min 2) | varies | Take from app |
 
 #### App Information:
-- **App Name**: Antenna Analyzer
-- **Short Description** (80 chars max): Professional antenna design & SWR calculator for ham radio operators
+- **App Name**: SMA Antenna Analyzer
+- **Short Description** (80 chars max): 
+  ```
+  Professional antenna design & SWR calculator for ham radio operators
+  ```
 - **Full Description** (4000 chars max): 
   ```
-  Antenna Analyzer is the ultimate tool for ham radio operators and antenna enthusiasts. 
+  SMA Antenna Analyzer is the ultimate tool for ham radio operators and antenna enthusiasts.
   
-  Features:
+  🎯 FEATURES:
   • Calculate SWR, gain, and front-to-back ratio
   • Visualize radiation patterns with polar plots
   • Optimize antenna height for best performance
@@ -64,59 +68,98 @@ You'll need these files ready:
   • Auto-tune element dimensions
   • Support for multiple bands (CB, 10m, 12m, 15m, 17m, 20m)
   • Ground radial system simulation
-  • Take-off angle analysis
+  • Take-off angle analysis for DX optimization
+  • Side-view elevation pattern visualization
   • Save and load antenna designs
   • Export results to CSV
+  • Boom lock and spacing lock for precise tuning
   
-  Perfect for:
+  📡 PERFECT FOR:
   • Amateur radio operators (hams)
-  • CB radio enthusiasts
+  • CB radio enthusiasts  
   • Antenna builders and experimenters
   • RF engineers
+  • Anyone interested in radio communications
   
-  Subscription tiers available for advanced features.
+  🔧 ADVANCED FEATURES:
+  • Element tapering support
+  • Corona ball configuration
+  • Stacking calculations
+  • Height optimization from 10-100 feet
+  • Real-time calculations
+  
+  💎 SUBSCRIPTION TIERS:
+  • Trial: 3 elements (free)
+  • Bronze: 7 elements
+  • Silver: 11 elements
+  • Gold: 20 elements
+  
+  Built with precision and accuracy for professional antenna analysis.
   ```
 
 ### Step 3: Build the Production APK/AAB
 
-Run these commands in your terminal:
+Run these commands on your local machine:
 
 ```bash
-# Install EAS CLI (if not installed)
+# 1. Install EAS CLI globally
 npm install -g eas-cli
 
-# Login to your Expo account
+# 2. Login to Expo account
 eas login
 
-# Configure the project for builds
+# 3. Navigate to frontend folder
+cd frontend
+
+# 4. Configure EAS (first time only)
 eas build:configure
 
-# Build for Android (AAB for Play Store)
+# 5. Build for Play Store (AAB format)
 eas build --platform android --profile production
 
-# Or build APK for direct distribution
+# 6. Or build APK for testing
 eas build --platform android --profile preview
 ```
 
 ### Step 4: Upload to Play Store
 
-1. Go to Google Play Console
+1. Go to **Google Play Console**: https://play.google.com/console/
 2. Click **"Create app"**
 3. Fill in app details:
-   - App name: Antenna Analyzer
-   - Default language: English
-   - App type: App
-   - Free or paid: Free (with in-app purchases)
-   - Category: Tools
-4. Upload your AAB file
-5. Complete the **Content Rating** questionnaire
-6. Set up **Pricing & Distribution**
-7. Complete **Data Safety** form
-8. Submit for review
+   - App name: **SMA Antenna Analyzer**
+   - Default language: English (United States)
+   - App or game: **App**
+   - Free or paid: **Free** (with in-app purchases for subscriptions)
+   - Category: **Tools**
+   - Tags: Radio, Amateur Radio, Antenna, Calculator, Ham Radio
+
+4. **Store Listing**:
+   - Upload app icon (512x512)
+   - Upload feature graphic (1024x500)
+   - Add 2-8 screenshots
+   - Write short and full descriptions
+
+5. **Content Rating**:
+   - Complete questionnaire
+   - Answer: No violence, no data collection beyond basic
+
+6. **Data Safety**:
+   - Data collected: Email (for account)
+   - Data shared: None
+   - Security: Data encrypted in transit
+
+7. **Pricing & Distribution**:
+   - Free app
+   - Available in all countries
+
+8. **Release**:
+   - Upload your AAB file
+   - Create release
+   - Submit for review
 
 ### Step 5: Wait for Approval
-- Initial review: 1-7 days
-- Updates review: 1-3 days
+- Initial review: **3-7 days**
+- Updates review: **1-3 days**
 
 ---
 
@@ -129,12 +172,13 @@ For private distribution without the Play Store:
    eas build --platform android --profile preview
    ```
 
-2. Download the APK file
+2. Download the APK file from Expo dashboard
 
 3. Share via:
-   - Email
+   - Email attachment
    - Website download link
    - QR code to download URL
+   - Google Drive/Dropbox link
 
 4. Users install by:
    - Enabling "Install from unknown sources" in Android settings
@@ -148,9 +192,9 @@ Your `app.json` is configured with:
 
 ```json
 {
-  "name": "Antenna Analyzer",
+  "name": "SMA Antenna Analyzer",
   "android": {
-    "package": "com.antennaanalyzer.app",
+    "package": "com.smaantennaanalyzer.app",
     "versionCode": 1,
     "permissions": [
       "android.permission.INTERNET",
@@ -164,16 +208,45 @@ Your `app.json` is configured with:
 
 ## Checklist Before Publishing
 
+### Already Done ✅
+- [x] App icon (512x512) created
+- [x] Adaptive icon created
+- [x] Favicon created
+- [x] Splash icon created
+- [x] App.json configured
+- [x] EAS.json build config created
+- [x] Package name set (com.smaantennaanalyzer.app)
+
+### You Need To Do 📋
 - [ ] Create Google Play Developer account ($25)
-- [ ] Prepare 512x512 app icon
-- [ ] Prepare 1024x500 feature graphic
-- [ ] Take 2-8 screenshots of the app
-- [ ] Write app descriptions
-- [ ] Build production AAB with EAS
-- [ ] Complete content rating questionnaire
+- [ ] Create feature graphic (1024x500)
+- [ ] Take 2-8 app screenshots
+- [ ] Run `eas build` command
+- [ ] Upload to Play Console
+- [ ] Complete content rating
 - [ ] Complete data safety form
-- [ ] Set up pricing (free with subscriptions)
 - [ ] Submit for review
+
+---
+
+## Creating Feature Graphic & Screenshots
+
+### Feature Graphic (1024x500):
+- Use Canva, Figma, or Photoshop
+- Include: App name, antenna graphic, tagline
+- Colors: Dark background (#121212), green accents (#4CAF50)
+- Text: "SMA Antenna Analyzer" + "Professional Ham Radio Tool"
+
+### Screenshots:
+Take screenshots of these screens:
+1. Main calculator with results
+2. Radiation pattern polar plot
+3. Height optimizer results
+4. Saved designs list
+5. Admin panel (optional)
+6. Subscription page
+
+Use a phone or emulator at 1080x1920 resolution.
 
 ---
 
@@ -181,15 +254,16 @@ Your `app.json` is configured with:
 
 - **Google Play Console**: https://play.google.com/console/
 - **Expo EAS Build Docs**: https://docs.expo.dev/build/introduction/
-- **App Store Assets Guide**: https://support.google.com/googleplay/android-developer/answer/9866151
+- **Expo Account Signup**: https://expo.dev/signup
+- **Play Store Asset Requirements**: https://support.google.com/googleplay/android-developer/answer/9866151
 
 ---
 
-## Need Help?
+## Support
 
 For questions about:
-- Building the app: Check Expo documentation
-- Play Store policies: Google Play Console Help
-- App features: Contact developer
+- **Building**: Check Expo documentation
+- **Play Store policies**: Google Play Console Help Center
+- **App features**: Contact developer
 
-Good luck with your launch! 🚀
+🚀 Good luck with your Play Store launch!
