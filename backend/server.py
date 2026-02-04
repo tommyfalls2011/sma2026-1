@@ -1141,19 +1141,76 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         num_directors = n - 1
         current_position = 0
     
-    # Add directors (each ~3% shorter, spaced 0.2-0.25 wavelength)
-    for i in range(num_directors):
-        director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)  # Gradually increase spacing
-        current_position += director_spacing
-        director_length = round(driven_length * (0.95 - i * 0.02), 1)  # Each ~2% shorter
+    # === SPACING LOCK MODE ===
+    # When spacing lock is enabled, keep original positions and only tune lengths
+    if request.spacing_lock_enabled and request.locked_positions:
+        # Preserve the locked positions
+        for i, elem in enumerate(elements):
+            if i < len(request.locked_positions):
+                elem["position"] = request.locked_positions[i]
         
-        elements.append({
-            "element_type": "director",
-            "length": director_length,
-            "diameter": 0.5,
-            "position": current_position
-        })
-        notes.append(f"Director {i+1}: {director_length}\" at {current_position}\"")
+        # Add directors at locked positions  
+        for i in range(num_directors):
+            position_idx = (2 if use_reflector else 1) + i
+            if position_idx < len(request.locked_positions):
+                locked_pos = request.locked_positions[position_idx]
+            else:
+                # Fall back to calculated position if not enough locked positions
+                director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)
+                current_position += director_spacing
+                locked_pos = current_position
+            
+            director_length = round(driven_length * (0.95 - i * 0.02), 1)
+            
+            elements.append({
+                "element_type": "director",
+                "length": director_length,
+                "diameter": 0.5,
+                "position": locked_pos
+            })
+            notes.append(f"Director {i+1}: {director_length}\" at {locked_pos}\" (spacing locked)")
+        notes.append("Spacing Lock: Positions preserved, only lengths optimized")
+    else:
+        # Normal mode: calculate optimal positions
+        # Add directors (each ~3% shorter, spaced 0.2-0.25 wavelength)
+        for i in range(num_directors):
+            director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)  # Gradually increase spacing
+            current_position += director_spacing
+            director_length = round(driven_length * (0.95 - i * 0.02), 1)  # Each ~2% shorter
+            
+            elements.append({
+                "element_type": "director",
+                "length": director_length,
+                "diameter": 0.5,
+                "position": current_position
+            })
+            notes.append(f"Director {i+1}: {director_length}\" at {current_position}\"")
+    
+    # === BOOM LOCK MODE ===
+    # When boom lock is enabled, scale positions to fit within max boom length
+    if request.boom_lock_enabled and request.max_boom_length:
+        max_boom = request.max_boom_length
+        current_boom = max(e["position"] for e in elements) if elements else 0
+        
+        if current_boom > max_boom and current_boom > 0:
+            # Scale factor to fit within boom constraint
+            scale = max_boom / current_boom
+            
+            # Scale all positions
+            for elem in elements:
+                elem["position"] = round(elem["position"] * scale, 1)
+            
+            notes.append(f"")
+            notes.append(f"Boom Lock: Scaled to fit {max_boom}\" boom ({scale:.2%} of optimal)")
+            notes.append(f"Note: Compressed spacing may reduce gain by ~{round((1 - scale) * 3, 1)} dB")
+            
+            # Adjust predicted performance for compression
+            compression_penalty = (1 - scale) * 3
+        else:
+            notes.append(f"Boom Lock: Design fits within {max_boom}\" limit")
+            compression_penalty = 0
+    else:
+        compression_penalty = 0
     
     # Predict performance (slightly worse without reflector)
     base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
