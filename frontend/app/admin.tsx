@@ -422,15 +422,22 @@ export default function AdminScreen() {
           style={[styles.tab, activeTab === 'pricing' && styles.tabActive]}
           onPress={() => setActiveTab('pricing')}
         >
-          <Ionicons name="pricetag" size={18} color={activeTab === 'pricing' ? '#4CAF50' : '#888'} />
+          <Ionicons name="pricetag" size={16} color={activeTab === 'pricing' ? '#4CAF50' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'pricing' && styles.tabTextActive]}>Pricing</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'users' && styles.tabActive]}
           onPress={() => setActiveTab('users')}
         >
-          <Ionicons name="people" size={18} color={activeTab === 'users' ? '#4CAF50' : '#888'} />
+          <Ionicons name="people" size={16} color={activeTab === 'users' ? '#4CAF50' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'users' && styles.tabTextActive]}>Users</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'designs' && styles.tabActive]}
+          onPress={() => setActiveTab('designs')}
+        >
+          <Ionicons name="save" size={16} color={activeTab === 'designs' ? '#FF9800' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'designs' && styles.tabTextActive]}>Designs</Text>
         </TouchableOpacity>
       </View>
 
