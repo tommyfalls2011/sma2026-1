@@ -862,4 +862,13 @@ const styles = StyleSheet.create({
   deleteDesignBtn: { padding: 10 },
   emptyDesigns: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyDesignsText: { color: '#666', fontSize: 14, marginTop: 12 },
+  
+  // Trial Duration styles
+  trialDurationSection: { marginTop: 8, marginBottom: 8, padding: 10, backgroundColor: 'rgba(156,39,176,0.1)', borderRadius: 8, borderWidth: 1, borderColor: 'rgba(156,39,176,0.3)' },
+  trialDurationSelector: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  trialDayOption: { flex: 1, paddingVertical: 10, backgroundColor: '#252525', borderRadius: 8, borderWidth: 1, borderColor: '#333', alignItems: 'center' },
+  trialDayOptionActive: { backgroundColor: '#9C27B0', borderColor: '#9C27B0' },
+  trialDayText: { fontSize: 13, color: '#888', fontWeight: '600' },
+  trialDayTextActive: { color: '#fff' },
+  trialDurationHint: { fontSize: 10, color: '#9C27B0', marginTop: 8, textAlign: 'center' },
 });
