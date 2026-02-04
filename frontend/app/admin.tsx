@@ -80,6 +80,12 @@ export default function AdminScreen() {
   const [newUserTier, setNewUserTier] = useState('trial');
   const [newUserTrialDays, setNewUserTrialDays] = useState('7');  // Default 7 days
   const [addingUser, setAddingUser] = useState(false);
+  
+  // Edit User Modal state
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editUserTier, setEditUserTier] = useState('');
+  const [savingUserRole, setSavingUserRole] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoad();
