@@ -466,7 +466,7 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tierFields}>
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <Text style={styles.fieldLabel}>Price (one-time)</Text>
                   <TextInput
                     style={styles.input}
                     value={bronzePrice}
@@ -498,7 +498,7 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tierFields}>
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <Text style={styles.fieldLabel}>Price (one-time)</Text>
                   <TextInput
                     style={styles.input}
                     value={silverPrice}
@@ -530,7 +530,7 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tierFields}>
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Price ($/month)</Text>
+                  <Text style={styles.fieldLabel}>Price (one-time)</Text>
                   <TextInput
                     style={styles.input}
                     value={goldPrice}
