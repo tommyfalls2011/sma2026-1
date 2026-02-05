@@ -444,7 +444,7 @@ index 314684e..e69de29 100644
 ----+from typing import Dict, Any
 ----+
 ----+# Backend URL from frontend/.env
-----+BASE_URL = "https://antenna-analyzer-1.preview.emergentagent.com/api"
+----+BASE_URL = "https://smart-antenna.preview.emergentagent.com/api"
 ----+
 ----+def test_height_optimizer_fix():
 ----+    """
@@ -2179,7 +2179,7 @@ index 314684e..e69de29 100644
 --+from typing import Dict, Any
 --+
 --+# Backend URL from frontend .env
---+BACKEND_URL = "https://antenna-analyzer-1.preview.emergentagent.com/api"
+--+BACKEND_URL = "https://smart-antenna.preview.emergentagent.com/api"
 --+
 --+def test_calculate_no_reflector():
 --+    """Test 1: Calculate with 3 elements WITHOUT reflector"""
