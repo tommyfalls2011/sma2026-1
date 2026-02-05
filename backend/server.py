@@ -37,7 +37,7 @@ ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'fallstommy@gmail.com')
 # Default Subscription Tiers Configuration (can be overridden from DB)
 DEFAULT_SUBSCRIPTION_TIERS = {
     "trial": {
-        "name": "Trial",
+        "name": "Free Trial",
         "price": 0,
         "max_elements": 3,
         "duration_hours": 1,
@@ -46,27 +46,27 @@ DEFAULT_SUBSCRIPTION_TIERS = {
     },
     "bronze": {
         "name": "Bronze",
-        "price": 29.99,
-        "max_elements": 3,
-        "duration_days": 30,
+        "price": 39.99,
+        "max_elements": 5,
+        "duration_days": 36500,
         "features": ["basic_calc", "swr_meter", "band_selection"],
-        "description": "$29.99/month - 3 elements max"
+        "description": "$39.99 one-time - Basic antenna calculations"
     },
     "silver": {
         "name": "Silver",
-        "price": 49.99,
-        "max_elements": 7,
-        "duration_days": 30,
-        "features": ["basic_calc", "swr_meter", "band_selection", "stacking", "taper"],
-        "description": "$49.99/month - 7 elements max"
+        "price": 59.99,
+        "max_elements": 10,
+        "duration_days": 36500,
+        "features": ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"],
+        "description": "$59.99 one-time - Auto-tune & save designs"
     },
     "gold": {
         "name": "Gold",
-        "price": 69.99,
+        "price": 99.99,
         "max_elements": 20,
-        "duration_days": 30,
+        "duration_days": 36500,
         "features": ["all"],
-        "description": "$69.99/month - Full access"
+        "description": "$99.99 one-time - All features forever"
     },
     "subadmin": {
         "name": "Sub-Admin",
