@@ -774,9 +774,10 @@ export default function AntennaCalculator() {
       URL.revokeObjectURL(url);
       Alert.alert('Exported', `File saved as ${filename}`);
     } else {
-      // Mobile: Save to device and share
+      // Mobile: Save to cache directory and share
       try {
-        const fileUri = FileSystem.documentDirectory + filename;
+        // Use cache directory which has guaranteed write access
+        const fileUri = FileSystem.cacheDirectory + filename;
         await FileSystem.writeAsStringAsync(fileUri, csvContent, {
           encoding: FileSystem.EncodingType.UTF8,
         });
@@ -787,11 +788,9 @@ export default function AntennaCalculator() {
           await Sharing.shareAsync(fileUri, {
             mimeType: 'text/csv',
             dialogTitle: `Export ${filename}`,
-            UTI: 'public.comma-separated-values-text',
           });
-          Alert.alert('Success', `File exported: ${filename}`);
         } else {
-          Alert.alert('File Saved', `File saved to app documents:\n${filename}\n\nSharing not available on this device.`);
+          Alert.alert('File Saved', `File saved to app cache:\n${filename}\n\nSharing not available on this device.`);
         }
       } catch (error: any) {
         console.error('Export error:', error);
