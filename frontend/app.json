@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "sma-antenna-analyzer",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
     "android": {
       "package": "com.smaantennaanalyzer.app",
