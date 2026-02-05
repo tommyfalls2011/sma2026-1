@@ -1655,15 +1655,18 @@ async def update_pricing(pricing: PricingUpdate, admin: dict = Depends(require_a
     # Update in-memory
     SUBSCRIPTION_TIERS["bronze"]["price"] = pricing.bronze_price
     SUBSCRIPTION_TIERS["bronze"]["max_elements"] = pricing.bronze_max_elements
-    SUBSCRIPTION_TIERS["bronze"]["description"] = f"${pricing.bronze_price}/month - {pricing.bronze_max_elements} elements max"
+    SUBSCRIPTION_TIERS["bronze"]["description"] = f"${pricing.bronze_price} one-time - {pricing.bronze_max_elements} elements max"
+    SUBSCRIPTION_TIERS["bronze"]["duration_days"] = 36500
     
     SUBSCRIPTION_TIERS["silver"]["price"] = pricing.silver_price
     SUBSCRIPTION_TIERS["silver"]["max_elements"] = pricing.silver_max_elements
-    SUBSCRIPTION_TIERS["silver"]["description"] = f"${pricing.silver_price}/month - {pricing.silver_max_elements} elements max"
+    SUBSCRIPTION_TIERS["silver"]["description"] = f"${pricing.silver_price} one-time - {pricing.silver_max_elements} elements max"
+    SUBSCRIPTION_TIERS["silver"]["duration_days"] = 36500
     
     SUBSCRIPTION_TIERS["gold"]["price"] = pricing.gold_price
     SUBSCRIPTION_TIERS["gold"]["max_elements"] = pricing.gold_max_elements
-    SUBSCRIPTION_TIERS["gold"]["description"] = f"${pricing.gold_price}/month - Full access"
+    SUBSCRIPTION_TIERS["gold"]["description"] = f"${pricing.gold_price} one-time - Full access forever"
+    SUBSCRIPTION_TIERS["gold"]["duration_days"] = 36500
     
     # Save to database
     await db.settings.update_one(
