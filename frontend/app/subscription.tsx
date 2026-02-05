@@ -212,7 +212,7 @@ export default function SubscriptionScreen() {
                       <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={styles.checkIcon} />
                     )}
                   </View>
-                  <Text style={styles.planPrice}>${tier.price}<Text style={styles.planPeriod}>/month</Text></Text>
+                  <Text style={styles.planPrice}>${tier.price}<Text style={styles.planPeriod}> one-time</Text></Text>
                   <Text style={styles.planDesc}>{tier.description}</Text>
                   <View style={styles.planFeatures}>
                     <Text style={styles.planFeature}>• Up to {tier.max_elements} elements</Text>
