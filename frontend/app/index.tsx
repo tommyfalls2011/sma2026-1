@@ -793,9 +793,9 @@ export default function AntennaCalculator() {
         } else {
           Alert.alert('File Saved', `File saved to app documents:\n${filename}\n\nSharing not available on this device.`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Export error:', error);
-        Alert.alert('Export Error', 'Failed to save file. Please try again.');
+        Alert.alert('Export Error', `Failed to save file: ${error?.message || 'Unknown error'}\n\nPlease try again.`);
       }
     }
   };
