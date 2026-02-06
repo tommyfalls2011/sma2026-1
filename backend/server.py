@@ -1657,16 +1657,19 @@ async def get_admin_pricing(admin: dict = Depends(require_admin)):
     """Get current pricing settings (admin only)"""
     return {
         "bronze": {
-            "price": SUBSCRIPTION_TIERS["bronze"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["bronze"]["max_elements"]
+            "monthly_price": SUBSCRIPTION_TIERS["bronze_monthly"]["price"],
+            "yearly_price": SUBSCRIPTION_TIERS["bronze_yearly"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"]
         },
         "silver": {
-            "price": SUBSCRIPTION_TIERS["silver"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["silver"]["max_elements"]
+            "monthly_price": SUBSCRIPTION_TIERS["silver_monthly"]["price"],
+            "yearly_price": SUBSCRIPTION_TIERS["silver_yearly"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"]
         },
         "gold": {
-            "price": SUBSCRIPTION_TIERS["gold"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["gold"]["max_elements"]
+            "monthly_price": SUBSCRIPTION_TIERS["gold_monthly"]["price"],
+            "yearly_price": SUBSCRIPTION_TIERS["gold_yearly"]["price"],
+            "max_elements": SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"]
         },
         "payment": {
             "paypal_email": PAYMENT_CONFIG["paypal"]["email"],
@@ -1679,32 +1682,49 @@ async def update_pricing(pricing: PricingUpdate, admin: dict = Depends(require_a
     """Update subscription pricing (admin only)"""
     global SUBSCRIPTION_TIERS
     
-    # Update in-memory
-    SUBSCRIPTION_TIERS["bronze"]["price"] = pricing.bronze_price
-    SUBSCRIPTION_TIERS["bronze"]["max_elements"] = pricing.bronze_max_elements
-    SUBSCRIPTION_TIERS["bronze"]["description"] = f"${pricing.bronze_price} one-time - {pricing.bronze_max_elements} elements max"
-    SUBSCRIPTION_TIERS["bronze"]["duration_days"] = 36500
+    # Update Bronze
+    SUBSCRIPTION_TIERS["bronze_monthly"]["price"] = pricing.bronze_monthly_price
+    SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"] = pricing.bronze_max_elements
+    SUBSCRIPTION_TIERS["bronze_monthly"]["description"] = f"${pricing.bronze_monthly_price}/month - {pricing.bronze_max_elements} elements max"
     
-    SUBSCRIPTION_TIERS["silver"]["price"] = pricing.silver_price
-    SUBSCRIPTION_TIERS["silver"]["max_elements"] = pricing.silver_max_elements
-    SUBSCRIPTION_TIERS["silver"]["description"] = f"${pricing.silver_price} one-time - {pricing.silver_max_elements} elements max"
-    SUBSCRIPTION_TIERS["silver"]["duration_days"] = 36500
+    SUBSCRIPTION_TIERS["bronze_yearly"]["price"] = pricing.bronze_yearly_price
+    SUBSCRIPTION_TIERS["bronze_yearly"]["max_elements"] = pricing.bronze_max_elements
+    yearly_savings = round((pricing.bronze_monthly_price * 12) - pricing.bronze_yearly_price, 0)
+    SUBSCRIPTION_TIERS["bronze_yearly"]["description"] = f"${pricing.bronze_yearly_price}/year - {pricing.bronze_max_elements} elements (Save ${yearly_savings}!)"
     
-    SUBSCRIPTION_TIERS["gold"]["price"] = pricing.gold_price
-    SUBSCRIPTION_TIERS["gold"]["max_elements"] = pricing.gold_max_elements
-    SUBSCRIPTION_TIERS["gold"]["description"] = f"${pricing.gold_price} one-time - Full access forever"
-    SUBSCRIPTION_TIERS["gold"]["duration_days"] = 36500
+    # Update Silver
+    SUBSCRIPTION_TIERS["silver_monthly"]["price"] = pricing.silver_monthly_price
+    SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"] = pricing.silver_max_elements
+    SUBSCRIPTION_TIERS["silver_monthly"]["description"] = f"${pricing.silver_monthly_price}/month - {pricing.silver_max_elements} elements max"
+    
+    SUBSCRIPTION_TIERS["silver_yearly"]["price"] = pricing.silver_yearly_price
+    SUBSCRIPTION_TIERS["silver_yearly"]["max_elements"] = pricing.silver_max_elements
+    yearly_savings = round((pricing.silver_monthly_price * 12) - pricing.silver_yearly_price, 0)
+    SUBSCRIPTION_TIERS["silver_yearly"]["description"] = f"${pricing.silver_yearly_price}/year - {pricing.silver_max_elements} elements (Save ${yearly_savings}!)"
+    
+    # Update Gold
+    SUBSCRIPTION_TIERS["gold_monthly"]["price"] = pricing.gold_monthly_price
+    SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"] = pricing.gold_max_elements
+    SUBSCRIPTION_TIERS["gold_monthly"]["description"] = f"${pricing.gold_monthly_price}/month - All features"
+    
+    SUBSCRIPTION_TIERS["gold_yearly"]["price"] = pricing.gold_yearly_price
+    SUBSCRIPTION_TIERS["gold_yearly"]["max_elements"] = pricing.gold_max_elements
+    yearly_savings = round((pricing.gold_monthly_price * 12) - pricing.gold_yearly_price, 0)
+    SUBSCRIPTION_TIERS["gold_yearly"]["description"] = f"${pricing.gold_yearly_price}/year - All features (Save ${yearly_savings}!)"
     
     # Save to database
     await db.settings.update_one(
         {"type": "pricing"},
         {"$set": {
             "type": "pricing",
-            "bronze_price": pricing.bronze_price,
+            "bronze_monthly_price": pricing.bronze_monthly_price,
+            "bronze_yearly_price": pricing.bronze_yearly_price,
             "bronze_max_elements": pricing.bronze_max_elements,
-            "silver_price": pricing.silver_price,
+            "silver_monthly_price": pricing.silver_monthly_price,
+            "silver_yearly_price": pricing.silver_yearly_price,
             "silver_max_elements": pricing.silver_max_elements,
-            "gold_price": pricing.gold_price,
+            "gold_monthly_price": pricing.gold_monthly_price,
+            "gold_yearly_price": pricing.gold_yearly_price,
             "gold_max_elements": pricing.gold_max_elements,
             "updated_at": datetime.utcnow()
         }},
