@@ -54,13 +54,16 @@ export default function AdminScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'pricing' | 'users' | 'designs'>('pricing');
   
-  // Pricing state
+  // Pricing state - Monthly
   const [pricing, setPricing] = useState<PricingData | null>(null);
-  const [bronzePrice, setBronzePrice] = useState('');
+  const [bronzeMonthlyPrice, setBronzeMonthlyPrice] = useState('');
+  const [bronzeYearlyPrice, setBronzeYearlyPrice] = useState('');
   const [bronzeElements, setBronzeElements] = useState('');
-  const [silverPrice, setSilverPrice] = useState('');
+  const [silverMonthlyPrice, setSilverMonthlyPrice] = useState('');
+  const [silverYearlyPrice, setSilverYearlyPrice] = useState('');
   const [silverElements, setSilverElements] = useState('');
-  const [goldPrice, setGoldPrice] = useState('');
+  const [goldMonthlyPrice, setGoldMonthlyPrice] = useState('');
+  const [goldYearlyPrice, setGoldYearlyPrice] = useState('');
   const [goldElements, setGoldElements] = useState('');
   const [paypalEmail, setPaypalEmail] = useState('');
   const [cashappTag, setCashappTag] = useState('');
