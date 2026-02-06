@@ -1921,7 +1921,7 @@ async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
         raise HTTPException(status_code=403, detail="Cannot delete main admin account")
     
     # Delete user's designs too
-    await db.designs.delete_many({"user_id": user_id})
+    await db.saved_designs.delete_many({"user_id": user_id})
     
     # Delete the user
     await db.users.delete_one({"id": user_id})
