@@ -15,7 +15,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "env": {
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+      },
+      "node": "18.18.0"
     },
     "production": {
       "distribution": "store",
