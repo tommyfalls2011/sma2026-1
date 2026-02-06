@@ -182,11 +182,14 @@ export default function AdminScreen() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          bronze_price: parseFloat(bronzePrice),
+          bronze_monthly_price: parseFloat(bronzeMonthlyPrice),
+          bronze_yearly_price: parseFloat(bronzeYearlyPrice),
           bronze_max_elements: parseInt(bronzeElements),
-          silver_price: parseFloat(silverPrice),
+          silver_monthly_price: parseFloat(silverMonthlyPrice),
+          silver_yearly_price: parseFloat(silverYearlyPrice),
           silver_max_elements: parseInt(silverElements),
-          gold_price: parseFloat(goldPrice),
+          gold_monthly_price: parseFloat(goldMonthlyPrice),
+          gold_yearly_price: parseFloat(goldYearlyPrice),
           gold_max_elements: parseInt(goldElements)
         })
       });
