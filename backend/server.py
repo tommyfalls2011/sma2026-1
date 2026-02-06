@@ -1966,7 +1966,7 @@ async def admin_delete_design(design_id: str, admin: dict = Depends(require_admi
 @api_router.delete("/admin/designs/bulk/all")
 async def admin_delete_all_designs(admin: dict = Depends(require_admin)):
     """Delete ALL designs from all users (admin only) - use with caution!"""
-    result = await db.designs.delete_many({})
+    result = await db.saved_designs.delete_many({})
     
     return {"success": True, "message": f"Deleted {result.deleted_count} designs"}
 
@@ -1977,7 +1977,7 @@ async def admin_delete_user_designs(user_id: str, admin: dict = Depends(require_
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    result = await db.designs.delete_many({"user_id": user_id})
+    result = await db.saved_designs.delete_many({"user_id": user_id})
     
     return {"success": True, "message": f"Deleted {result.deleted_count} designs from {user.get('email', 'Unknown')}"}
 
