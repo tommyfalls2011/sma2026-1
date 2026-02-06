@@ -515,13 +515,24 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tierFields}>
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Price (one-time)</Text>
+                  <Text style={styles.fieldLabel}>Monthly Price</Text>
                   <TextInput
                     style={styles.input}
-                    value={silverPrice}
-                    onChangeText={setSilverPrice}
+                    value={silverMonthlyPrice}
+                    onChangeText={setSilverMonthlyPrice}
                     keyboardType="decimal-pad"
-                    placeholder="49.99"
+                    placeholder="19.99"
+                    placeholderTextColor="#555"
+                  />
+                </View>
+                <View style={styles.field}>
+                  <Text style={styles.fieldLabel}>Yearly Price</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={silverYearlyPrice}
+                    onChangeText={setSilverYearlyPrice}
+                    keyboardType="decimal-pad"
+                    placeholder="199.99"
                     placeholderTextColor="#555"
                   />
                 </View>
