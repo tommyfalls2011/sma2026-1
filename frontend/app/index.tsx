@@ -416,7 +416,7 @@ export default function AntennaCalculator() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           num_elements: inputs.num_elements,
-          height_from_ground: parseFloat(inputs.height_from_ground) || 35,
+          height_from_ground: parseFloat(inputs.height_from_ground) || 54,
           height_unit: inputs.height_unit,
           boom_diameter: parseFloat(inputs.boom_diameter) || 2,
           boom_unit: inputs.boom_unit,
