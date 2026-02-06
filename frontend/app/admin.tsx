@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
   tierCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4 },
   tierHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   tierName: { fontSize: 18, fontWeight: '700' },
-  tierFields: { flexDirection: 'row', gap: 12 },
+  tierFields: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   field: { flex: 1 },
   fieldLabel: { fontSize: 11, color: '#888', marginBottom: 4 },
   input: { backgroundColor: '#252525', borderRadius: 8, padding: 12, fontSize: 14, color: '#fff', borderWidth: 1, borderColor: '#333' },
