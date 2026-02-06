@@ -1112,24 +1112,36 @@ export default function AntennaCalculator() {
           </View>
 
           {/* Ground Radials */}
-          <View style={styles.section}>
+          <View style={[styles.section, { zIndex: 500 }]}>
             <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-network-outline" size={14} color="#8BC34A" /> Ground Radials</Text><Switch value={inputs.ground_radials.enabled} onValueChange={v => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, enabled: v } }))} trackColor={{ false: '#333', true: '#8BC34A' }} thumbColor="#fff" /></View>
             {inputs.ground_radials.enabled && (
               <View style={{ marginTop: 8 }}>
-                <Text style={styles.inputLabel}>Ground Type</Text>
-                <View style={styles.groundTypeSelector}>
-                  {['wet', 'average', 'dry'].map(gt => (
-                    <TouchableOpacity 
-                      key={gt} 
-                      style={[styles.groundTypeBtn, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnActive]}
-                      onPress={() => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, ground_type: gt } }))}
-                    >
-                      <Ionicons name={gt === 'wet' ? 'water' : gt === 'dry' ? 'sunny' : 'partly-sunny'} size={14} color={inputs.ground_radials.ground_type === gt ? '#fff' : '#888'} />
-                      <Text style={[styles.groundTypeBtnText, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnTextActive]}>{gt.charAt(0).toUpperCase() + gt.slice(1)}</Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={[styles.rowSpaced, { zIndex: 600 }]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Ground Type</Text>
+                    <View style={styles.groundTypeSelector}>
+                      {['wet', 'average', 'dry'].map(gt => (
+                        <TouchableOpacity 
+                          key={gt} 
+                          style={[styles.groundTypeBtn, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnActive]}
+                          onPress={() => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, ground_type: gt } }))}
+                        >
+                          <Ionicons name={gt === 'wet' ? 'water' : gt === 'dry' ? 'sunny' : 'partly-sunny'} size={14} color={inputs.ground_radials.ground_type === gt ? '#fff' : '#888'} />
+                          <Text style={[styles.groundTypeBtnText, inputs.ground_radials.ground_type === gt && styles.groundTypeBtnTextActive]}>{gt.charAt(0).toUpperCase() + gt.slice(1)}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={{ width: 100, zIndex: 700 }}>
+                    <Dropdown 
+                      label="# Radials" 
+                      value={inputs.ground_radials.num_radials.toString()} 
+                      options={[4, 6, 8, 10, 12, 14, 16, 18].map(n => ({ value: n.toString(), label: `${n} Radials` }))} 
+                      onChange={(v: string) => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, num_radials: parseInt(v) } }))} 
+                    />
+                  </View>
                 </View>
-                <Text style={styles.groundRadialHint}>8 radials (N, NE, E, SE, S, SW, W, NW) • ¼λ length • 0.5" dia wire</Text>
+                <Text style={styles.groundRadialHint}>{inputs.ground_radials.num_radials} radials • ¼λ length • 0.5" dia wire</Text>
                 {results?.ground_radials_info && (
                   <View style={styles.groundRadialInfo}>
                     <Text style={styles.groundRadialInfoText}>
