@@ -10,8 +10,14 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const TIER_COLORS: Record<string, string> = {
   trial: '#888',
   bronze: '#CD7F32',
+  bronze_monthly: '#CD7F32',
+  bronze_yearly: '#CD7F32',
   silver: '#C0C0C0',
+  silver_monthly: '#C0C0C0',
+  silver_yearly: '#C0C0C0',
   gold: '#FFD700',
+  gold_monthly: '#FFD700',
+  gold_yearly: '#FFD700',
   subadmin: '#9C27B0',
   admin: '#f44336'
 };
@@ -19,8 +25,14 @@ const TIER_COLORS: Record<string, string> = {
 const TIER_ICONS: Record<string, any> = {
   trial: 'time-outline',
   bronze: 'shield-outline',
+  bronze_monthly: 'shield-outline',
+  bronze_yearly: 'shield-outline',
   silver: 'shield-half-outline',
+  silver_monthly: 'shield-half-outline',
+  silver_yearly: 'shield-half-outline',
   gold: 'shield-checkmark',
+  gold_monthly: 'shield-checkmark',
+  gold_yearly: 'shield-checkmark',
   subadmin: 'key-outline',
   admin: 'key'
 };
@@ -33,6 +45,7 @@ export default function SubscriptionScreen() {
   const [loading, setLoading] = useState(false);
   const [trialRemaining, setTrialRemaining] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     if (user?.is_trial && user?.trial_started) {
@@ -78,18 +91,20 @@ export default function SubscriptionScreen() {
     if (method === 'paypal' && paymentMethods?.paypal?.email) {
       Alert.alert(
         'PayPal Payment',
-        `Send payment to:\n\n${paymentMethods.paypal.email}\n\nAmount: $${tiers?.[selectedTier!]?.price}\n\nAfter payment, click "Confirm Payment"`,
+        `Send payment to:\n\n${paymentMethods.paypal.email}\n\nInclude your email (${user?.email}) in the payment note.`,
         [
           { text: 'Copy Email', onPress: () => {} },
+          { text: 'Open PayPal', onPress: () => Linking.openURL(`https://paypal.me/${paymentMethods.paypal.email.split('@')[0]}`) },
           { text: 'OK' }
         ]
       );
     } else if (method === 'cashapp' && paymentMethods?.cashapp?.tag) {
       Alert.alert(
         'Cash App Payment',
-        `Send payment to:\n\n${paymentMethods.cashapp.tag}\n\nAmount: $${tiers?.[selectedTier!]?.price}\n\nAfter payment, click "Confirm Payment"`,
+        `Send payment to:\n\n${paymentMethods.cashapp.tag}\n\nInclude your email (${user?.email}) in the payment note.`,
         [
-          { text: 'Open Cash App', onPress: () => Linking.openURL(`https://cash.app/${paymentMethods.cashapp.tag.replace('$', '')}`) },
+          { text: 'Copy Tag', onPress: () => {} },
+          { text: 'Open Cash App', onPress: () => Linking.openURL(`https://cash.app/${paymentMethods.cashapp.tag}`) },
           { text: 'OK' }
         ]
       );
@@ -97,33 +112,51 @@ export default function SubscriptionScreen() {
   };
 
   const handleUpgrade = async () => {
-    if (!selectedTier || !selectedPayment) {
-      Alert.alert('Error', 'Please select a plan and payment method');
-      return;
+    if (!selectedTier || !selectedPayment) return;
+    
+    setLoading(true);
+    try {
+      const success = await upgradeSubscription(selectedTier, selectedPayment);
+      if (success) {
+        Alert.alert(
+          'Upgrade Requested',
+          'Your upgrade request has been submitted. Your account will be upgraded once payment is verified.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to process upgrade request');
     }
+    setLoading(false);
+  };
 
-    Alert.alert(
-      'Confirm Payment',
-      `Have you completed the ${selectedPayment === 'paypal' ? 'PayPal' : 'Cash App'} payment of $${tiers?.[selectedTier]?.price}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes, Confirm',
-          onPress: async () => {
-            setLoading(true);
-            const result = await upgradeSubscription(selectedTier, selectedPayment);
-            setLoading(false);
-            if (result.success) {
-              Alert.alert('Success', `Upgraded to ${tiers?.[selectedTier]?.name}!`, [
-                { text: 'OK', onPress: () => router.back() }
-              ]);
-            } else {
-              Alert.alert('Error', result.error || 'Upgrade failed');
-            }
-          }
-        }
-      ]
-    );
+  // Get current user tier base (e.g., "bronze" from "bronze_monthly")
+  const getUserTierBase = () => {
+    if (!user?.subscription_tier) return '';
+    return user.subscription_tier.replace('_monthly', '').replace('_yearly', '');
+  };
+
+  // Filter and group tiers by base tier (bronze, silver, gold)
+  const getDisplayTiers = () => {
+    if (!tiers) return [];
+    
+    const baseTiers = ['bronze', 'silver', 'gold'];
+    return baseTiers.map(base => {
+      const monthlyKey = `${base}_monthly`;
+      const yearlyKey = `${base}_yearly`;
+      const monthly = tiers[monthlyKey];
+      const yearly = tiers[yearlyKey];
+      
+      if (!monthly || !yearly) return null;
+      
+      return {
+        base,
+        monthly: { ...monthly, key: monthlyKey },
+        yearly: { ...yearly, key: yearlyKey },
+        color: TIER_COLORS[base],
+        icon: TIER_ICONS[base]
+      };
+    }).filter(Boolean);
   };
 
   if (!user) {
@@ -138,6 +171,9 @@ export default function SubscriptionScreen() {
       </SafeAreaView>
     );
   }
+
+  const displayTiers = getDisplayTiers();
+  const userTierBase = getUserTierBase();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -164,16 +200,16 @@ export default function SubscriptionScreen() {
         )}
 
         {/* Current Status */}
-        <View style={[styles.statusCard, { borderColor: TIER_COLORS[user.subscription_tier] }]}>
+        <View style={[styles.statusCard, { borderColor: TIER_COLORS[user.subscription_tier] || '#888' }]}>
           <View style={styles.statusHeader}>
-            <Ionicons name={TIER_ICONS[user.subscription_tier]} size={28} color={TIER_COLORS[user.subscription_tier]} />
+            <Ionicons name={TIER_ICONS[user.subscription_tier] || 'person'} size={28} color={TIER_COLORS[user.subscription_tier] || '#888'} />
             <View style={styles.statusInfo}>
               <Text style={styles.statusName}>{user.name}</Text>
               <Text style={styles.statusEmail}>{user.email}</Text>
             </View>
           </View>
           <View style={styles.statusDetails}>
-            <View style={[styles.tierBadge, { backgroundColor: TIER_COLORS[user.subscription_tier] }]}>
+            <View style={[styles.tierBadge, { backgroundColor: TIER_COLORS[user.subscription_tier] || '#888' }]}>
               <Text style={styles.tierBadgeText}>{tiers?.[user.subscription_tier]?.name || user.subscription_tier}</Text>
             </View>
             {user.is_trial && trialRemaining !== null && (
@@ -189,30 +225,68 @@ export default function SubscriptionScreen() {
         </View>
 
         {/* Upgrade Plans */}
-        {user.subscription_tier !== 'gold' && user.subscription_tier !== 'admin' && (
+        {userTierBase !== 'gold' && user.subscription_tier !== 'admin' && (
           <>
             <Text style={styles.sectionTitle}>Upgrade Your Plan</Text>
             
-            {tiers && Object.entries(tiers)
-              .filter(([key]) => key !== 'trial' && key !== 'admin')
-              .map(([key, tier]) => (
+            {/* Billing Cycle Toggle */}
+            <View style={styles.billingToggleContainer}>
+              <TouchableOpacity
+                style={[styles.billingToggle, billingCycle === 'monthly' && styles.billingToggleActive]}
+                onPress={() => { setBillingCycle('monthly'); setSelectedTier(null); }}
+              >
+                <Text style={[styles.billingToggleText, billingCycle === 'monthly' && styles.billingToggleTextActive]}>
+                  Monthly
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.billingToggle, billingCycle === 'yearly' && styles.billingToggleActive]}
+                onPress={() => { setBillingCycle('yearly'); setSelectedTier(null); }}
+              >
+                <Text style={[styles.billingToggleText, billingCycle === 'yearly' && styles.billingToggleTextActive]}>
+                  Yearly
+                </Text>
+                <View style={styles.saveBadge}>
+                  <Text style={styles.saveBadgeText}>SAVE!</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Plan Cards */}
+            {displayTiers.map((tierGroup: any) => {
+              const tier = billingCycle === 'monthly' ? tierGroup.monthly : tierGroup.yearly;
+              const tierKey = tier.key;
+              const isCurrentTier = userTierBase === tierGroup.base;
+              
+              return (
                 <TouchableOpacity
-                  key={key}
+                  key={tierKey}
                   style={[
                     styles.planCard,
-                    { borderColor: TIER_COLORS[key] },
-                    selectedTier === key && styles.planCardSelected
+                    { borderColor: tierGroup.color },
+                    selectedTier === tierKey && styles.planCardSelected,
+                    isCurrentTier && styles.planCardCurrent
                   ]}
-                  onPress={() => setSelectedTier(key)}
+                  onPress={() => !isCurrentTier && setSelectedTier(tierKey)}
+                  disabled={isCurrentTier}
                 >
                   <View style={styles.planHeader}>
-                    <Ionicons name={TIER_ICONS[key]} size={24} color={TIER_COLORS[key]} />
-                    <Text style={[styles.planName, { color: TIER_COLORS[key] }]}>{tier.name}</Text>
-                    {selectedTier === key && (
+                    <Ionicons name={tierGroup.icon} size={24} color={tierGroup.color} />
+                    <Text style={[styles.planName, { color: tierGroup.color }]}>
+                      {tierGroup.base.charAt(0).toUpperCase() + tierGroup.base.slice(1)}
+                    </Text>
+                    {isCurrentTier ? (
+                      <View style={styles.currentBadge}>
+                        <Text style={styles.currentBadgeText}>CURRENT</Text>
+                      </View>
+                    ) : selectedTier === tierKey ? (
                       <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={styles.checkIcon} />
-                    )}
+                    ) : null}
                   </View>
-                  <Text style={styles.planPrice}>${tier.price}<Text style={styles.planPeriod}> one-time</Text></Text>
+                  <Text style={styles.planPrice}>
+                    ${tier.price}
+                    <Text style={styles.planPeriod}>/{billingCycle === 'monthly' ? 'month' : 'year'}</Text>
+                  </Text>
                   <Text style={styles.planDesc}>{tier.description}</Text>
                   <View style={styles.planFeatures}>
                     <Text style={styles.planFeature}>• Up to {tier.max_elements} elements</Text>
@@ -223,9 +297,15 @@ export default function SubscriptionScreen() {
                         <Text key={i} style={styles.planFeature}>• {f.replace('_', ' ')}</Text>
                       ))
                     )}
+                    {billingCycle === 'yearly' && (
+                      <Text style={[styles.planFeature, { color: '#4CAF50', fontWeight: '600' }]}>
+                        • Save money vs monthly!
+                      </Text>
+                    )}
                   </View>
                 </TouchableOpacity>
-              ))}
+              );
+            })}
 
             {/* Payment Methods */}
             {selectedTier && (
@@ -282,17 +362,18 @@ export default function SubscriptionScreen() {
           </>
         )}
 
-        {/* Gold/Admin Message */}
-        {(user.subscription_tier === 'gold' || user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') && (
+        {/* Already at max tier */}
+        {(userTierBase === 'gold' || user.subscription_tier === 'admin') && (
           <View style={styles.maxTierCard}>
-            <Ionicons name="star" size={40} color="#FFD700" />
+            <Ionicons name="trophy" size={48} color="#FFD700" />
             <Text style={styles.maxTierTitle}>You have full access!</Text>
             <Text style={styles.maxTierDesc}>
-              Enjoy all features with unlimited elements.
+              Enjoy all features with your {tiers?.[user.subscription_tier]?.name || 'Premium'} subscription.
             </Text>
           </View>
         )}
 
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -301,59 +382,70 @@ export default function SubscriptionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  message: { color: '#888', fontSize: 16, marginBottom: 20 },
-  loginBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
-  loginBtnText: { color: '#fff', fontWeight: '600' },
-
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  backBtn: { padding: 8 },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: 'bold', color: '#fff', textAlign: 'center' },
-  logoutBtn: { padding: 8 },
+  scrollContent: { padding: 16 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  message: { fontSize: 16, color: '#888', marginBottom: 16 },
+  loginBtn: { backgroundColor: '#2196F3', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 },
+  loginBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   
-  adminPanelBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f44336', borderRadius: 12, padding: 14, marginBottom: 16, gap: 8 },
-  adminPanelBtnText: { color: '#fff', fontSize: 15, fontWeight: '600', flex: 1 },
-
-  statusCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 2 },
-  statusHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  statusInfo: { flex: 1 },
-  statusName: { fontSize: 18, fontWeight: '600', color: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, paddingVertical: 8 },
+  backBtn: { padding: 4 },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: 'bold', color: '#fff', marginLeft: 12 },
+  logoutBtn: { padding: 4 },
+  
+  adminPanelBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1E1E1E', padding: 12, borderRadius: 8, marginBottom: 16, gap: 8 },
+  adminPanelBtnText: { flex: 1, color: '#fff', fontSize: 14, fontWeight: '500' },
+  
+  statusCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginBottom: 20, borderWidth: 2 },
+  statusHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  statusInfo: { marginLeft: 12, flex: 1 },
+  statusName: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
   statusEmail: { fontSize: 13, color: '#888' },
-  statusDetails: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 12 },
+  statusDetails: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   tierBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  tierBadgeText: { color: '#000', fontSize: 12, fontWeight: '700' },
+  tierBadgeText: { color: '#121212', fontSize: 12, fontWeight: 'bold' },
   trialTimer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  trialTimerText: { color: '#FFC107', fontSize: 14, fontWeight: '600' },
-  maxElements: { color: '#888', fontSize: 12, marginTop: 8 },
-
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#fff', marginBottom: 12, marginTop: 8 },
-
-  planCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2, borderColor: '#333' },
-  planCardSelected: { borderColor: '#4CAF50', backgroundColor: '#1f2f1f' },
-  planHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  planName: { fontSize: 18, fontWeight: '700', flex: 1 },
+  trialTimerText: { fontSize: 14, color: '#FFC107', fontWeight: '600' },
+  maxElements: { fontSize: 12, color: '#888', marginTop: 8 },
+  
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#fff', marginBottom: 12, marginTop: 8 },
+  
+  billingToggleContainer: { flexDirection: 'row', backgroundColor: '#1E1E1E', borderRadius: 12, padding: 4, marginBottom: 16 },
+  billingToggle: { flex: 1, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  billingToggleActive: { backgroundColor: '#2196F3' },
+  billingToggleText: { fontSize: 15, color: '#888', fontWeight: '600' },
+  billingToggleTextActive: { color: '#fff' },
+  saveBadge: { backgroundColor: '#4CAF50', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  saveBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  
+  planCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2 },
+  planCardSelected: { backgroundColor: '#1a2a1a', borderColor: '#4CAF50' },
+  planCardCurrent: { opacity: 0.6 },
+  planHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  planName: { fontSize: 18, fontWeight: 'bold', marginLeft: 8, flex: 1 },
   checkIcon: { marginLeft: 'auto' },
-  planPrice: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 8 },
-  planPeriod: { fontSize: 14, fontWeight: '400', color: '#888' },
-  planDesc: { fontSize: 13, color: '#888', marginTop: 4 },
-  planFeatures: { marginTop: 12 },
-  planFeature: { fontSize: 12, color: '#aaa', marginBottom: 2 },
-
-  paymentCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2, borderColor: '#333' },
-  paymentCardSelected: { borderColor: '#4CAF50' },
-  paymentHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  paymentInfo: { flex: 1 },
+  currentBadge: { backgroundColor: '#666', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  currentBadgeText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
+  planPrice: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
+  planPeriod: { fontSize: 14, color: '#888', fontWeight: 'normal' },
+  planDesc: { fontSize: 13, color: '#888', marginBottom: 12 },
+  planFeatures: { gap: 4 },
+  planFeature: { fontSize: 13, color: '#aaa' },
+  
+  paymentCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2, borderColor: '#333' },
+  paymentCardSelected: { borderColor: '#4CAF50', backgroundColor: '#1a2a1a' },
+  paymentHeader: { flexDirection: 'row', alignItems: 'center' },
+  paymentInfo: { marginLeft: 12, flex: 1 },
   paymentName: { fontSize: 16, fontWeight: '600', color: '#fff' },
   paymentEmail: { fontSize: 13, color: '#888' },
   cashAppIcon: { width: 28, height: 28, backgroundColor: '#00D632', borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
-  cashAppText: { color: '#fff', fontWeight: '800', fontSize: 18 },
-
-  confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#4CAF50', borderRadius: 12, padding: 16, marginTop: 8, gap: 8 },
+  cashAppText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  
+  confirmBtn: { backgroundColor: '#4CAF50', borderRadius: 12, padding: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 8 },
   confirmBtnDisabled: { backgroundColor: '#333' },
   confirmBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-
-  maxTierCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 30, alignItems: 'center', marginTop: 20 },
-  maxTierTitle: { fontSize: 20, fontWeight: '700', color: '#FFD700', marginTop: 12 },
+  
+  maxTierCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 24, alignItems: 'center', marginTop: 20 },
+  maxTierTitle: { fontSize: 20, fontWeight: 'bold', color: '#FFD700', marginTop: 12 },
   maxTierDesc: { fontSize: 14, color: '#888', textAlign: 'center', marginTop: 8 },
 });
