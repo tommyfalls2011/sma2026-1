@@ -213,10 +213,18 @@ const styles = StyleSheet.create({
   switchButtonText: { color: '#888', fontSize: 14 },
   switchButtonLink: { color: '#4CAF50', fontWeight: '600' },
   
-  pricingPreview: { backgroundColor: '#1a1a1a', borderRadius: 16, padding: 16, marginBottom: 30 },
+  pricingPreview: { backgroundColor: '#1a1a1a', borderRadius: 16, padding: 16, marginBottom: 16 },
   pricingTitle: { fontSize: 14, fontWeight: '600', color: '#888', textAlign: 'center', marginBottom: 12 },
   tierRow: { flexDirection: 'row', justifyContent: 'space-around', gap: 8 },
   tierBadge: { alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 10, minWidth: 90 },
   tierBadgeText: { color: '#000', fontSize: 12, fontWeight: '700' },
-  tierPrice: { color: '#000', fontSize: 14, fontWeight: '800', marginTop: 2 },
+  tierPrice: { color: '#000', fontSize: 13, fontWeight: '800', marginTop: 2 },
+  yearlyHint: { textAlign: 'center', color: '#4CAF50', fontSize: 12, marginTop: 12, fontWeight: '500' },
+  
+  expoSection: { backgroundColor: '#1a1a1a', borderRadius: 16, padding: 16, marginBottom: 30, borderWidth: 1, borderColor: '#333' },
+  expoTitle: { fontSize: 16, fontWeight: '600', color: '#fff', textAlign: 'center', marginBottom: 4 },
+  expoDesc: { fontSize: 12, color: '#888', textAlign: 'center', marginBottom: 12 },
+  expoButtons: { flexDirection: 'row', justifyContent: 'center', gap: 12 },
+  expoButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#333', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8, gap: 6 },
+  expoButtonText: { color: '#fff', fontSize: 13, fontWeight: '500' },
 });
