@@ -31,9 +31,9 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 interface PricingData {
-  bronze: { price: number; max_elements: number };
-  silver: { price: number; max_elements: number };
-  gold: { price: number; max_elements: number };
+  bronze: { monthly_price?: number; yearly_price?: number; max_elements: number };
+  silver: { monthly_price?: number; yearly_price?: number; max_elements: number };
+  gold: { monthly_price?: number; yearly_price?: number; max_elements: number };
   payment: { paypal_email: string; cashapp_tag: string };
 }
 
