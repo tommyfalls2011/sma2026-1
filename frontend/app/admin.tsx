@@ -131,11 +131,14 @@ export default function AdminScreen() {
       if (pricingRes.ok) {
         const data = await pricingRes.json();
         setPricing(data);
-        setBronzePrice(data.bronze.price.toString());
+        setBronzeMonthlyPrice(data.bronze.monthly_price?.toString() || '');
+        setBronzeYearlyPrice(data.bronze.yearly_price?.toString() || '');
         setBronzeElements(data.bronze.max_elements.toString());
-        setSilverPrice(data.silver.price.toString());
+        setSilverMonthlyPrice(data.silver.monthly_price?.toString() || '');
+        setSilverYearlyPrice(data.silver.yearly_price?.toString() || '');
         setSilverElements(data.silver.max_elements.toString());
-        setGoldPrice(data.gold.price.toString());
+        setGoldMonthlyPrice(data.gold.monthly_price?.toString() || '');
+        setGoldYearlyPrice(data.gold.yearly_price?.toString() || '');
         setGoldElements(data.gold.max_elements.toString());
         setPaypalEmail(data.payment.paypal_email);
         setCashappTag(data.payment.cashapp_tag);
