@@ -1342,13 +1342,19 @@ class HeightOptimizeOutput(BaseModel):
 
 @api_router.post("/optimize-height", response_model=HeightOptimizeOutput)
 async def optimize_height(request: HeightOptimizeRequest):
-    """Test heights from min to max and find best overall performance (SWR, Gain, F/B)."""
+    """Test heights from min to max and find best overall performance (SWR, Gain, F/B, Take-off Angle)."""
     best_height = request.min_height
     best_score = -999.0  # We'll maximize a combined score
     best_swr = 999.0
     best_gain = 0.0
     best_fb = 0.0
     heights_tested = []
+    
+    # Get wavelength for takeoff angle calculation
+    band_info = BAND_DEFINITIONS.get(request.band, BAND_DEFINITIONS["11m_cb"])
+    center_freq = request.frequency_mhz if request.frequency_mhz else band_info["center"]
+    c = 299792458
+    wavelength = c / (center_freq * 1e6)
     
     for height in range(request.min_height, request.max_height + 1, request.step):
         # Create a calculation request for this height
@@ -1372,21 +1378,51 @@ async def optimize_height(request: HeightOptimizeRequest):
         gain = result.gain_dbi
         fb = result.fb_ratio
         
-        # Calculate a combined performance score
-        # Lower SWR is better (penalty for high SWR)
-        # Higher gain is better
-        # Higher F/B is better
-        swr_score = max(0, 3 - swr) * 10  # SWR 1.0 = 20 pts, SWR 2.0 = 10 pts, SWR 3.0+ = 0 pts
-        gain_score = gain * 2  # Gain directly contributes
-        fb_score = fb * 0.5  # F/B contributes
+        # Calculate take-off angle for this height
+        height_m = height * 0.3048  # ft to meters
+        height_wavelengths = height_m / wavelength
         
-        total_score = swr_score + gain_score + fb_score
+        if height_wavelengths >= 0.25:
+            takeoff_angle = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
+        else:
+            takeoff_angle = 70 + (0.25 - height_wavelengths) * 80
+        takeoff_angle = round(max(5, min(90, takeoff_angle)), 1)
+        
+        # === IMPROVED SCORING ===
+        # SWR: Anything under 1.5 is good. Diminishing returns below that.
+        # This prevents SWR from dominating the score.
+        if swr <= 1.5:
+            swr_score = 10 - (swr - 1.0) * 4  # 1.0→10, 1.5→8 (small range)
+        elif swr <= 2.0:
+            swr_score = 8 - (swr - 1.5) * 8   # 1.5→8, 2.0→4
+        else:
+            swr_score = max(0, 4 - (swr - 2.0) * 4)  # 2.0→4, 3.0→0
+        
+        # Gain: Higher is better, weighted strongly
+        gain_score = gain * 2.5
+        
+        # F/B ratio: Higher is better
+        fb_score = fb * 0.4
+        
+        # Take-off angle: LOWER is better for DX performance
+        # Angles below 20° are excellent, 20-30° good, above 30° less desirable
+        if takeoff_angle <= 15:
+            takeoff_score = 25  # Excellent DX angle - max bonus
+        elif takeoff_angle <= 25:
+            takeoff_score = 25 - (takeoff_angle - 15) * 1.0  # 15→25, 25→15
+        elif takeoff_angle <= 40:
+            takeoff_score = 15 - (takeoff_angle - 25) * 0.8  # 25→15, 40→3
+        else:
+            takeoff_score = max(0, 3 - (takeoff_angle - 40) * 0.1)  # Poor angles
+        
+        total_score = swr_score + gain_score + fb_score + takeoff_score
         
         heights_tested.append({
             "height": height, 
             "swr": round(swr, 2),
             "gain": round(gain, 2),
             "fb_ratio": round(fb, 1),
+            "takeoff_angle": takeoff_angle,
             "score": round(total_score, 1)
         })
         
