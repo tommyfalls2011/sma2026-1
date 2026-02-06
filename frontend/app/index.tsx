@@ -864,9 +864,9 @@ export default function AntennaCalculator() {
           </View>
           
           {/* Band & Frequency */}
-          <View style={styles.section}>
-            <View style={styles.rowSpaced}>
-              <View style={{ flex: 1 }}><Dropdown label="Band" value={inputs.band} options={BANDS.map(b => ({ value: b.id, label: b.name }))} onChange={handleBandChange} /></View>
+          <View style={[styles.section, { zIndex: 2000 }]}>
+            <View style={[styles.rowSpaced, { zIndex: 2000 }]}>
+              <View style={{ flex: 1, zIndex: 2000 }}><Dropdown label="Band" value={inputs.band} options={BANDS.map(b => ({ value: b.id, label: b.name }))} onChange={handleBandChange} /></View>
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Freq (MHz)</Text><TextInput style={styles.input} value={inputs.frequency_mhz} onChangeText={v => setInputs(p => ({ ...p, frequency_mhz: v }))} keyboardType="decimal-pad" /></View>
             </View>
             
