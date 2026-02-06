@@ -1955,11 +1955,11 @@ async def admin_get_all_designs(admin: dict = Depends(require_admin)):
 @api_router.delete("/admin/designs/{design_id}")
 async def admin_delete_design(design_id: str, admin: dict = Depends(require_admin)):
     """Delete a specific design (admin only)"""
-    design = await db.designs.find_one({"id": design_id})
+    design = await db.saved_designs.find_one({"id": design_id})
     if not design:
         raise HTTPException(status_code=404, detail="Design not found")
     
-    await db.designs.delete_one({"id": design_id})
+    await db.saved_designs.delete_one({"id": design_id})
     
     return {"success": True, "message": f"Design '{design.get('name', 'Unnamed')}' deleted successfully"}
 
