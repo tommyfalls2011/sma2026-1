@@ -54,7 +54,7 @@ export default function AdminScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'pricing' | 'users' | 'designs'>('pricing');
   
-  // Pricing state - Monthly
+  // Pricing state
   const [pricing, setPricing] = useState<PricingData | null>(null);
   const [bronzeMonthlyPrice, setBronzeMonthlyPrice] = useState('');
   const [bronzeYearlyPrice, setBronzeYearlyPrice] = useState('');
