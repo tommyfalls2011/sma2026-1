@@ -44,29 +44,53 @@ DEFAULT_SUBSCRIPTION_TIERS = {
         "features": ["basic_calc", "swr_meter"],
         "description": "1 hour free trial with basic features"
     },
-    "bronze": {
-        "name": "Bronze",
+    "bronze_monthly": {
+        "name": "Bronze Monthly",
         "price": 39.99,
         "max_elements": 5,
-        "duration_days": 36500,
+        "duration_days": 30,
         "features": ["basic_calc", "swr_meter", "band_selection"],
-        "description": "$39.99 one-time - Basic antenna calculations"
+        "description": "$39.99/month - Basic antenna calculations"
     },
-    "silver": {
-        "name": "Silver",
+    "bronze_yearly": {
+        "name": "Bronze Yearly",
+        "price": 400.00,
+        "max_elements": 5,
+        "duration_days": 365,
+        "features": ["basic_calc", "swr_meter", "band_selection"],
+        "description": "$400/year - Basic antenna calculations (Save $80!)"
+    },
+    "silver_monthly": {
+        "name": "Silver Monthly",
         "price": 59.99,
         "max_elements": 10,
-        "duration_days": 36500,
+        "duration_days": 30,
         "features": ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"],
-        "description": "$59.99 one-time - Auto-tune & save designs"
+        "description": "$59.99/month - Auto-tune & save designs"
     },
-    "gold": {
-        "name": "Gold",
+    "silver_yearly": {
+        "name": "Silver Yearly",
+        "price": 675.00,
+        "max_elements": 10,
+        "duration_days": 365,
+        "features": ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"],
+        "description": "$675/year - Auto-tune & save designs (Save $45!)"
+    },
+    "gold_monthly": {
+        "name": "Gold Monthly",
         "price": 99.99,
         "max_elements": 20,
-        "duration_days": 36500,
+        "duration_days": 30,
         "features": ["all"],
-        "description": "$99.99 one-time - All features forever"
+        "description": "$99.99/month - All features"
+    },
+    "gold_yearly": {
+        "name": "Gold Yearly",
+        "price": 1050.00,
+        "max_elements": 20,
+        "duration_days": 365,
+        "features": ["all"],
+        "description": "$1050/year - All features (Save $150!)"
     },
     "subadmin": {
         "name": "Sub-Admin",
