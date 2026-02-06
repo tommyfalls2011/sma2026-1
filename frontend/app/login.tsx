@@ -142,16 +142,39 @@ export default function LoginScreen() {
             <View style={styles.tierRow}>
               <View style={[styles.tierBadge, { backgroundColor: '#CD7F32' }]}>
                 <Text style={styles.tierBadgeText}>Bronze</Text>
-                <Text style={styles.tierPrice}>$29.99</Text>
+                <Text style={styles.tierPrice}>$39.99/mo</Text>
               </View>
               <View style={[styles.tierBadge, { backgroundColor: '#C0C0C0' }]}>
                 <Text style={styles.tierBadgeText}>Silver</Text>
-                <Text style={styles.tierPrice}>$49.99</Text>
+                <Text style={styles.tierPrice}>$59.99/mo</Text>
               </View>
               <View style={[styles.tierBadge, { backgroundColor: '#FFD700' }]}>
                 <Text style={styles.tierBadgeText}>Gold</Text>
-                <Text style={styles.tierPrice}>$69.99</Text>
+                <Text style={styles.tierPrice}>$99.99/mo</Text>
               </View>
+            </View>
+            <Text style={styles.yearlyHint}>Yearly plans available - Save up to $150!</Text>
+          </View>
+
+          {/* Expo Go Download Section */}
+          <View style={styles.expoSection}>
+            <Text style={styles.expoTitle}>📱 Using Expo Go?</Text>
+            <Text style={styles.expoDesc}>Download the Expo Go app to test this app on your phone</Text>
+            <View style={styles.expoButtons}>
+              <TouchableOpacity 
+                style={styles.expoButton}
+                onPress={() => Linking.openURL('https://play.google.com/store/apps/details?id=host.exp.exponent')}
+              >
+                <Ionicons name="logo-google-playstore" size={18} color="#fff" />
+                <Text style={styles.expoButtonText}>Google Play</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.expoButton}
+                onPress={() => Linking.openURL('https://apps.apple.com/app/expo-go/id982107779')}
+              >
+                <Ionicons name="logo-apple" size={18} color="#fff" />
+                <Text style={styles.expoButtonText}>App Store</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
