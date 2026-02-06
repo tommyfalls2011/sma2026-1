@@ -917,16 +917,36 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         quarter_wave_ft = quarter_wave_m * 3.28084
         quarter_wave_in = quarter_wave_m * 39.3701
         
-        # 8 radial directions
-        radial_directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+        # Radial directions based on count
+        all_directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "NNE", "ENE", "ESE", "SSE", "SSW", "WSW", "WNW", "NNW", "N2", "E2"]
+        num_rads = ground_radials.num_radials
+        radial_directions = all_directions[:num_rads]
         
-        # Ground effect on antenna performance
+        # Ground effect on antenna performance - scaled by number of radials
+        # More radials = better ground plane = more improvement
+        # Base improvements at 8 radials, scale from there
+        radial_factor = num_rads / 8.0  # 1.0 at 8 radials
+        
         ground_improvement = {
             "wet": {"swr_improvement": 0.05, "gain_bonus": 1.5, "efficiency_bonus": 8},
             "average": {"swr_improvement": 0.03, "gain_bonus": 0.8, "efficiency_bonus": 5},
             "dry": {"swr_improvement": 0.01, "gain_bonus": 0.3, "efficiency_bonus": 2}
         }
-        g_bonus = ground_improvement.get(ground_type, ground_improvement["average"])
+        base_bonus = ground_improvement.get(ground_type, ground_improvement["average"])
+        
+        # Scale improvements by radial count (diminishing returns after 8)
+        if radial_factor <= 1.0:
+            # Fewer radials = linear reduction
+            scale = radial_factor
+        else:
+            # More radials = diminishing returns (logarithmic)
+            scale = 1.0 + (math.log2(radial_factor) * 0.5)
+        
+        g_bonus = {
+            "swr_improvement": round(base_bonus["swr_improvement"] * scale, 3),
+            "gain_bonus": round(base_bonus["gain_bonus"] * scale, 2),
+            "efficiency_bonus": round(base_bonus["efficiency_bonus"] * scale, 1)
+        }
         
         ground_radials_info = {
             "enabled": True,
@@ -939,7 +959,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "radial_length_in": round(quarter_wave_in, 1),
             "wire_diameter_in": ground_radials.wire_diameter,
             "num_radials": ground_radials.num_radials,
-            "radial_directions": radial_directions[:ground_radials.num_radials],
+            "radial_directions": radial_directions,
             "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1),
             "estimated_improvements": {
                 "swr_improvement": g_bonus["swr_improvement"],
