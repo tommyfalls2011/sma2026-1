@@ -1933,7 +1933,7 @@ async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
 @api_router.get("/admin/designs")
 async def admin_get_all_designs(admin: dict = Depends(require_admin)):
     """Get all saved designs from all users (admin only)"""
-    designs = await db.designs.find().to_list(length=500)
+    designs = await db.saved_designs.find().to_list(length=500)
     
     # Get user info for each design
     result = []
