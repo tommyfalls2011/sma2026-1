@@ -131,19 +131,22 @@ PAYMENT_CONFIG = DEFAULT_PAYMENT_CONFIG.copy()
 
 # ==================== ADMIN MODELS ====================
 class PricingUpdate(BaseModel):
-    bronze_price: float
-    bronze_max_elements: int
-    silver_price: float
-    silver_max_elements: int
-    gold_price: float
-    gold_max_elements: int
+    bronze_monthly_price: float = 39.99
+    bronze_yearly_price: float = 400.00
+    bronze_max_elements: int = 5
+    silver_monthly_price: float = 59.99
+    silver_yearly_price: float = 675.00
+    silver_max_elements: int = 10
+    gold_monthly_price: float = 99.99
+    gold_yearly_price: float = 1050.00
+    gold_max_elements: int = 20
 
 class PaymentConfigUpdate(BaseModel):
     paypal_email: str
     cashapp_tag: str
 
 class UserRoleUpdate(BaseModel):
-    role: str  # 'trial', 'bronze', 'silver', 'gold', 'subadmin'
+    role: str  # 'trial', 'bronze_monthly', 'bronze_yearly', 'silver_monthly', 'silver_yearly', 'gold_monthly', 'gold_yearly', 'subadmin'
 
 
 # ==================== HELPER FUNCTIONS ====================
