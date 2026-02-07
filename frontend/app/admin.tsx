@@ -346,7 +346,16 @@ export default function AdminScreen() {
           if (qrRes.ok) { const qd = await qrRes.json(); setQrBase64(qd.qr_base64); }
         }
       }
-      if (emailsRes.ok) { const d = await emailsRes.json(); setUserEmails(d.users || []); }
+      if (emailsRes.ok) {
+        const d = await emailsRes.json();
+        const filtered = (d.users || []).filter((u: any) => {
+          const e = (u.email || '').toLowerCase();
+          if (e === (user?.email || '').toLowerCase()) return false; // exclude admin
+          if (e.endsWith('@testuser.com')) return false; // exclude test users
+          return true;
+        });
+        setUserEmails(filtered);
+      }
     } catch (e) { console.error('Load notify error:', e); }
   };
 
