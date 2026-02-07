@@ -1430,9 +1430,10 @@ class HeightOptimizeOutput(BaseModel):
 
 @api_router.post("/optimize-height", response_model=HeightOptimizeOutput)
 async def optimize_height(request: HeightOptimizeRequest):
-    """Test heights from min to max and find best overall performance (SWR, Gain, F/B, Take-off Angle)."""
+    """Test heights from min to max and find best overall performance (SWR, Gain, F/B, Take-off Angle).
+    Factors in: number of elements, boom length, ground radials, ground type."""
     best_height = request.min_height
-    best_score = -999.0  # We'll maximize a combined score
+    best_score = -999.0
     best_swr = 999.0
     best_gain = 0.0
     best_fb = 0.0
@@ -1443,6 +1444,23 @@ async def optimize_height(request: HeightOptimizeRequest):
     center_freq = request.frequency_mhz if request.frequency_mhz else band_info["center"]
     c = 299792458
     wavelength = c / (center_freq * 1e6)
+    
+    # Calculate boom length from element positions (in meters)
+    positions = [e.position for e in request.elements]
+    boom_length_in = max(positions) - min(positions) if positions else 0
+    boom_length_m = boom_length_in * 0.0254
+    boom_wavelengths = boom_length_m / wavelength if wavelength > 0 else 0
+    
+    n = request.num_elements
+    
+    # Ground type from radials config
+    ground_type = "average"
+    has_radials = False
+    if request.ground_radials and request.ground_radials.enabled:
+        ground_type = request.ground_radials.ground_type
+        has_radials = True
+    
+    ground_angle_adj = {"wet": -3, "average": 0, "dry": 5}.get(ground_type, 0)
     
     for height in range(request.min_height, request.max_height + 1, request.step):
         # Create a calculation request for this height
@@ -1457,7 +1475,8 @@ async def optimize_height(request: HeightOptimizeRequest):
             frequency_mhz=request.frequency_mhz,
             stacking=None,
             taper=None,
-            corona_balls=None
+            corona_balls=None,
+            ground_radials=request.ground_radials
         )
         
         # Calculate for this height
@@ -1467,43 +1486,107 @@ async def optimize_height(request: HeightOptimizeRequest):
         fb = result.fb_ratio
         
         # Calculate take-off angle for this height
-        height_m = height * 0.3048  # ft to meters
+        height_m = height * 0.3048
         height_wavelengths = height_m / wavelength
         
         if height_wavelengths >= 0.25:
             takeoff_angle = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
         else:
             takeoff_angle = 70 + (0.25 - height_wavelengths) * 80
-        takeoff_angle = round(max(5, min(90, takeoff_angle)), 1)
+        takeoff_angle = round(max(5, min(90, takeoff_angle + ground_angle_adj)), 1)
         
-        # === IMPROVED SCORING ===
-        # SWR: Anything under 1.5 is good. Diminishing returns below that.
-        # This prevents SWR from dominating the score.
+        # === IMPROVED SCORING (factors in boom, elements, ground) ===
+        
+        # SWR score
         if swr <= 1.5:
-            swr_score = 10 - (swr - 1.0) * 4  # 1.0→10, 1.5→8 (small range)
+            swr_score = 10 - (swr - 1.0) * 4
         elif swr <= 2.0:
-            swr_score = 8 - (swr - 1.5) * 8   # 1.5→8, 2.0→4
+            swr_score = 8 - (swr - 1.5) * 8
         else:
-            swr_score = max(0, 4 - (swr - 2.0) * 4)  # 2.0→4, 3.0→0
+            swr_score = max(0, 4 - (swr - 2.0) * 4)
         
-        # Gain: Higher is better, weighted strongly
+        # Gain score
         gain_score = gain * 2.5
         
-        # F/B ratio: Higher is better
+        # F/B ratio score
         fb_score = fb * 0.4
         
-        # Take-off angle: LOWER is better for DX performance
-        # Angles below 20° are excellent, 20-30° good, above 30° less desirable
+        # Take-off angle score
         if takeoff_angle <= 15:
-            takeoff_score = 25  # Excellent DX angle - max bonus
+            takeoff_score = 25
         elif takeoff_angle <= 25:
-            takeoff_score = 25 - (takeoff_angle - 15) * 1.0  # 15→25, 25→15
+            takeoff_score = 25 - (takeoff_angle - 15) * 1.0
         elif takeoff_angle <= 40:
-            takeoff_score = 15 - (takeoff_angle - 25) * 0.8  # 25→15, 40→3
+            takeoff_score = 15 - (takeoff_angle - 25) * 0.8
         else:
-            takeoff_score = max(0, 3 - (takeoff_angle - 40) * 0.1)  # Poor angles
+            takeoff_score = max(0, 3 - (takeoff_angle - 40) * 0.1)
         
-        total_score = swr_score + gain_score + fb_score + takeoff_score
+        # === BOOM LENGTH FACTOR ===
+        # Longer booms benefit more from higher mounting heights
+        # A long boom antenna at low height wastes its potential directivity
+        # Ideal: height >= 0.5 * boom_length for proper pattern formation
+        boom_height_ratio = height_m / boom_length_m if boom_length_m > 0 else 2.0
+        if boom_height_ratio >= 2.0:
+            boom_score = 5.0  # Height well above boom - good clearance
+        elif boom_height_ratio >= 1.0:
+            boom_score = 3.0 + (boom_height_ratio - 1.0) * 2.0
+        elif boom_height_ratio >= 0.5:
+            boom_score = 1.0 + (boom_height_ratio - 0.5) * 4.0
+        else:
+            boom_score = boom_height_ratio * 2.0  # Very low relative to boom
+        
+        # === ELEMENT COUNT FACTOR ===
+        # More elements = more directivity = benefits more from optimal height
+        # Penalize heights that don't allow the antenna to reach full potential
+        # Higher element counts need height in the 0.5-1.0 wavelength sweet spot
+        if n >= 5:
+            # High-element antennas are height-sensitive
+            if 0.5 <= height_wavelengths <= 1.2:
+                element_score = 6.0  # Sweet spot
+            elif 0.3 <= height_wavelengths < 0.5:
+                element_score = 3.0
+            elif 1.2 < height_wavelengths <= 1.5:
+                element_score = 4.0
+            else:
+                element_score = 1.0
+        elif n >= 3:
+            if 0.4 <= height_wavelengths <= 1.0:
+                element_score = 4.0
+            elif 0.25 <= height_wavelengths < 0.4:
+                element_score = 2.5
+            else:
+                element_score = 1.5
+        else:
+            element_score = 2.0  # 2-element antennas are less height-sensitive
+        
+        # === GROUND RADIALS FACTOR ===
+        # With ground radials, lower heights can be more effective
+        # Radials improve ground reflection, favoring slightly lower heights
+        radial_score = 0
+        if has_radials:
+            num_rads = request.ground_radials.num_radials
+            if ground_type == "wet":
+                # Wet ground + radials: lower heights work well
+                if 0.3 <= height_wavelengths <= 0.8:
+                    radial_score = 4.0
+                else:
+                    radial_score = 2.0
+            elif ground_type == "dry":
+                # Dry ground: need more height even with radials
+                if 0.6 <= height_wavelengths <= 1.2:
+                    radial_score = 3.0
+                else:
+                    radial_score = 1.0
+            else:
+                # Average ground
+                if 0.4 <= height_wavelengths <= 1.0:
+                    radial_score = 3.5
+                else:
+                    radial_score = 1.5
+            # Scale by radial count (more = better ground plane)
+            radial_score *= min(num_rads / 8.0, 1.5)
+        
+        total_score = swr_score + gain_score + fb_score + takeoff_score + boom_score + element_score + radial_score
         
         heights_tested.append({
             "height": height, 
