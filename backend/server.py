@@ -1419,6 +1419,7 @@ class HeightOptimizeRequest(BaseModel):
     min_height: int = 10
     max_height: int = 100
     step: int = 1  # Changed to 1 foot increments
+    ground_radials: Optional[GroundRadialConfig] = None
 
 class HeightOptimizeOutput(BaseModel):
     optimal_height: int
