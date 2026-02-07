@@ -1016,9 +1016,12 @@ export default function AntennaCalculator() {
               <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
             </TouchableOpacity>
             
-            {/* Save/Load buttons - only shown when logged in */}
+            {/* Save/Load/Refresh buttons - only shown when logged in */}
             {user && (
               <View style={styles.saveLoadButtons}>
+                <TouchableOpacity style={{ backgroundColor: '#f44336', borderRadius: 6, padding: 8 }} onPress={handleRefresh}>
+                  <Ionicons name="refresh-outline" size={16} color="#fff" />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.saveBtn} onPress={() => setShowSaveModal(true)}>
                   <Ionicons name="save-outline" size={16} color="#fff" />
                 </TouchableOpacity>
