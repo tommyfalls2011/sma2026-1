@@ -8,7 +8,7 @@ import { useAuth } from './context/AuthContext';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
 
 const TIER_COLORS: Record<string, string> = {
