@@ -367,12 +367,20 @@ export default function AdminScreen() {
   const sendUpdateEmail = async () => {
     setSendingEmail(true); setEmailResult('');
     try {
+      // Get all user emails, send them to admin in one email
+      const emailsRes = await fetch(`${BACKEND_URL}/api/admin/user-emails`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const emailsData = emailsRes.ok ? await emailsRes.json() : { users: [] };
+      const allEmails = (emailsData.users || []).map((u: any) => u.email).filter(Boolean);
+
+      const emailList = allEmails.join(', ');
+      const fullMessage = `${emailMessage}\n\n--- COPY THE EMAILS BELOW INTO GMAIL BCC ---\n\n${emailList}\n\n--- ${allEmails.length} USERS TOTAL ---\n\nQR/Download Link: ${expoUrl || downloadLink || 'Not set'}`;
+
       const res = await fetch(`${BACKEND_URL}/api/admin/send-update-email`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ subject: emailSubject, message: emailMessage, expo_url: expoUrl, download_link: downloadLink, send_to: 'all' }),
+        body: JSON.stringify({ subject: emailSubject, message: fullMessage, expo_url: expoUrl, download_link: downloadLink, send_to: user?.email || 'fallstommy@gmail.com' }),
       });
       const d = await res.json();
-      if (res.ok) { setEmailResult(`✅ ${d.message}`); }
+      if (res.ok) { setEmailResult(`✅ Email list sent to your inbox (${allEmails.length} users)`); }
       else { setEmailResult(`❌ ${d.detail || 'Failed'}`); }
     } catch (e) { setEmailResult('❌ Network error'); }
     setSendingEmail(false);
