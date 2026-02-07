@@ -1407,31 +1407,39 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
             notes.append(f"Note: Long spacing may increase gain by ~{round((spacing_factor - 1) * 1.5, 1)} dB but widen beamwidth")
     
     # === BOOM LOCK MODE (FINAL CONSTRAINT) ===
-    # Applied AFTER spacing so boom lock always wins as the hard limit
+    # When boom lock is active, evenly distribute elements across the locked boom length
+    # Reflector at 0, driven at ~15% of boom, directors equally spaced in remaining space
     if request.boom_lock_enabled and request.max_boom_length:
         target_boom = request.max_boom_length
-        current_boom = max(e["position"] for e in elements) if elements else 0
         
-        if current_boom > 0 and abs(current_boom - target_boom) > 0.5:
-            scale = target_boom / current_boom
-            
-            # Scale all positions proportionally
-            for elem in elements:
-                elem["position"] = round(elem["position"] * scale, 1)
-            
-            if scale < 1.0:
-                notes.append(f"")
-                notes.append(f"Boom Lock: Constrained to {target_boom}\" boom ({scale:.2%} of spacing-adjusted)")
-                notes.append(f"Note: Compressed spacing may reduce gain by ~{round((1 - scale) * 3, 1)} dB")
+        # Find reflector, driven, and directors
+        refl_idx = next((i for i, e in enumerate(elements) if e["element_type"] == "reflector"), None)
+        driven_idx = next((i for i, e in enumerate(elements) if e["element_type"] == "driven"), None)
+        dir_indices = [i for i, e in enumerate(elements) if e["element_type"] == "director"]
+        
+        if driven_idx is not None:
+            if refl_idx is not None:
+                # Has reflector: reflector at 0, driven at 15% of boom, directors equally spaced
+                elements[refl_idx]["position"] = 0
+                refl_driven_gap = round(target_boom * 0.15, 1)
+                elements[driven_idx]["position"] = refl_driven_gap
+                
+                if len(dir_indices) > 0:
+                    remaining = target_boom - refl_driven_gap
+                    dir_spacing = round(remaining / len(dir_indices), 1)
+                    for j, idx in enumerate(dir_indices):
+                        elements[idx]["position"] = round(refl_driven_gap + dir_spacing * (j + 1), 1)
             else:
-                notes.append(f"")
-                notes.append(f"Boom Lock: Extended to {target_boom}\" boom ({scale:.2%} of spacing-adjusted)")
-                notes.append(f"Note: Extended spacing may shift pattern by ~{round((scale - 1) * 2, 1)} dB")
-            
-            compression_penalty = abs(1 - scale) * 3
-        else:
-            notes.append(f"Boom Lock: Design matches {target_boom}\" target")
-            compression_penalty = 0
+                # No reflector: driven at 0, directors equally spaced
+                elements[driven_idx]["position"] = 0
+                if len(dir_indices) > 0:
+                    dir_spacing = round(target_boom / len(dir_indices), 1)
+                    for j, idx in enumerate(dir_indices):
+                        elements[idx]["position"] = round(dir_spacing * (j + 1), 1)
+        
+        notes.append(f"")
+        notes.append(f"Boom Lock: {target_boom}\" ({round(target_boom/12, 1)} ft) — elements equally spaced")
+        compression_penalty = 0
     else:
         compression_penalty = 0
     
