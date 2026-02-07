@@ -703,10 +703,7 @@ export default function AntennaCalculator() {
       return;
     }
     
-    // Reset spacing when element count changes to avoid stale positions
-    setSpacingMode('normal');
-    setSpacingLevel('1.0');
-    
+    // Build fresh elements for the new count (default positions)
     const newElements: ElementDimension[] = [];
     
     if (inputs.use_reflector) {
@@ -719,6 +716,7 @@ export default function AntennaCalculator() {
     }
     
     setInputs(prev => ({ ...prev, num_elements: c, elements: newElements }));
+    // Note: spacing mode is preserved — auto-tune will apply it via backend
   };
 
   const updateElement = (idx: number, field: keyof ElementDimension, value: string) => {
