@@ -1472,16 +1472,20 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         
         if driven_idx is not None:
             if refl_idx is not None:
-                # Has reflector: reflector at 0, driven at 15% of boom, directors equally spaced
+                # Has reflector: reflector at 0
                 elements[refl_idx]["position"] = 0
-                refl_driven_gap = round(target_boom * 0.15, 1)
-                elements[driven_idx]["position"] = refl_driven_gap
                 
                 if len(dir_indices) > 0:
+                    # With directors: driven at 15% of boom, directors equally spaced after
+                    refl_driven_gap = round(target_boom * 0.15, 1)
+                    elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
                     for j, idx in enumerate(dir_indices):
                         elements[idx]["position"] = round(refl_driven_gap + dir_spacing * (j + 1), 1)
+                else:
+                    # No directors (2-element): driven uses full boom length
+                    elements[driven_idx]["position"] = round(target_boom, 1)
             else:
                 # No reflector: driven at 0, directors equally spaced
                 elements[driven_idx]["position"] = 0
