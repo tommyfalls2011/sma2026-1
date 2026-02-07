@@ -578,29 +578,59 @@ def calculate_taper_effects(taper: TaperConfig, num_elements: int) -> dict:
     num_tapers = taper.num_tapers
     sections = taper.sections
     
-    base_gain_bonus = 0.3 * num_tapers
-    bandwidth_mult = 1.0 + (0.15 * num_tapers)
-    swr_mult = 1.0 - (0.04 * num_tapers)
-    fb_bonus = 1.5 * num_tapers
-    fs_bonus = 1.0 * num_tapers
+    # Base effects from number of taper steps
+    # More taper steps = smoother impedance transition = better performance
+    base_gain_bonus = 0.15 * num_tapers
+    bandwidth_mult = 1.0 + (0.08 * num_tapers)
+    swr_mult = 1.0 - (0.02 * num_tapers)
+    fb_bonus = 0.8 * num_tapers
+    fs_bonus = 0.5 * num_tapers
     
     if sections:
         total_taper_ratio = 0
+        max_start_dia = 0
+        min_end_dia = 999
+        
         for section in sections:
             if section.start_diameter > 0:
                 ratio = section.end_diameter / section.start_diameter
                 total_taper_ratio += (1 - ratio)
+                max_start_dia = max(max_start_dia, section.start_diameter)
+                min_end_dia = min(min_end_dia, section.end_diameter)
+        
         avg_taper = total_taper_ratio / len(sections) if sections else 0
-        if 0.3 <= avg_taper <= 0.6:
-            base_gain_bonus += 0.5
-            bandwidth_mult += 0.1
+        
+        # Larger diameter center elements (1.25"+) give structural strength bonus
+        if max_start_dia >= 1.0:
+            base_gain_bonus += 0.2
+            bandwidth_mult += 0.05
+        
+        # Good taper ratio (gradual reduction) improves impedance matching
+        if 0.2 <= avg_taper <= 0.7:
+            # Sweet spot - smooth taper transition
+            taper_quality = 1.0 - abs(avg_taper - 0.45) / 0.45  # Peak at 0.45 ratio
+            base_gain_bonus += 0.4 * taper_quality * num_tapers
+            bandwidth_mult += 0.12 * taper_quality * num_tapers
+            swr_mult -= 0.03 * taper_quality * num_tapers
+            fb_bonus += 1.5 * taper_quality * num_tapers
+        
+        # Overall diameter reduction (from largest center to smallest tip)
+        if max_start_dia > 0 and min_end_dia < max_start_dia:
+            overall_ratio = min_end_dia / max_start_dia
+            if 0.3 <= overall_ratio <= 0.6:
+                # Ideal overall taper (e.g., 1.25" to 0.5" = 0.4 ratio)
+                base_gain_bonus += 0.3
+                bandwidth_mult += 0.08
+    
+    # Scale effects by number of elements (more elements = more impact from taper)
+    element_scale = min(1.5, num_elements / 3.0)
     
     return {
-        "gain_bonus": round(base_gain_bonus, 2),
+        "gain_bonus": round(base_gain_bonus * element_scale, 2),
         "bandwidth_mult": round(bandwidth_mult, 2),
         "swr_mult": round(max(0.7, swr_mult), 2),
-        "fb_bonus": round(fb_bonus, 1),
-        "fs_bonus": round(fs_bonus, 1),
+        "fb_bonus": round(fb_bonus * element_scale, 1),
+        "fs_bonus": round(fs_bonus * element_scale, 1),
         "num_tapers": num_tapers,
         "sections": [s.dict() for s in sections] if sections else []
     }
