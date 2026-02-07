@@ -217,7 +217,7 @@ const Dropdown = ({ label, value, options, onChange }: any) => {
       </TouchableOpacity>
       {open && (
         <View style={styles.dropdownList}>
-          <ScrollView style={{ maxHeight: 300 }} nestedScrollEnabled showsVerticalScrollIndicator>
+          <ScrollView style={{ maxHeight: 300 }} nestedScrollEnabled showsVerticalScrollIndicator={true} bounces={false} persistentScrollbar={true}>
             {options.map((o: any) => (
               <TouchableOpacity 
                 key={o.value} 
