@@ -26,24 +26,34 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png",
-      "name": "SMA Antenna Analyzer",
-      "shortName": "SMA Antenna",
-      "description": "Professional antenna design and analysis tool",
-      "themeColor": "#121212",
-      "backgroundColor": "#121212"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#121212"
+      ["expo-build-properties", {
+        "android": {
+          "newArchEnabled": true,
+          "extraCMakeArgs": ["-DCMAKE_CXX_FLAGS=-Wno-error=deprecated-declarations"]
         }
-      ]
-    ]
+      }],
+      "expo-router",
+      ["expo-splash-screen", {
+        "image": "./assets/images/splash-icon.png",
+        "imageWidth": 200,
+        "resizeMode": "contain",
+        "backgroundColor": "#121212"
+      }],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6e765fe6-aa21-4fce-accc-6815d4db4bfc"
+      },
+      "router": {}
+    },
+    "owner": "tommyfalls2011"
   }
 }
