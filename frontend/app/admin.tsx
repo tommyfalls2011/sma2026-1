@@ -291,6 +291,85 @@ export default function AdminScreen() {
     }
   };
 
+  // === DISCOUNT FUNCTIONS ===
+  const loadDiscounts = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/discounts`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { const d = await res.json(); setDiscounts(d.discounts || []); }
+    } catch (e) { console.error('Load discounts error:', e); }
+  };
+
+  const createDiscount = async () => {
+    if (!discCode || !discValue) { Alert.alert('Error', 'Code and value are required'); return; }
+    setCreatingDiscount(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/discounts`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          code: discCode, discount_type: discType, value: parseFloat(discValue),
+          applies_to: discApplies, tiers: discTiers,
+          max_uses: discMaxUses ? parseInt(discMaxUses) : null,
+          user_emails: discEmails ? discEmails.split(',').map((e: string) => e.trim()) : [],
+        }),
+      });
+      if (res.ok) { setDiscCode(''); setDiscValue(''); setDiscMaxUses(''); setDiscEmails(''); loadDiscounts(); Alert.alert('Success', 'Discount created!'); }
+      else { const err = await res.json(); Alert.alert('Error', err.detail || 'Failed'); }
+    } catch (e) { Alert.alert('Error', 'Failed to create discount'); }
+    setCreatingDiscount(false);
+  };
+
+  const deleteDiscount = (id: string) => {
+    confirmAction('Delete Discount', 'Are you sure?', async () => {
+      await fetch(`${BACKEND_URL}/api/admin/discounts/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      loadDiscounts();
+    });
+  };
+
+  const toggleDiscount = async (id: string) => {
+    await fetch(`${BACKEND_URL}/api/admin/discounts/${id}/toggle`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+    loadDiscounts();
+  };
+
+  // === NOTIFY FUNCTIONS ===
+  const loadNotifyData = async () => {
+    try {
+      const [settingsRes, emailsRes] = await Promise.all([
+        fetch(`${BACKEND_URL}/api/admin/app-update-settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${BACKEND_URL}/api/admin/user-emails`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      ]);
+      if (settingsRes.ok) { const d = await settingsRes.json(); setExpoUrl(d.expo_url || ''); setDownloadLink(d.download_link || ''); }
+      if (emailsRes.ok) { const d = await emailsRes.json(); setUserEmails(d.users || []); }
+    } catch (e) { console.error('Load notify error:', e); }
+  };
+
+  const saveUpdateSettings = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/api/admin/app-update-settings`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ expo_url: expoUrl, download_link: downloadLink }),
+      });
+      if (expoUrl) {
+        const qrRes = await fetch(`${BACKEND_URL}/api/admin/qr-code`, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (qrRes.ok) { const d = await qrRes.json(); setQrBase64(d.qr_base64); }
+      }
+      Alert.alert('Success', 'Settings saved!');
+    } catch (e) { Alert.alert('Error', 'Failed to save settings'); }
+  };
+
+  const sendUpdateEmail = async () => {
+    setSendingEmail(true); setEmailResult('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/send-update-email`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ subject: emailSubject, message: emailMessage, expo_url: expoUrl, download_link: downloadLink, send_to: 'all' }),
+      });
+      const d = await res.json();
+      if (res.ok) { setEmailResult(`✅ ${d.message}`); }
+      else { setEmailResult(`❌ ${d.detail || 'Failed'}`); }
+    } catch (e) { setEmailResult('❌ Network error'); }
+    setSendingEmail(false);
+  };
+
   const savePricing = async () => {
     setSaving(true);
     try {
