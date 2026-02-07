@@ -521,6 +521,21 @@ export default function AdminScreen() {
               </View>
             </View>
 
+            {/* Bronze Features */}
+            <View style={styles.featuresSection}>
+              <Text style={styles.featuresTitle}>Features</Text>
+              {ALL_FEATURES.map(feat => (
+                <View key={feat} style={styles.featureRow}>
+                  <Text style={styles.featureLabel}>{FEATURE_LABELS[feat]}</Text>
+                  <Switch value={bronzeFeatures.includes(feat) || bronzeFeatures.includes('all')} onValueChange={(v) => {
+                    if (v) setBronzeFeatures(prev => [...prev, feat]);
+                    else setBronzeFeatures(prev => prev.filter(f => f !== feat && f !== 'all'));
+                  }} trackColor={{ false: '#333', true: '#CD7F32' }} thumbColor="#fff" />
+                </View>
+              ))}
+            </View>
+            </View>
+
             {/* Silver */}
             <View style={[styles.tierCard, { borderLeftColor: TIER_COLORS.silver }]}>
               <View style={styles.tierHeader}>
