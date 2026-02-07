@@ -145,12 +145,15 @@ export default function AdminScreen() {
         setBronzeMonthlyPrice(data.bronze.monthly_price?.toString() || '');
         setBronzeYearlyPrice(data.bronze.yearly_price?.toString() || '');
         setBronzeElements(data.bronze.max_elements.toString());
+        setBronzeFeatures(data.bronze.features || ['basic_calc', 'swr_meter', 'band_selection']);
         setSilverMonthlyPrice(data.silver.monthly_price?.toString() || '');
         setSilverYearlyPrice(data.silver.yearly_price?.toString() || '');
         setSilverElements(data.silver.max_elements.toString());
+        setSilverFeatures(data.silver.features || ['basic_calc', 'swr_meter', 'band_selection', 'auto_tune', 'save_designs']);
         setGoldMonthlyPrice(data.gold.monthly_price?.toString() || '');
         setGoldYearlyPrice(data.gold.yearly_price?.toString() || '');
         setGoldElements(data.gold.max_elements.toString());
+        setGoldFeatures(data.gold.features || ['all']);
         setPaypalEmail(data.payment.paypal_email);
         setCashappTag(data.payment.cashapp_tag);
       }
