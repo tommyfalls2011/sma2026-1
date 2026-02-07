@@ -1153,7 +1153,7 @@ export default function AntennaCalculator() {
                 <Switch value={boomLockEnabled} onValueChange={setBoomLockEnabled} trackColor={{ false: '#333', true: '#FF9800' }} thumbColor="#fff" />
                 <View style={styles.lockLabelContainer}>
                   <Text style={styles.lockLabel}>Boom Lock</Text>
-                  <Text style={styles.lockDesc}>Limit max boom length</Text>
+                  <Text style={styles.lockDesc}>Set boom length, adjust spacing</Text>
                 </View>
               </View>
               {boomLockEnabled && (
