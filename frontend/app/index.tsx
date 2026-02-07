@@ -368,6 +368,7 @@ export default function AntennaCalculator() {
   // Designer Info state
   const [showDesignerInfo, setShowDesignerInfo] = useState(false);
   const [designerInfoContent, setDesignerInfoContent] = useState('');
+  const [gainMode, setGainMode] = useState<'realworld' | 'freespace'>('realworld');
 
   // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
