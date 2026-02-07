@@ -1,0 +1,59 @@
+{
+  "summary": "Backend-only testing of the free-space gain model and boom doubling behavior. All 20 tests passed. The lookup-table based gain model returns expected values: 2elem=6.2, 3elem=8.2, 5elem=10.8, 8elem=13.0, 10elem=14.0 dBi. Boom doubling gives +2.5dB, halving gives -2.5dB. No-reflector mode correctly applies -1.5dB adjustment.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_gain_model.py",
+    "/app/test_reports/pytest/pytest_results_gain.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_gain_model.py"
+  ],
+  "success_rate": {
+    "backend": "100% (20/20 tests passed)",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None - Uses public API endpoints without authentication",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Free-space gain model fully verified. Test file /app/backend/tests/test_gain_model.py contains 20 tests covering: free-space gain lookup (2-10 elements), boom doubling/halving (2.5dB per doubling), no-reflector mode (-1.5dB), auto-tune predicted gain, and gain_breakdown field validation. All tests pass.",
+  "test_results_details": {
+    "test_free_space_gain_model": {
+      "2_elements": "6.2 dBi (expected 6.0-6.5) - PASS",
+      "3_elements": "8.2 dBi (expected 8.0-8.5) - PASS",
+      "5_elements": "10.8 dBi (expected 10.0-11.5) - PASS",
+      "8_elements": "13.0 dBi (expected 12.0-13.5) - PASS",
+      "10_elements": "14.0 dBi (expected 14.0-15.0) - PASS"
+    },
+    "test_boom_doubling_effect": {
+      "boom_doubling": "+2.5 dB gain increase (expected ~2.5) - PASS",
+      "boom_halving": "-2.5 dB gain decrease (expected ~2.5) - PASS",
+      "boom_adj_positive_for_longer": "boom_adj=1.46 for 1.5x boom - PASS",
+      "boom_adj_negative_for_shorter": "boom_adj=-2.5 for 0.5x boom - PASS"
+    },
+    "test_no_reflector_mode": {
+      "reflector_adj": "-1.5 dB when no reflector - PASS",
+      "gain_difference": "1.5 dB less without reflector - PASS"
+    },
+    "test_auto_tune_predicted_gain": {
+      "3_elements": "10.2 dBi (expected 10.2) - PASS",
+      "10_elements": "16.0 dBi (expected 16.0) - PASS",
+      "20_elements": "19.2 dBi (expected 19.2) - PASS",
+      "no_reflector_reduction": "1.5 dB less - PASS"
+    },
+    "test_gain_breakdown_fields": {
+      "all_fields_present": "standard_gain, boom_adj, reflector_adj, taper_bonus, corona_adj, height_bonus, boom_bonus, final_gain - PASS",
+      "final_gain_matches_gain_dbi": "13.6 = 13.6 - PASS",
+      "components_add_up": "sum = final_gain - PASS"
+    }
+  }
+}
