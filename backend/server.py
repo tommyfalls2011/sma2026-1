@@ -1439,7 +1439,6 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     
     notes.append(f"")
     notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
-    notes.append(f"Total boom length: ~{round(max(e['position'] for e in elements), 1)}\" ({round(max(e['position'] for e in elements)/12, 1)} ft)")
     
     # === SPACING MODE ===
     # Apply tight/long spacing BEFORE boom lock (boom lock is the hard constraint)
