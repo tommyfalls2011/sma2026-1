@@ -579,6 +579,21 @@ export default function AdminScreen() {
               </View>
             </View>
 
+            {/* Silver Features */}
+            <View style={styles.featuresSection}>
+              <Text style={styles.featuresTitle}>Features</Text>
+              {ALL_FEATURES.map(feat => (
+                <View key={feat} style={styles.featureRow}>
+                  <Text style={styles.featureLabel}>{FEATURE_LABELS[feat]}</Text>
+                  <Switch value={silverFeatures.includes(feat) || silverFeatures.includes('all')} onValueChange={(v) => {
+                    if (v) setSilverFeatures(prev => [...prev, feat]);
+                    else setSilverFeatures(prev => prev.filter(f => f !== feat && f !== 'all'));
+                  }} trackColor={{ false: '#333', true: '#C0C0C0' }} thumbColor="#fff" />
+                </View>
+              ))}
+            </View>
+            </View>
+
             {/* Gold */}
             <View style={[styles.tierCard, { borderLeftColor: TIER_COLORS.gold }]}>
               <View style={styles.tierHeader}>
@@ -620,6 +635,27 @@ export default function AdminScreen() {
                   />
                 </View>
               </View>
+
+            {/* Gold Features */}
+            <View style={styles.featuresSection}>
+              <Text style={styles.featuresTitle}>Features</Text>
+              <View style={styles.featureRow}>
+                <Text style={styles.featureLabel}>All Features</Text>
+                <Switch value={goldFeatures.includes('all')} onValueChange={(v) => {
+                  if (v) setGoldFeatures(['all']);
+                  else setGoldFeatures(['basic_calc', 'swr_meter', 'band_selection']);
+                }} trackColor={{ false: '#333', true: '#FFD700' }} thumbColor="#fff" />
+              </View>
+              {!goldFeatures.includes('all') && ALL_FEATURES.map(feat => (
+                <View key={feat} style={styles.featureRow}>
+                  <Text style={styles.featureLabel}>{FEATURE_LABELS[feat]}</Text>
+                  <Switch value={goldFeatures.includes(feat)} onValueChange={(v) => {
+                    if (v) setGoldFeatures(prev => [...prev, feat]);
+                    else setGoldFeatures(prev => prev.filter(f => f !== feat));
+                  }} trackColor={{ false: '#333', true: '#FFD700' }} thumbColor="#fff" />
+                </View>
+              ))}
+            </View>
             </View>
 
             {/* Payment Config */}
