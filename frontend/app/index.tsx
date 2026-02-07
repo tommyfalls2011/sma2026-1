@@ -313,6 +313,40 @@ export default function AntennaCalculator() {
   const [maxBoomLength, setMaxBoomLength] = useState('120');  // Default 10 feet in inches
   const [spacingLockEnabled, setSpacingLockEnabled] = useState(false);
   
+  // Element Spacing Mode
+  const [spacingMode, setSpacingMode] = useState<'normal' | 'tight' | 'long'>('normal');
+  const [spacingLevel, setSpacingLevel] = useState('1.0');
+  
+  const SPACING_OPTIONS = {
+    tight: [
+      { value: '0.6', label: 'Very Tight (60%)' },
+      { value: '0.75', label: 'Tight (75%)' },
+      { value: '0.85', label: 'Mod Tight (85%)' },
+    ],
+    long: [
+      { value: '1.15', label: 'Mod Long (115%)' },
+      { value: '1.3', label: 'Long (130%)' },
+      { value: '1.5', label: 'Very Long (150%)' },
+    ],
+  };
+
+  const applySpacing = (factor: string) => {
+    const f = parseFloat(factor);
+    const oldF = parseFloat(spacingLevel) || 1;
+    setSpacingLevel(factor);
+    setInputs(prev => ({
+      ...prev,
+      elements: prev.elements.map((el, i) => {
+        if (i === 0) return el;
+        const basePos = parseFloat(el.position);
+        const firstPos = parseFloat(prev.elements[0].position);
+        const relativePos = basePos - firstPos;
+        const newPos = firstPos + (relativePos * f / oldF);
+        return { ...el, position: newPos.toFixed(3) };
+      })
+    }));
+  };
+
   // Height optimizer sort option
   const [heightSortBy, setHeightSortBy] = useState<'default' | 'takeoff' | 'gain' | 'fb'>('default');
   
