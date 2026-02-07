@@ -1176,7 +1176,10 @@ export default function AntennaCalculator() {
               <Ionicons name="resize-outline" size={12} color="#888" />
               <Text style={styles.currentBoomText}>Current boom: {calculateBoomLength().ft}' {calculateBoomLength().inches.toFixed(1)}" ({calculateBoomLength().total_inches.toFixed(0)}")</Text>
               {boomLockEnabled && parseFloat(maxBoomLength) < calculateBoomLength().total_inches && (
-                <Text style={styles.boomWarning}> ⚠️ Over limit!</Text>
+                <Text style={styles.boomWarning}> ↕️ Will compress</Text>
+              )}
+              {boomLockEnabled && parseFloat(maxBoomLength) > calculateBoomLength().total_inches && (
+                <Text style={[styles.boomWarning, { color: '#4CAF50' }]}> ↕️ Will extend</Text>
               )}
             </View>
             
