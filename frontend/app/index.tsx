@@ -692,18 +692,19 @@ export default function AntennaCalculator() {
       return;
     }
     
+    // Reset spacing when element count changes to avoid stale positions
+    setSpacingMode('normal');
+    setSpacingLevel('1.0');
+    
     const newElements: ElementDimension[] = [];
     
     if (inputs.use_reflector) {
-      newElements.push(inputs.elements.find(e => e.element_type === 'reflector') || { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' });
-      newElements.push(inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '48' });
-      const dirs = inputs.elements.filter(e => e.element_type === 'director');
-      for (let i = 0; i < c - 2; i++) newElements.push(dirs[i] || { element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
+      newElements.push({ element_type: 'reflector', length: '216', diameter: '0.5', position: '0' });
+      newElements.push({ element_type: 'driven', length: '204', diameter: '0.5', position: '48' });
+      for (let i = 0; i < c - 2; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
     } else {
-      // No reflector - driven + directors only
-      newElements.push(inputs.elements.find(e => e.element_type === 'driven') || { element_type: 'driven', length: '204', diameter: '0.5', position: '0' });
-      const dirs = inputs.elements.filter(e => e.element_type === 'director');
-      for (let i = 0; i < c - 1; i++) newElements.push(dirs[i] || { element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (48 + i * 48).toString() });
+      newElements.push({ element_type: 'driven', length: '204', diameter: '0.5', position: '0' });
+      for (let i = 0; i < c - 1; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (48 + i * 48).toString() });
     }
     
     setInputs(prev => ({ ...prev, num_elements: c, elements: newElements }));
