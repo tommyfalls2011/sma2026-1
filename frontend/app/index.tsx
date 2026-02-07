@@ -436,9 +436,9 @@ export default function AntennaCalculator() {
         // Apply optimized elements while preserving current diameters and respecting use_reflector
         let newElements = data.optimized_elements.map((e: any, idx: number) => ({
           element_type: e.element_type,
-          length: e.length.toString(),
-          diameter: inputs.elements[idx]?.diameter || e.diameter.toString(),
-          position: spacingLockEnabled ? inputs.elements[idx]?.position || e.position.toString() : e.position.toString(),
+          length: parseFloat(e.length).toFixed(3),
+          diameter: inputs.elements[idx]?.diameter || parseFloat(e.diameter).toFixed(3),
+          position: spacingLockEnabled ? inputs.elements[idx]?.position || parseFloat(e.position).toFixed(3) : parseFloat(e.position).toFixed(3),
         }));
         
         // If no reflector mode, filter out reflector from results
@@ -448,7 +448,7 @@ export default function AntennaCalculator() {
           const drivenPos = parseFloat(newElements.find((e: any) => e.element_type === 'driven')?.position || '0');
           newElements = newElements.map((e: any) => ({
             ...e,
-            position: (parseFloat(e.position) - drivenPos).toString()
+            position: (parseFloat(e.position) - drivenPos).toFixed(3)
           }));
         }
         
