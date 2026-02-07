@@ -45,7 +45,12 @@ EXPECTED_FREE_SPACE_GAINS = {
 
 
 def build_element_list(num_elements, boom_length_in, has_reflector=True):
-    """Build element list for a Yagi antenna configuration."""
+    """Build element list for a Yagi antenna configuration.
+    
+    IMPORTANT: boom_length_in is the TOTAL boom length (max position - min position).
+    The API calculates boom length from: max(positions) - min(positions).
+    So for a given boom_length_in, we place elements from 0 to boom_length_in.
+    """
     elements = []
     
     if has_reflector:
@@ -56,27 +61,37 @@ def build_element_list(num_elements, boom_length_in, has_reflector=True):
             "diameter": STANDARD_ELEMENTS["reflector"]["diameter"],
             "position": 0
         })
-        # Driven element at 15% of boom
-        driven_pos = round(boom_length_in * 0.15, 1)
-        elements.append({
-            "element_type": "driven",
-            "length": STANDARD_ELEMENTS["driven"]["length"],
-            "diameter": STANDARD_ELEMENTS["driven"]["diameter"],
-            "position": driven_pos
-        })
-        # Directors evenly spaced
-        num_directors = num_elements - 2
-        if num_directors > 0:
-            remaining_boom = boom_length_in - driven_pos
-            director_spacing = remaining_boom / num_directors
-            for i in range(num_directors):
-                dir_pos = round(driven_pos + director_spacing * (i + 1), 1)
-                elements.append({
-                    "element_type": "director",
-                    "length": STANDARD_ELEMENTS["director"]["length"] - (i * 2),  # Progressive shortening
-                    "diameter": STANDARD_ELEMENTS["director"]["diameter"],
-                    "position": dir_pos
-                })
+        
+        if num_elements == 2:
+            # Just reflector + driven: driven at boom_length_in
+            elements.append({
+                "element_type": "driven",
+                "length": STANDARD_ELEMENTS["driven"]["length"],
+                "diameter": STANDARD_ELEMENTS["driven"]["diameter"],
+                "position": boom_length_in  # Full boom length
+            })
+        else:
+            # Driven element at ~15% of boom from reflector
+            driven_pos = round(boom_length_in * 0.15, 1)
+            elements.append({
+                "element_type": "driven",
+                "length": STANDARD_ELEMENTS["driven"]["length"],
+                "diameter": STANDARD_ELEMENTS["driven"]["diameter"],
+                "position": driven_pos
+            })
+            # Directors evenly spaced from driven to end of boom
+            num_directors = num_elements - 2
+            if num_directors > 0:
+                remaining_boom = boom_length_in - driven_pos
+                director_spacing = remaining_boom / num_directors
+                for i in range(num_directors):
+                    dir_pos = round(driven_pos + director_spacing * (i + 1), 1)
+                    elements.append({
+                        "element_type": "director",
+                        "length": STANDARD_ELEMENTS["director"]["length"] - (i * 2),  # Progressive shortening
+                        "diameter": STANDARD_ELEMENTS["director"]["diameter"],
+                        "position": dir_pos
+                    })
     else:
         # No reflector mode: driven at position 0
         elements.append({
