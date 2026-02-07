@@ -668,6 +668,20 @@ export default function AdminScreen() {
           <Ionicons name="person" size={16} color={activeTab === 'designer' ? '#FF9800' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'designer' && styles.tabTextActive]}>Designer</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'discounts' && styles.tabActive]}
+          onPress={() => { setActiveTab('discounts'); loadDiscounts(); }}
+        >
+          <Ionicons name="pricetags" size={16} color={activeTab === 'discounts' ? '#E91E63' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'discounts' && styles.tabTextActive]}>Discounts</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'notify' && styles.tabActive]}
+          onPress={() => { setActiveTab('notify'); loadNotifyData(); }}
+        >
+          <Ionicons name="mail" size={16} color={activeTab === 'notify' ? '#2196F3' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'notify' && styles.tabTextActive]}>Notify</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
