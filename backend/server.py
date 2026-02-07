@@ -1499,6 +1499,11 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     else:
         compression_penalty = 0
     
+    # Final boom length note (after all spacing/boom adjustments)
+    final_boom = max(e['position'] for e in elements) if elements else 0
+    notes.append(f"")
+    notes.append(f"Total boom length: ~{round(final_boom, 1)}\" ({round(final_boom/12, 1)} ft)")
+    
     # Predict performance using shared free-space gain model
     base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
     predicted_swr = base_predicted_swr if use_reflector else base_predicted_swr + 0.1
