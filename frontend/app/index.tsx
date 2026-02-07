@@ -359,6 +359,43 @@ export default function AntennaCalculator() {
   const [loadingDesigns, setLoadingDesigns] = useState(false);
   const [deletingDesignId, setDeletingDesignId] = useState<string | null>(null);
 
+  // Tutorial / Intro state
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialContent, setTutorialContent] = useState('');
+  const [tutorialEnabled, setTutorialEnabled] = useState(true);
+
+  // Load tutorial preference and content
+  useEffect(() => {
+    const loadTutorial = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('tutorial_enabled');
+        const enabled = stored !== 'false'; // Default to true
+        setTutorialEnabled(enabled);
+        
+        // Fetch tutorial content
+        const res = await fetch(`${BACKEND_URL}/api/tutorial`);
+        if (res.ok) {
+          const data = await res.json();
+          setTutorialContent(data.content || '');
+        }
+        
+        // Show tutorial on first login if enabled
+        const shown = await AsyncStorage.getItem('tutorial_shown');
+        if (!shown && enabled && user) {
+          setShowTutorial(true);
+          await AsyncStorage.setItem('tutorial_shown', 'true');
+        }
+      } catch (e) { /* ignore */ }
+    };
+    loadTutorial();
+  }, [user]);
+
+  const toggleTutorialEnabled = async (val: boolean) => {
+    setTutorialEnabled(val);
+    await AsyncStorage.setItem('tutorial_enabled', val ? 'true' : 'false');
+    if (val) setShowTutorial(true);
+  };
+
   // Get max elements based on subscription
   const maxElements = user ? getMaxElements() : 3;
 
