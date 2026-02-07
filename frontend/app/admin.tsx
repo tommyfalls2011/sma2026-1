@@ -337,7 +337,15 @@ export default function AdminScreen() {
         fetch(`${BACKEND_URL}/api/admin/app-update-settings`, { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch(`${BACKEND_URL}/api/admin/user-emails`, { headers: { 'Authorization': `Bearer ${token}` } }),
       ]);
-      if (settingsRes.ok) { const d = await settingsRes.json(); setExpoUrl(d.expo_url || ''); setDownloadLink(d.download_link || ''); }
+      if (settingsRes.ok) {
+        const d = await settingsRes.json();
+        setExpoUrl(d.expo_url || '');
+        setDownloadLink(d.download_link || '');
+        if (d.expo_url) {
+          const qrRes = await fetch(`${BACKEND_URL}/api/admin/qr-code`, { headers: { 'Authorization': `Bearer ${token}` } });
+          if (qrRes.ok) { const qd = await qrRes.json(); setQrBase64(qd.qr_base64); }
+        }
+      }
       if (emailsRes.ok) { const d = await emailsRes.json(); setUserEmails(d.users || []); }
     } catch (e) { console.error('Load notify error:', e); }
   };
