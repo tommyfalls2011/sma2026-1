@@ -1335,6 +1335,73 @@ export default function AntennaCalculator() {
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>F/S</Text><Text style={styles.mainResultValue}>{results.fs_ratio}dB</Text></View>
               </View>
               
+              {/* Gain Breakdown Card */}
+              {results.base_gain_dbi != null && results.gain_breakdown && (
+                <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: '#4CAF50' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#4CAF50', marginBottom: 8 }}>
+                    <Ionicons name="trending-up" size={12} color="#4CAF50" /> Gain Breakdown
+                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 9, color: '#888' }}>Base ({inputs.num_elements} elem)</Text>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#888' }}>{results.base_gain_dbi} dBi</Text>
+                    </View>
+                    <Ionicons name="arrow-forward" size={18} color="#4CAF50" />
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 9, color: '#888' }}>Final</Text>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#4CAF50' }}>{results.gain_dbi} dBi</Text>
+                    </View>
+                    <View style={{ alignItems: 'center', backgroundColor: '#1f3d1f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 9, color: '#4CAF50' }}>Increase</Text>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>
+                        +{(results.gain_dbi - results.base_gain_dbi).toFixed(1)} dBi
+                      </Text>
+                      <Text style={{ fontSize: 9, color: '#81C784' }}>
+                        +{results.base_gain_dbi > 0 ? (((results.gain_dbi - results.base_gain_dbi) / results.base_gain_dbi) * 100).toFixed(0) : 0}%
+                      </Text>
+                    </View>
+                  </View>
+                  {/* Individual bonuses */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                    {results.gain_breakdown.height_bonus > 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#81C784' }}>Height +{results.gain_breakdown.height_bonus}dB</Text>
+                      </View>
+                    )}
+                    {results.gain_breakdown.boom_bonus > 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#81C784' }}>Boom +{results.gain_breakdown.boom_bonus}dB</Text>
+                      </View>
+                    )}
+                    {results.gain_breakdown.taper_bonus > 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#E91E63' }}>Taper +{results.gain_breakdown.taper_bonus}dB</Text>
+                      </View>
+                    )}
+                    {(results.gain_breakdown.corona_adj || 0) !== 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#00BCD4' }}>Corona {results.gain_breakdown.corona_adj}dB</Text>
+                      </View>
+                    )}
+                    {(results.gain_breakdown.ground_radials_bonus || 0) > 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#8BC34A' }}>Radials +{results.gain_breakdown.ground_radials_bonus}dB</Text>
+                      </View>
+                    )}
+                    {results.gain_breakdown.reflector_adj < 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#f44336' }}>No Refl {results.gain_breakdown.reflector_adj}dB</Text>
+                      </View>
+                    )}
+                    {results.stacking_enabled && results.stacked_gain_dbi && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#9C27B0' }}>Stacked +{(results.stacked_gain_dbi - results.gain_dbi).toFixed(1)}dB</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+              
               <View style={styles.secondaryResults}>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Boom Length</Text><Text style={styles.secondaryValue}>{calculateBoomLength().ft}' {calculateBoomLength().inches.toFixed(1)}"</Text></View>
                 <View style={styles.secondaryResultItem}><Text style={styles.secondaryLabel}>Beamwidth</Text><Text style={styles.secondaryValue}>H:{results.beamwidth_h}° V:{results.beamwidth_v}°</Text></View>
