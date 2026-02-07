@@ -365,36 +365,38 @@ export default function AntennaCalculator() {
   const [tutorialContent, setTutorialContent] = useState('');
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
 
-  // Load tutorial preference and content
+  // Load tutorial content on mount
   useEffect(() => {
-    const loadTutorial = async () => {
+    const loadTutorialContent = async () => {
       try {
-        const stored = await AsyncStorage.getItem('tutorial_enabled');
-        const enabled = stored !== 'false'; // Default to true
-        setTutorialEnabled(enabled);
-        
-        // Fetch tutorial content
         const res = await fetch(`${BACKEND_URL}/api/tutorial`);
         if (res.ok) {
           const data = await res.json();
           setTutorialContent(data.content || '');
         }
-        
-        // Show tutorial on first login if enabled
-        const shown = await AsyncStorage.getItem('tutorial_shown');
-        if (!shown && enabled && user) {
+      } catch (e) { /* ignore */ }
+    };
+    loadTutorialContent();
+  }, []);
+
+  // Show tutorial on login when toggle is ON
+  useEffect(() => {
+    const checkShowOnLogin = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('tutorial_enabled');
+        const enabled = stored !== 'false'; // Default to true (first time = show)
+        setTutorialEnabled(enabled);
+        if (enabled && user) {
           setShowTutorial(true);
-          await AsyncStorage.setItem('tutorial_shown', 'true');
         }
       } catch (e) { /* ignore */ }
     };
-    loadTutorial();
+    if (user) checkShowOnLogin();
   }, [user]);
 
   const toggleTutorialEnabled = async (val: boolean) => {
     setTutorialEnabled(val);
     await AsyncStorage.setItem('tutorial_enabled', val ? 'true' : 'false');
-    if (val) setShowTutorial(true);
   };
 
   // Get max elements based on subscription
