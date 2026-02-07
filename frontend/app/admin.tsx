@@ -983,6 +983,10 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, color: '#888', marginBottom: 16 },
   
   tierCard: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4 },
+  featuresSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#333' },
+  featuresTitle: { fontSize: 13, fontWeight: '700', color: '#aaa', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  featureRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
+  featureLabel: { fontSize: 13, color: '#ccc' },
   tierHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   tierName: { fontSize: 18, fontWeight: '700' },
   tierFields: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
