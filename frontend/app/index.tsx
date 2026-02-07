@@ -580,7 +580,7 @@ export default function AntennaCalculator() {
 
   const updateTaperCount = (num: number) => {
     const sections: TaperSection[] = [];
-    for (let i = 0; i < num; i++) sections.push(inputs.taper.sections[i] || { length: (12 - i * 2).toString(), start_diameter: (0.5 - i * 0.05).toFixed(3), end_diameter: (0.375 - i * 0.05).toFixed(3) });
+    for (let i = 0; i < num; i++) sections.push(inputs.taper.sections[i] || { length: '36', start_diameter: (0.625 - i * 0.0625).toFixed(3), end_diameter: (0.5 - i * 0.0625).toFixed(3) });
     setInputs(prev => ({ ...prev, taper: { ...prev.taper, num_tapers: num, sections } }));
   };
 
