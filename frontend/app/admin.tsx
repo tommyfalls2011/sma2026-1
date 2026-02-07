@@ -1237,11 +1237,11 @@ export default function AdminScreen() {
 
               {emailResult ? <Text style={{ fontSize: 12, color: emailResult.startsWith('✅') ? '#4CAF50' : '#f44336', marginBottom: 8, textAlign: 'center' }}>{emailResult}</Text> : null}
 
-              <TouchableOpacity onPress={() => confirmAction('Send Update Email', `This will send an email to ${userEmails.length} users. Continue?`, sendUpdateEmail)} disabled={sendingEmail} style={{ backgroundColor: '#2196F3', borderRadius: 8, padding: 14, alignItems: 'center', opacity: sendingEmail ? 0.6 : 1 }}>
+              <TouchableOpacity onPress={() => confirmAction('Send Email List', `This will send all ${userEmails.length} user emails to your inbox. You can then BCC them in Gmail.`, sendUpdateEmail)} disabled={sendingEmail} style={{ backgroundColor: '#2196F3', borderRadius: 8, padding: 14, alignItems: 'center', opacity: sendingEmail ? 0.6 : 1 }}>
                 {sendingEmail ? <ActivityIndicator color="#fff" /> : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Ionicons name="send" size={16} color="#fff" />
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Send to All Users</Text>
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Send Email List to My Inbox</Text>
                   </View>
                 )}
               </TouchableOpacity>
