@@ -68,6 +68,17 @@ export default function AdminScreen() {
   const [paypalEmail, setPaypalEmail] = useState('');
   const [cashappTag, setCashappTag] = useState('');
   
+  // Feature toggles per tier
+  const ALL_FEATURES = ['auto_tune', 'optimize_height', 'save_designs', 'csv_export', 'stacking', 'taper', 'corona_balls', 'ground_radials'];
+  const FEATURE_LABELS: Record<string, string> = {
+    auto_tune: 'Auto-Tune', optimize_height: 'Optimize Height', save_designs: 'Save Designs',
+    csv_export: 'CSV Export', stacking: 'Stacking', taper: 'Tapered Elements',
+    corona_balls: 'Corona Balls', ground_radials: 'Ground Radials'
+  };
+  const [bronzeFeatures, setBronzeFeatures] = useState<string[]>(['basic_calc', 'swr_meter', 'band_selection']);
+  const [silverFeatures, setSilverFeatures] = useState<string[]>(['basic_calc', 'swr_meter', 'band_selection', 'auto_tune', 'save_designs']);
+  const [goldFeatures, setGoldFeatures] = useState<string[]>(['all']);
+  
   // Users state
   const [users, setUsers] = useState<UserData[]>([]);
   
