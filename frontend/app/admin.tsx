@@ -1076,10 +1076,11 @@ export default function AdminScreen() {
               </Text>
             ) : null}
             <TextInput
-              style={{ backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', color: '#ccc', fontSize: 12, padding: 10, minHeight: 400, textAlignVertical: 'top', fontFamily: 'monospace' }}
+              style={{ backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', color: '#ccc', fontSize: 12, padding: 10, minHeight: 400, maxHeight: 500, textAlignVertical: 'top', fontFamily: 'monospace' }}
               value={designerContent}
               onChangeText={setDesignerContent}
               multiline
+              scrollEnabled={true}
               numberOfLines={20}
               placeholder="Enter designer info / about me content..."
               placeholderTextColor="#555"
