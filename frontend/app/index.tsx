@@ -1141,7 +1141,7 @@ export default function AntennaCalculator() {
                     <Dropdown 
                       label="# Radials" 
                       value={inputs.ground_radials.num_radials.toString()} 
-                      options={[4, 6, 8, 10, 12, 14, 16, 18].map(n => ({ value: n.toString(), label: `${n} Radials` }))} 
+                      options={[4, 6, 8, 10, 12, 14, 16, 18].map(n => ({ value: n.toString(), label: `${n}` }))} 
                       onChange={(v: string) => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, num_radials: parseInt(v) } }))} 
                     />
                   </View>
