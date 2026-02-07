@@ -113,6 +113,27 @@ export default function AdminScreen() {
   const [designerUpdatedBy, setDesignerUpdatedBy] = useState('');
   const [savingDesigner, setSavingDesigner] = useState(false);
 
+  // Discounts state
+  const [discounts, setDiscounts] = useState<any[]>([]);
+  const [discCode, setDiscCode] = useState('');
+  const [discType, setDiscType] = useState<'percentage' | 'fixed'>('percentage');
+  const [discValue, setDiscValue] = useState('');
+  const [discApplies, setDiscApplies] = useState('all');
+  const [discTiers, setDiscTiers] = useState<string[]>(['bronze', 'silver', 'gold']);
+  const [discMaxUses, setDiscMaxUses] = useState('');
+  const [discEmails, setDiscEmails] = useState('');
+  const [creatingDiscount, setCreatingDiscount] = useState(false);
+
+  // Notify state
+  const [expoUrl, setExpoUrl] = useState('');
+  const [downloadLink, setDownloadLink] = useState('');
+  const [qrBase64, setQrBase64] = useState('');
+  const [emailSubject, setEmailSubject] = useState('SMA Antenna Calc - New Update Available!');
+  const [emailMessage, setEmailMessage] = useState('We have released a new version of SMA Antenna Calc with improvements and bug fixes. Please install the latest version using the QR code or download link below.');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailResult, setEmailResult] = useState('');
+  const [userEmails, setUserEmails] = useState<any[]>([]);
+
   useEffect(() => {
     checkAdminAndLoad();
   }, [token]);
