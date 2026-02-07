@@ -410,6 +410,9 @@ class AutoTuneRequest(BaseModel):
     max_boom_length: Optional[float] = Field(default=None)  # Max boom length in inches
     spacing_lock_enabled: bool = Field(default=False)
     locked_positions: Optional[List[float]] = Field(default=None)  # Positions to preserve when spacing lock is on
+    # Element spacing mode
+    spacing_mode: str = Field(default="normal")  # normal, tight, long
+    spacing_level: float = Field(default=1.0)  # Spacing multiplier
 
 class AntennaOutput(BaseModel):
     swr: float
