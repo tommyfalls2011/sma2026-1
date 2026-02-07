@@ -1486,9 +1486,9 @@ export default function AntennaCalculator() {
                   </View>
                   {/* Individual bonuses */}
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                    {results.gain_breakdown.height_bonus > 0 && (
+                    {results.gain_breakdown.height_bonus > 0 && gainMode === 'realworld' && (
                       <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
-                        <Text style={{ fontSize: 9, color: '#81C784' }}>Height +{results.gain_breakdown.height_bonus}dB</Text>
+                        <Text style={{ fontSize: 9, color: '#81C784' }}>Ground +{results.gain_breakdown.height_bonus}dB</Text>
                       </View>
                     )}
                     {results.gain_breakdown.boom_bonus > 0 && (
