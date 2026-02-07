@@ -373,27 +373,28 @@ FREE_SPACE_GAIN_DBI = {
 }
 
 # Standard boom lengths (inches) at 11m (27.185 MHz) for gain calibration.
+# Based on real-world optimized Yagi designs at 27 MHz.
 # These are also used by auto-tune; moved here for shared access.
 STANDARD_BOOM_11M_IN = {
-    2: 77,
-    3: 159,
-    4: 222,
-    5: 270,
-    6: 295,
-    7: 354,
-    8: 394,
-    9: 413,
-    10: 433,
-    11: 472,
-    12: 512,
-    13: 551,
-    14: 591,
-    15: 630,
-    16: 669,
-    17: 709,
-    18: 748,
-    19: 772,
-    20: 800,
+    2: 47,      # ~1.2m
+    3: 138,     # ~3.5m
+    4: 217,     # ~5.5m
+    5: 295,     # ~7.5m
+    6: 394,     # ~10.0m
+    7: 472,     # ~12.0m (interpolated)
+    8: 551,     # ~14.0m
+    9: 640,     # ~16.25m (interpolated)
+    10: 728,    # ~18.5m
+    11: 827,    # ~21.0m (interpolated)
+    12: 925,    # ~23.5m
+    13: 1024,   # ~26.0m (interpolated)
+    14: 1122,   # ~28.5m (interpolated)
+    15: 1221,   # ~31.0m
+    16: 1323,   # ~33.6m (interpolated)
+    17: 1425,   # ~36.2m (interpolated)
+    18: 1528,   # ~38.8m (interpolated)
+    19: 1630,   # ~41.4m (interpolated)
+    20: 1732,   # ~44.0m
 }
 REF_WAVELENGTH_11M_IN = 434.2  # 11m at 27.185 MHz in inches
 
