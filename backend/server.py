@@ -894,10 +894,28 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_breakdown["corona_adj"] = round(corona_adj, 2)
     
     # Ground gain (height-dependent reinforcement from earth reflections)
-    # G_real = G_free_space + G_ground. At 1λ: ~5.8 dBi over average soil.
-    height_bonus = calculate_ground_gain(height_wavelengths)
+    # G_real = G_free_space + G_ground. Base model assumes "average" soil.
+    # Ground type modifies reflection efficiency:
+    #   wet: 1.05x (better conductor), average: 1.0x, dry: 0.70x (poor reflector)
+    # Radials improve effective soil quality toward the next tier.
+    base_ground_gain = calculate_ground_gain(height_wavelengths)
+    
+    ground_radials = input_data.ground_radials
+    ground_type = "average"
+    ground_scale = 1.0  # average soil baseline
+    if ground_radials and ground_radials.enabled:
+        ground_type = ground_radials.ground_type
+        ground_type_scales = {"wet": 1.05, "average": 1.0, "dry": 0.70}
+        ground_scale = ground_type_scales.get(ground_type, 1.0)
+        # Radials improve effective ground quality (shift dry→average, average→wet)
+        radial_boost = min(0.15, ground_radials.num_radials / 8.0 * 0.15)
+        ground_scale = min(1.05, ground_scale + radial_boost)
+    
+    height_bonus = round(base_ground_gain * ground_scale, 2)
     gain_dbi += height_bonus
-    gain_breakdown["height_bonus"] = round(height_bonus, 2)
+    gain_breakdown["height_bonus"] = height_bonus
+    gain_breakdown["ground_type"] = ground_type
+    gain_breakdown["ground_scale"] = ground_scale
     
     # Boom diameter bonus (negligible — already captured in empirical gain data)
     boom_bonus = 0
