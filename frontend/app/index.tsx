@@ -1235,7 +1235,8 @@ export default function AntennaCalculator() {
               )}
             </View>
 
-            {/* Element Spacing Control */}
+            {/* Element Spacing Control - hidden when boom lock is active */}
+            {!boomLockEnabled && (
             <View style={{ marginTop: 12, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12 }}>
               <Text style={{ fontSize: 12, fontWeight: '700', color: '#aaa', marginBottom: 8 }}>
                 <Ionicons name="resize-outline" size={12} color="#9C27B0" /> Element Spacing
@@ -1272,6 +1273,14 @@ export default function AntennaCalculator() {
                 />
               )}
             </View>
+            )}
+            {boomLockEnabled && (
+              <View style={{ marginTop: 12, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#FF9800' }}>
+                <Text style={{ fontSize: 11, color: '#888' }}>
+                  <Ionicons name="information-circle-outline" size={12} color="#FF9800" /> Spacing controls disabled — Boom Lock sets the boom length and distributes elements equally.
+                </Text>
+              </View>
+            )}
 
           </View>
 
