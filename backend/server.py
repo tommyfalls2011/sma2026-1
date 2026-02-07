@@ -1353,6 +1353,24 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     else:
         compression_penalty = 0
     
+    # === SPACING MODE ===
+    # Apply tight/long spacing after all other position calculations
+    spacing_factor = request.spacing_level
+    if request.spacing_mode != "normal" and abs(spacing_factor - 1.0) > 0.01:
+        first_pos = elements[0]["position"] if elements else 0
+        for elem in elements:
+            if elem["position"] != first_pos:
+                relative = elem["position"] - first_pos
+                elem["position"] = round(first_pos + relative * spacing_factor, 1)
+        
+        mode_label = "Tight" if request.spacing_mode == "tight" else "Long"
+        notes.append(f"")
+        notes.append(f"Spacing: {mode_label} mode ({spacing_factor:.2f}x)")
+        if spacing_factor < 1.0:
+            notes.append(f"Note: Tight spacing may reduce gain by ~{round((1 - spacing_factor) * 2.5, 1)} dB but improves F/B")
+        else:
+            notes.append(f"Note: Long spacing may increase gain by ~{round((spacing_factor - 1) * 1.5, 1)} dB but widen beamwidth")
+    
     # Predict performance (slightly worse without reflector)
     base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
     predicted_swr = base_predicted_swr if use_reflector else base_predicted_swr + 0.1
