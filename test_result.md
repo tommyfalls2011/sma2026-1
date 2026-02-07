@@ -395,7 +395,7 @@ test_plan:
     status_history:
         - working: true
         - agent: "main"
-        - comment: "Replaced logarithmic gain formula with lookup-table model calibrated to user-provided Yagi engineering data. FREE_SPACE_GAIN_DBI table: 2elem=6.2, 3elem=8.2, 5elem=10.8, 8elem=13.0, 10elem=14.0, 15elem=16.0, 20elem=17.2 dBi. Boom adjustment: 2.5dB per boom doubling (verified: 10.8→13.3 at 2x boom). Auto-tune predicted gain also updated to use shared lookup."
+        - comment: "Replaced logarithmic gain formula with lookup-table model calibrated to user-provided Yagi engineering data. FREE_SPACE_GAIN_DBI table: 2elem=6.2, 3elem=8.2, 5elem=10.8, 8elem=13.0, 10elem=14.0, 15elem=16.0, 20elem=17.2 dBi. Boom adjustment: 2.5dB per boom doubling. Ground gain model: 5.8dBi at 1λ height. Updated boom lengths to user's optimal specs. Real-world gains at 36ft match user targets within ±0.5dBi."
 
   - task: "Optimize Height - Boom/Elements/Ground Factors"
     implemented: true
