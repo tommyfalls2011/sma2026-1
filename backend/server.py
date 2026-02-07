@@ -915,7 +915,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_dbi += height_bonus
     gain_breakdown["height_bonus"] = height_bonus
     gain_breakdown["ground_type"] = ground_type
-    gain_breakdown["ground_scale"] = ground_scale
+    gain_breakdown["ground_scale"] = round(ground_scale, 2)
     
     # Boom diameter bonus (negligible — already captured in empirical gain data)
     boom_bonus = 0
