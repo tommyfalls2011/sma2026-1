@@ -380,8 +380,15 @@ export default function AdminScreen() {
       const emailsRes = await fetch(`${BACKEND_URL}/api/admin/user-emails`, { headers: { 'Authorization': `Bearer ${token}` } });
       const emailsData = emailsRes.ok ? await emailsRes.json() : { users: [] };
       const allUsers = emailsData.users || [];
-      setUserEmails(allUsers);
-      const allEmails = allUsers.map((u: any) => u.email).filter(Boolean);
+      const adminEmail = (user?.email || 'fallstommy@gmail.com').toLowerCase();
+      const filtered = allUsers.filter((u: any) => {
+        const e = (u.email || '').toLowerCase();
+        if (e === adminEmail) return false;
+        if (e.endsWith('@testuser.com')) return false;
+        return true;
+      });
+      setUserEmails(filtered);
+      const allEmails = filtered.map((u: any) => u.email).filter(Boolean);
 
       if (allEmails.length === 0) { setEmailResult('❌ No users found'); setSendingEmail(false); return; }
 
