@@ -1611,11 +1611,11 @@ export default function AntennaCalculator() {
                 <Text style={styles.performanceTitle}><Ionicons name="bar-chart-outline" size={14} color="#FF9800" /> Performance Metrics</Text>
                 <View style={styles.performanceGrid}>
                   <View style={styles.perfItem}>
-                    <Text style={styles.perfLabel}>Gain</Text>
+                    <Text style={styles.perfLabel}>Gain ({gainMode === 'freespace' ? 'FS' : 'RW'})</Text>
                     <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min((results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi) / 20 * 100, 100)}%`, backgroundColor: '#4CAF50' }]} />
+                      <View style={[styles.perfBarFill, { width: `${Math.min(((gainMode === 'freespace' && results.gain_breakdown ? results.gain_dbi - (results.gain_breakdown.height_bonus || 0) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)) / 25) * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
                     </View>
-                    <Text style={styles.perfValue}>{results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi} dBi</Text>
+                    <Text style={styles.perfValue}>{gainMode === 'freespace' && results.gain_breakdown ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0)).toFixed(1) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)} dBi</Text>
                   </View>
                   <View style={styles.perfItem}>
                     <Text style={styles.perfLabel}>F/B Ratio</Text>
