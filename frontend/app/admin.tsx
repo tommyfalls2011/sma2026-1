@@ -948,6 +948,60 @@ export default function AdminScreen() {
             </View>
           </>
         )}
+
+        {/* Designer Info Editor Tab */}
+        {activeTab === 'designer' && (
+          <>
+            <Text style={styles.sectionTitle}>Designer Info / About Me</Text>
+            <Text style={styles.hint}>
+              Edit the Designer Info shown to users when they tap "Designer Info" on the main screen. Uses simple markdown.
+            </Text>
+            {designerUpdatedAt ? (
+              <Text style={{ fontSize: 10, color: '#666', marginBottom: 8 }}>
+                Last updated: {new Date(designerUpdatedAt).toLocaleDateString()} by {designerUpdatedBy}
+              </Text>
+            ) : null}
+            <TextInput
+              style={{ backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', color: '#ccc', fontSize: 12, padding: 10, minHeight: 400, textAlignVertical: 'top', fontFamily: 'monospace' }}
+              value={designerContent}
+              onChangeText={setDesignerContent}
+              multiline
+              numberOfLines={20}
+              placeholder="Enter designer info / about me content..."
+              placeholderTextColor="#555"
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: '#2196F3', borderRadius: 8, padding: 12, marginTop: 12, alignItems: 'center', opacity: savingDesigner ? 0.6 : 1 }}
+              onPress={saveDesignerContent}
+              disabled={savingDesigner}
+            >
+              {savingDesigner ? <ActivityIndicator color="#fff" /> : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="save" size={16} color="#fff" />
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Save Designer Info</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            {/* Preview Section */}
+            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Preview</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#333' }}>
+              {designerContent.split('\n').map((line: string, i: number) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('# ')) return <Text key={i} style={{ fontSize: 16, fontWeight: 'bold', color: '#2196F3', marginTop: 8, marginBottom: 4 }}>{trimmed.slice(2)}</Text>;
+                if (trimmed.startsWith('## ')) return <Text key={i} style={{ fontSize: 13, fontWeight: '700', color: '#4CAF50', marginTop: 10, marginBottom: 3 }}>{trimmed.slice(3)}</Text>;
+                if (trimmed.startsWith('### ')) return <Text key={i} style={{ fontSize: 12, fontWeight: '700', color: '#FF9800', marginTop: 8, marginBottom: 3 }}>{trimmed.slice(4)}</Text>;
+                if (trimmed.startsWith('- **')) {
+                  const match = trimmed.match(/- \*\*(.+?)\*\*:?\s*(.*)/);
+                  if (match) return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginLeft: 8, marginBottom: 2 }}><Text style={{ fontWeight: '700', color: '#fff' }}>{match[1]}</Text>: {match[2]}</Text>;
+                }
+                if (trimmed.startsWith('- ')) return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginLeft: 8, marginBottom: 2 }}>• {trimmed.slice(2)}</Text>;
+                if (trimmed === '') return <View key={i} style={{ height: 4 }} />;
+                return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginBottom: 2, lineHeight: 16 }}>{trimmed}</Text>;
+              })}
+            </View>
+          </>
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
