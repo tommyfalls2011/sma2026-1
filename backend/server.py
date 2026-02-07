@@ -2754,8 +2754,10 @@ async def send_update_email(data: SendUpdateEmail, admin: dict = Depends(require
     if not recipients:
         raise HTTPException(status_code=400, detail="No recipients found")
 
-    expo_url = data.expo_url or ""
-    download_link = data.download_link or expo_url
+    # Use request values, fall back to saved settings
+    saved_settings = await db.app_settings.find_one({"key": "app_update"}, {"_id": 0}) or {}
+    expo_url = data.expo_url or saved_settings.get("expo_url", "")
+    download_link = data.download_link or data.expo_url or saved_settings.get("download_link", "") or expo_url
     qr_html = ""
     if expo_url:
         qr_b64 = generate_qr_base64(expo_url)
