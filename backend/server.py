@@ -1266,34 +1266,60 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     # Determine if we should include reflector
     use_reflector = getattr(request, 'use_reflector', True)
     
+    # === REALISTIC BOOM LENGTHS for 27 MHz (11m) ===
+    # Based on real-world Yagi designs. Scale for other bands by wavelength ratio.
+    # Reference wavelength = 11m (27.185 MHz) = 434.2"
+    TYPICAL_BOOM_11M = {
+        2: 76,     # ~6.3 ft (4.8-8 ft range)
+        3: 150,    # ~12.5 ft (10-15 ft range)
+        4: 252,    # ~21 ft (18-24 ft range)
+        5: 324,    # ~27 ft (25-30 ft range)
+        6: 384,    # ~32 ft (30-35 ft range)
+        7: 444,    # ~37 ft (35-39 ft range)
+        8: 504,    # ~42 ft
+        9: 564,    # ~47 ft
+        10: 624,   # ~52 ft
+        11: 672,   # ~56 ft
+        12: 720,   # ~60 ft
+        13: 756,   # ~63 ft
+        14: 792,   # ~66 ft
+        15: 828,   # ~69 ft
+        16: 864,   # ~72 ft
+        17: 900,   # ~75 ft
+        18: 936,   # ~78 ft
+        19: 960,   # ~80 ft
+        20: 984,   # ~82 ft
+    }
+    ref_wavelength_in = 434.2  # 11m at 27.185 MHz
+    scale_factor = wavelength_in / ref_wavelength_in
+    
+    # Get target boom length, scaled for current band
+    target_boom = TYPICAL_BOOM_11M.get(n, 150 + (n - 3) * 60) * scale_factor
+    
     if use_reflector:
-        # Optimal reflector: ~5% longer than driven, 0.2 wavelength behind
-        reflector_length = round(driven_length * 1.05, 1)
-        reflector_spacing = round(wavelength_in * 0.2, 1)
+        # Reflector-to-driven: ~15% of total boom (closer than directors)
+        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
         
-        # Add reflector
         elements.append({
             "element_type": "reflector",
-            "length": reflector_length,
+            "length": round(driven_length * 1.05, 1),
             "diameter": 0.5,
             "position": 0
         })
-        notes.append(f"Reflector: {reflector_length}\" (5% longer than driven)")
+        notes.append(f"Reflector: {round(driven_length * 1.05, 1)}\" (5% longer than driven)")
         
-        # Add driven element
         elements.append({
             "element_type": "driven",
             "length": driven_length,
             "diameter": 0.5,
-            "position": reflector_spacing
+            "position": refl_driven_gap
         })
-        notes.append(f"Driven: {driven_length}\" at {reflector_spacing}\" from reflector")
+        notes.append(f"Driven: {driven_length}\" at {refl_driven_gap}\" from reflector")
         
-        # Add directors
         num_directors = n - 2
-        current_position = reflector_spacing
+        remaining_boom = target_boom - refl_driven_gap
+        current_position = refl_driven_gap
     else:
-        # No reflector mode - driven element at position 0
         elements.append({
             "element_type": "driven",
             "length": driven_length,
@@ -1302,8 +1328,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         })
         notes.append(f"Driven: {driven_length}\" at position 0 (no reflector)")
         
-        # All remaining elements are directors
         num_directors = n - 1
+        remaining_boom = target_boom
         current_position = 0
     
     # === SPACING LOCK MODE ===
