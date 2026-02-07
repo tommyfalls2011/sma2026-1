@@ -159,16 +159,36 @@ async def load_settings_from_db():
     
     settings = await db.settings.find_one({"type": "pricing"})
     if settings:
-        SUBSCRIPTION_TIERS["bronze"]["price"] = settings.get("bronze_price", 29.99)
-        SUBSCRIPTION_TIERS["bronze"]["max_elements"] = settings.get("bronze_max_elements", 3)
-        SUBSCRIPTION_TIERS["silver"]["price"] = settings.get("silver_price", 49.99)
-        SUBSCRIPTION_TIERS["silver"]["max_elements"] = settings.get("silver_max_elements", 7)
-        SUBSCRIPTION_TIERS["gold"]["price"] = settings.get("gold_price", 69.99)
-        SUBSCRIPTION_TIERS["gold"]["max_elements"] = settings.get("gold_max_elements", 20)
-        # Update descriptions
-        SUBSCRIPTION_TIERS["bronze"]["description"] = f"${SUBSCRIPTION_TIERS['bronze']['price']}/month - {SUBSCRIPTION_TIERS['bronze']['max_elements']} elements max"
-        SUBSCRIPTION_TIERS["silver"]["description"] = f"${SUBSCRIPTION_TIERS['silver']['price']}/month - {SUBSCRIPTION_TIERS['silver']['max_elements']} elements max"
-        SUBSCRIPTION_TIERS["gold"]["description"] = f"${SUBSCRIPTION_TIERS['gold']['price']}/month - Full access"
+        # Load monthly tiers
+        if "bronze_monthly" in SUBSCRIPTION_TIERS:
+            SUBSCRIPTION_TIERS["bronze_monthly"]["price"] = settings.get("bronze_monthly_price", 39.99)
+            SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"] = settings.get("bronze_max_elements", 5)
+            SUBSCRIPTION_TIERS["bronze_monthly"]["features"] = settings.get("bronze_features", ["basic_calc", "swr_meter", "band_selection"])
+            SUBSCRIPTION_TIERS["bronze_yearly"]["price"] = settings.get("bronze_yearly_price", 400.00)
+            SUBSCRIPTION_TIERS["bronze_yearly"]["max_elements"] = settings.get("bronze_max_elements", 5)
+            SUBSCRIPTION_TIERS["bronze_yearly"]["features"] = settings.get("bronze_features", ["basic_calc", "swr_meter", "band_selection"])
+            
+            SUBSCRIPTION_TIERS["silver_monthly"]["price"] = settings.get("silver_monthly_price", 59.99)
+            SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"] = settings.get("silver_max_elements", 10)
+            SUBSCRIPTION_TIERS["silver_monthly"]["features"] = settings.get("silver_features", ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"])
+            SUBSCRIPTION_TIERS["silver_yearly"]["price"] = settings.get("silver_yearly_price", 675.00)
+            SUBSCRIPTION_TIERS["silver_yearly"]["max_elements"] = settings.get("silver_max_elements", 10)
+            SUBSCRIPTION_TIERS["silver_yearly"]["features"] = settings.get("silver_features", ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"])
+            
+            SUBSCRIPTION_TIERS["gold_monthly"]["price"] = settings.get("gold_monthly_price", 99.99)
+            SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"] = settings.get("gold_max_elements", 20)
+            SUBSCRIPTION_TIERS["gold_monthly"]["features"] = settings.get("gold_features", ["all"])
+            SUBSCRIPTION_TIERS["gold_yearly"]["price"] = settings.get("gold_yearly_price", 1050.00)
+            SUBSCRIPTION_TIERS["gold_yearly"]["max_elements"] = settings.get("gold_max_elements", 20)
+            SUBSCRIPTION_TIERS["gold_yearly"]["features"] = settings.get("gold_features", ["all"])
+        else:
+            # Legacy format
+            SUBSCRIPTION_TIERS["bronze"]["price"] = settings.get("bronze_price", 29.99)
+            SUBSCRIPTION_TIERS["bronze"]["max_elements"] = settings.get("bronze_max_elements", 3)
+            SUBSCRIPTION_TIERS["silver"]["price"] = settings.get("silver_price", 49.99)
+            SUBSCRIPTION_TIERS["silver"]["max_elements"] = settings.get("silver_max_elements", 7)
+            SUBSCRIPTION_TIERS["gold"]["price"] = settings.get("gold_price", 69.99)
+            SUBSCRIPTION_TIERS["gold"]["max_elements"] = settings.get("gold_max_elements", 20)
     
     payment_settings = await db.settings.find_one({"type": "payment"})
     if payment_settings:
