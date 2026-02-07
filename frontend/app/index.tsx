@@ -552,6 +552,25 @@ export default function AntennaCalculator() {
         
         setInputs(prev => ({ ...prev, elements: newElements }));
         
+        // Re-apply spacing mode after auto-tune if active
+        // This ensures the spacing doesn't revert when auto-tune recalculates
+        if (spacingMode !== 'normal' && parseFloat(spacingLevel) !== 1.0) {
+          const factor = parseFloat(spacingLevel);
+          setTimeout(() => {
+            setInputs(prev => ({
+              ...prev,
+              elements: prev.elements.map((el: any, idx: number) => {
+                if (idx === 0) return el; // Keep first element at position 0
+                const basePos = parseFloat(newElements[0]?.position || '0');
+                const currentPos = parseFloat(newElements[idx]?.position || '0');
+                const relativePos = currentPos - basePos;
+                const newPos = basePos + relativePos * factor;
+                return { ...el, position: newPos.toFixed(3) };
+              })
+            }));
+          }, 50);
+        }
+        
         // Build alert message with lock info
         let alertMsg = `Predicted SWR: ${data.predicted_swr}:1\nPredicted Gain: ${data.predicted_gain} dBi`;
         if (boomLockEnabled) alertMsg += `\n\n🔒 Boom constrained to ${maxBoomLength}${elementUnit === 'meters' ? 'm' : '"'}`;
