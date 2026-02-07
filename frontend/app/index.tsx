@@ -287,11 +287,10 @@ export default function AntennaCalculator() {
   const { user, token, loading: authLoading, getMaxElements, isFeatureAvailable, tiers } = useAuth();
   
   const [inputs, setInputs] = useState<AntennaInput>({
-    num_elements: 3,
+    num_elements: 2,
     elements: [
       { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
       { element_type: 'driven', length: '204', diameter: '0.5', position: '48' },
-      { element_type: 'director', length: '195', diameter: '0.5', position: '96' },
     ],
     height_from_ground: '54', height_unit: 'ft', boom_diameter: '1.5', boom_unit: 'inches', band: '11m_cb', frequency_mhz: '27.185',
     stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
