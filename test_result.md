@@ -373,9 +373,45 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "Gain Breakdown (Base vs Final with %)"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/app/index.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Added base_gain_dbi and gain_breakdown fields to /api/calculate. Shows element base gain, height bonus, boom bonus, taper, corona, radials. Frontend displays breakdown card with Base→Final+% increase."
+
+  - task: "Optimize Height - Boom/Elements/Ground Factors"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Height optimizer now factors boom length, element count, ground radials, and ground type. 7-elem=54ft, 3-elem=36ft, wet radials=28ft showing differentiation."
+
+  - task: "Tutorial Popup with Admin Editor"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/app/index.tsx, /app/frontend/app/admin.tsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+        - agent: "main"
+        - comment: "Tutorial popup on first login, toggle to show/hide on login, admin can edit content from Tutorial tab. GET /api/tutorial, PUT /api/admin/tutorial endpoints."
+
 agent_communication:
     - agent: "main"
-    - message: "Enhanced implementation complete with dynamic element inputs, band selection (CB/Ham), SWR bandwidth meter showing curve and usable bandwidth at 1.5:1 and 2.0:1, height in ft/in, boom in mm/in. All features working as shown in screenshot."
+    - message: "Implemented 3 new features: 1) Gain Breakdown showing base vs final gain with individual bonus contributions, 2) Enhanced Height Optimizer factoring boom length, element count, ground radials & type, 3) Tutorial popup with admin-editable content. All backend endpoints tested via curl. Need testing agent to verify."
     - agent: "testing"
     - message: "✅ BACKEND TESTING COMPLETE - All 3 backend API endpoints are working perfectly: POST /api/calculate (validates inputs, returns all required fields with correct calculations), GET /api/history (retrieves calculation records), DELETE /api/history (clears history with proper count). Created comprehensive backend_test.py with 6 test cases - all passed. Backend is production-ready. Frontend testing not performed per system limitations."
     - agent: "main"
