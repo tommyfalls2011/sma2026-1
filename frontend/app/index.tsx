@@ -1013,24 +1013,6 @@ export default function AntennaCalculator() {
               <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
             </TouchableOpacity>
             
-            {/* Save/Load/Refresh buttons - only shown when logged in */}
-            {user && (
-              <View style={styles.saveLoadButtons}>
-                <TouchableOpacity style={{ backgroundColor: '#f44336', borderRadius: 6, padding: 8 }} onPress={handleRefresh}>
-                  <Ionicons name="refresh-outline" size={16} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveBtn} onPress={() => setShowSaveModal(true)}>
-                  <Ionicons name="save-outline" size={16} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.loadBtn} onPress={loadDesignsList} disabled={loadingDesigns}>
-                  {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={16} color="#fff" />}
-                </TouchableOpacity>
-                <TouchableOpacity style={{ backgroundColor: '#FF9800', borderRadius: 6, padding: 8 }} onPress={() => setShowTutorial(true)}>
-                  <Ionicons name="help-circle-outline" size={16} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            )}
-            
             {user ? (
               <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/subscription')}>
                 <View style={[styles.tierDot, { backgroundColor: TIER_COLORS[user.subscription_tier] || '#888' }]} />
@@ -1043,9 +1025,33 @@ export default function AntennaCalculator() {
                 <Ionicons name="log-in-outline" size={16} color="#4CAF50" />
               </TouchableOpacity>
             )}
-            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a3a5c', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowDesignerInfo(true)}>
-              <Ionicons name="person-circle-outline" size={16} color="#2196F3" />
-              <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '600' }}>Designer Info</Text>
+          </View>
+          
+          {/* Action Buttons Row */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
+            {user && (
+              <>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f44336', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={handleRefresh}>
+                  <Ionicons name="refresh-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Reset</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#2196F3', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowSaveModal(true)}>
+                  <Ionicons name="save-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={loadDesignsList} disabled={loadingDesigns}>
+                  {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={14} color="#fff" />}
+                  <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Load</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FF9800', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowTutorial(true)}>
+                  <Ionicons name="help-circle-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Help</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a3a5c', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowDesignerInfo(true)}>
+              <Ionicons name="person-circle-outline" size={14} color="#2196F3" />
+              <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '600' }}>Designer Info</Text>
             </TouchableOpacity>
           </View>
           
