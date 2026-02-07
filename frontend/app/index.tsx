@@ -1444,27 +1444,43 @@ export default function AntennaCalculator() {
               
               {/* Gain Breakdown Card */}
               {results.base_gain_dbi != null && results.gain_breakdown && (
-                <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: '#4CAF50' }}>
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#4CAF50', marginBottom: 8 }}>
-                    <Ionicons name="trending-up" size={12} color="#4CAF50" /> Gain Breakdown
-                  </Text>
+                <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }}>
+                      <Ionicons name="trending-up" size={12} color={gainMode === 'freespace' ? '#64B5F6' : '#4CAF50'} /> {gainMode === 'freespace' ? 'Free Space' : 'Real World'} Gain
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() => setGainMode(gainMode === 'realworld' ? 'freespace' : 'realworld')}
+                      style={{ backgroundColor: gainMode === 'freespace' ? '#1a3a5c' : '#1f3d1f', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}
+                    >
+                      <Text style={{ fontSize: 9, color: gainMode === 'freespace' ? '#64B5F6' : '#81C784', fontWeight: '600' }}>
+                        {gainMode === 'freespace' ? '→ Real World' : '→ Free Space'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <View style={{ alignItems: 'center' }}>
                       <Text style={{ fontSize: 9, color: '#888' }}>Base ({inputs.num_elements} elem)</Text>
                       <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#888' }}>{results.base_gain_dbi} dBi</Text>
                     </View>
-                    <Ionicons name="arrow-forward" size={18} color="#4CAF50" />
+                    <Ionicons name="arrow-forward" size={18} color={gainMode === 'freespace' ? '#64B5F6' : '#4CAF50'} />
                     <View style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 9, color: '#888' }}>Final</Text>
-                      <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#4CAF50' }}>{results.gain_dbi} dBi</Text>
-                    </View>
-                    <View style={{ alignItems: 'center', backgroundColor: '#1f3d1f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                      <Text style={{ fontSize: 9, color: '#4CAF50' }}>Increase</Text>
-                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#4CAF50' }}>
-                        +{(results.gain_dbi - results.base_gain_dbi).toFixed(1)} dBi
+                      <Text style={{ fontSize: 9, color: '#888' }}>{gainMode === 'freespace' ? 'Free Space' : 'Real World'}</Text>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', color: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }}>
+                        {gainMode === 'freespace'
+                          ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0)).toFixed(1)
+                          : results.gain_dbi} dBi
                       </Text>
-                      <Text style={{ fontSize: 9, color: '#81C784' }}>
-                        +{results.base_gain_dbi > 0 ? (((results.gain_dbi - results.base_gain_dbi) / results.base_gain_dbi) * 100).toFixed(0) : 0}%
+                    </View>
+                    <View style={{ alignItems: 'center', backgroundColor: gainMode === 'freespace' ? '#1a2a3a' : '#1f3d1f', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
+                      <Text style={{ fontSize: 9, color: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }}>Increase</Text>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }}>
+                        +{gainMode === 'freespace'
+                          ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0) - results.base_gain_dbi).toFixed(1)
+                          : (results.gain_dbi - results.base_gain_dbi).toFixed(1)} dBi
+                      </Text>
+                      <Text style={{ fontSize: 9, color: gainMode === 'freespace' ? '#90CAF9' : '#81C784' }}>
+                        {gainMode === 'freespace' ? 'No ground gain' : `+${(results.gain_breakdown.height_bonus || 0).toFixed(1)} ground`}
                       </Text>
                     </View>
                   </View>
