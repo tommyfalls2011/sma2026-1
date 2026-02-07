@@ -1844,6 +1844,37 @@ export default function AntennaCalculator() {
           </View>
         </View>
       </Modal>
+
+      {/* Designer Info Modal */}
+      <Modal visible={showDesignerInfo} transparent animationType="fade" onRequestClose={() => setShowDesignerInfo(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '85%', maxWidth: 400 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}><Ionicons name="person-circle-outline" size={18} color="#2196F3" /> Designer Info</Text>
+              <TouchableOpacity onPress={() => setShowDesignerInfo(false)}><Ionicons name="close" size={24} color="#888" /></TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator>
+              {designerInfoContent.split('\n').map((line: string, i: number) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('# ')) return <Text key={i} style={{ fontSize: 18, fontWeight: 'bold', color: '#2196F3', marginTop: 12, marginBottom: 6 }}>{trimmed.slice(2)}</Text>;
+                if (trimmed.startsWith('## ')) return <Text key={i} style={{ fontSize: 14, fontWeight: '700', color: '#4CAF50', marginTop: 14, marginBottom: 4 }}>{trimmed.slice(3)}</Text>;
+                if (trimmed.startsWith('### ')) return <Text key={i} style={{ fontSize: 13, fontWeight: '700', color: '#FF9800', marginTop: 10, marginBottom: 3 }}>{trimmed.slice(4)}</Text>;
+                if (trimmed.startsWith('**') && trimmed.endsWith('**')) return <Text key={i} style={{ fontSize: 12, fontWeight: '700', color: '#fff', marginTop: 8, marginBottom: 3 }}>{trimmed.slice(2, -2)}</Text>;
+                if (trimmed.startsWith('- **')) {
+                  const match = trimmed.match(/- \*\*(.+?)\*\*:?\s*(.*)/);
+                  if (match) return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginLeft: 8, marginBottom: 3 }}><Text style={{ fontWeight: '700', color: '#fff' }}>{match[1]}</Text>: {match[2]}</Text>;
+                }
+                if (trimmed.startsWith('- ')) return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginLeft: 8, marginBottom: 3 }}>• {trimmed.slice(2)}</Text>;
+                if (trimmed === '') return <View key={i} style={{ height: 6 }} />;
+                return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginBottom: 3, lineHeight: 18 }}>{trimmed}</Text>;
+              })}
+            </ScrollView>
+            <TouchableOpacity style={{ backgroundColor: '#2196F3', borderRadius: 8, paddingVertical: 10, marginTop: 12, alignItems: 'center' }} onPress={() => setShowDesignerInfo(false)}>
+              <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
