@@ -1137,7 +1137,7 @@ export default function AntennaCalculator() {
                       ))}
                     </View>
                   </View>
-                  <View style={{ width: 100, zIndex: 700 }}>
+                  <View style={{ width: 100, zIndex: 2200 }}>
                     <Dropdown 
                       label="# Radials" 
                       value={inputs.ground_radials.num_radials.toString()} 
