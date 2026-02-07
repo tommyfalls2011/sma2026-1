@@ -541,7 +541,8 @@ export default function AntennaCalculator() {
           frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
           min_height: 10,
           max_height: 100,
-          step: 1,  // Test every foot
+          step: 1,
+          ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
         }),
       });
       if (response.ok) {
