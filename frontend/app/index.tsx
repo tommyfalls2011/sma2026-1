@@ -1712,6 +1712,41 @@ export default function AntennaCalculator() {
           </View>
         </View>
       </Modal>
+      
+      {/* Tutorial / Intro Modal */}
+      <Modal visible={showTutorial} transparent animationType="fade" onRequestClose={() => setShowTutorial(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '85%', maxWidth: 400 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}><Ionicons name="book-outline" size={18} color="#FF9800" /> How to Use</Text>
+              <TouchableOpacity onPress={() => setShowTutorial(false)}><Ionicons name="close" size={24} color="#888" /></TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator>
+              {tutorialContent.split('\n').map((line: string, i: number) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('# ')) return <Text key={i} style={{ fontSize: 18, fontWeight: 'bold', color: '#FF9800', marginTop: 12, marginBottom: 6 }}>{trimmed.slice(2)}</Text>;
+                if (trimmed.startsWith('## ')) return <Text key={i} style={{ fontSize: 14, fontWeight: '700', color: '#4CAF50', marginTop: 14, marginBottom: 4 }}>{trimmed.slice(3)}</Text>;
+                if (trimmed.startsWith('- **')) {
+                  const match = trimmed.match(/- \*\*(.+?)\*\*:?\s*(.*)/);
+                  if (match) return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginLeft: 8, marginBottom: 3 }}><Text style={{ fontWeight: '700', color: '#fff' }}>{match[1]}</Text>: {match[2]}</Text>;
+                }
+                if (trimmed.startsWith('- ')) return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginLeft: 8, marginBottom: 3 }}>• {trimmed.slice(2)}</Text>;
+                if (trimmed === '') return <View key={i} style={{ height: 6 }} />;
+                return <Text key={i} style={{ fontSize: 12, color: '#ccc', marginBottom: 3, lineHeight: 18 }}>{trimmed}</Text>;
+              })}
+            </ScrollView>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#333' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Switch value={tutorialEnabled} onValueChange={toggleTutorialEnabled} trackColor={{ false: '#333', true: '#FF9800' }} thumbColor="#fff" />
+                <Text style={{ fontSize: 11, color: '#888' }}>Show on login</Text>
+              </View>
+              <TouchableOpacity style={{ backgroundColor: '#FF9800', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 16 }} onPress={() => setShowTutorial(false)}>
+                <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Got it!</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
