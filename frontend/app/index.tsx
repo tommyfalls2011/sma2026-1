@@ -380,10 +380,13 @@ export default function AntennaCalculator() {
         if (cancelled) return;
         setTutorialEnabled(enabled);
 
-        // Load content from API
-        const res = await fetch(`${BACKEND_URL}/api/tutorial`);
-        if (res.ok && !cancelled) {
-          const data = await res.json();
+        // Load content from API (tutorial + designer info)
+        const [tutRes, designerRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/tutorial`),
+          fetch(`${BACKEND_URL}/api/designer-info`)
+        ]);
+        if (tutRes.ok && !cancelled) {
+          const data = await tutRes.json();
           setTutorialContent(data.content || '');
           setTutorialLoaded(true);
 
@@ -391,6 +394,10 @@ export default function AntennaCalculator() {
           if (enabled && user) {
             setShowTutorial(true);
           }
+        }
+        if (designerRes.ok && !cancelled) {
+          const data = await designerRes.json();
+          setDesignerInfoContent(data.content || '');
         }
       } catch (e) { /* ignore */ }
     };
