@@ -235,6 +235,41 @@ export default function AdminScreen() {
     }
   };
 
+  const loadDesignerContent = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/designer-info`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDesignerContent(data.content || '');
+        setDesignerUpdatedAt(data.updated_at || '');
+        setDesignerUpdatedBy(data.updated_by || '');
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  const saveDesignerContent = async () => {
+    setSavingDesigner(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/designer-info`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: designerContent })
+      });
+      if (res.ok) {
+        if (Platform.OS === 'web') { window.alert('Designer info saved!'); }
+        else { Alert.alert('Saved', 'Designer info updated successfully.'); }
+        loadDesignerContent();
+      }
+    } catch (e) {
+      if (Platform.OS === 'web') { window.alert('Failed to save designer info'); }
+      else { Alert.alert('Error', 'Failed to save designer info.'); }
+    } finally {
+      setSavingDesigner(false);
+    }
+  };
+
   const savePricing = async () => {
     setSaving(true);
     try {
