@@ -525,6 +525,8 @@ export default function AntennaCalculator() {
           max_boom_length: maxBoomInches,
           spacing_lock_enabled: spacingLockEnabled,
           locked_positions: lockedPositions,
+          spacing_mode: spacingMode,
+          spacing_level: parseFloat(spacingLevel) || 1.0,
         }),
       });
       if (response.ok) {
