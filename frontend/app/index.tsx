@@ -696,7 +696,7 @@ export default function AntennaCalculator() {
     
     const timestamp = getTimestamp();
     const userEmail = user?.email || 'guest';
-    const filename = `height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}.csv`;
+    const filename = sanitizeFilename(`height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
     // Create CSV content
     let csv = 'Height (ft),SWR,Gain (dBi),F/B Ratio (dB),Score,Is Optimal\n';
