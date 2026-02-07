@@ -1346,8 +1346,7 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
             if position_idx < len(request.locked_positions):
                 locked_pos = request.locked_positions[position_idx]
             else:
-                # Fall back to calculated position if not enough locked positions
-                director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)
+                director_spacing = remaining_boom / num_directors if num_directors > 0 else remaining_boom
                 current_position += director_spacing
                 locked_pos = current_position
             
@@ -1362,20 +1361,31 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
             notes.append(f"Director {i+1}: {director_length}\" at {locked_pos}\" (spacing locked)")
         notes.append("Spacing Lock: Positions preserved, only lengths optimized")
     else:
-        # Normal mode: calculate optimal positions
-        # Add directors (each ~3% shorter, spaced 0.2-0.25 wavelength)
-        for i in range(num_directors):
-            director_spacing = round(wavelength_in * (0.2 + i * 0.02), 1)  # Gradually increase spacing
-            current_position += director_spacing
-            director_length = round(driven_length * (0.95 - i * 0.02), 1)  # Each ~2% shorter
-            
-            elements.append({
-                "element_type": "director",
-                "length": director_length,
-                "diameter": 0.5,
-                "position": current_position
-            })
-            notes.append(f"Director {i+1}: {director_length}\" at {current_position}\"")
+        # Normal mode: distribute directors evenly along remaining boom
+        # First director slightly closer, then gradually increasing spacing
+        if num_directors > 0:
+            for i in range(num_directors):
+                # Weight: first director at ~0.8x avg spacing, last at ~1.2x avg spacing
+                # This mimics real Yagi designs where initial directors are closer
+                weight = 0.8 + (0.4 * i / max(num_directors - 1, 1))
+                total_weight = sum(0.8 + (0.4 * j / max(num_directors - 1, 1)) for j in range(num_directors))
+                director_spacing = round(remaining_boom * weight / total_weight, 1)
+                current_position += director_spacing
+                
+                # Each director ~2% shorter than previous
+                director_length = round(driven_length * (0.95 - i * 0.02), 1)
+                
+                elements.append({
+                    "element_type": "director",
+                    "length": director_length,
+                    "diameter": 0.5,
+                    "position": round(current_position, 1)
+                })
+                notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\"")
+    
+    notes.append(f"")
+    notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
+    notes.append(f"Total boom length: ~{round(max(e['position'] for e in elements), 1)}\" ({round(max(e['position'] for e in elements)/12, 1)} ft)")
     
     # === BOOM LOCK MODE ===
     # When boom lock is enabled, scale ALL positions to exactly match the target boom length
