@@ -1522,42 +1522,37 @@ async def optimize_height(request: HeightOptimizeRequest):
             takeoff_score = max(0, 3 - (takeoff_angle - 40) * 0.1)
         
         # === BOOM LENGTH FACTOR ===
-        # Longer booms benefit more from higher mounting heights
-        # A long boom antenna at low height wastes its potential directivity
-        # Ideal: height >= 0.5 * boom_length for proper pattern formation
+        # Longer booms need higher mounting for proper pattern formation
+        # Minimum effective height is roughly boom_length * 1.5
         boom_height_ratio = height_m / boom_length_m if boom_length_m > 0 else 2.0
-        if boom_height_ratio >= 2.0:
-            boom_score = 5.0  # Height well above boom - good clearance
+        min_effective_ratio = 1.5 + (boom_wavelengths * 0.5)  # Scales with boom size
+        
+        if boom_height_ratio >= min_effective_ratio:
+            boom_score = 8.0  # Height well above boom requirement
         elif boom_height_ratio >= 1.0:
-            boom_score = 3.0 + (boom_height_ratio - 1.0) * 2.0
+            boom_score = 4.0 + (boom_height_ratio - 1.0) * (4.0 / (min_effective_ratio - 1.0))
         elif boom_height_ratio >= 0.5:
-            boom_score = 1.0 + (boom_height_ratio - 0.5) * 4.0
+            boom_score = boom_height_ratio * 4.0  # Under-height penalty
         else:
             boom_score = boom_height_ratio * 2.0  # Very low relative to boom
         
+        # Scale boom importance by boom wavelengths (longer booms matter more)
+        boom_score *= (1.0 + boom_wavelengths * 0.8)
+        
         # === ELEMENT COUNT FACTOR ===
-        # More elements = more directivity = benefits more from optimal height
-        # Penalize heights that don't allow the antenna to reach full potential
-        # Higher element counts need height in the 0.5-1.0 wavelength sweet spot
-        if n >= 5:
-            # High-element antennas are height-sensitive
-            if 0.5 <= height_wavelengths <= 1.2:
-                element_score = 6.0  # Sweet spot
-            elif 0.3 <= height_wavelengths < 0.5:
-                element_score = 3.0
-            elif 1.2 < height_wavelengths <= 1.5:
-                element_score = 4.0
-            else:
-                element_score = 1.0
-        elif n >= 3:
-            if 0.4 <= height_wavelengths <= 1.0:
-                element_score = 4.0
-            elif 0.25 <= height_wavelengths < 0.4:
-                element_score = 2.5
-            else:
-                element_score = 1.5
+        # More elements = more directivity = needs height in specific wavelength bands
+        # Higher element counts are more height-sensitive and benefit from higher mounting
+        ideal_low = 0.5 + (n - 2) * 0.05   # Shifts sweet spot up with more elements
+        ideal_high = 1.0 + (n - 2) * 0.1    # Widens sweet spot for more elements
+        
+        if ideal_low <= height_wavelengths <= ideal_high:
+            element_score = 6.0 + (n - 2) * 1.5  # Sweet spot scales with element count
+        elif (ideal_low - 0.15) <= height_wavelengths < ideal_low:
+            element_score = 3.0 + (n - 2) * 0.5
+        elif ideal_high < height_wavelengths <= (ideal_high + 0.3):
+            element_score = 4.0 + (n - 2) * 0.5
         else:
-            element_score = 2.0  # 2-element antennas are less height-sensitive
+            element_score = 1.0
         
         # === GROUND RADIALS FACTOR ===
         # With ground radials, lower heights can be more effective
