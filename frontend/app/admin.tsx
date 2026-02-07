@@ -199,12 +199,15 @@ export default function AdminScreen() {
           bronze_monthly_price: parseFloat(bronzeMonthlyPrice),
           bronze_yearly_price: parseFloat(bronzeYearlyPrice),
           bronze_max_elements: parseInt(bronzeElements),
+          bronze_features: bronzeFeatures,
           silver_monthly_price: parseFloat(silverMonthlyPrice),
           silver_yearly_price: parseFloat(silverYearlyPrice),
           silver_max_elements: parseInt(silverElements),
+          silver_features: silverFeatures,
           gold_monthly_price: parseFloat(goldMonthlyPrice),
           gold_yearly_price: parseFloat(goldYearlyPrice),
-          gold_max_elements: parseInt(goldElements)
+          gold_max_elements: parseInt(goldElements),
+          gold_features: goldFeatures
         })
       });
 
