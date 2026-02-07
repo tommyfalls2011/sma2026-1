@@ -100,6 +100,12 @@ export default function AdminScreen() {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [editUserTier, setEditUserTier] = useState('');
   const [savingUserRole, setSavingUserRole] = useState(false);
+  
+  // Tutorial state
+  const [tutorialContent, setTutorialContent] = useState('');
+  const [tutorialUpdatedAt, setTutorialUpdatedAt] = useState('');
+  const [tutorialUpdatedBy, setTutorialUpdatedBy] = useState('');
+  const [savingTutorial, setSavingTutorial] = useState(false);
 
   useEffect(() => {
     checkAdminAndLoad();
