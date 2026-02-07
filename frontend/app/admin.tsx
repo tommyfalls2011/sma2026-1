@@ -561,6 +561,13 @@ export default function AdminScreen() {
           <Ionicons name="book" size={16} color={activeTab === 'tutorial' ? '#FF9800' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'tutorial' && styles.tabTextActive]}>Tutorial</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'designer' && styles.tabActive]}
+          onPress={() => { setActiveTab('designer'); loadDesignerContent(); }}
+        >
+          <Ionicons name="person" size={16} color={activeTab === 'designer' ? '#FF9800' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'designer' && styles.tabTextActive]}>Designer</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
