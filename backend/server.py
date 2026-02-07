@@ -424,6 +424,27 @@ def get_standard_boom_in(n: int, wavelength_in: float) -> float:
     return base * scale
 
 
+def calculate_ground_gain(height_wavelengths: float) -> float:
+    """Calculate ground reflection gain (dBi) for horizontal Yagi over average soil.
+    At 1λ height: ~5.8 dBi. Formula: G_real = G_free_space + G_ground."""
+    h = height_wavelengths
+    if h <= 0:
+        return 0.0
+    if h < 0.25:
+        return round(h * 8.0, 2)           # 0 → 2.0 dBi
+    if h < 0.5:
+        return round(2.0 + (h - 0.25) * 8.0, 2)   # 2.0 → 4.0
+    if h < 0.75:
+        return round(4.0 + (h - 0.5) * 4.0, 2)    # 4.0 → 5.0
+    if h < 1.0:
+        return round(5.0 + (h - 0.75) * 3.2, 2)   # 5.0 → 5.8
+    if h <= 1.5:
+        return round(5.8 + (h - 1.0) * 0.4, 2)    # 5.8 → 6.0
+    if h <= 2.0:
+        return round(6.0 - (h - 1.5) * 1.0, 2)    # 6.0 → 5.5
+    return round(max(4.0, 5.5 - (h - 2.0) * 0.5), 2)  # gradual decrease
+
+
 class TaperSection(BaseModel):
     length: float = Field(..., gt=0)
     start_diameter: float = Field(..., gt=0)
