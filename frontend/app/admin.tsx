@@ -1116,6 +1116,142 @@ export default function AdminScreen() {
             </View>
           </>
         )}
+
+        {/* === DISCOUNTS TAB === */}
+        {activeTab === 'discounts' && (
+          <>
+            <Text style={styles.sectionTitle}>Create Discount Code</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#333' }}>
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Code</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={discCode} onChangeText={(t) => setDiscCode(t.toUpperCase())} placeholder="e.g. TEST50" placeholderTextColor="#555" autoCapitalize="characters" />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <TouchableOpacity onPress={() => setDiscType('percentage')} style={{ flex: 1, backgroundColor: discType === 'percentage' ? '#4CAF50' : '#333', borderRadius: 6, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 12 }}>% Off</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setDiscType('fixed')} style={{ flex: 1, backgroundColor: discType === 'fixed' ? '#4CAF50' : '#333', borderRadius: 6, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 12 }}>$ Off</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Value ({discType === 'percentage' ? '%' : '$'})</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={discValue} onChangeText={setDiscValue} placeholder={discType === 'percentage' ? 'e.g. 50' : 'e.g. 10.00'} placeholderTextColor="#555" keyboardType="numeric" />
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Applies To</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                {['all', 'monthly', 'yearly'].map(opt => (
+                  <TouchableOpacity key={opt} onPress={() => setDiscApplies(opt)} style={{ flex: 1, backgroundColor: discApplies === opt ? '#2196F3' : '#333', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Tiers</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                {['bronze', 'silver', 'gold'].map(tier => (
+                  <TouchableOpacity key={tier} onPress={() => setDiscTiers(prev => prev.includes(tier) ? prev.filter(t => t !== tier) : [...prev, tier])} style={{ flex: 1, backgroundColor: discTiers.includes(tier) ? (TIER_COLORS[tier] || '#888') : '#333', borderRadius: 6, padding: 8, alignItems: 'center' }}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600' }}>{tier.charAt(0).toUpperCase() + tier.slice(1)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Max Uses (optional)</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={discMaxUses} onChangeText={setDiscMaxUses} placeholder="Leave empty for unlimited" placeholderTextColor="#555" keyboardType="numeric" />
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Restrict to Emails (optional, comma-separated)</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 12, borderWidth: 1, borderColor: '#444' }} value={discEmails} onChangeText={setDiscEmails} placeholder="Leave empty for all users" placeholderTextColor="#555" autoCapitalize="none" />
+
+              <TouchableOpacity onPress={createDiscount} disabled={creatingDiscount} style={{ backgroundColor: '#E91E63', borderRadius: 8, padding: 12, alignItems: 'center', opacity: creatingDiscount ? 0.6 : 1 }}>
+                {creatingDiscount ? <ActivityIndicator color="#fff" /> : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="add-circle" size={16} color="#fff" />
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Create Discount</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.sectionTitle}>Active Discounts ({discounts.length})</Text>
+            {discounts.length === 0 && <Text style={{ color: '#666', fontSize: 12, textAlign: 'center', padding: 20 }}>No discounts yet</Text>}
+            {discounts.map((d: any) => (
+              <View key={d.id} style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: d.active ? '#E91E63' : '#333', opacity: d.active ? 1 : 0.5 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ color: '#E91E63', fontWeight: '700', fontSize: 16 }}>{d.code}</Text>
+                    <View style={{ backgroundColor: d.discount_type === 'percentage' ? '#4CAF50' : '#FF9800', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                      <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{d.discount_type === 'percentage' ? `${d.value}%` : `$${d.value}`}</Text>
+                    </View>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity onPress={() => toggleDiscount(d.id)}>
+                      <Ionicons name={d.active ? 'pause-circle' : 'play-circle'} size={24} color={d.active ? '#FF9800' : '#4CAF50'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => deleteDiscount(d.id)}>
+                      <Ionicons name="trash" size={22} color="#f44336" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 10, color: '#888' }}>
+                  {d.applies_to === 'all' ? 'All billing' : d.applies_to} · Tiers: {(d.tiers || []).join(', ')} · Used: {d.times_used}{d.max_uses ? `/${d.max_uses}` : ''}{d.user_emails?.length ? ` · ${d.user_emails.length} specific users` : ' · All users'}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+
+        {/* === NOTIFY TAB === */}
+        {activeTab === 'notify' && (
+          <>
+            <Text style={styles.sectionTitle}>App Update & QR Code</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#333' }}>
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Expo Build URL</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 12, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={expoUrl} onChangeText={setExpoUrl} placeholder="exp://u.expo.dev/..." placeholderTextColor="#555" autoCapitalize="none" />
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Download Link (optional, fallback for non-Expo users)</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 12, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={downloadLink} onChangeText={setDownloadLink} placeholder="https://expo.dev/@your-app" placeholderTextColor="#555" autoCapitalize="none" />
+
+              <TouchableOpacity onPress={saveUpdateSettings} style={{ backgroundColor: '#4CAF50', borderRadius: 8, padding: 10, alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ color: '#fff', fontWeight: '600', fontSize: 12 }}>Save & Generate QR</Text>
+              </TouchableOpacity>
+
+              {qrBase64 ? (
+                <View style={{ alignItems: 'center', padding: 12, backgroundColor: '#fff', borderRadius: 8, marginBottom: 8 }}>
+                  <Text style={{ fontSize: 12, color: '#333', fontWeight: '600', marginBottom: 8 }}>Scan to Install</Text>
+                  {Platform.OS === 'web' ? (
+                    <img src={`data:image/png;base64,${qrBase64}`} style={{ width: 200, height: 200 }} alt="QR Code" />
+                  ) : (
+                    <Text style={{ fontSize: 10, color: '#666' }}>QR Code generated (visible in email)</Text>
+                  )}
+                </View>
+              ) : null}
+            </View>
+
+            <Text style={styles.sectionTitle}>Compose Update Email</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#333' }}>
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Subject</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 13, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={emailSubject} onChangeText={setEmailSubject} placeholder="Email subject" placeholderTextColor="#555" />
+
+              <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Message</Text>
+              <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 12, marginBottom: 12, minHeight: 120, textAlignVertical: 'top', borderWidth: 1, borderColor: '#444' }} value={emailMessage} onChangeText={setEmailMessage} multiline numberOfLines={6} placeholder="Type your update message..." placeholderTextColor="#555" />
+
+              <View style={{ backgroundColor: '#252525', borderRadius: 6, padding: 8, marginBottom: 12 }}>
+                <Text style={{ fontSize: 11, color: '#4CAF50', fontWeight: '600', marginBottom: 4 }}>Recipients: {userEmails.length} users</Text>
+                <Text style={{ fontSize: 10, color: '#888' }}>{userEmails.map((u: any) => u.email).join(', ')}</Text>
+              </View>
+
+              {emailResult ? <Text style={{ fontSize: 12, color: emailResult.startsWith('✅') ? '#4CAF50' : '#f44336', marginBottom: 8, textAlign: 'center' }}>{emailResult}</Text> : null}
+
+              <TouchableOpacity onPress={() => confirmAction('Send Update Email', `This will send an email to ${userEmails.length} users. Continue?`, sendUpdateEmail)} disabled={sendingEmail} style={{ backgroundColor: '#2196F3', borderRadius: 8, padding: 14, alignItems: 'center', opacity: sendingEmail ? 0.6 : 1 }}>
+                {sendingEmail ? <ActivityIndicator color="#fff" /> : (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Ionicons name="send" size={16} color="#fff" />
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Send to All Users</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
