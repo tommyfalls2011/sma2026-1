@@ -217,19 +217,25 @@ const Dropdown = ({ label, value, options, onChange }: any) => {
       </TouchableOpacity>
       {open && (
         <View style={styles.dropdownList}>
-          <ScrollView style={{ maxHeight: 300 }} nestedScrollEnabled showsVerticalScrollIndicator={true} bounces={false} persistentScrollbar={true}>
-            {options.map((o: any) => (
+          <FlatList
+            data={options}
+            keyExtractor={(item: any) => item.value}
+            style={{ maxHeight: 280 }}
+            nestedScrollEnabled={true}
+            showsVerticalScrollIndicator={true}
+            persistentScrollbar={true}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }: any) => (
               <TouchableOpacity 
-                key={o.value} 
-                style={[styles.dropdownItem, value === o.value && styles.dropdownItemSelected]} 
-                onPress={() => { onChange(o.value); setOpen(false); }}
+                style={[styles.dropdownItem, value === item.value && styles.dropdownItemSelected]} 
+                onPress={() => { onChange(item.value); setOpen(false); }}
               >
-                <Text style={[styles.dropdownItemText, value === o.value && styles.dropdownItemTextSelected]}>
-                  {o.label}
+                <Text style={[styles.dropdownItemText, value === item.value && styles.dropdownItemTextSelected]}>
+                  {item.label}
                 </Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            )}
+          />
         </View>
       )}
     </View>
