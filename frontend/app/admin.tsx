@@ -1412,6 +1412,10 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: 'rgba(76,175,80,0.15)' },
   tabText: { fontSize: 14, color: '#888', fontWeight: '500' },
   tabTextActive: { color: '#4CAF50' },
+  tabPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: '#252525', borderWidth: 1, borderColor: '#333' },
+  tabPillActive: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
+  tabPillText: { fontSize: 11, color: '#888', fontWeight: '600' },
+  tabPillTextActive: { color: '#fff' },
   
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40 },
