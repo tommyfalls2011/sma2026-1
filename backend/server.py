@@ -1509,7 +1509,7 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         base_gain -= 1.5  # Less gain without reflector
     if request.taper and request.taper.enabled:
         base_gain += 0.3 * request.taper.num_tapers
-    predicted_gain = round(base_gain + 2.0 - compression_penalty, 1)  # Add height gain estimate, subtract compression penalty
+    predicted_gain = round(base_gain + calculate_ground_gain(height_m / wavelength_m) - compression_penalty, 1)
     
     # Safe F/B calculation
     if n <= 5:
