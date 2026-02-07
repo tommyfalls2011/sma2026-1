@@ -318,7 +318,8 @@ def check_subscription_active(user: dict) -> tuple:
         if isinstance(expires, str):
             expires = datetime.fromisoformat(expires.replace('Z', '+00:00'))
         if datetime.utcnow() > expires.replace(tzinfo=None):
-            return False, SUBSCRIPTION_TIERS.get(tier), "Subscription expired"
+            # Subscription expired - downgrade to free (not trial)
+            return False, SUBSCRIPTION_TIERS.get(tier), "Subscription expired - please renew"
     
     return True, SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["trial"]), "Active"
 
