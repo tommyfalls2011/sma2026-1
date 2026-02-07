@@ -364,35 +364,49 @@ export default function AntennaCalculator() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialContent, setTutorialContent] = useState('');
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
+  const [tutorialLoaded, setTutorialLoaded] = useState(false);
 
-  // Load tutorial content on mount
+  // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
-    const loadTutorialContent = async () => {
+    let cancelled = false;
+    const initTutorial = async () => {
       try {
+        // Load preference
+        const stored = await AsyncStorage.getItem('tutorial_enabled');
+        const enabled = stored !== 'false'; // Default true for new users
+        if (cancelled) return;
+        setTutorialEnabled(enabled);
+
+        // Load content from API
         const res = await fetch(`${BACKEND_URL}/api/tutorial`);
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json();
           setTutorialContent(data.content || '');
-        }
-      } catch (e) { /* ignore */ }
-    };
-    loadTutorialContent();
-  }, []);
+          setTutorialLoaded(true);
 
-  // Show tutorial on login when toggle is ON
-  useEffect(() => {
-    const checkShowOnLogin = async () => {
-      try {
-        const stored = await AsyncStorage.getItem('tutorial_enabled');
-        const enabled = stored !== 'false'; // Default to true (first time = show)
-        setTutorialEnabled(enabled);
-        if (enabled && user) {
-          setShowTutorial(true);
+          // Show tutorial if user is logged in and toggle is ON
+          if (enabled && user) {
+            setShowTutorial(true);
+          }
         }
       } catch (e) { /* ignore */ }
     };
-    if (user) checkShowOnLogin();
+    if (user) {
+      initTutorial();
+    }
+    return () => { cancelled = true; };
   }, [user]);
+
+  // Also show tutorial when app comes back to foreground (user already logged in)
+  useEffect(() => {
+    const handleAppState = (nextState: string) => {
+      if (nextState === 'active' && user && tutorialEnabled && tutorialLoaded) {
+        setShowTutorial(true);
+      }
+    };
+    const sub = AppState.addEventListener('change', handleAppState);
+    return () => sub.remove();
+  }, [user, tutorialEnabled, tutorialLoaded]);
 
   const toggleTutorialEnabled = async (val: boolean) => {
     setTutorialEnabled(val);
