@@ -2274,6 +2274,93 @@ async def admin_delete_user_designs(user_id: str, admin: dict = Depends(require_
     return {"success": True, "message": f"Deleted {result.deleted_count} designs from {user.get('email', 'Unknown')}"}
 
 
+# ==================== TUTORIAL / INTRO CONTENT ====================
+DEFAULT_TUTORIAL_CONTENT = """# Welcome to SMA Antenna Calculator! 📡
+
+## Getting Started
+This app helps you design and analyze Yagi-Uda antennas for CB and Ham radio bands. Here's a quick guide to get you started.
+
+## 1. Choose Your Band
+Select your operating band (11m CB, 10m, 20m, etc.) from the dropdown at the top. The frequency will auto-fill to the band center, but you can adjust it.
+
+## 2. Set Up Elements
+- **Reflector**: The longest element, sits behind the driven element. Makes the antenna directional.
+- **Driven**: The element connected to your feedline. Its length determines resonance.
+- **Directors**: Shorter elements in front that increase gain and narrow the beam.
+
+Use the element count dropdown to add more directors (up to 20 with Gold tier).
+
+## 3. Enter Dimensions
+For each element, enter:
+- **Length**: Total tip-to-tip length (inches)
+- **Diameter**: Element tube diameter (inches)
+- **Position**: Distance from the reflector along the boom (inches)
+
+## 4. Height & Boom
+- **Height from Ground**: How high the antenna is mounted. Higher = lower take-off angle = better DX.
+- **Boom Diameter**: The tube diameter of your boom. Affects gain slightly.
+
+## 5. Auto-Tune 🔧
+Hit the Auto-Tune button to automatically calculate optimal element lengths and spacing for your selected band. Great starting point!
+
+## 6. Optimize Height 📊
+Use "Optimize Height" to find the best mounting height. The optimizer considers SWR, gain, F/B ratio, take-off angle, boom length, and ground conditions.
+
+## 7. Optional Features
+- **Tapered Elements**: If your elements use multiple tube diameters (stepped taper), enable this for accurate calculations.
+- **Corona Balls**: Add tip balls for high-power operation.
+- **Ground Radials**: Model ground radials under the antenna.
+- **Stacking**: Calculate performance for stacked antenna arrays.
+- **Element Spacing**: Adjust spacing tighter or longer from optimal.
+
+## 8. Reading Results
+- **Gain (dBi)**: Higher = stronger signal in the forward direction.
+- **SWR**: Lower is better. Under 1.5:1 is excellent.
+- **F/B Ratio**: Higher = less signal off the back of the antenna.
+- **Take-off Angle**: Lower = better for long-distance (DX) contacts.
+
+## 9. Saving & Exporting
+- Save your designs to load them later.
+- Export results and height data to CSV files.
+
+## Tips for Beginners
+- Start with Auto-Tune, then fine-tune from there.
+- A 3-element Yagi at 54' is a great starting point for 11m CB.
+- Use Optimize Height to find the best height for your specific setup.
+- The SWR Bandwidth chart shows your usable frequency range.
+
+Happy DX'ing! 73 🎙️"""
+
+@api_router.get("/tutorial")
+async def get_tutorial():
+    """Get tutorial content (public endpoint)"""
+    tutorial = await db.app_settings.find_one({"key": "tutorial_content"}, {"_id": 0})
+    if tutorial:
+        return {"content": tutorial.get("content", DEFAULT_TUTORIAL_CONTENT)}
+    return {"content": DEFAULT_TUTORIAL_CONTENT}
+
+class UpdateTutorialRequest(BaseModel):
+    content: str
+
+@api_router.put("/admin/tutorial")
+async def update_tutorial(request: UpdateTutorialRequest, admin: dict = Depends(require_admin)):
+    """Update tutorial content (admin only)"""
+    await db.app_settings.update_one(
+        {"key": "tutorial_content"},
+        {"$set": {"key": "tutorial_content", "content": request.content, "updated_at": datetime.utcnow().isoformat(), "updated_by": admin["email"]}},
+        upsert=True
+    )
+    return {"success": True, "message": "Tutorial content updated"}
+
+@api_router.get("/admin/tutorial")
+async def admin_get_tutorial(admin: dict = Depends(require_admin)):
+    """Get tutorial content for editing (admin only)"""
+    tutorial = await db.app_settings.find_one({"key": "tutorial_content"}, {"_id": 0})
+    if tutorial:
+        return {"content": tutorial.get("content", DEFAULT_TUTORIAL_CONTENT), "updated_at": tutorial.get("updated_at"), "updated_by": tutorial.get("updated_by")}
+    return {"content": DEFAULT_TUTORIAL_CONTENT, "updated_at": None, "updated_by": None}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
