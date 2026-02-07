@@ -52,7 +52,7 @@ export default function AdminScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pricing' | 'users' | 'designs' | 'tutorial' | 'designer'>('pricing');
+  const [activeTab, setActiveTab] = useState<'pricing' | 'users' | 'designs' | 'tutorial' | 'designer' | 'discounts' | 'notify'>('pricing');
   
   // Pricing state
   const [pricing, setPricing] = useState<PricingData | null>(null);
