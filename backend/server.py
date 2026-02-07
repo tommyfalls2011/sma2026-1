@@ -775,7 +775,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Spacing adjustment - element spacing vs optimal affects gain
     # Optimal spacing is ~0.2-0.25 wavelength between elements
     # Tighter reduces gain, longer increases gain (up to ~0.35λ then drops)
-    if n >= 3 and len(directors) > 0 and driven:
+    spacing_adj = 0
+    if n >= 3:
         positions = sorted([e.position for e in input_data.elements])
         spacings = [positions[i+1] - positions[i] for i in range(len(positions)-1)]
         avg_spacing_in = sum(spacings) / len(spacings) if spacings else 0
@@ -797,7 +798,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             spacing_adj = max(spacing_adj, -1.5)
         
         gain_dbi += spacing_adj
-        gain_breakdown["spacing_adj"] = round(spacing_adj, 2)
+    gain_breakdown["spacing_adj"] = round(spacing_adj, 2)
     
     # Taper bonus
     taper_bonus = taper_effects["gain_bonus"]
