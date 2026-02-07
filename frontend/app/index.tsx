@@ -800,7 +800,7 @@ export default function AntennaCalculator() {
         // Use cache directory which has guaranteed write access
         const fileUri = FileSystem.cacheDirectory + filename;
         await FileSystem.writeAsStringAsync(fileUri, csvContent, {
-          encoding: FileSystem.EncodingType.UTF8,
+          encoding: 'utf8',
         });
         
         // Check if sharing is available
