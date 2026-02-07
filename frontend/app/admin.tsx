@@ -632,57 +632,36 @@ export default function AdminScreen() {
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'pricing' && styles.tabActive]}
-          onPress={() => setActiveTab('pricing')}
-        >
-          <Ionicons name="pricetag" size={16} color={activeTab === 'pricing' ? '#4CAF50' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'pricing' && styles.tabTextActive]}>Pricing</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#1a1a1a', maxHeight: 48 }} contentContainerStyle={{ paddingHorizontal: 8, paddingVertical: 6, gap: 6, alignItems: 'center' }}>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'pricing' && styles.tabPillActive]} onPress={() => setActiveTab('pricing')}>
+          <Ionicons name="pricetag" size={14} color={activeTab === 'pricing' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'pricing' && styles.tabPillTextActive]}>Pricing</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'users' && styles.tabActive]}
-          onPress={() => setActiveTab('users')}
-        >
-          <Ionicons name="people" size={16} color={activeTab === 'users' ? '#4CAF50' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'users' && styles.tabTextActive]}>Users</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'users' && styles.tabPillActive]} onPress={() => setActiveTab('users')}>
+          <Ionicons name="people" size={14} color={activeTab === 'users' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'users' && styles.tabPillTextActive]}>Users</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'designs' && styles.tabActive]}
-          onPress={() => setActiveTab('designs')}
-        >
-          <Ionicons name="save" size={16} color={activeTab === 'designs' ? '#FF9800' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'designs' && styles.tabTextActive]}>Designs</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'designs' && styles.tabPillActive]} onPress={() => setActiveTab('designs')}>
+          <Ionicons name="save" size={14} color={activeTab === 'designs' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'designs' && styles.tabPillTextActive]}>Designs</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'tutorial' && styles.tabActive]}
-          onPress={() => { setActiveTab('tutorial'); loadTutorialContent(); }}
-        >
-          <Ionicons name="book" size={16} color={activeTab === 'tutorial' ? '#FF9800' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'tutorial' && styles.tabTextActive]}>Tutorial</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'tutorial' && styles.tabPillActive]} onPress={() => { setActiveTab('tutorial'); loadTutorialContent(); }}>
+          <Ionicons name="book" size={14} color={activeTab === 'tutorial' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'tutorial' && styles.tabPillTextActive]}>Tutorial</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'designer' && styles.tabActive]}
-          onPress={() => { setActiveTab('designer'); loadDesignerContent(); }}
-        >
-          <Ionicons name="person" size={16} color={activeTab === 'designer' ? '#FF9800' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'designer' && styles.tabTextActive]}>Designer</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'designer' && styles.tabPillActive]} onPress={() => { setActiveTab('designer'); loadDesignerContent(); }}>
+          <Ionicons name="person" size={14} color={activeTab === 'designer' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'designer' && styles.tabPillTextActive]}>Designer</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'discounts' && styles.tabActive]}
-          onPress={() => { setActiveTab('discounts'); loadDiscounts(); }}
-        >
-          <Ionicons name="pricetags" size={16} color={activeTab === 'discounts' ? '#E91E63' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'discounts' && styles.tabTextActive]}>Discounts</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'discounts' && styles.tabPillActive]} onPress={() => { setActiveTab('discounts'); loadDiscounts(); }}>
+          <Ionicons name="pricetags" size={14} color={activeTab === 'discounts' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'discounts' && styles.tabPillTextActive]}>Discounts</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'notify' && styles.tabActive]}
-          onPress={() => { setActiveTab('notify'); loadNotifyData(); }}
-        >
-          <Ionicons name="mail" size={16} color={activeTab === 'notify' ? '#2196F3' : '#888'} />
-          <Text style={[styles.tabText, activeTab === 'notify' && styles.tabTextActive]}>Notify</Text>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'notify' && styles.tabPillActive]} onPress={() => { setActiveTab('notify'); loadNotifyData(); }}>
+          <Ionicons name="mail" size={14} color={activeTab === 'notify' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'notify' && styles.tabPillTextActive]}>Notify</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       <ScrollView
         style={styles.scrollView}
