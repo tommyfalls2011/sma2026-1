@@ -576,7 +576,6 @@ export default function AdminScreen() {
                   />
                 </View>
               </View>
-            </View>
 
             {/* Silver Features */}
             <View style={styles.featuresSection}>
