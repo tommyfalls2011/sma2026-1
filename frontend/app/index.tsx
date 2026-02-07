@@ -703,20 +703,21 @@ export default function AntennaCalculator() {
       return;
     }
     
-    // Build fresh elements for the new count (default positions)
+    // Apply active spacing factor to default positions
+    const factor = (spacingMode !== 'normal') ? parseFloat(spacingLevel) || 1.0 : 1.0;
+    
     const newElements: ElementDimension[] = [];
     
     if (inputs.use_reflector) {
       newElements.push({ element_type: 'reflector', length: '216', diameter: '0.5', position: '0' });
-      newElements.push({ element_type: 'driven', length: '204', diameter: '0.5', position: '48' });
-      for (let i = 0; i < c - 2; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (96 + i * 48).toString() });
+      newElements.push({ element_type: 'driven', length: '204', diameter: '0.5', position: (48 * factor).toFixed(1) });
+      for (let i = 0; i < c - 2; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: ((96 + i * 48) * factor).toFixed(1) });
     } else {
       newElements.push({ element_type: 'driven', length: '204', diameter: '0.5', position: '0' });
-      for (let i = 0; i < c - 1; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: (48 + i * 48).toString() });
+      for (let i = 0; i < c - 1; i++) newElements.push({ element_type: 'director', length: (195 - i * 3).toString(), diameter: '0.5', position: ((48 + i * 48) * factor).toFixed(1) });
     }
     
     setInputs(prev => ({ ...prev, num_elements: c, elements: newElements }));
-    // Note: spacing mode is preserved — auto-tune will apply it via backend
   };
 
   const updateElement = (idx: number, field: keyof ElementDimension, value: string) => {
