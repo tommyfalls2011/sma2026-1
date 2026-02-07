@@ -1321,27 +1321,31 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
             notes.append(f"Director {i+1}: {director_length}\" at {current_position}\"")
     
     # === BOOM LOCK MODE ===
-    # When boom lock is enabled, scale positions to fit within max boom length
+    # When boom lock is enabled, scale ALL positions to exactly match the target boom length
+    # This works both ways: compress if boom is too long, extend if boom is shorter
     if request.boom_lock_enabled and request.max_boom_length:
-        max_boom = request.max_boom_length
+        target_boom = request.max_boom_length
         current_boom = max(e["position"] for e in elements) if elements else 0
         
-        if current_boom > max_boom and current_boom > 0:
-            # Scale factor to fit within boom constraint
-            scale = max_boom / current_boom
+        if current_boom > 0 and abs(current_boom - target_boom) > 0.5:
+            scale = target_boom / current_boom
             
-            # Scale all positions
+            # Scale all positions proportionally
             for elem in elements:
                 elem["position"] = round(elem["position"] * scale, 1)
             
-            notes.append(f"")
-            notes.append(f"Boom Lock: Scaled to fit {max_boom}\" boom ({scale:.2%} of optimal)")
-            notes.append(f"Note: Compressed spacing may reduce gain by ~{round((1 - scale) * 3, 1)} dB")
+            if scale < 1.0:
+                notes.append(f"")
+                notes.append(f"Boom Lock: Compressed to {target_boom}\" boom ({scale:.2%} of optimal)")
+                notes.append(f"Note: Compressed spacing may reduce gain by ~{round((1 - scale) * 3, 1)} dB")
+            else:
+                notes.append(f"")
+                notes.append(f"Boom Lock: Extended to {target_boom}\" boom ({scale:.2%} of optimal)")
+                notes.append(f"Note: Extended spacing may shift pattern by ~{round((scale - 1) * 2, 1)} dB")
             
-            # Adjust predicted performance for compression
-            compression_penalty = (1 - scale) * 3
+            compression_penalty = abs(1 - scale) * 3
         else:
-            notes.append(f"Boom Lock: Design fits within {max_boom}\" limit")
+            notes.append(f"Boom Lock: Design matches {target_boom}\" target")
             compression_penalty = 0
     else:
         compression_penalty = 0
