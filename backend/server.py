@@ -1479,15 +1479,12 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     else:
         compression_penalty = 0
     
-    # Predict performance (slightly worse without reflector)
+    # Predict performance using shared free-space gain model
     base_predicted_swr = 1.05 if request.taper and request.taper.enabled else 1.1
     predicted_swr = base_predicted_swr if use_reflector else base_predicted_swr + 0.1
     
-    # Use safe calculation that handles n=2 case
-    if n <= 7:
-        base_gain = {2: 5.5, 3: 8.5, 4: 10.5, 5: 12.0, 6: 13.5, 7: 14.5}.get(n, 8.5)
-    else:
-        base_gain = 8.5 + 3.0 * math.log10(max(n - 2, 1))
+    # Use the calibrated free-space gain lookup (same model as /api/calculate)
+    base_gain = get_free_space_gain(n)
     
     if not use_reflector:
         base_gain -= 1.5  # Less gain without reflector
