@@ -585,28 +585,13 @@ export default function AntennaCalculator() {
         
         setInputs(prev => ({ ...prev, elements: newElements }));
         
-        // When boom lock is active, backend already distributed evenly
-        // Reset spacing state so user can cleanly apply spacing after turning off boom lock
+        // Backend already applies spacing_mode/spacing_level if sent
+        // When boom lock is active, reset spacing state cleanly
         if (boomLockEnabled) {
           setSpacingMode('normal');
           setSpacingLevel('1.0');
-        } else if (spacingMode !== 'normal' && parseFloat(spacingLevel) !== 1.0) {
-          // Re-apply spacing mode after auto-tune if active (no boom lock)
-          const factor = parseFloat(spacingLevel);
-          setTimeout(() => {
-            setInputs(prev => ({
-              ...prev,
-              elements: prev.elements.map((el: any, idx: number) => {
-                if (idx === 0) return el;
-                const basePos = parseFloat(newElements[0]?.position || '0');
-                const currentPos = parseFloat(newElements[idx]?.position || '0');
-                const relativePos = currentPos - basePos;
-                const newPos = basePos + relativePos * factor;
-                return { ...el, position: newPos.toFixed(3) };
-              })
-            }));
-          }, 50);
         }
+        // No re-application needed — backend handles spacing
         
         // Build alert message with lock info
         let alertMsg = `Predicted SWR: ${data.predicted_swr}:1\nPredicted Gain: ${data.predicted_gain} dBi`;
