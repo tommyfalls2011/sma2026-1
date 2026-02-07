@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G, Ellipse } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
