@@ -893,12 +893,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_dbi += corona_adj
     gain_breakdown["corona_adj"] = round(corona_adj, 2)
     
-    # Height bonus
-    if 0.5 <= height_wavelengths <= 1.0: height_bonus = 2.5
-    elif 0.25 <= height_wavelengths < 0.5: height_bonus = 1.5
-    elif 1.0 < height_wavelengths <= 1.5: height_bonus = 2.0
-    elif height_wavelengths > 1.5: height_bonus = 1.5
-    else: height_bonus = 0
+    # Ground gain (height-dependent reinforcement from earth reflections)
+    # G_real = G_free_space + G_ground. At 1λ: ~5.8 dBi over average soil.
+    height_bonus = calculate_ground_gain(height_wavelengths)
     gain_dbi += height_bonus
     gain_breakdown["height_bonus"] = round(height_bonus, 2)
     
