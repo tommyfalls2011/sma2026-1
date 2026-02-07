@@ -425,6 +425,8 @@ class AntennaOutput(BaseModel):
     bandwidth_description: str
     gain_dbi: float
     gain_description: str
+    base_gain_dbi: Optional[float] = None
+    gain_breakdown: Optional[dict] = None
     multiplication_factor: float
     multiplication_description: str
     antenna_efficiency: float
