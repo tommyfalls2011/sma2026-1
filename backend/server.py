@@ -1269,27 +1269,27 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     # === REALISTIC BOOM LENGTHS for 27 MHz (11m) ===
     # Based on real-world Yagi designs. Scale for other bands by wavelength ratio.
     # Reference wavelength = 11m (27.185 MHz) = 434.2"
-    # Values use midpoint of typical range for each element count
+    # Reflector-to-driven spacing typically 0.15-0.25λ, director spacing 0.2-0.4λ
     TYPICAL_BOOM_11M = {
-        2: 68,     # 3.3-8 ft → ~5.7 ft
-        3: 156,    # 10-16 ft → ~13 ft
-        4: 246,    # 16-25 ft → ~20.5 ft
-        5: 300,    # 20-30 ft → ~25 ft
-        6: 396,    # 26-40 ft → ~33 ft
-        7: 474,    # 33-46 ft → ~39.5 ft
-        8: 552,    # 40-52 ft → ~46 ft
-        9: 624,    # ~52 ft (interpolated 8→10)
-        10: 690,   # 50-65 ft → ~57.5 ft
-        11: 768,   # ~64 ft (interpolated 10→12)
-        12: 852,   # 60-82 ft → ~71 ft
-        13: 912,   # ~76 ft (interpolated 12→15)
-        14: 972,   # ~81 ft (interpolated 12→15)
-        15: 1020,  # 72-98 ft → ~85 ft
-        16: 1068,  # ~89 ft (interpolated 15→20)
-        17: 1116,  # ~93 ft
-        18: 1164,  # ~97 ft
-        19: 1212,  # ~101 ft
-        20: 1260,  # 100+ ft → ~105 ft
+        2: 77,     # 1.5-2.4m → ~6.4 ft (LFA: 1.45m, standard: up to 2.4m)
+        3: 159,    # 3.0-4.8m → ~13.3 ft (OWA: 3.0m, standard: up to 4.8m)
+        4: 222,    # 5.2-6.1m → ~18.5 ft
+        5: 270,    # 6.0-7.5m → ~22.5 ft (common 20-25 ft range)
+        6: 295,    # 7.5m → ~24.6 ft
+        7: 354,    # ~9.0m → ~29.5 ft
+        8: 394,    # ~10.0m → ~32.8 ft
+        9: 413,    # ~10.5m → ~34.4 ft
+        10: 433,   # 10-12m → ~36 ft (long-boom/super-beam territory)
+        11: 472,   # ~12m → ~39 ft
+        12: 512,   # ~13m → ~42.7 ft
+        13: 551,   # ~14m → ~45.9 ft
+        14: 591,   # ~15m → ~49.2 ft
+        15: 630,   # ~16m → ~52.5 ft
+        16: 669,   # ~17m → ~55.7 ft
+        17: 709,   # ~18m → ~59 ft
+        18: 748,   # ~19m → ~62.3 ft
+        19: 772,   # ~19.6m → ~64.3 ft
+        20: 800,   # ~20m+ → ~66.7 ft (extremely large, ultra-long-boom)
     }
     ref_wavelength_in = 434.2  # 11m at 27.185 MHz
     scale_factor = wavelength_in / ref_wavelength_in
