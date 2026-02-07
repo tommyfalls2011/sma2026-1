@@ -194,6 +194,41 @@ export default function AdminScreen() {
     setRefreshing(false);
   };
 
+  const loadTutorialContent = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/tutorial`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTutorialContent(data.content || '');
+        setTutorialUpdatedAt(data.updated_at || '');
+        setTutorialUpdatedBy(data.updated_by || '');
+      }
+    } catch (e) { /* ignore */ }
+  };
+
+  const saveTutorialContent = async () => {
+    setSavingTutorial(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/tutorial`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: tutorialContent })
+      });
+      if (res.ok) {
+        if (Platform.OS === 'web') { window.alert('Tutorial content saved!'); }
+        else { Alert.alert('Saved', 'Tutorial content updated successfully.'); }
+        loadTutorialContent();
+      }
+    } catch (e) {
+      if (Platform.OS === 'web') { window.alert('Failed to save tutorial'); }
+      else { Alert.alert('Error', 'Failed to save tutorial content.'); }
+    } finally {
+      setSavingTutorial(false);
+    }
+  };
+
   const savePricing = async () => {
     setSaving(true);
     try {
