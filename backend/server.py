@@ -749,9 +749,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
     # === GAIN CALCULATION ===
-    # Boom-length-driven model: ~3 dB gain per doubling of boom length
-    # Formula: base = 13.07 + 9.97 * log10(boom_wavelengths)
-    # This gives exactly 3 dB per boom doubling (10*log10(2) ≈ 3.01)
+    # Boom-length-driven model: ~2.5 dB gain per doubling of boom length (practical)
+    # Formula: base = 9.93 + 8.31 * log10(boom_wavelengths)
+    # This gives 2.5 dB per boom doubling (8.31 * log10(2) ≈ 2.50)
+    # Validated against: 4-elem free-space ~8-9.5 dBi, ground gain adds 2-3 dB
     
     # Calculate boom length from element positions
     positions = sorted([e.position for e in input_data.elements])
@@ -761,11 +762,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     boom_wavelengths_for_gain = max(boom_wavelengths_for_gain, 0.05)  # Floor to avoid log(0)
     
     # Base gain from boom length (primary driver)
-    boom_gain = round(13.07 + 9.97 * math.log10(boom_wavelengths_for_gain), 2)
+    boom_gain = round(9.93 + 8.31 * math.log10(boom_wavelengths_for_gain), 2)
     
     # Element efficiency bonus: more elements extract more gain from the boom
-    # Diminishing returns: first few elements matter most
-    element_bonus = round(min(3.0, 0.5 * (n - 2)), 2) if n > 2 else 0
+    # Diminishing returns after ~7 elements
+    element_bonus = round(min(3.5, 0.6 * (n - 1)), 2) if n >= 2 else 0
     
     gain_dbi = boom_gain + element_bonus
     
