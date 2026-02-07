@@ -478,6 +478,13 @@ export default function AdminScreen() {
           <Ionicons name="save" size={16} color={activeTab === 'designs' ? '#FF9800' : '#888'} />
           <Text style={[styles.tabText, activeTab === 'designs' && styles.tabTextActive]}>Designs</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'tutorial' && styles.tabActive]}
+          onPress={() => { setActiveTab('tutorial'); loadTutorialContent(); }}
+        >
+          <Ionicons name="book" size={16} color={activeTab === 'tutorial' ? '#FF9800' : '#888'} />
+          <Text style={[styles.tabText, activeTab === 'tutorial' && styles.tabTextActive]}>Tutorial</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
