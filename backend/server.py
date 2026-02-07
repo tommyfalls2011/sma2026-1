@@ -1735,6 +1735,79 @@ async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends
         "max_elements": tier_info["max_elements"]
     }
 
+@api_router.post("/subscription/cancel")
+async def cancel_subscription(user: dict = Depends(require_user)):
+    """Cancel subscription - downgrade to free/expired"""
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "subscription_tier": "trial",
+            "subscription_expires": None,
+            "is_trial": False,
+            "cancelled_at": datetime.utcnow()
+        }}
+    )
+    return {"success": True, "message": "Subscription cancelled. You can renew anytime."}
+
+@api_router.post("/admin/subscription/manage")
+async def admin_manage_subscription(data: dict, admin: dict = Depends(require_admin)):
+    """Admin: extend, change, or cancel a user's subscription"""
+    user_id = data.get("user_id")
+    action = data.get("action")  # extend, change_tier, cancel
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if action == "extend":
+        days = data.get("days", 30)
+        current_expires = user.get("subscription_expires")
+        if current_expires:
+            if isinstance(current_expires, str):
+                current_expires = datetime.fromisoformat(current_expires.replace('Z', '+00:00'))
+            # Extend from current expiry or now, whichever is later
+            base = max(current_expires.replace(tzinfo=None), datetime.utcnow())
+        else:
+            base = datetime.utcnow()
+        new_expires = base + timedelta(days=days)
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"subscription_expires": new_expires, "is_trial": False}}
+        )
+        return {"success": True, "message": f"Extended {days} days. Expires: {new_expires.isoformat()}"}
+    
+    elif action == "change_tier":
+        new_tier = data.get("tier")
+        if new_tier not in SUBSCRIPTION_TIERS:
+            raise HTTPException(status_code=400, detail="Invalid tier")
+        duration_days = SUBSCRIPTION_TIERS[new_tier].get("duration_days", 30)
+        expires = datetime.utcnow() + timedelta(days=duration_days)
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {
+                "subscription_tier": new_tier,
+                "subscription_expires": expires,
+                "is_trial": False
+            }}
+        )
+        return {"success": True, "message": f"Changed to {new_tier}. Expires: {expires.isoformat()}"}
+    
+    elif action == "cancel":
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {
+                "subscription_tier": "trial",
+                "subscription_expires": None,
+                "is_trial": False,
+                "cancelled_at": datetime.utcnow()
+            }}
+        )
+        return {"success": True, "message": "User subscription cancelled"}
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action. Use: extend, change_tier, cancel")
+
+
 @api_router.get("/subscription/status")
 async def get_subscription_status(user: dict = Depends(require_user)):
     """Get current subscription status"""
