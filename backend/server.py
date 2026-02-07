@@ -38,6 +38,9 @@ security = HTTPBearer(auto_error=False)
 
 # Admin email for backdoor access (from environment variable)
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'fallstommy@gmail.com')
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
+resend.api_key = RESEND_API_KEY
 
 # Default Subscription Tiers Configuration (can be overridden from DB)
 DEFAULT_SUBSCRIPTION_TIERS = {
