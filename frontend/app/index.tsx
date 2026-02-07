@@ -412,6 +412,40 @@ export default function AntennaCalculator() {
     await AsyncStorage.setItem('tutorial_enabled', val ? 'true' : 'false');
   };
 
+  // Refresh/Reset - resets all options but keeps current element count
+  const handleRefresh = () => {
+    const currentCount = inputs.num_elements;
+    const currentBand = inputs.band;
+    const currentFreq = inputs.frequency_mhz;
+    
+    // Reset spacing
+    setSpacingMode('normal');
+    setSpacingLevel('1.0');
+    
+    // Reset locks
+    setBoomLockEnabled(false);
+    setMaxBoomLength('120');
+    setSpacingLockEnabled(false);
+    
+    // Reset options but keep elements, band, freq
+    setInputs(prev => ({
+      ...prev,
+      height_from_ground: '54', height_unit: 'ft',
+      boom_diameter: '1.5', boom_unit: 'inches',
+      band: currentBand, frequency_mhz: currentFreq,
+      stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
+      taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '36', start_diameter: '0.625', end_diameter: '0.5' }, { length: '36', start_diameter: '0.5', end_diameter: '0.375' }] },
+      corona_balls: { enabled: false, diameter: '1.0' },
+      ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
+      use_reflector: true,
+      antenna_orientation: 'horizontal',
+    }));
+    
+    // Clear results
+    setResults(null);
+    setHeightOptResult(null);
+  };
+
   // Get max elements based on subscription
   const maxElements = user ? getMaxElements() : 3;
 
