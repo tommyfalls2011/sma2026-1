@@ -749,18 +749,28 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
     # === GAIN CALCULATION ===
-    # Step 1: Base gain from element count only
-    if n == 2: element_gain = 5.5
-    elif n == 3: element_gain = 8.5
-    elif n == 4: element_gain = 10.5
-    elif n == 5: element_gain = 12.0
-    elif n == 6: element_gain = 13.5
-    elif n == 7: element_gain = 14.5
-    else: element_gain = 8.5 + 3.0 * math.log10(n - 2) + 1.5 * (n - 3) * 0.55
+    # Boom-length-driven model: ~3 dB gain per doubling of boom length
+    # Formula: base = 13.07 + 9.97 * log10(boom_wavelengths)
+    # This gives exactly 3 dB per boom doubling (10*log10(2) ≈ 3.01)
+    
+    # Calculate boom length from element positions
+    positions = sorted([e.position for e in input_data.elements])
+    boom_length_in = max(positions) - min(positions) if len(positions) > 1 else 48
+    boom_length_m = boom_length_in * 0.0254
+    boom_wavelengths_for_gain = boom_length_m / wavelength if wavelength > 0 else 0.5
+    boom_wavelengths_for_gain = max(boom_wavelengths_for_gain, 0.05)  # Floor to avoid log(0)
+    
+    # Base gain from boom length (primary driver)
+    boom_gain = round(13.07 + 9.97 * math.log10(boom_wavelengths_for_gain), 2)
+    
+    # Element efficiency bonus: more elements extract more gain from the boom
+    # Diminishing returns: first few elements matter most
+    element_bonus = round(min(3.0, 0.5 * (n - 2)), 2) if n > 2 else 0
+    
+    gain_dbi = boom_gain + element_bonus
     
     # Track gain breakdown
-    gain_breakdown = {"element_gain": round(element_gain, 2)}
-    gain_dbi = element_gain
+    gain_breakdown = {"boom_gain": round(boom_gain, 2), "element_bonus": round(element_bonus, 2)}
     
     # Without reflector, gain is reduced by ~1.5-2 dB
     reflector_adj = 0
@@ -769,36 +779,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gain_dbi += reflector_adj
     gain_breakdown["reflector_adj"] = round(reflector_adj, 2)
     
-    # Base gain = elements + reflector (before any options)
+    # Base gain = boom + elements + reflector (before any options)
     base_gain_dbi = round(gain_dbi, 2)
-    
-    # Spacing adjustment - element spacing vs optimal affects gain
-    # Optimal spacing is ~0.2-0.25 wavelength between elements
-    # Tighter reduces gain, longer increases gain (up to ~0.35λ then drops)
-    spacing_adj = 0
-    if n >= 3:
-        positions = sorted([e.position for e in input_data.elements])
-        spacings = [positions[i+1] - positions[i] for i in range(len(positions)-1)]
-        avg_spacing_in = sum(spacings) / len(spacings) if spacings else 0
-        avg_spacing_m = avg_spacing_in * 0.0254
-        avg_spacing_wl = avg_spacing_m / wavelength if wavelength > 0 else 0.2
-        
-        # Optimal spacing is 0.2-0.25 wavelengths
-        if 0.2 <= avg_spacing_wl <= 0.25:
-            spacing_adj = 0  # Optimal
-        elif avg_spacing_wl < 0.2:
-            # Tight spacing: reduces gain
-            spacing_adj = round((avg_spacing_wl - 0.2) * 8, 2)  # e.g., 0.15λ → -0.4 dB
-        elif avg_spacing_wl <= 0.35:
-            # Slightly long: increases gain
-            spacing_adj = round((avg_spacing_wl - 0.25) * 6, 2)  # e.g., 0.30λ → +0.3 dB
-        else:
-            # Too long: pattern breaks down, gain drops
-            spacing_adj = round(0.6 - (avg_spacing_wl - 0.35) * 4, 2)  # peaks at 0.35λ then drops
-            spacing_adj = max(spacing_adj, -1.5)
-        
-        gain_dbi += spacing_adj
-    gain_breakdown["spacing_adj"] = round(spacing_adj, 2)
     
     # Taper bonus
     taper_bonus = taper_effects["gain_bonus"]
@@ -819,7 +801,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_dbi += height_bonus
     gain_breakdown["height_bonus"] = round(height_bonus, 2)
     
-    # Boom bonus
+    # Boom diameter bonus
     if boom_dia_m > 0.05: boom_bonus = 0.3
     elif boom_dia_m > 0.03: boom_bonus = 0.2
     else: boom_bonus = 0
