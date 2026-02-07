@@ -772,6 +772,33 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Base gain = elements + reflector (before any options)
     base_gain_dbi = round(gain_dbi, 2)
     
+    # Spacing adjustment - element spacing vs optimal affects gain
+    # Optimal spacing is ~0.2-0.25 wavelength between elements
+    # Tighter reduces gain, longer increases gain (up to ~0.35λ then drops)
+    if n >= 3 and len(directors) > 0 and driven:
+        positions = sorted([e.position for e in input_data.elements])
+        spacings = [positions[i+1] - positions[i] for i in range(len(positions)-1)]
+        avg_spacing_in = sum(spacings) / len(spacings) if spacings else 0
+        avg_spacing_m = avg_spacing_in * 0.0254
+        avg_spacing_wl = avg_spacing_m / wavelength if wavelength > 0 else 0.2
+        
+        # Optimal spacing is 0.2-0.25 wavelengths
+        if 0.2 <= avg_spacing_wl <= 0.25:
+            spacing_adj = 0  # Optimal
+        elif avg_spacing_wl < 0.2:
+            # Tight spacing: reduces gain
+            spacing_adj = round((avg_spacing_wl - 0.2) * 8, 2)  # e.g., 0.15λ → -0.4 dB
+        elif avg_spacing_wl <= 0.35:
+            # Slightly long: increases gain
+            spacing_adj = round((avg_spacing_wl - 0.25) * 6, 2)  # e.g., 0.30λ → +0.3 dB
+        else:
+            # Too long: pattern breaks down, gain drops
+            spacing_adj = round(0.6 - (avg_spacing_wl - 0.35) * 4, 2)  # peaks at 0.35λ then drops
+            spacing_adj = max(spacing_adj, -1.5)
+        
+        gain_dbi += spacing_adj
+        gain_breakdown["spacing_adj"] = round(spacing_adj, 2)
+    
     # Taper bonus
     taper_bonus = taper_effects["gain_bonus"]
     gain_dbi += taper_bonus
