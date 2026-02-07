@@ -519,7 +519,6 @@ export default function AdminScreen() {
                   />
                 </View>
               </View>
-            </View>
 
             {/* Bronze Features */}
             <View style={styles.featuresSection}>
