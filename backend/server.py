@@ -1842,17 +1842,20 @@ async def get_admin_pricing(admin: dict = Depends(require_admin)):
         "bronze": {
             "monthly_price": SUBSCRIPTION_TIERS["bronze_monthly"]["price"],
             "yearly_price": SUBSCRIPTION_TIERS["bronze_yearly"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"]
+            "max_elements": SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"],
+            "features": SUBSCRIPTION_TIERS["bronze_monthly"].get("features", ["basic_calc", "swr_meter", "band_selection"])
         },
         "silver": {
             "monthly_price": SUBSCRIPTION_TIERS["silver_monthly"]["price"],
             "yearly_price": SUBSCRIPTION_TIERS["silver_yearly"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"]
+            "max_elements": SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"],
+            "features": SUBSCRIPTION_TIERS["silver_monthly"].get("features", ["basic_calc", "swr_meter", "band_selection", "auto_tune", "save_designs"])
         },
         "gold": {
             "monthly_price": SUBSCRIPTION_TIERS["gold_monthly"]["price"],
             "yearly_price": SUBSCRIPTION_TIERS["gold_yearly"]["price"],
-            "max_elements": SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"]
+            "max_elements": SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"],
+            "features": SUBSCRIPTION_TIERS["gold_monthly"].get("features", ["all"])
         },
         "payment": {
             "paypal_email": PAYMENT_CONFIG["paypal"]["email"],
