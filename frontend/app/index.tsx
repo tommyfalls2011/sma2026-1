@@ -1394,6 +1394,13 @@ export default function AntennaCalculator() {
                         <Text style={{ fontSize: 9, color: '#81C784' }}>Boom +{results.gain_breakdown.boom_bonus}dB</Text>
                       </View>
                     )}
+                    {(results.gain_breakdown.spacing_adj || 0) !== 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: (results.gain_breakdown.spacing_adj || 0) > 0 ? '#FF9800' : '#f44336' }}>
+                          Spacing {(results.gain_breakdown.spacing_adj || 0) > 0 ? '+' : ''}{results.gain_breakdown.spacing_adj}dB
+                        </Text>
+                      </View>
+                    )}
                     {results.gain_breakdown.taper_bonus > 0 && (
                       <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
                         <Text style={{ fontSize: 9, color: '#E91E63' }}>Taper +{results.gain_breakdown.taper_bonus}dB</Text>
