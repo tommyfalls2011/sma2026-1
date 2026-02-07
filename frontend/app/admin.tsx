@@ -847,6 +847,59 @@ export default function AdminScreen() {
             )}
           </>
         )}
+
+        {/* Tutorial Editor Tab */}
+        {activeTab === 'tutorial' && (
+          <>
+            <Text style={styles.sectionTitle}>Tutorial / Intro Content</Text>
+            <Text style={styles.hint}>
+              Edit the tutorial text shown to users when they first open the app. Uses simple markdown: # for headers, ## for subheaders, - for list items, **bold** for emphasis.
+            </Text>
+            {tutorialUpdatedAt ? (
+              <Text style={{ fontSize: 10, color: '#666', marginBottom: 8 }}>
+                Last updated: {new Date(tutorialUpdatedAt).toLocaleDateString()} by {tutorialUpdatedBy}
+              </Text>
+            ) : null}
+            <TextInput
+              style={{ backgroundColor: '#1a1a1a', borderRadius: 8, borderWidth: 1, borderColor: '#333', color: '#ccc', fontSize: 12, padding: 10, minHeight: 400, textAlignVertical: 'top', fontFamily: 'monospace' }}
+              value={tutorialContent}
+              onChangeText={setTutorialContent}
+              multiline
+              numberOfLines={20}
+              placeholder="Enter tutorial content here..."
+              placeholderTextColor="#555"
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: '#FF9800', borderRadius: 8, padding: 12, marginTop: 12, alignItems: 'center', opacity: savingTutorial ? 0.6 : 1 }}
+              onPress={saveTutorialContent}
+              disabled={savingTutorial}
+            >
+              {savingTutorial ? <ActivityIndicator color="#fff" /> : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="save" size={16} color="#fff" />
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Save Tutorial</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            {/* Preview Section */}
+            <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Preview</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#333' }}>
+              {tutorialContent.split('\n').map((line: string, i: number) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('# ')) return <Text key={i} style={{ fontSize: 16, fontWeight: 'bold', color: '#FF9800', marginTop: 8, marginBottom: 4 }}>{trimmed.slice(2)}</Text>;
+                if (trimmed.startsWith('## ')) return <Text key={i} style={{ fontSize: 13, fontWeight: '700', color: '#4CAF50', marginTop: 10, marginBottom: 3 }}>{trimmed.slice(3)}</Text>;
+                if (trimmed.startsWith('- **')) {
+                  const match = trimmed.match(/- \*\*(.+?)\*\*:?\s*(.*)/);
+                  if (match) return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginLeft: 8, marginBottom: 2 }}><Text style={{ fontWeight: '700', color: '#fff' }}>{match[1]}</Text>: {match[2]}</Text>;
+                }
+                if (trimmed.startsWith('- ')) return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginLeft: 8, marginBottom: 2 }}>• {trimmed.slice(2)}</Text>;
+                if (trimmed === '') return <View key={i} style={{ height: 4 }} />;
+                return <Text key={i} style={{ fontSize: 11, color: '#ccc', marginBottom: 2, lineHeight: 16 }}>{trimmed}</Text>;
+              })}
+            </View>
+          </>
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
