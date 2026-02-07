@@ -746,30 +746,57 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
     # === GAIN CALCULATION ===
-    if n == 2: gain_dbi = 5.5
-    elif n == 3: gain_dbi = 8.5
-    elif n == 4: gain_dbi = 10.5
-    elif n == 5: gain_dbi = 12.0
-    elif n == 6: gain_dbi = 13.5
-    elif n == 7: gain_dbi = 14.5
-    else: gain_dbi = 8.5 + 3.0 * math.log10(n - 2) + 1.5 * (n - 3) * 0.55
+    # Step 1: Base gain from element count only
+    if n == 2: element_gain = 5.5
+    elif n == 3: element_gain = 8.5
+    elif n == 4: element_gain = 10.5
+    elif n == 5: element_gain = 12.0
+    elif n == 6: element_gain = 13.5
+    elif n == 7: element_gain = 14.5
+    else: element_gain = 8.5 + 3.0 * math.log10(n - 2) + 1.5 * (n - 3) * 0.55
+    
+    # Track gain breakdown
+    gain_breakdown = {"element_gain": round(element_gain, 2)}
+    gain_dbi = element_gain
     
     # Without reflector, gain is reduced by ~1.5-2 dB
+    reflector_adj = 0
     if not has_reflector:
-        gain_dbi -= 1.5
+        reflector_adj = -1.5
+        gain_dbi += reflector_adj
+    gain_breakdown["reflector_adj"] = round(reflector_adj, 2)
     
-    gain_dbi += taper_effects["gain_bonus"]
-    gain_dbi += corona_effects.get("gain_effect", 0)
+    # Base gain = elements + reflector (before any options)
+    base_gain_dbi = round(gain_dbi, 2)
     
-    if 0.5 <= height_wavelengths <= 1.0: gain_dbi += 2.5
-    elif 0.25 <= height_wavelengths < 0.5: gain_dbi += 1.5
-    elif 1.0 < height_wavelengths <= 1.5: gain_dbi += 2.0
-    elif height_wavelengths > 1.5: gain_dbi += 1.5
+    # Taper bonus
+    taper_bonus = taper_effects["gain_bonus"]
+    gain_dbi += taper_bonus
+    gain_breakdown["taper_bonus"] = round(taper_bonus, 2)
     
-    if boom_dia_m > 0.05: gain_dbi += 0.3
-    elif boom_dia_m > 0.03: gain_dbi += 0.2
+    # Corona effect
+    corona_adj = corona_effects.get("gain_effect", 0)
+    gain_dbi += corona_adj
+    gain_breakdown["corona_adj"] = round(corona_adj, 2)
+    
+    # Height bonus
+    if 0.5 <= height_wavelengths <= 1.0: height_bonus = 2.5
+    elif 0.25 <= height_wavelengths < 0.5: height_bonus = 1.5
+    elif 1.0 < height_wavelengths <= 1.5: height_bonus = 2.0
+    elif height_wavelengths > 1.5: height_bonus = 1.5
+    else: height_bonus = 0
+    gain_dbi += height_bonus
+    gain_breakdown["height_bonus"] = round(height_bonus, 2)
+    
+    # Boom bonus
+    if boom_dia_m > 0.05: boom_bonus = 0.3
+    elif boom_dia_m > 0.03: boom_bonus = 0.2
+    else: boom_bonus = 0
+    gain_dbi += boom_bonus
+    gain_breakdown["boom_bonus"] = round(boom_bonus, 2)
     
     gain_dbi = round(min(gain_dbi, 45.0), 2)
+    gain_breakdown["final_gain"] = gain_dbi
     
     # === SWR CALCULATION (Now based on actual element dimensions and height) ===
     swr = calculate_swr_from_elements(input_data.elements, wavelength, taper_enabled, height_wavelengths)
