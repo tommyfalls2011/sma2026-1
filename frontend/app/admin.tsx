@@ -688,6 +688,8 @@ export default function AdminScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4CAF50" />}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
       >
         {activeTab === 'pricing' ? (
           <>
