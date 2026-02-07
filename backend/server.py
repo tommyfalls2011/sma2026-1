@@ -1774,30 +1774,36 @@ async def update_pricing(pricing: PricingUpdate, admin: dict = Depends(require_a
     # Update Bronze
     SUBSCRIPTION_TIERS["bronze_monthly"]["price"] = pricing.bronze_monthly_price
     SUBSCRIPTION_TIERS["bronze_monthly"]["max_elements"] = pricing.bronze_max_elements
+    SUBSCRIPTION_TIERS["bronze_monthly"]["features"] = pricing.bronze_features
     SUBSCRIPTION_TIERS["bronze_monthly"]["description"] = f"${pricing.bronze_monthly_price}/month - {pricing.bronze_max_elements} elements max"
     
     SUBSCRIPTION_TIERS["bronze_yearly"]["price"] = pricing.bronze_yearly_price
     SUBSCRIPTION_TIERS["bronze_yearly"]["max_elements"] = pricing.bronze_max_elements
+    SUBSCRIPTION_TIERS["bronze_yearly"]["features"] = pricing.bronze_features
     yearly_savings = round((pricing.bronze_monthly_price * 12) - pricing.bronze_yearly_price, 0)
     SUBSCRIPTION_TIERS["bronze_yearly"]["description"] = f"${pricing.bronze_yearly_price}/year - {pricing.bronze_max_elements} elements (Save ${yearly_savings}!)"
     
     # Update Silver
     SUBSCRIPTION_TIERS["silver_monthly"]["price"] = pricing.silver_monthly_price
     SUBSCRIPTION_TIERS["silver_monthly"]["max_elements"] = pricing.silver_max_elements
+    SUBSCRIPTION_TIERS["silver_monthly"]["features"] = pricing.silver_features
     SUBSCRIPTION_TIERS["silver_monthly"]["description"] = f"${pricing.silver_monthly_price}/month - {pricing.silver_max_elements} elements max"
     
     SUBSCRIPTION_TIERS["silver_yearly"]["price"] = pricing.silver_yearly_price
     SUBSCRIPTION_TIERS["silver_yearly"]["max_elements"] = pricing.silver_max_elements
+    SUBSCRIPTION_TIERS["silver_yearly"]["features"] = pricing.silver_features
     yearly_savings = round((pricing.silver_monthly_price * 12) - pricing.silver_yearly_price, 0)
     SUBSCRIPTION_TIERS["silver_yearly"]["description"] = f"${pricing.silver_yearly_price}/year - {pricing.silver_max_elements} elements (Save ${yearly_savings}!)"
     
     # Update Gold
     SUBSCRIPTION_TIERS["gold_monthly"]["price"] = pricing.gold_monthly_price
     SUBSCRIPTION_TIERS["gold_monthly"]["max_elements"] = pricing.gold_max_elements
+    SUBSCRIPTION_TIERS["gold_monthly"]["features"] = pricing.gold_features
     SUBSCRIPTION_TIERS["gold_monthly"]["description"] = f"${pricing.gold_monthly_price}/month - All features"
     
     SUBSCRIPTION_TIERS["gold_yearly"]["price"] = pricing.gold_yearly_price
     SUBSCRIPTION_TIERS["gold_yearly"]["max_elements"] = pricing.gold_max_elements
+    SUBSCRIPTION_TIERS["gold_yearly"]["features"] = pricing.gold_features
     yearly_savings = round((pricing.gold_monthly_price * 12) - pricing.gold_yearly_price, 0)
     SUBSCRIPTION_TIERS["gold_yearly"]["description"] = f"${pricing.gold_yearly_price}/year - All features (Save ${yearly_savings}!)"
     
@@ -1809,12 +1815,15 @@ async def update_pricing(pricing: PricingUpdate, admin: dict = Depends(require_a
             "bronze_monthly_price": pricing.bronze_monthly_price,
             "bronze_yearly_price": pricing.bronze_yearly_price,
             "bronze_max_elements": pricing.bronze_max_elements,
+            "bronze_features": pricing.bronze_features,
             "silver_monthly_price": pricing.silver_monthly_price,
             "silver_yearly_price": pricing.silver_yearly_price,
             "silver_max_elements": pricing.silver_max_elements,
+            "silver_features": pricing.silver_features,
             "gold_monthly_price": pricing.gold_monthly_price,
             "gold_yearly_price": pricing.gold_yearly_price,
             "gold_max_elements": pricing.gold_max_elements,
+            "gold_features": pricing.gold_features,
             "updated_at": datetime.utcnow()
         }},
         upsert=True
