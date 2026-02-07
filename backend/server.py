@@ -2450,6 +2450,72 @@ async def admin_get_tutorial(admin: dict = Depends(require_admin)):
     return {"content": DEFAULT_TUTORIAL_CONTENT, "updated_at": None, "updated_by": None}
 
 
+# ==================== DESIGNER INFO / ABOUT ME ====================
+DEFAULT_DESIGNER_INFO = """# SMA Antenna Calculator
+## Designed & Developed by Tommy Falls
+
+### About the Designer
+With over 25 years of experience in CB and amateur radio, I've dedicated my career to understanding antenna design and RF engineering. This app was born from the need for a reliable, easy-to-use tool that gives real-world results — not just theoretical numbers.
+
+### My Background
+- Licensed amateur radio operator
+- Specializing in Yagi-Uda antenna design for 11-meter CB band
+- Hands-on builder with dozens of custom antenna installations
+- Passionate about helping fellow operators get the best signal possible
+
+### About This App
+The SMA Antenna Calculator is a professional-grade tool designed for both beginners and experienced antenna builders. Every calculation is based on real-world data and validated against actual antenna measurements.
+
+**Key Features:**
+- Real-time antenna parameter calculations (SWR, Gain, F/B, Beamwidth)
+- Auto-Tune with realistic boom lengths based on actual Yagi designs
+- Height optimization considering boom length, elements, ground conditions
+- Element spacing control (Tight/Normal/Long)
+- Taper element support for stepped-diameter designs
+- Corona ball calculations for high-power setups
+- Ground radial modeling
+- Stacking analysis for multi-antenna arrays
+- CSV export for documentation
+
+### Contact & Support
+Have questions, suggestions, or want to share your build? I'd love to hear from you!
+
+- Email: fallstommy@gmail.com
+- Built with pride for the amateur radio community
+
+### Version
+SMA Antenna Calculator v2.0
+© 2026 Tommy Falls. All rights reserved.
+
+73 & Good DX! 🎙️📡"""
+
+@api_router.get("/designer-info")
+async def get_designer_info():
+    """Get designer info content (public endpoint)"""
+    info = await db.app_settings.find_one({"key": "designer_info"}, {"_id": 0})
+    if info:
+        return {"content": info.get("content", DEFAULT_DESIGNER_INFO)}
+    return {"content": DEFAULT_DESIGNER_INFO}
+
+@api_router.put("/admin/designer-info")
+async def update_designer_info(request: UpdateTutorialRequest, admin: dict = Depends(require_admin)):
+    """Update designer info content (admin only)"""
+    await db.app_settings.update_one(
+        {"key": "designer_info"},
+        {"$set": {"key": "designer_info", "content": request.content, "updated_at": datetime.utcnow().isoformat(), "updated_by": admin["email"]}},
+        upsert=True
+    )
+    return {"success": True, "message": "Designer info updated"}
+
+@api_router.get("/admin/designer-info")
+async def admin_get_designer_info(admin: dict = Depends(require_admin)):
+    """Get designer info for editing (admin only)"""
+    info = await db.app_settings.find_one({"key": "designer_info"}, {"_id": 0})
+    if info:
+        return {"content": info.get("content", DEFAULT_DESIGNER_INFO), "updated_at": info.get("updated_at"), "updated_by": info.get("updated_by")}
+    return {"content": DEFAULT_DESIGNER_INFO, "updated_at": None, "updated_by": None}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
