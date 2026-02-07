@@ -365,6 +365,10 @@ export default function AntennaCalculator() {
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const [tutorialLoaded, setTutorialLoaded] = useState(false);
 
+  // Designer Info state
+  const [showDesignerInfo, setShowDesignerInfo] = useState(false);
+  const [designerInfoContent, setDesignerInfoContent] = useState('');
+
   // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
     let cancelled = false;
