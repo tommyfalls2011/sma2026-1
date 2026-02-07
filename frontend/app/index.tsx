@@ -1419,7 +1419,24 @@ export default function AntennaCalculator() {
               <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
               
               <View style={styles.mainResults}>
-                <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>Gain</Text><Text style={[styles.mainResultValue, { color: '#4CAF50' }]}>{results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi} dBi</Text></View>
+                <View style={styles.mainResultItem}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text style={styles.mainResultLabel}>Gain</Text>
+                    <TouchableOpacity
+                      onPress={() => setGainMode(gainMode === 'realworld' ? 'freespace' : 'realworld')}
+                      style={{ backgroundColor: gainMode === 'freespace' ? '#1a3a5c' : '#1f3d1f', borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 }}
+                    >
+                      <Text style={{ fontSize: 8, color: gainMode === 'freespace' ? '#64B5F6' : '#81C784', fontWeight: '600' }}>
+                        {gainMode === 'freespace' ? 'Free Space' : 'Real World'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={[styles.mainResultValue, { color: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]}>
+                    {gainMode === 'freespace' && results.gain_breakdown
+                      ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0)).toFixed(1)
+                      : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)} dBi
+                  </Text>
+                </View>
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>SWR</Text><Text style={[styles.mainResultValue, { color: results.swr <= 1.5 ? '#4CAF50' : results.swr <= 2.0 ? '#FFC107' : '#f44336' }]}>{results.swr}:1</Text></View>
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>F/B</Text><Text style={styles.mainResultValue}>{results.fb_ratio}dB</Text></View>
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>F/S</Text><Text style={styles.mainResultValue}>{results.fs_ratio}dB</Text></View>
