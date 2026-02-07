@@ -1,0 +1,72 @@
+{
+  "summary": "Backend-only testing of Admin Discounts and Notify Tab endpoints. All 29 tests passed (100% success rate). Tested: Discount CRUD (create %, $, list, delete, toggle), discount validation (tier/billing/email restrictions), app update settings (expo_url, download_link), QR code generation, email send via Resend, user emails list. All endpoints correctly require admin auth except /api/validate-discount.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_discounts_notify.py",
+    "/app/test_reports/pytest/pytest_admin_discounts_notify.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_admin_discounts_notify.py"
+  ],
+  "success_rate": {
+    "backend": "100% (29/29 tests passed)",
+    "frontend": "N/A - Backend only testing requested"
+  },
+  "seed_data_creation": "Test discounts created with prefixes TESTPCT_, TESTFIX_, DUPE_, VALTEST_, TODEL_ - all cleaned up after tests",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All admin discount and notify endpoints fully tested and working. Test file /app/backend/tests/test_admin_discounts_notify.py contains 29 tests. Auth via POST /api/auth/login (JSON body {email, password}, returns {token}). Admin: fallstommy@gmail.com / admin123. Discount codes are auto-uppercased. /api/validate-discount does NOT require auth. Resend email tested with send_to='fallstommy@gmail.com'.",
+  "test_results_details": {
+    "discount_endpoints": {
+      "GET /api/admin/discounts": "200 OK - Returns list with TEST50, BETA20 existing",
+      "POST /api/admin/discounts (percent)": "200 OK - Creates % discount with active=true",
+      "POST /api/admin/discounts (fixed)": "200 OK - Creates $ discount with applies_to, tiers, max_uses",
+      "POST /api/admin/discounts (duplicate)": "400 Bad Request - Duplicate code rejected",
+      "POST /api/admin/discounts/{id}/toggle": "200 OK - Toggles active state",
+      "POST /api/admin/discounts/{id}/toggle (nonexistent)": "404 Not Found",
+      "DELETE /api/admin/discounts/{id}": "200 OK - Discount deleted",
+      "DELETE /api/admin/discounts/{id} (nonexistent)": "404 Not Found",
+      "auth_required": "All return 401 without Bearer token"
+    },
+    "validate_discount": {
+      "POST /api/validate-discount (valid)": "200 OK - No auth required, returns valid=true, discount_type, value",
+      "POST /api/validate-discount (invalid code)": "404 Not Found",
+      "POST /api/validate-discount (wrong tier)": "400 Bad Request - Tier not in tiers list",
+      "POST /api/validate-discount (wrong billing)": "400 Bad Request - Billing period mismatch",
+      "POST /api/validate-discount (restricted email)": "403 Forbidden - Email not in user_emails list",
+      "case_insensitive": "Lowercase codes work (auto-uppercased)"
+    },
+    "notify_endpoints": {
+      "PUT /api/admin/app-update-settings": "200 OK - Saves expo_url and download_link",
+      "GET /api/admin/app-update-settings": "200 OK - Returns saved expo_url and download_link",
+      "GET /api/admin/qr-code": "200 OK - Returns qr_base64 (PNG) and url",
+      "GET /api/admin/qr-code (no expo_url)": "400 Bad Request - No Expo URL configured",
+      "GET /api/admin/user-emails": "200 OK - Returns users array with email, id, subscription_tier",
+      "POST /api/admin/send-update-email": "200 OK - Sends HTML email with QR+link via Resend",
+      "POST /api/admin/send-update-email (no recipients)": "400 Bad Request",
+      "auth_required": "All return 401 without Bearer token"
+    }
+  },
+  "tested_endpoints_summary": [
+    "POST /api/admin/discounts - Create discount (% or $ off) - PASS",
+    "GET /api/admin/discounts - List all discounts - PASS",
+    "DELETE /api/admin/discounts/{id} - Delete discount - PASS",
+    "POST /api/admin/discounts/{id}/toggle - Toggle active/inactive - PASS",
+    "POST /api/validate-discount - Validate code (NO auth) - PASS",
+    "PUT /api/admin/app-update-settings - Save expo_url & download_link - PASS",
+    "GET /api/admin/app-update-settings - Get settings - PASS",
+    "GET /api/admin/qr-code - Generate QR base64 - PASS",
+    "POST /api/admin/send-update-email - Send HTML email via Resend - PASS",
+    "GET /api/admin/user-emails - List all user emails - PASS"
+  ]
+}
