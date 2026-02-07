@@ -2611,6 +2611,192 @@ async def admin_get_designer_info(admin: dict = Depends(require_admin)):
     return {"content": DEFAULT_DESIGNER_INFO, "updated_at": None, "updated_by": None}
 
 
+# ==================== DISCOUNT MANAGEMENT ====================
+
+class DiscountCreate(BaseModel):
+    code: str
+    discount_type: str = "percentage"
+    value: float
+    applies_to: str = "all"
+    tiers: List[str] = []
+    max_uses: Optional[int] = None
+    expires_at: Optional[str] = None
+    user_emails: List[str] = []
+
+
+@api_router.get("/admin/discounts")
+async def get_discounts(admin: dict = Depends(require_admin)):
+    discounts = await db.discounts.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return {"discounts": discounts}
+
+
+@api_router.post("/admin/discounts")
+async def create_discount(data: DiscountCreate, admin: dict = Depends(require_admin)):
+    existing = await db.discounts.find_one({"code": data.code.upper()}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Discount code already exists")
+    discount = {
+        "id": str(uuid.uuid4()),
+        "code": data.code.upper(),
+        "discount_type": data.discount_type,
+        "value": data.value,
+        "applies_to": data.applies_to,
+        "tiers": data.tiers if data.tiers else ["bronze", "silver", "gold"],
+        "max_uses": data.max_uses,
+        "times_used": 0,
+        "expires_at": data.expires_at,
+        "user_emails": [e.lower() for e in data.user_emails],
+        "active": True,
+        "created_at": datetime.utcnow().isoformat(),
+        "created_by": admin["email"],
+    }
+    await db.discounts.insert_one(discount)
+    discount.pop("_id", None)
+    return {"discount": discount}
+
+
+@api_router.delete("/admin/discounts/{discount_id}")
+async def delete_discount(discount_id: str, admin: dict = Depends(require_admin)):
+    result = await db.discounts.delete_one({"id": discount_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    return {"message": "Discount deleted"}
+
+
+@api_router.post("/admin/discounts/{discount_id}/toggle")
+async def toggle_discount(discount_id: str, admin: dict = Depends(require_admin)):
+    discount = await db.discounts.find_one({"id": discount_id}, {"_id": 0})
+    if not discount:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    new_active = not discount.get("active", True)
+    await db.discounts.update_one({"id": discount_id}, {"$set": {"active": new_active}})
+    return {"active": new_active}
+
+
+@api_router.post("/validate-discount")
+async def validate_discount(data: dict):
+    code = data.get("code", "").upper()
+    tier = data.get("tier", "").lower()
+    billing = data.get("billing", "monthly")
+    user_email = data.get("email", "").lower()
+    discount = await db.discounts.find_one({"code": code, "active": True}, {"_id": 0})
+    if not discount:
+        raise HTTPException(status_code=404, detail="Invalid discount code")
+    if discount.get("expires_at"):
+        if datetime.fromisoformat(discount["expires_at"]) < datetime.utcnow():
+            raise HTTPException(status_code=400, detail="Discount code has expired")
+    if discount.get("max_uses") and discount["times_used"] >= discount["max_uses"]:
+        raise HTTPException(status_code=400, detail="Discount code usage limit reached")
+    if discount["user_emails"] and user_email not in discount["user_emails"]:
+        raise HTTPException(status_code=403, detail="This discount is not available for your account")
+    if tier and tier not in discount.get("tiers", []):
+        raise HTTPException(status_code=400, detail=f"Discount not valid for {tier} tier")
+    if discount["applies_to"] != "all" and discount["applies_to"] != billing:
+        raise HTTPException(status_code=400, detail=f"Discount only valid for {discount['applies_to']} billing")
+    await db.discounts.update_one({"code": code}, {"$inc": {"times_used": 1}})
+    return {"valid": True, "discount_type": discount["discount_type"], "value": discount["value"], "code": discount["code"]}
+
+
+# ==================== APP UPDATE NOTIFICATIONS ====================
+
+class SendUpdateEmail(BaseModel):
+    subject: str
+    message: str
+    expo_url: Optional[str] = None
+    download_link: Optional[str] = None
+    send_to: str = "all"
+
+
+def generate_qr_base64(url: str) -> str:
+    qr = qrcode.QRCode(version=1, box_size=8, border=2)
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+@api_router.get("/admin/app-update-settings")
+async def get_app_update_settings(admin: dict = Depends(require_admin)):
+    settings = await db.app_settings.find_one({"key": "app_update"}, {"_id": 0})
+    return {"expo_url": settings.get("expo_url", "") if settings else "", "download_link": settings.get("download_link", "") if settings else ""}
+
+
+@api_router.put("/admin/app-update-settings")
+async def update_app_update_settings(data: dict, admin: dict = Depends(require_admin)):
+    await db.app_settings.update_one(
+        {"key": "app_update"},
+        {"$set": {"key": "app_update", "expo_url": data.get("expo_url", ""), "download_link": data.get("download_link", "")}},
+        upsert=True
+    )
+    return {"message": "Settings saved"}
+
+
+@api_router.get("/admin/qr-code")
+async def get_qr_code(admin: dict = Depends(require_admin)):
+    settings = await db.app_settings.find_one({"key": "app_update"}, {"_id": 0})
+    url = (settings or {}).get("expo_url", "")
+    if not url:
+        raise HTTPException(status_code=400, detail="No Expo URL configured")
+    return {"qr_base64": generate_qr_base64(url), "url": url}
+
+
+@api_router.post("/admin/send-update-email")
+async def send_update_email(data: SendUpdateEmail, admin: dict = Depends(require_admin)):
+    if not RESEND_API_KEY:
+        raise HTTPException(status_code=500, detail="Email service not configured")
+    if data.send_to == "all":
+        users = await db.users.find({}, {"_id": 0, "email": 1}).to_list(10000)
+        recipients = [u["email"] for u in users if u.get("email")]
+    else:
+        recipients = [e.strip() for e in data.send_to.split(",") if e.strip()]
+    if not recipients:
+        raise HTTPException(status_code=400, detail="No recipients found")
+
+    expo_url = data.expo_url or ""
+    download_link = data.download_link or expo_url
+    qr_html = ""
+    if expo_url:
+        qr_b64 = generate_qr_base64(expo_url)
+        qr_html = f'<div style="text-align:center;margin:20px 0;"><img src="data:image/png;base64,{qr_b64}" alt="QR Code" width="200" height="200" style="border:2px solid #333;border-radius:8px;" /></div>'
+    link_html = ""
+    if download_link:
+        link_html = f'<div style="text-align:center;margin:20px 0;"><a href="{download_link}" style="display:inline-block;background:#4CAF50;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:bold;">Download Latest Version</a></div>'
+
+    html_content = f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1a1a1a;color:#e0e0e0;padding:30px;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:20px;">
+            <h1 style="color:#4CAF50;margin:0;">SMA Antenna Calc</h1>
+            <p style="color:#888;font-size:14px;">App Update Notification</p>
+        </div>
+        <h2 style="color:#fff;font-size:18px;">{data.subject}</h2>
+        <div style="line-height:1.6;font-size:15px;color:#ccc;">{data.message.replace(chr(10), '<br/>')}</div>
+        {qr_html}
+        {link_html}
+        <div style="border-top:1px solid #333;margin-top:30px;padding-top:15px;text-align:center;font-size:12px;color:#666;">
+            <p>Scan the QR code with your phone camera to install the latest version via Expo.</p>
+        </div>
+    </div>
+    """
+    sent = 0
+    errors = []
+    for i in range(0, len(recipients), 50):
+        batch = recipients[i:i+50]
+        try:
+            await asyncio.to_thread(resend.Emails.send, {"from": SENDER_EMAIL, "to": batch, "subject": data.subject, "html": html_content})
+            sent += len(batch)
+        except Exception as e:
+            errors.append(f"Batch {i//50+1}: {str(e)}")
+    return {"sent": sent, "total": len(recipients), "errors": errors if errors else None, "message": f"Update email sent to {sent}/{len(recipients)} users"}
+
+
+@api_router.get("/admin/user-emails")
+async def get_user_emails(admin: dict = Depends(require_admin)):
+    users = await db.users.find({}, {"_id": 0, "email": 1, "id": 1, "subscription_tier": 1}).to_list(10000)
+    return {"users": users}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
