@@ -1221,11 +1221,8 @@ export default function AdminScreen() {
               {qrBase64 ? (
                 <View style={{ alignItems: 'center', padding: 12, backgroundColor: '#fff', borderRadius: 8, marginBottom: 8 }}>
                   <Text style={{ fontSize: 12, color: '#333', fontWeight: '600', marginBottom: 8 }}>Scan to Install</Text>
-                  {Platform.OS === 'web' ? (
-                    <img src={`data:image/png;base64,${qrBase64}`} style={{ width: 200, height: 200 }} alt="QR Code" />
-                  ) : (
-                    <Text style={{ fontSize: 10, color: '#666' }}>QR Code generated (visible in email)</Text>
-                  )}
+                  <Image source={{ uri: `data:image/png;base64,${qrBase64}` }} style={{ width: 200, height: 200, borderRadius: 4 }} resizeMode="contain" />
+                  <Text style={{ fontSize: 10, color: '#666', marginTop: 6 }}>{expoUrl}</Text>
                 </View>
               ) : null}
             </View>
