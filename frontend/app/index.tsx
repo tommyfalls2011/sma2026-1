@@ -1043,6 +1043,10 @@ export default function AntennaCalculator() {
                 <Ionicons name="log-in-outline" size={16} color="#4CAF50" />
               </TouchableOpacity>
             )}
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a3a5c', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowDesignerInfo(true)}>
+              <Ionicons name="person-circle-outline" size={16} color="#2196F3" />
+              <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '600' }}>Designer Info</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Band & Frequency */}
