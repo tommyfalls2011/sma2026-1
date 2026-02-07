@@ -1462,9 +1462,6 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     if request.taper and request.taper.enabled:
         predicted_fb += 1.5 * request.taper.num_tapers
     
-    notes.append(f"")
-    notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
-    notes.append(f"Total boom length: ~{round(current_position, 1)}\"")
     if not use_reflector:
         notes.append(f"Note: No reflector mode - reduced F/B ratio")
     
