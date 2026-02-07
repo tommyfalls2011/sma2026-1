@@ -552,15 +552,19 @@ export default function AntennaCalculator() {
         
         setInputs(prev => ({ ...prev, elements: newElements }));
         
-        // Re-apply spacing mode after auto-tune if active
-        // This ensures the spacing doesn't revert when auto-tune recalculates
-        if (spacingMode !== 'normal' && parseFloat(spacingLevel) !== 1.0) {
+        // When boom lock is active, backend already distributed evenly
+        // Reset spacing state so user can cleanly apply spacing after turning off boom lock
+        if (boomLockEnabled) {
+          setSpacingMode('normal');
+          setSpacingLevel('1.0');
+        } else if (spacingMode !== 'normal' && parseFloat(spacingLevel) !== 1.0) {
+          // Re-apply spacing mode after auto-tune if active (no boom lock)
           const factor = parseFloat(spacingLevel);
           setTimeout(() => {
             setInputs(prev => ({
               ...prev,
               elements: prev.elements.map((el: any, idx: number) => {
-                if (idx === 0) return el; // Keep first element at position 0
+                if (idx === 0) return el;
                 const basePos = parseFloat(newElements[0]?.position || '0');
                 const currentPos = parseFloat(newElements[idx]?.position || '0');
                 const relativePos = currentPos - basePos;
