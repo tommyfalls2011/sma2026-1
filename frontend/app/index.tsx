@@ -682,6 +682,11 @@ export default function AntennaCalculator() {
     return now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
   };
 
+  // Sanitize filename - remove all illegal characters for Android/iOS
+  const sanitizeFilename = (name: string) => {
+    return name.replace(/[^a-zA-Z0-9_\-\.]/g, '_');
+  };
+
   // Export height optimization data to CSV
   const exportHeightData = async () => {
     if (!heightOptResult || !heightOptResult.heights_tested) {
