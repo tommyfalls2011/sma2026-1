@@ -1152,6 +1152,45 @@ export default function AntennaCalculator() {
                 </View>
               )}
             </View>
+
+            {/* Element Spacing Control */}
+            <View style={{ marginTop: 12, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12 }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#aaa', marginBottom: 8 }}>
+                <Ionicons name="resize-outline" size={12} color="#9C27B0" /> Element Spacing
+              </Text>
+              <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                <TouchableOpacity 
+                  style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'tight' ? '#9C27B0' : '#252525', marginRight: 4, alignItems: 'center' }}
+                  onPress={() => { if (spacingMode === 'tight') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('tight'); } }}
+                >
+                  <Ionicons name="contract-outline" size={14} color={spacingMode === 'tight' ? '#fff' : '#888'} />
+                  <Text style={{ fontSize: 11, color: spacingMode === 'tight' ? '#fff' : '#888', marginTop: 2 }}>Tight</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'normal' ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
+                  onPress={() => { setSpacingMode('normal'); applySpacing('1.0'); }}
+                >
+                  <Ionicons name="remove-outline" size={14} color={spacingMode === 'normal' ? '#fff' : '#888'} />
+                  <Text style={{ fontSize: 11, color: spacingMode === 'normal' ? '#fff' : '#888', marginTop: 2 }}>Normal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'long' ? '#FF9800' : '#252525', marginLeft: 4, alignItems: 'center' }}
+                  onPress={() => { if (spacingMode === 'long') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('long'); } }}
+                >
+                  <Ionicons name="expand-outline" size={14} color={spacingMode === 'long' ? '#fff' : '#888'} />
+                  <Text style={{ fontSize: 11, color: spacingMode === 'long' ? '#fff' : '#888', marginTop: 2 }}>Long</Text>
+                </TouchableOpacity>
+              </View>
+              {spacingMode !== 'normal' && (
+                <Dropdown 
+                  label={spacingMode === 'tight' ? 'Tighter Spacing' : 'Longer Spacing'} 
+                  value={spacingLevel} 
+                  options={SPACING_OPTIONS[spacingMode]} 
+                  onChange={(v: string) => applySpacing(v)} 
+                />
+              )}
+            </View>
+
           </View>
 
           {/* Taper */}
