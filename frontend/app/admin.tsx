@@ -370,7 +370,11 @@ export default function AdminScreen() {
       // Get all user emails, send them to admin in one email
       const emailsRes = await fetch(`${BACKEND_URL}/api/admin/user-emails`, { headers: { 'Authorization': `Bearer ${token}` } });
       const emailsData = emailsRes.ok ? await emailsRes.json() : { users: [] };
-      const allEmails = (emailsData.users || []).map((u: any) => u.email).filter(Boolean);
+      const allUsers = emailsData.users || [];
+      setUserEmails(allUsers);
+      const allEmails = allUsers.map((u: any) => u.email).filter(Boolean);
+
+      if (allEmails.length === 0) { setEmailResult('❌ No users found'); setSendingEmail(false); return; }
 
       const emailList = allEmails.join(', ');
       const fullMessage = `${emailMessage}\n\n--- COPY THE EMAILS BELOW INTO GMAIL BCC ---\n\n${emailList}\n\n--- ${allEmails.length} USERS TOTAL ---\n\nQR/Download Link: ${expoUrl || downloadLink || 'Not set'}`;
