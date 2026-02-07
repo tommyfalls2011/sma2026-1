@@ -1,0 +1,76 @@
+{
+  "summary": "Backend-only testing of real-world gain model with ground reflection. All 27 tests passed. Verified: auto-tune gains at 36ft match user specs (2elem=12.0, 3elem=14.0, 5elem=16.6, 8elem=18.8, 10elem=19.8, 15elem=21.8, 20elem=23.0 dBi), boom lengths match specs (2elem=47in, 3elem=138in, 5elem=295in, 8elem=551in, 10elem=728in), ground gain at 36ft=5.78dBi/10ft=2.21dBi/50ft=5.95dBi, Height is King (3-elem: 36ft vs 10ft shows 3.57dBi diff), boom doubling=+2.5dB, no-reflector=-1.5dB.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_real_world_gains.py",
+    "/app/test_reports/pytest/pytest_results_realworld.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_real_world_gains.py"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 tests passed)",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None - Uses public API endpoints without authentication",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Real-world gain model with ground reflection fully verified. Test file /app/backend/tests/test_real_world_gains.py contains 27 tests covering: auto-tune gains at 36ft for 2-20 elements, boom length verification, ground gain model (height_bonus), Height is King principle, boom doubling (+2.5dB), no-reflector mode (-1.5dB), and gain_breakdown fields. All tests pass. IMPORTANT: height_unit must be 'ft' (not 'feet').",
+  "test_results_details": {
+    "auto_tune_real_world_gains_at_36ft": {
+      "2_elements": "12.0 dBi (expected 12.0±0.5) - PASS",
+      "3_elements": "14.0 dBi (expected 14.0±0.5) - PASS",
+      "5_elements": "16.6 dBi (expected 16.6±0.5) - PASS",
+      "8_elements": "18.8 dBi (expected 18.8±0.5) - PASS",
+      "10_elements": "19.8 dBi (expected 19.8±0.5) - PASS",
+      "15_elements": "21.8 dBi (expected 21.8±0.5) - PASS",
+      "20_elements": "23.0 dBi (expected 23.0±0.5) - PASS"
+    },
+    "auto_tune_boom_lengths": {
+      "2_elements": "47.0\" (expected ~47\") - PASS",
+      "3_elements": "138.0\" (expected ~138\") - PASS",
+      "5_elements": "295.0\" (expected ~295\") - PASS",
+      "8_elements": "550.9\" (expected ~551\") - PASS",
+      "10_elements": "728.0\" (expected ~728\") - PASS"
+    },
+    "ground_gain_model": {
+      "at_36ft": "5.78 dBi (expected ~5.78) - PASS",
+      "at_10ft": "2.21 dBi (expected ~2.2) - PASS",
+      "at_50ft": "5.95 dBi (expected ~6.0) - PASS",
+      "increases_with_height": "10ft<36ft verified - PASS"
+    },
+    "height_is_king": {
+      "3elem_36ft_vs_10ft": "13.98 vs 10.41 dBi = 3.57 dB difference (>3.0) - PASS",
+      "gain_diff_matches_height_bonus_diff": "3.57 = 3.57 - PASS"
+    },
+    "boom_doubling_effect": {
+      "5elem_standard_vs_doubled": "16.58 vs 19.08 dBi = +2.5 dB - PASS",
+      "boom_adj_in_breakdown": "2.5 dBi for doubled boom - PASS"
+    },
+    "no_reflector_mode": {
+      "gain_reduction": "13.98 vs 12.48 dBi = 1.5 dB reduction - PASS",
+      "reflector_adj_field": "-1.5 - PASS"
+    },
+    "gain_breakdown_fields": {
+      "all_fields_present": "standard_gain, boom_adj, reflector_adj, taper_bonus, corona_adj, height_bonus, boom_bonus, final_gain - PASS",
+      "final_gain_equals_gain_dbi": "16.58 = 16.58 - PASS",
+      "components_add_up": "16.58 = 16.58 - PASS"
+    }
+  },
+  "gain_model_formula": {
+    "description": "G_real = G_free_space + G_ground",
+    "free_space_gain_lookup": "Stored in FREE_SPACE_GAIN_DBI dict by element count",
+    "ground_gain_at_1lambda": "~5.78 dBi (calculate_ground_gain function)",
+    "wavelength_at_27MHz": "~36ft (1λ)"
+  }
+}
