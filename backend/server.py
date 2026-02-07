@@ -1269,26 +1269,27 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     # === REALISTIC BOOM LENGTHS for 27 MHz (11m) ===
     # Based on real-world Yagi designs. Scale for other bands by wavelength ratio.
     # Reference wavelength = 11m (27.185 MHz) = 434.2"
+    # Values use midpoint of typical range for each element count
     TYPICAL_BOOM_11M = {
-        2: 76,     # ~6.3 ft (4.8-8 ft range)
-        3: 150,    # ~12.5 ft (10-15 ft range)
-        4: 252,    # ~21 ft (18-24 ft range)
-        5: 324,    # ~27 ft (25-30 ft range)
-        6: 384,    # ~32 ft (30-35 ft range)
-        7: 444,    # ~37 ft (35-39 ft range)
-        8: 504,    # ~42 ft
-        9: 564,    # ~47 ft
-        10: 624,   # ~52 ft
-        11: 672,   # ~56 ft
-        12: 720,   # ~60 ft
-        13: 756,   # ~63 ft
-        14: 792,   # ~66 ft
-        15: 828,   # ~69 ft
-        16: 864,   # ~72 ft
-        17: 900,   # ~75 ft
-        18: 936,   # ~78 ft
-        19: 960,   # ~80 ft
-        20: 984,   # ~82 ft
+        2: 68,     # 3.3-8 ft → ~5.7 ft
+        3: 156,    # 10-16 ft → ~13 ft
+        4: 246,    # 16-25 ft → ~20.5 ft
+        5: 300,    # 20-30 ft → ~25 ft
+        6: 396,    # 26-40 ft → ~33 ft
+        7: 474,    # 33-46 ft → ~39.5 ft
+        8: 552,    # 40-52 ft → ~46 ft
+        9: 624,    # ~52 ft (interpolated 8→10)
+        10: 690,   # 50-65 ft → ~57.5 ft
+        11: 768,   # ~64 ft (interpolated 10→12)
+        12: 852,   # 60-82 ft → ~71 ft
+        13: 912,   # ~76 ft (interpolated 12→15)
+        14: 972,   # ~81 ft (interpolated 12→15)
+        15: 1020,  # 72-98 ft → ~85 ft
+        16: 1068,  # ~89 ft (interpolated 15→20)
+        17: 1116,  # ~93 ft
+        18: 1164,  # ~97 ft
+        19: 1212,  # ~101 ft
+        20: 1260,  # 100+ ft → ~105 ft
     }
     ref_wavelength_in = 434.2  # 11m at 27.185 MHz
     scale_factor = wavelength_in / ref_wavelength_in
