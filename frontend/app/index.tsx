@@ -727,7 +727,7 @@ export default function AntennaCalculator() {
     
     const timestamp = getTimestamp();
     const userEmail = user?.email || 'guest';
-    const filename = `antenna_results_${timestamp}_${userEmail.replace('@', '_at_')}.csv`;
+    const filename = sanitizeFilename(`antenna_results_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
     // Create CSV content
     let csv = 'ANTENNA CALCULATION RESULTS\n';
