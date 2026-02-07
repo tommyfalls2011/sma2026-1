@@ -1235,8 +1235,16 @@ export default function AdminScreen() {
               <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 12, marginBottom: 12, minHeight: 120, textAlignVertical: 'top', borderWidth: 1, borderColor: '#444' }} value={emailMessage} onChangeText={setEmailMessage} multiline numberOfLines={6} placeholder="Type your update message..." placeholderTextColor="#555" />
 
               <View style={{ backgroundColor: '#252525', borderRadius: 6, padding: 8, marginBottom: 12 }}>
-                <Text style={{ fontSize: 11, color: '#4CAF50', fontWeight: '600', marginBottom: 4 }}>Recipients: {userEmails.length} users</Text>
-                <Text style={{ fontSize: 10, color: '#888' }}>{userEmails.map((u: any) => u.email).join(', ')}</Text>
+                <Text style={{ fontSize: 11, color: '#4CAF50', fontWeight: '600', marginBottom: 6 }}>Recipients: {userEmails.length} users (tap to remove)</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                  {userEmails.map((u: any, i: number) => (
+                    <TouchableOpacity key={i} onPress={() => setUserEmails(prev => prev.filter((_, idx) => idx !== i))} style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#333', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4, gap: 4 }}>
+                      <Text style={{ fontSize: 10, color: '#ccc' }}>{u.email}</Text>
+                      <Ionicons name="close-circle" size={14} color="#f44336" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {userEmails.length === 0 && <Text style={{ fontSize: 10, color: '#f44336', marginTop: 4 }}>No recipients — reload tab to refresh</Text>}
               </View>
 
               {emailResult ? <Text style={{ fontSize: 12, color: emailResult.startsWith('✅') ? '#4CAF50' : '#f44336', marginBottom: 8, textAlign: 'center' }}>{emailResult}</Text> : null}
