@@ -346,6 +346,82 @@ BAND_DEFINITIONS = {
     "70cm": {"name": "70cm Ham Band", "center": 435.0, "start": 420.0, "end": 450.0, "channel_spacing_khz": 25},
 }
 
+# === FREE-SPACE GAIN MODEL (dBi) ===
+# Based on real-world Yagi engineering data at 27 MHz (11m band).
+# Doubling boom length yields ~2.5-3 dB gain increase.
+# These values assume standard boom lengths from STANDARD_BOOM_11M_IN.
+FREE_SPACE_GAIN_DBI = {
+    2: 6.2,      # 6.0-6.5 dBi
+    3: 8.2,      # 8.0-8.5 dBi
+    4: 10.0,     # 10.0-11.5 range (4-5 elements)
+    5: 10.8,
+    6: 12.0,     # 12.0-13.5 range (6-8 elements)
+    7: 12.5,
+    8: 13.0,
+    9: 13.5,
+    10: 14.0,    # 14.0-15.0 range (10-12 elements)
+    11: 14.3,
+    12: 15.0,
+    13: 15.3,
+    14: 15.6,
+    15: 16.0,    # 16.0-17.5 range (15-20 elements)
+    16: 16.3,
+    17: 16.5,
+    18: 16.8,
+    19: 17.0,
+    20: 17.2,
+}
+
+# Standard boom lengths (inches) at 11m (27.185 MHz) for gain calibration.
+# These are also used by auto-tune; moved here for shared access.
+STANDARD_BOOM_11M_IN = {
+    2: 77,
+    3: 159,
+    4: 222,
+    5: 270,
+    6: 295,
+    7: 354,
+    8: 394,
+    9: 413,
+    10: 433,
+    11: 472,
+    12: 512,
+    13: 551,
+    14: 591,
+    15: 630,
+    16: 669,
+    17: 709,
+    18: 748,
+    19: 772,
+    20: 800,
+}
+REF_WAVELENGTH_11M_IN = 434.2  # 11m at 27.185 MHz in inches
+
+
+def get_free_space_gain(n: int) -> float:
+    """Get free-space gain for n elements, interpolating/extrapolating if needed."""
+    if n in FREE_SPACE_GAIN_DBI:
+        return FREE_SPACE_GAIN_DBI[n]
+    if n < 2:
+        return 4.0
+    if n > 20:
+        # Extrapolate: ~0.3 dBi per additional element beyond 20 (diminishing returns)
+        return 17.2 + 0.3 * (n - 20)
+    # Interpolate between known values
+    lower = max(k for k in FREE_SPACE_GAIN_DBI if k <= n)
+    upper = min(k for k in FREE_SPACE_GAIN_DBI if k >= n)
+    if lower == upper:
+        return FREE_SPACE_GAIN_DBI[lower]
+    frac = (n - lower) / (upper - lower)
+    return round(FREE_SPACE_GAIN_DBI[lower] + frac * (FREE_SPACE_GAIN_DBI[upper] - FREE_SPACE_GAIN_DBI[lower]), 2)
+
+
+def get_standard_boom_in(n: int, wavelength_in: float) -> float:
+    """Get standard boom length in inches for n elements, scaled for frequency."""
+    scale = wavelength_in / REF_WAVELENGTH_11M_IN
+    base = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60)
+    return base * scale
+
 
 class TaperSection(BaseModel):
     length: float = Field(..., gt=0)
