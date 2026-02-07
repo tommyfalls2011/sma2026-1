@@ -951,6 +951,9 @@ export default function AntennaCalculator() {
                 <TouchableOpacity style={styles.loadBtn} onPress={loadDesignsList} disabled={loadingDesigns}>
                   {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={16} color="#fff" />}
                 </TouchableOpacity>
+                <TouchableOpacity style={{ backgroundColor: '#FF9800', borderRadius: 6, padding: 8 }} onPress={() => setShowTutorial(true)}>
+                  <Ionicons name="help-circle-outline" size={16} color="#fff" />
+                </TouchableOpacity>
               </View>
             )}
             
