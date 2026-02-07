@@ -1121,7 +1121,7 @@ export default function AntennaCalculator() {
             <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-network-outline" size={14} color="#8BC34A" /> Ground Radials</Text><Switch value={inputs.ground_radials.enabled} onValueChange={v => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, enabled: v } }))} trackColor={{ false: '#333', true: '#8BC34A' }} thumbColor="#fff" /></View>
             {inputs.ground_radials.enabled && (
               <View style={{ marginTop: 8 }}>
-                <View style={[styles.rowSpaced, { zIndex: 600 }]}>
+                <View style={[styles.rowSpaced, { zIndex: 2100 }]}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>Ground Type</Text>
                     <View style={styles.groundTypeSelector}>
