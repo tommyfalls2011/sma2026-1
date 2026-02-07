@@ -426,23 +426,33 @@ def get_standard_boom_in(n: int, wavelength_in: float) -> float:
 
 def calculate_ground_gain(height_wavelengths: float) -> float:
     """Calculate ground reflection gain (dBi) for horizontal Yagi over average soil.
-    At 1λ height: ~5.8 dBi. Formula: G_real = G_free_space + G_ground."""
+    Based on real-world measurements at 27 MHz.
+    Shows oscillating pattern: peaks at integer λ, dips at half-integer λ."""
     h = height_wavelengths
     if h <= 0:
         return 0.0
-    if h < 0.25:
-        return round(h * 8.0, 2)           # 0 → 2.0 dBi
-    if h < 0.5:
-        return round(2.0 + (h - 0.25) * 8.0, 2)   # 2.0 → 4.0
-    if h < 0.75:
-        return round(4.0 + (h - 0.5) * 4.0, 2)    # 4.0 → 5.0
-    if h < 1.0:
-        return round(5.0 + (h - 0.75) * 3.2, 2)   # 5.0 → 5.8
-    if h <= 1.5:
-        return round(5.8 + (h - 1.0) * 0.4, 2)    # 5.8 → 6.0
-    if h <= 2.0:
-        return round(6.0 - (h - 1.5) * 1.0, 2)    # 6.0 → 5.5
-    return round(max(4.0, 5.5 - (h - 2.0) * 0.5), 2)  # gradual decrease
+    # Calibration points from real-world data (height_λ, ground_gain_dB)
+    points = [
+        (0.00, 0.0),
+        (0.25, 2.8),
+        (0.55, 5.2),
+        (1.00, 6.0),
+        (1.50, 5.5),
+        (2.00, 5.9),
+        (2.50, 5.7),
+        (2.75, 5.8),
+    ]
+    # Clamp to range
+    if h >= points[-1][0]:
+        return round(points[-1][1], 2)
+    # Linear interpolation between calibration points
+    for i in range(len(points) - 1):
+        h0, g0 = points[i]
+        h1, g1 = points[i + 1]
+        if h0 <= h <= h1:
+            frac = (h - h0) / (h1 - h0) if h1 != h0 else 0
+            return round(g0 + frac * (g1 - g0), 2)
+    return round(points[-1][1], 2)
 
 
 class TaperSection(BaseModel):
