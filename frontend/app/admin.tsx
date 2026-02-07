@@ -107,6 +107,12 @@ export default function AdminScreen() {
   const [tutorialUpdatedBy, setTutorialUpdatedBy] = useState('');
   const [savingTutorial, setSavingTutorial] = useState(false);
 
+  // Designer Info state
+  const [designerContent, setDesignerContent] = useState('');
+  const [designerUpdatedAt, setDesignerUpdatedAt] = useState('');
+  const [designerUpdatedBy, setDesignerUpdatedBy] = useState('');
+  const [savingDesigner, setSavingDesigner] = useState(false);
+
   useEffect(() => {
     checkAdminAndLoad();
   }, [token]);
