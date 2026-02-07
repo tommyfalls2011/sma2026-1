@@ -795,20 +795,39 @@ export default function AntennaCalculator() {
       URL.revokeObjectURL(url);
       Alert.alert('Exported', `File saved as ${filename}`);
     } else {
-      // Mobile: Save to cache directory and share
+      // Mobile: Save to cache and use SAF to let user pick save location
       try {
-        // Use cache directory which has guaranteed write access
         const fileUri = FileSystem.cacheDirectory + filename;
         await FileSystem.writeAsStringAsync(fileUri, csvContent, {
           encoding: 'utf8',
         });
         
-        // Check if sharing is available
+        // Try using StorageAccessFramework to save to user-chosen location
+        try {
+          const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+          if (permissions.granted) {
+            const newFile = await FileSystem.StorageAccessFramework.createFileAsync(
+              permissions.directoryUri,
+              filename,
+              'text/csv'
+            );
+            await FileSystem.writeAsStringAsync(newFile, csvContent, {
+              encoding: 'utf8',
+            });
+            Alert.alert('✅ Exported!', `CSV saved to your chosen folder as:\n${filename}`);
+            return;
+          }
+        } catch (safError) {
+          console.log('SAF not available, falling back to share sheet');
+        }
+        
+        // Fallback: Use share sheet
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
           await Sharing.shareAsync(fileUri, {
             mimeType: 'text/csv',
-            dialogTitle: `Export ${filename}`,
+            dialogTitle: `Save ${filename}`,
+            UTI: 'public.comma-separated-values-text',
           });
         } else {
           Alert.alert('File Saved', `File saved to app cache:\n${filename}\n\nSharing not available on this device.`);
