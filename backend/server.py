@@ -1180,6 +1180,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         bandwidth_description=f"{usable_2_0:.3f} MHz at 2:1 SWR",
         gain_dbi=gain_dbi,
         gain_description=f"{round(10 ** ((stacked_gain_dbi or gain_dbi) / 10), 2)}x over isotropic",
+        base_gain_dbi=base_gain_dbi,
+        gain_breakdown=gain_breakdown,
         multiplication_factor=multiplication_factor,
         multiplication_description="ERP multiplier",
         antenna_efficiency=antenna_efficiency,
