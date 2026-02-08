@@ -1499,6 +1499,19 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "new_beamwidth_v": new_beamwidth_v,
             "stacked_multiplication_factor": round(10 ** (stacked_gain_dbi / 10), 2),
             "optimal_spacing_ft": optimal_spacing_ft,
+            "power_splitter": {
+                "type": f"{stacking.num_antennas}:1 Power Splitter/Combiner",
+                "input_impedance": "50 ohm",
+                "combined_load": f"{round(50 / stacking.num_antennas, 1)} ohm (parallel)",
+                "matching_method": "Quarter-wave (lambda/4) transformer",
+                "quarter_wave_ft": round((wavelength * 0.25) / 0.3048, 1),
+                "quarter_wave_in": round((wavelength * 0.25) / 0.0254, 1),
+                "power_per_antenna_100w": round(100 / stacking.num_antennas, 1),
+                "power_per_antenna_1kw": round(1000 / stacking.num_antennas, 1),
+                "phase_lines": f"All feed lines must be identical length for 0 deg phase shift",
+                "min_power_rating": f"{round(1000 / stacking.num_antennas * 1.5)} W per port recommended",
+                "isolation_note": "Port isolation prevents mismatch on one antenna from degrading others",
+            },
         }
         beamwidth_h, beamwidth_v = new_beamwidth_h, new_beamwidth_v
     
