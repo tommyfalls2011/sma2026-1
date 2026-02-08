@@ -2287,6 +2287,21 @@ export default function AntennaCalculator() {
                   <SpecRow label="Spacing" value={`${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}\u03bb)`} />
                   <SpecRow label="Gain Increase" value={`+${results.stacking_info.gain_increase_db} dB`} accent="#4CAF50" />
                   <SpecRow label="Stacked Gain" value={`${results.stacked_gain_dbi} dBi`} accent="#E91E63" />
+                  {results.stacking_info.power_splitter && (
+                    <View style={{ marginTop: 8, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>POWER SPLITTER</Text>
+                      <SpecRow label="  Type" value={results.stacking_info.power_splitter.type} small />
+                      <SpecRow label="  Input" value={results.stacking_info.power_splitter.input_impedance} small />
+                      <SpecRow label="  Combined Load" value={results.stacking_info.power_splitter.combined_load} small />
+                      <SpecRow label="  Matching" value={results.stacking_info.power_splitter.matching_method} small />
+                      <SpecRow label="  Quarter-Wave Line" value={`${results.stacking_info.power_splitter.quarter_wave_ft}' (${results.stacking_info.power_splitter.quarter_wave_in}")`} small />
+                      <SpecRow label="  Power @ 100W" value={`${results.stacking_info.power_splitter.power_per_antenna_100w}W each`} small />
+                      <SpecRow label="  Power @ 1kW" value={`${results.stacking_info.power_splitter.power_per_antenna_1kw}W each`} small />
+                      <SpecRow label="  Min Rating" value={results.stacking_info.power_splitter.min_power_rating} small />
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 4, fontStyle: 'italic' }}>{results.stacking_info.power_splitter.phase_lines}</Text>
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2, fontStyle: 'italic' }}>{results.stacking_info.power_splitter.isolation_note}</Text>
+                    </View>
+                  )}
                 </SpecSection>
               )}
 
