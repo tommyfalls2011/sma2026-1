@@ -1973,6 +1973,12 @@ export default function AntennaCalculator() {
                   <Text style={styles.exportAllBtnText}>Export All Results to CSV</Text>
                 </TouchableOpacity>
               )}
+              {results && (
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a1a', borderRadius: 8, paddingVertical: 12, marginTop: 8, gap: 8, borderWidth: 1, borderColor: '#444' }} onPress={() => setShowSpecSheet(true)}>
+                  <Ionicons name="reader-outline" size={16} color="#00BCD4" />
+                  <Text style={{ fontSize: 13, color: '#00BCD4', fontWeight: '600' }}>View Spec Sheet</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </ScrollView>
