@@ -1388,7 +1388,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Take-off angle and ground radials
         takeoff_angle=takeoff_angle,
         takeoff_angle_description=takeoff_desc,
-        ground_radials_info=ground_radials_info
+        ground_radials_info=ground_radials_info,
+        # Noise level based on orientation
+        noise_level="High" if input_data.antenna_orientation == "vertical" else "Low",
+        noise_description="Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else "Horizontal polarization has a quieter receive noise floor",
     )
 
 
