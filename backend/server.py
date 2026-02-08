@@ -1022,53 +1022,52 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     multiplication_factor = round(10 ** (gain_dbi / 10), 2)
     
-    # === EFFICIENCY CALCULATION (Comprehensive) ===
-    # 1. Base efficiency depends on element count and design complexity
-    if n <= 3:
-        base_efficiency = 0.92
-    elif n <= 5:
-        base_efficiency = 0.94
-    elif n <= 7:
-        base_efficiency = 0.95
-    else:
-        base_efficiency = 0.96
+    # === EFFICIENCY CALCULATION ===
+    # η = R_rad / (R_rad + R_loss) × 100%
+    # R_rad: 73Ω (horizontal half-wave dipole), 36.5Ω (vertical quarter-wave)
+    # R_loss: ohmic + ground + dielectric losses
     
-    # 2. SWR mismatch loss - power reflected back to transmitter
-    swr_reflection_coeff = (swr - 1) / (swr + 1)  # Gamma (reflection coefficient)
-    swr_mismatch_loss = 1 - (swr_reflection_coeff ** 2)  # Power transmitted
+    antenna_orient = input_data.antenna_orientation
+    r_rad = 73.0 if antenna_orient == "horizontal" else (36.5 if antenna_orient == "vertical" else 55.0)  # 45° ≈ average
     
-    # 3. Conductor/material losses based on element diameter
+    # Ohmic losses from conductor resistance
     avg_element_dia_m = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / n
-    if avg_element_dia_m > 0.02:  # > 20mm (thick elements)
-        conductor_efficiency = 0.99
-    elif avg_element_dia_m > 0.015:  # 15-20mm
-        conductor_efficiency = 0.98
-    elif avg_element_dia_m > 0.01:  # 10-15mm
-        conductor_efficiency = 0.97
-    elif avg_element_dia_m > 0.005:  # 5-10mm
-        conductor_efficiency = 0.95
-    else:  # < 5mm (thin wire)
-        conductor_efficiency = 0.92
+    if avg_element_dia_m > 0.02: r_ohmic = 0.5
+    elif avg_element_dia_m > 0.015: r_ohmic = 1.0
+    elif avg_element_dia_m > 0.01: r_ohmic = 1.5
+    elif avg_element_dia_m > 0.005: r_ohmic = 2.5
+    else: r_ohmic = 4.0
     
-    # 4. Boom losses
-    if boom_dia_m > 0.05:  # > 50mm boom
-        boom_efficiency = 0.99
-    elif boom_dia_m > 0.03:  # 30-50mm
-        boom_efficiency = 0.98
+    # Ground losses - verticals depend heavily on radials
+    if antenna_orient == "vertical":
+        if ground_radials and ground_radials.enabled:
+            num_r = ground_radials.num_radials
+            if num_r >= 64: r_ground = 2.0
+            elif num_r >= 32: r_ground = 5.0
+            elif num_r >= 16: r_ground = 10.0
+            elif num_r >= 8: r_ground = 15.0
+            else: r_ground = 25.0
+        else:
+            r_ground = 36.0  # No radials = massive ground loss (matches R_rad!)
     else:
-        boom_efficiency = 0.97
+        # Horizontal/45° - ground loss depends on height
+        if height_wavelengths < 0.25: r_ground = 8.0
+        elif height_wavelengths < 0.5: r_ground = 3.0
+        elif height_wavelengths < 1.0: r_ground = 1.5
+        else: r_ground = 0.5
     
-    # 5. Height-related ground losses
-    if height_wavelengths < 0.25:
-        height_efficiency = 0.85  # Very low - significant ground absorption
-    elif height_wavelengths < 0.5:
-        height_efficiency = 0.92
-    elif height_wavelengths < 1.0:
-        height_efficiency = 0.97
-    else:
-        height_efficiency = 0.99  # High enough for minimal ground interaction
+    r_loss = r_ohmic + r_ground
+    radiation_efficiency = r_rad / (r_rad + r_loss)
     
-    # 6. Element spacing efficiency
+    # SWR mismatch loss
+    swr_reflection_coeff = (swr - 1) / (swr + 1)
+    swr_mismatch_loss = 1 - (swr_reflection_coeff ** 2)
+    
+    # Boom and spacing losses
+    if boom_dia_m > 0.05: boom_efficiency = 0.99
+    elif boom_dia_m > 0.03: boom_efficiency = 0.98
+    else: boom_efficiency = 0.97
+    
     driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
     reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
     spacing_efficiency = 0.98
@@ -1076,19 +1075,15 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
         ideal_spacing = wavelength * 0.2
         spacing_deviation = abs(spacing_m - ideal_spacing) / ideal_spacing
-        if spacing_deviation > 0.3:
-            spacing_efficiency = 0.92
-        elif spacing_deviation > 0.2:
-            spacing_efficiency = 0.95
-        elif spacing_deviation > 0.1:
-            spacing_efficiency = 0.97
+        if spacing_deviation > 0.3: spacing_efficiency = 0.92
+        elif spacing_deviation > 0.2: spacing_efficiency = 0.95
+        elif spacing_deviation > 0.1: spacing_efficiency = 0.97
     
-    # 7. Taper bonus (tapered elements have better efficiency)
+    # Taper: tapered elements are 2-5% longer to maintain resonance, slightly better efficiency
     taper_efficiency = 1.02 if taper_enabled else 1.0
     
-    # Calculate total efficiency
-    antenna_efficiency = (base_efficiency * swr_mismatch_loss * conductor_efficiency * 
-                         boom_efficiency * height_efficiency * spacing_efficiency * taper_efficiency)
+    antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * 
+                         boom_efficiency * spacing_efficiency * taper_efficiency)
     antenna_efficiency = round(min(antenna_efficiency * 100, 99.9), 1)
     
     # === REFLECTED POWER CALCULATIONS ===
