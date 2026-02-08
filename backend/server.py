@@ -954,9 +954,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         radial_boost = min(0.30, radial_boost)
         ground_scale = min(1.20, ground_scale + radial_boost)
         
-        # Wet ground causes slight SWR detuning (downward frequency shift)
-        if ground_type == "wet":
-            swr = round(swr * 1.03, 2)  # ~3% SWR increase from detuning
+        # Wet ground causes slight SWR detuning (handled after SWR calculation below)
     
     height_bonus = round(base_ground_gain * ground_scale, 2)
     gain_dbi += height_bonus
