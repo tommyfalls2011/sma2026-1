@@ -936,7 +936,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Ground type modifies reflection efficiency:
     #   wet: 1.05x (better conductor), average: 1.0x, dry: 0.70x (poor reflector)
     # Radials improve effective soil quality toward the next tier.
-    base_ground_gain = calculate_ground_gain(height_wavelengths)
+    base_ground_gain = calculate_ground_gain(height_wavelengths, input_data.antenna_orientation)
     
     ground_radials = input_data.ground_radials
     ground_type = "average"
