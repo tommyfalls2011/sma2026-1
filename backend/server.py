@@ -1420,6 +1420,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Take-off angle and ground radials
         takeoff_angle=takeoff_angle,
         takeoff_angle_description=takeoff_desc,
+        height_performance=height_perf,
         ground_radials_info=ground_radials_info,
         # Noise level based on orientation
         noise_level="High" if input_data.antenna_orientation == "vertical" else ("Moderate" if input_data.antenna_orientation == "angle45" else "Low"),
