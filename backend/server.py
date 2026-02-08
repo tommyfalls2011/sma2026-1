@@ -1099,6 +1099,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     swr = round(max(1.0, min(swr, 5.0)), 2)
     
+    # === MATCHING NETWORK ===
+    feed_type = input_data.feed_type
+    matched_swr, matching_info = apply_matching_network(swr, feed_type)
+    if feed_type != "direct":
+        swr = round(matched_swr, 3)
+    
     # === F/B and F/S RATIOS ===
     if n == 2: fb_ratio, fs_ratio = 14, 8
     elif n == 3: fb_ratio, fs_ratio = 20, 12
@@ -1107,6 +1113,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     else:
         fb_ratio = 20 + 3.0 * math.log2(n - 2)
         fs_ratio = 12 + 2.5 * math.log2(n - 2)
+    
+    # Dual polarity improves F/B due to cross-polarization coupling
+    if is_dual and dual_info:
+        fb_ratio += dual_info["fb_bonus_db"]
     
     # Without reflector, F/B and F/S are significantly reduced
     if not has_reflector:
