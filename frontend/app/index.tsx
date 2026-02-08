@@ -880,7 +880,7 @@ export default function AntennaCalculator() {
     
     let csv = '';
     csv += '=============================================\n';
-    csv += '  HEIGHT OPTIMIZATION REPORT\n';
+    csv += 'HEIGHT OPTIMIZATION REPORT\n';
     csv += '=============================================\n';
     csv += `Date:, ${new Date().toLocaleString()}\n`;
     csv += `User:, ${userEmail}\n`;
@@ -890,7 +890,7 @@ export default function AntennaCalculator() {
     csv += `Feed Match:, ${inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed'}\n\n`;
     
     csv += '---------------------------------------------\n';
-    csv += '  OPTIMAL RESULT\n';
+    csv += 'OPTIMAL RESULT\n';
     csv += '---------------------------------------------\n';
     csv += `Best Height:, ${heightOptResult.optimal_height} ft\n`;
     csv += `SWR at Best:, ${heightOptResult.optimal_swr}:1\n`;
@@ -898,7 +898,7 @@ export default function AntennaCalculator() {
     csv += `F/B at Best:, ${heightOptResult.optimal_fb_ratio} dB\n\n`;
     
     csv += '---------------------------------------------\n';
-    csv += '  ALL HEIGHTS TESTED\n';
+    csv += 'ALL HEIGHTS TESTED\n';
     csv += '---------------------------------------------\n';
     csv += 'Height (ft), SWR, Gain (dBi), F/B (dB), Efficiency (%), TOA (deg), Score, Optimal?\n';
     heightOptResult.heights_tested.forEach((h: any) => {
@@ -946,7 +946,7 @@ export default function AntennaCalculator() {
     
     // --- ELEMENT TABLE ---
     csv += '---------------------------------------------\n';
-    csv += '  ELEMENT DIMENSIONS\n';
+    csv += 'ELEMENT DIMENSIONS\n';
     csv += '---------------------------------------------\n';
     csv += '#, Type, Length, Diameter, Position from Reflector\n';
     inputs.elements.forEach((e: any, i: number) => {
@@ -956,10 +956,10 @@ export default function AntennaCalculator() {
     
     // --- PERFORMANCE ---
     csv += '=============================================\n';
-    csv += '  PERFORMANCE RESULTS\n';
+    csv += 'PERFORMANCE RESULTS\n';
     csv += '=============================================\n\n';
     
-    csv += '  Signal\n';
+    csv += 'Signal\n';
     csv += `  Gain:, ${results.gain_dbi} dBi\n`;
     csv += `  Base Free-Space Gain:, ${results.base_gain_dbi || '-'} dBi\n`;
     csv += `  Gain Description:, ${results.gain_description}\n`;
@@ -981,7 +981,7 @@ export default function AntennaCalculator() {
     }
     csv += '\n';
     
-    csv += '  SWR & Impedance\n';
+    csv += 'SWR & Impedance\n';
     csv += `  SWR:, ${Number(results.swr).toFixed(3)}:1, ${results.swr_description}\n`;
     if (results.matching_info && results.feed_type !== 'direct') {
       csv += `  Feed Match:, ${results.matching_info.type}\n`;
@@ -992,19 +992,19 @@ export default function AntennaCalculator() {
     csv += `  Return Loss:, ${results.return_loss_db || '-'} dB\n`;
     csv += `  Mismatch Loss:, ${results.mismatch_loss_db || '-'} dB\n\n`;
     
-    csv += '  Radiation Pattern\n';
+    csv += 'Radiation Pattern\n';
     csv += `  F/B Ratio:, ${results.fb_ratio} dB\n`;
     csv += `  F/S Ratio:, ${results.fs_ratio} dB\n`;
     csv += `  Horizontal Beamwidth:, ${results.beamwidth_h}°\n`;
     csv += `  Vertical Beamwidth:, ${results.beamwidth_v}°\n\n`;
     
-    csv += '  Propagation\n';
+    csv += 'Propagation\n';
     csv += `  Take-off Angle:, ${results.takeoff_angle || '-'}°\n`;
     csv += `  Angle Rating:, ${results.takeoff_angle_description || '-'}\n`;
     csv += `  Height Performance:, ${results.height_performance || '-'}\n`;
     csv += `  Noise Level:, ${results.noise_level || '-'} — ${results.noise_description || ''}\n\n`;
     
-    csv += '  Bandwidth\n';
+    csv += 'Bandwidth\n';
     csv += `  Total Bandwidth:, ${results.bandwidth} MHz\n`;
     csv += `  Usable @ 1.5:1 SWR:, ${results.usable_bandwidth_1_5} MHz\n`;
     csv += `  Usable @ 2.0:1 SWR:, ${results.usable_bandwidth_2_0} MHz\n\n`;
@@ -1012,7 +1012,7 @@ export default function AntennaCalculator() {
     // --- DUAL POLARITY ---
     if (results.dual_polarity_info) {
       csv += '---------------------------------------------\n';
-      csv += '  DUAL POLARITY DETAILS\n';
+      csv += 'DUAL POLARITY DETAILS\n';
       csv += '---------------------------------------------\n';
       csv += `  Configuration:, ${results.dual_polarity_info.description}\n`;
       csv += `  Gain per Polarization:, ${results.dual_polarity_info.gain_per_polarization_dbi} dBi\n`;
@@ -1023,7 +1023,7 @@ export default function AntennaCalculator() {
     // --- STACKING ---
     if (results.stacking_enabled && results.stacking_info) {
       csv += '---------------------------------------------\n';
-      csv += '  STACKING CONFIGURATION\n';
+      csv += 'STACKING CONFIGURATION\n';
       csv += '---------------------------------------------\n';
       csv += `  Antennas Stacked:, ${results.stacking_info.num_antennas}\n`;
       csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
@@ -1035,7 +1035,7 @@ export default function AntennaCalculator() {
     // --- TAPER ---
     if (results.taper_info?.enabled) {
       csv += '---------------------------------------------\n';
-      csv += '  ELEMENT TAPER\n';
+      csv += 'ELEMENT TAPER\n';
       csv += '---------------------------------------------\n';
       csv += `  Taper Steps:, ${results.taper_info.num_tapers}\n`;
       csv += `  Gain Bonus:, +${results.taper_info.gain_bonus} dB\n`;
@@ -1045,7 +1045,7 @@ export default function AntennaCalculator() {
     // --- CORONA BALLS ---
     if (results.corona_info?.enabled) {
       csv += '---------------------------------------------\n';
-      csv += '  CORONA BALL TIPS\n';
+      csv += 'CORONA BALL TIPS\n';
       csv += '---------------------------------------------\n';
       csv += `  Diameter:, ${results.corona_info.diameter}"\n`;
       csv += `  Corona Reduction:, ${results.corona_info.corona_reduction}%\n`;
@@ -1057,7 +1057,7 @@ export default function AntennaCalculator() {
     // --- POWER ---
     if (results.forward_power_100w) {
       csv += '---------------------------------------------\n';
-      csv += '  POWER ANALYSIS\n';
+      csv += 'POWER ANALYSIS\n';
       csv += '---------------------------------------------\n';
       csv += `, @ 100W, @ 1000W\n`;
       csv += `  Forward Power:, ${results.forward_power_100w}W, ${results.forward_power_1kw}W\n`;
@@ -1067,7 +1067,7 @@ export default function AntennaCalculator() {
     // --- GROUND RADIALS ---
     if (results.ground_radials_info) {
       csv += '---------------------------------------------\n';
-      csv += '  GROUND RADIAL SYSTEM\n';
+      csv += 'GROUND RADIAL SYSTEM\n';
       csv += '---------------------------------------------\n';
       csv += `  Ground Type:, ${results.ground_radials_info.ground_type}\n`;
       csv += `  Radials:, ${results.ground_radials_info.num_radials}\n`;
@@ -1079,7 +1079,7 @@ export default function AntennaCalculator() {
     
     // --- FAR-FIELD PATTERN DATA ---
     csv += '---------------------------------------------\n';
-    csv += '  FAR-FIELD RADIATION PATTERN\n';
+    csv += 'FAR-FIELD RADIATION PATTERN\n';
     csv += '---------------------------------------------\n';
     csv += 'Angle (°), Magnitude (%)\n';
     results.far_field_pattern?.forEach((p: any) => {
@@ -1089,7 +1089,7 @@ export default function AntennaCalculator() {
     
     // --- SWR CURVE DATA ---
     csv += '---------------------------------------------\n';
-    csv += '  SWR ACROSS BAND\n';
+    csv += 'SWR ACROSS BAND\n';
     csv += '---------------------------------------------\n';
     csv += 'Frequency (MHz), SWR, Channel\n';
     results.swr_curve?.forEach((s: any) => {
@@ -1097,7 +1097,7 @@ export default function AntennaCalculator() {
     });
     
     csv += '\n=============================================\n';
-    csv += '  END OF REPORT\n';
+    csv += 'END OF REPORT\n';
     csv += '=============================================\n';
     
     downloadCSV(csv, filename);
