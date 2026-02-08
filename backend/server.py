@@ -1571,7 +1571,7 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                         elements[idx]["position"] = round(dir_spacing * (j + 1), 1)
         
         notes.append(f"")
-        notes.append(f"Boom Lock: {target_boom}\" ({round(target_boom/12, 1)} ft) — elements equally spaced")
+        notes.append(f"Boom Restraint: {target_boom}\" ({round(target_boom/12, 1)} ft) — elements equally spaced")
         compression_penalty = 0
     else:
         compression_penalty = 0
