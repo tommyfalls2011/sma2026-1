@@ -518,7 +518,8 @@ class AntennaInput(BaseModel):
     boom_unit: str = Field(default="inches")
     band: str = Field(default="11m_cb")
     frequency_mhz: Optional[float] = Field(default=None)
-    antenna_orientation: str = Field(default="horizontal")
+    antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
+    feed_type: str = Field(default="direct")  # direct, gamma, hairpin
     stacking: Optional[StackingConfig] = Field(default=None)
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
