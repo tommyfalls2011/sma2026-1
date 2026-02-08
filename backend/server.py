@@ -1131,13 +1131,22 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     }
     ground = ground_factors.get(ground_type, ground_factors["average"])
     
-    # Base take-off angle calculation (simplified model)
-    # For a horizontal antenna, take-off angle ≈ arcsin(1/(4*h/λ)) for main lobe
-    if height_wavelengths >= 0.25:
-        # Main lobe angle decreases with height
+    # Base take-off angle calculation
+    antenna_orient = input_data.antenna_orientation
+    if antenna_orient == "vertical":
+        # Vertical antennas have naturally low take-off angle regardless of height
+        # Gets lower with better radial system
+        base_takeoff = 15.0
+        if ground_radials and ground_radials.enabled:
+            radial_reduction = min(10, ground_radials.num_radials / 4.0)
+            base_takeoff = max(5, 15.0 - radial_reduction)
+        else:
+            base_takeoff = 25.0  # No radials = higher angle
+    elif height_wavelengths >= 0.25:
+        # Horizontal: main lobe angle decreases with height
         base_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
     else:
-        # Very low antennas have high take-off angles (nearly vertical)
+        # Very low horizontal antennas have high take-off angles
         base_takeoff = 70 + (0.25 - height_wavelengths) * 80
     
     # Adjust for ground type
