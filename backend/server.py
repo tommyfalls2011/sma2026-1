@@ -1397,8 +1397,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         takeoff_angle_description=takeoff_desc,
         ground_radials_info=ground_radials_info,
         # Noise level based on orientation
-        noise_level="High" if input_data.antenna_orientation == "vertical" else "Low",
-        noise_description="Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else "Horizontal polarization has a quieter receive noise floor",
+        noise_level="High" if input_data.antenna_orientation == "vertical" else ("Moderate" if input_data.antenna_orientation == "slant_45" else "Low"),
+        noise_description="Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else ("45° slant receives both polarizations — moderate noise, good for fading" if input_data.antenna_orientation == "slant_45" else "Horizontal polarization has a quieter receive noise floor"),
     )
 
 
