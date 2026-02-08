@@ -1218,7 +1218,7 @@ export default function AdminScreen() {
             <Text style={styles.sectionTitle}>Active Discounts ({discounts.length})</Text>
             {discounts.length === 0 && <Text style={{ color: '#666', fontSize: 12, textAlign: 'center', padding: 20 }}>No discounts yet</Text>}
             {discounts.map((d: any) => (
-              <View key={d.id} style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: d.active ? '#E91E63' : '#333', opacity: d.active ? 1 : 0.5 }}>
+              <TouchableOpacity key={d.id} onPress={() => editDiscount(d)} activeOpacity={0.7} style={{ backgroundColor: editingDiscountId === d.id ? '#2a2000' : '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: editingDiscountId === d.id ? '#FF9800' : (d.active ? '#E91E63' : '#333'), opacity: d.active ? 1 : 0.5 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <Text style={{ color: '#E91E63', fontWeight: '700', fontSize: 16 }}>{d.code}</Text>
@@ -1226,11 +1226,12 @@ export default function AdminScreen() {
                       <Text style={{ color: '#fff', fontSize: 10, fontWeight: '600' }}>{d.discount_type === 'percentage' ? `${d.value}%` : `$${d.value}`}</Text>
                     </View>
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TouchableOpacity onPress={() => toggleDiscount(d.id)}>
+                  <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                    <Ionicons name="create-outline" size={20} color="#888" />
+                    <TouchableOpacity onPress={(e) => { e.stopPropagation(); toggleDiscount(d.id); }}>
                       <Ionicons name={d.active ? 'pause-circle' : 'play-circle'} size={24} color={d.active ? '#FF9800' : '#4CAF50'} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => deleteDiscount(d.id)}>
+                    <TouchableOpacity onPress={(e) => { e.stopPropagation(); deleteDiscount(d.id); }}>
                       <Ionicons name="trash" size={22} color="#f44336" />
                     </TouchableOpacity>
                   </View>
@@ -1238,7 +1239,8 @@ export default function AdminScreen() {
                 <Text style={{ fontSize: 10, color: '#888' }}>
                   {d.applies_to === 'all' ? 'All billing' : d.applies_to} · Tiers: {(d.tiers || []).join(', ')} · Used: {d.times_used}{d.max_uses ? `/${d.max_uses}` : ''}{d.user_emails?.length ? ` · ${d.user_emails.length} specific users` : ' · All users'}
                 </Text>
-              </View>
+                <Text style={{ fontSize: 9, color: '#555', marginTop: 2 }}>Tap to edit</Text>
+              </TouchableOpacity>
             ))}
           </>
         )}
