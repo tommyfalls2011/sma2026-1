@@ -944,7 +944,7 @@ export default function AntennaCalculator() {
     csv += `Reflector:, ${inputs.use_reflector ? 'Yes' : 'No'}\n`;
     csv += `Height:, ${inputs.height_from_ground} ${inputs.height_unit}\n`;
     csv += `Boom:, ${inputs.boom_diameter} ${inputs.boom_unit} diameter\n`;
-    csv += `Gain Mode:, ${inputs.gain_mode === 'real_world' ? 'Real World' : 'Free Space'}\n\n`;
+    csv += `Gain Mode:, ${gainMode === 'realworld' ? 'Real World' : 'Free Space'}\n\n`;
     
     // --- ELEMENT TABLE ---
     csv += '───────────────────────────────────────────────────\n';
@@ -2217,7 +2217,7 @@ export default function AntennaCalculator() {
                 <SpecRow label="Elements" value={inputs.antenna_orientation === 'dual' ? `${inputs.num_elements} per pol (${inputs.num_elements * 2} total)` : `${inputs.num_elements}`} />
                 <SpecRow label="Height" value={`${inputs.height_from_ground} ${inputs.height_unit}`} />
                 <SpecRow label="Boom" value={`${inputs.boom_diameter} ${inputs.boom_unit} OD`} />
-                <SpecRow label="Gain Mode" value={inputs.gain_mode === 'real_world' ? 'Real World' : 'Free Space'} />
+                <SpecRow label="Gain Mode" value={gainMode === 'realworld' ? 'Real World' : 'Free Space'} />
               </SpecSection>
 
               {/* Section: Element Table */}
