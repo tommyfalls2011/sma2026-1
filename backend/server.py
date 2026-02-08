@@ -1859,7 +1859,7 @@ async def optimize_height(request: HeightOptimizeRequest):
             # Scale by radial count (more = better ground plane)
             radial_score *= min(num_rads / 8.0, 1.5)
         
-        total_score = swr_score + gain_score + fb_score + takeoff_score + boom_score + element_score + radial_score
+        total_score = swr_score + eff_score + gain_score + fb_score + takeoff_score + boom_score + element_score + radial_score
         
         heights_tested.append({
             "height": height, 
@@ -1867,6 +1867,7 @@ async def optimize_height(request: HeightOptimizeRequest):
             "gain": round(gain, 2),
             "fb_ratio": round(fb, 1),
             "takeoff_angle": takeoff_angle,
+            "efficiency": round(efficiency, 1),
             "score": round(total_score, 1)
         })
         
