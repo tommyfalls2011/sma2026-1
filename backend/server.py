@@ -544,6 +544,8 @@ class AutoTuneRequest(BaseModel):
     # Element spacing mode
     spacing_mode: str = Field(default="normal")  # normal, tight, long
     spacing_level: float = Field(default=1.0)  # Spacing multiplier
+    antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
+    feed_type: str = Field(default="direct")  # direct, gamma, hairpin
 
 class AntennaOutput(BaseModel):
     swr: float
