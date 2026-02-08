@@ -1838,34 +1838,50 @@ export default function AntennaCalculator() {
               <View style={styles.performanceCard}>
                 <Text style={styles.performanceTitle}><Ionicons name="bar-chart-outline" size={14} color="#FF9800" /> Performance Metrics</Text>
                 <View style={styles.performanceGrid}>
-                  <View style={styles.perfItem}>
-                    <Text style={styles.perfLabel}>Gain ({gainMode === 'freespace' ? 'FS' : 'RW'})</Text>
-                    <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(((gainMode === 'freespace' && results.gain_breakdown ? results.gain_dbi - (results.gain_breakdown.height_bonus || 0) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)) / 60) * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
-                    </View>
-                    <Text style={styles.perfValue}>{gainMode === 'freespace' && results.gain_breakdown ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0)).toFixed(1) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)} dBi</Text>
-                  </View>
-                  <View style={styles.perfItem}>
-                    <Text style={styles.perfLabel}>F/B Ratio</Text>
-                    <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fb_ratio / 60 * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
-                    </View>
-                    <Text style={styles.perfValue}>{results.fb_ratio} dB</Text>
-                  </View>
-                  <View style={styles.perfItem}>
-                    <Text style={styles.perfLabel}>F/S Ratio</Text>
-                    <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fs_ratio / 60 * 100, 100)}%`, backgroundColor: '#9C27B0' }]} />
-                    </View>
-                    <Text style={styles.perfValue}>{results.fs_ratio} dB</Text>
-                  </View>
-                  <View style={styles.perfItem}>
-                    <Text style={styles.perfLabel}>Efficiency</Text>
-                    <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${results.antenna_efficiency}%`, backgroundColor: '#FF9800' }]} />
-                    </View>
-                    <Text style={styles.perfValue}>{results.antenna_efficiency}%</Text>
-                  </View>
+                  {(() => {
+                    const gainVal = gainMode === 'freespace' && results.gain_breakdown ? results.gain_dbi - (results.gain_breakdown.height_bonus || 0) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi);
+                    const fbVal = results.fb_ratio;
+                    const fsVal = results.fs_ratio;
+                    const effVal = results.antenna_efficiency;
+                    // Base scale: 60 for dB values, 100 for efficiency
+                    let dbScale = 60;
+                    let effScale = 100;
+                    // Auto-grow: if any value exceeds 85% of scale, bump all by 15%
+                    while (gainVal / dbScale > 0.85 || fbVal / dbScale > 0.85 || fsVal / dbScale > 0.85) { dbScale *= 1.15; }
+                    while (effVal / effScale > 0.85) { effScale *= 1.15; }
+                    return (
+                      <>
+                        <View style={styles.perfItem}>
+                          <Text style={styles.perfLabel}>Gain ({gainMode === 'freespace' ? 'FS' : 'RW'})</Text>
+                          <View style={styles.perfBar}>
+                            <View style={[styles.perfBarFill, { width: `${Math.min(gainVal / dbScale * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
+                          </View>
+                          <Text style={styles.perfValue}>{gainVal} dBi</Text>
+                        </View>
+                        <View style={styles.perfItem}>
+                          <Text style={styles.perfLabel}>F/B Ratio</Text>
+                          <View style={styles.perfBar}>
+                            <View style={[styles.perfBarFill, { width: `${Math.min(fbVal / dbScale * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
+                          </View>
+                          <Text style={styles.perfValue}>{fbVal} dB</Text>
+                        </View>
+                        <View style={styles.perfItem}>
+                          <Text style={styles.perfLabel}>F/S Ratio</Text>
+                          <View style={styles.perfBar}>
+                            <View style={[styles.perfBarFill, { width: `${Math.min(fsVal / dbScale * 100, 100)}%`, backgroundColor: '#9C27B0' }]} />
+                          </View>
+                          <Text style={styles.perfValue}>{fsVal} dB</Text>
+                        </View>
+                        <View style={styles.perfItem}>
+                          <Text style={styles.perfLabel}>Efficiency</Text>
+                          <View style={styles.perfBar}>
+                            <View style={[styles.perfBarFill, { width: `${Math.min(effVal / effScale * 100, 100)}%`, backgroundColor: '#FF9800' }]} />
+                          </View>
+                          <Text style={styles.perfValue}>{effVal}%</Text>
+                        </View>
+                      </>
+                    );
+                  })()}
                 </View>
                 
                 {/* Gain to Power Conversion */}
