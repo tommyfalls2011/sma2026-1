@@ -471,7 +471,7 @@ def calculate_ground_gain(height_wavelengths: float, orientation: str = "horizon
                 base = g0 + frac * (g1 - g0)
                 break
     # 45-degree slant: ~3 dB less than horizontal
-    if orientation == "slant_45":
+    if orientation == "angle45":
         return round(max(0, base - 3.0), 2)
     return round(base, 2)
 
@@ -1144,7 +1144,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             base_takeoff = max(5, 15.0 - radial_reduction)
         else:
             base_takeoff = 25.0  # No radials = higher angle
-    elif antenna_orient == "slant_45":
+    elif antenna_orient == "angle45":
         # 45° slant: between horizontal and vertical takeoff angles
         if height_wavelengths >= 0.25:
             horiz_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
@@ -1397,8 +1397,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         takeoff_angle_description=takeoff_desc,
         ground_radials_info=ground_radials_info,
         # Noise level based on orientation
-        noise_level="High" if input_data.antenna_orientation == "vertical" else ("Moderate" if input_data.antenna_orientation == "slant_45" else "Low"),
-        noise_description="Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else ("45° slant receives both polarizations — moderate noise, good for fading" if input_data.antenna_orientation == "slant_45" else "Horizontal polarization has a quieter receive noise floor"),
+        noise_level="High" if input_data.antenna_orientation == "vertical" else ("Moderate" if input_data.antenna_orientation == "angle45" else "Low"),
+        noise_description="Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else ("45° slant receives both polarizations — moderate noise, good for fading" if input_data.antenna_orientation == "angle45" else "Horizontal polarization has a quieter receive noise floor"),
     )
 
 
