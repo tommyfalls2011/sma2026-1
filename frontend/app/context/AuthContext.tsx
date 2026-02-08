@@ -165,7 +165,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Cache user for offline/fast loading
         await AsyncStorage.setItem('cachedUser', JSON.stringify(userData));
       } else if (response.status === 401) {
-        await logout();
+        // Only logout on explicit token expiry, not transient errors
+        const errorData = await response.json().catch(() => ({}));
+        if (errorData.detail === 'Token expired') {
+          await logout();
+        }
+        // For other 401s (network, server restart), keep cached user
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
