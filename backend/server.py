@@ -729,6 +729,100 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
     return round(max(1.0, min(base_swr, 5.0)), 2)
 
 
+def apply_matching_network(swr: float, feed_type: str) -> tuple:
+    """Apply matching network effects to SWR.
+    
+    Gamma match: Uses a rod alongside the driven element with a series capacitor
+    to transform impedance to 50 ohms. Very effective, can achieve 1.1:1 or better.
+    Slightly narrows bandwidth due to added reactance.
+    
+    Hairpin match: Uses a shorted transmission line stub (hairpin) across the
+    driven element feedpoint. Adds inductance to cancel capacitive reactance.
+    Broadband, simple, reliable. Slightly less precise than gamma.
+    """
+    if feed_type == "gamma":
+        # Gamma match: brings SWR very close to 1:1
+        # Effectiveness depends on starting SWR — worse starting = less perfect result
+        if swr <= 2.0:
+            matched_swr = 1.05 + (swr - 1.0) * 0.05  # 1.0→1.05, 2.0→1.10
+        elif swr <= 3.0:
+            matched_swr = 1.10 + (swr - 2.0) * 0.10  # 2.0→1.10, 3.0→1.20
+        else:
+            matched_swr = 1.20 + (swr - 3.0) * 0.15  # Degrades with very bad starting SWR
+        info = {
+            "type": "Gamma Match",
+            "description": "Rod + capacitor alongside driven element transforms impedance to 50Ω",
+            "original_swr": round(swr, 3),
+            "matched_swr": round(matched_swr, 3),
+            "bandwidth_effect": "Slightly narrower (-5%)",
+            "bandwidth_mult": 0.95,
+        }
+        return round(max(1.0, matched_swr), 3), info
+    
+    elif feed_type == "hairpin":
+        # Hairpin match: good but slightly less precise than gamma
+        if swr <= 2.0:
+            matched_swr = 1.08 + (swr - 1.0) * 0.07  # 1.0→1.08, 2.0→1.15
+        elif swr <= 3.0:
+            matched_swr = 1.15 + (swr - 2.0) * 0.12  # 2.0→1.15, 3.0→1.27
+        else:
+            matched_swr = 1.27 + (swr - 3.0) * 0.18
+        info = {
+            "type": "Hairpin Match",
+            "description": "Shorted stub adds inductance to cancel capacitive reactance at feedpoint",
+            "original_swr": round(swr, 3),
+            "matched_swr": round(matched_swr, 3),
+            "bandwidth_effect": "Broadband (minimal effect)",
+            "bandwidth_mult": 1.0,
+        }
+        return round(max(1.0, matched_swr), 3), info
+    
+    else:
+        # Direct feed — no matching network
+        return swr, {
+            "type": "Direct Feed",
+            "description": "Direct 50Ω coax connection to driven element",
+            "original_swr": round(swr, 3),
+            "matched_swr": round(swr, 3),
+            "bandwidth_effect": "No effect",
+            "bandwidth_mult": 1.0,
+        }
+
+
+def calculate_dual_polarity_gain(n_total: int, gain_h_single: float) -> dict:
+    """Calculate combined gain for dual-polarity antenna (equal H+V split).
+    
+    A dual-polarity Yagi like the Maco Laser 400 has n/2 horizontal elements
+    and n/2 vertical elements sharing the same boom. Each polarization array
+    acts as an independent Yagi with half the total elements.
+    
+    The combined gain is NOT additive in dB — you can only receive one
+    polarization at a time. But the dual array provides:
+    - Gain of n/2 elements per polarization
+    - Both polarization coverage (critical for skip/DX where polarization rotates)
+    - Slightly improved F/B due to element coupling
+    """
+    n_per_pol = n_total // 2
+    
+    # Each polarization array has n/2 elements
+    gain_per_pol = get_free_space_gain(n_per_pol)
+    
+    # Cross-coupling between H and V arrays adds ~0.5-1.0 dB 
+    # due to mutual impedance effects on the shared boom
+    coupling_bonus = min(1.0, 0.3 + n_per_pol * 0.08)
+    
+    # F/B improvement from dual arrays (parasitic coupling helps rejection)
+    fb_bonus = min(6.0, 1.0 + n_per_pol * 0.5)
+    
+    return {
+        "elements_per_polarization": n_per_pol,
+        "gain_per_polarization_dbi": round(gain_per_pol + coupling_bonus, 2),
+        "coupling_bonus_db": round(coupling_bonus, 2),
+        "fb_bonus_db": round(fb_bonus, 1),
+        "description": f"{n_per_pol}H + {n_per_pol}V elements on shared boom"
+    }
+
+
 def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float, min_swr: float = 1.0) -> float:
     freq_offset = abs(freq - center_freq)
     half_bandwidth = bandwidth / 2
