@@ -1280,6 +1280,16 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             base_takeoff = horiz_takeoff * 0.85  # slightly lower than horizontal
         else:
             base_takeoff = 55 + (0.25 - height_wavelengths) * 60
+    elif antenna_orient == "dual":
+        # Dual polarity: combines both H and V radiation patterns
+        # The H component follows standard height-based takeoff
+        # The V component contributes low-angle fill
+        if height_wavelengths >= 0.25:
+            h_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
+            # Dual has both H and V lobes — effective takeoff is slightly lower
+            base_takeoff = h_takeoff * 0.90
+        else:
+            base_takeoff = 65 + (0.25 - height_wavelengths) * 70
     elif height_wavelengths >= 0.25:
         # Horizontal: main lobe angle decreases with height
         base_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
