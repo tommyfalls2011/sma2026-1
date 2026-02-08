@@ -1228,15 +1228,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1),
             "estimated_improvements": {
                 "swr_improvement": g_bonus["swr_improvement"],
-                "gain_bonus_db": g_bonus["gain_bonus"],
                 "efficiency_bonus_percent": g_bonus["efficiency_bonus"]
             }
         }
         
         # Apply ground radial benefits to calculations
         swr = max(1.0, swr - g_bonus["swr_improvement"])
-        gain_dbi = round(gain_dbi + g_bonus["gain_bonus"], 2)
-        gain_breakdown["ground_radials_bonus"] = round(g_bonus["gain_bonus"], 2)
         gain_breakdown["final_gain"] = gain_dbi
         antenna_efficiency = min(99.9, antenna_efficiency + g_bonus["efficiency_bonus"])
     
