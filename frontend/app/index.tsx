@@ -1395,7 +1395,7 @@ export default function AntennaCalculator() {
                       Total Wire: {results.ground_radials_info.total_wire_length_ft}' • Conductivity: {results.ground_radials_info.ground_conductivity} S/m
                     </Text>
                     <Text style={[styles.groundRadialInfoText, { color: '#4CAF50' }]}>
-                      Bonus: +{results.ground_radials_info.estimated_improvements.gain_bonus_db}dB gain, +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% efficiency
+                      Bonus: +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% efficiency
                     </Text>
                   </View>
                 )}
@@ -1421,7 +1421,7 @@ export default function AntennaCalculator() {
               {results.taper_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-merge" size={12} color="#E91E63" /> Taper: +{results.taper_info.gain_bonus}dB, +{results.taper_info.bandwidth_improvement} BW</Text></View>}
               {results.corona_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="ellipse" size={12} color="#00BCD4" /> Corona: {results.corona_info.corona_reduction}% reduction</Text></View>}
               {results.stacking_enabled && results.stacking_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="layers" size={12} color="#9C27B0" /> Stacked: +{results.stacking_info.gain_increase_db}dB ({results.gain_dbi}→{results.stacked_gain_dbi})</Text></View>}
-              {results.ground_radials_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-network" size={12} color="#8BC34A" /> Ground Radials ({results.ground_radials_info.ground_type}): +{results.ground_radials_info.estimated_improvements.gain_bonus_db}dB</Text></View>}
+              {results.ground_radials_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-network" size={12} color="#8BC34A" /> Ground Radials ({results.ground_radials_info.ground_type}): +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% eff</Text></View>}
               
               <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
               
