@@ -1128,11 +1128,6 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
             </View>
-            {isDualOddWarning && (
-              <Text style={{ fontSize: 10, color: '#FF9800', textAlign: 'center', marginTop: 4 }}>
-                <Ionicons name="warning-outline" size={10} color="#FF9800" /> Dual polarity works best with even element count for equal H/V split
-              </Text>
-            )}
           </View>
 
           {/* Elements */}
