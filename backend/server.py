@@ -1163,18 +1163,46 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     takeoff_angle = round(max(5, min(90, base_takeoff + ground["angle_adj"])), 1)
     
     # Describe the take-off angle
-    if takeoff_angle < 15:
-        takeoff_desc = "Very Low (Excellent DX)"
-    elif takeoff_angle < 25:
-        takeoff_desc = "Low (Good DX)"
+    if takeoff_angle < 10:
+        takeoff_desc = "Elite (Extremely low angle, massive DX)"
+    elif takeoff_angle < 15:
+        takeoff_desc = "Deep DX (Reaching other continents)"
+    elif takeoff_angle < 18:
+        takeoff_desc = "DX Sweet Spot (Maximum ground gain)"
+    elif takeoff_angle < 22:
+        takeoff_desc = "Strong Mid-Range (Continent-wide skip)"
+    elif takeoff_angle < 28:
+        takeoff_desc = "Regional (Good local/statewide skip)"
     elif takeoff_angle < 35:
-        takeoff_desc = "Medium-Low (Good all-around)"
+        takeoff_desc = "Minimum (Moderate skip, safe from detuning)"
     elif takeoff_angle < 50:
         takeoff_desc = "Medium (Regional/DX mix)"
     elif takeoff_angle < 70:
-        takeoff_desc = "High (Regional)"
+        takeoff_desc = "High (Near vertical, short distance)"
     else:
-        takeoff_desc = "Very High (NVIS/Local)"
+        takeoff_desc = "Inefficient (High ground absorption)"
+    
+    # Height performance category based on wavelength
+    if height_wavelengths < 0.25:
+        height_perf = "Inefficient: Below minimum height. Ground absorption detunes elements."
+    elif height_wavelengths < 0.40:
+        height_perf = "Near Vertical: High-angle signal, very short distance only."
+    elif height_wavelengths < 0.55:
+        height_perf = "Minimum: Safe from ground detuning. Moderate skip capability."
+    elif height_wavelengths < 0.70:
+        height_perf = "Regional: Good for local and statewide skip propagation."
+    elif height_wavelengths < 0.85:
+        height_perf = "Strong Mid-Range: Effective for continent-wide skip."
+    elif height_wavelengths < 1.05:
+        height_perf = "DX Sweet Spot: Maximum ground gain. Ideal for long distance."
+    elif height_wavelengths < 1.25:
+        height_perf = "Deep DX: Reaching other continents reliably."
+    elif height_wavelengths < 1.75:
+        height_perf = "Elite: Extremely low angle, massive skip distance."
+    elif height_wavelengths < 2.5:
+        height_perf = "Peak Performance: Point of diminishing returns."
+    else:
+        height_perf = "Complex: Multiple radiation lobes may cause signal splitting."
     
     # === GROUND RADIAL CALCULATIONS ===
     ground_radials_info = None
