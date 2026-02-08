@@ -1095,6 +1095,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_breakdown["boom_bonus"] = round(boom_bonus, 2)
     
     gain_dbi = round(min(gain_dbi, 45.0), 2)
+    
+    # Apply dual_active combined gain bonus (+3dB when both H+V transmit simultaneously)
+    if dual_active and dual_info:
+        gain_dbi = round(gain_dbi + dual_info["combined_gain_bonus_db"], 2)
+        gain_breakdown["dual_active_bonus"] = dual_info["combined_gain_bonus_db"]
+    
     gain_breakdown["final_gain"] = gain_dbi
     
     # === SWR CALCULATION (Now based on actual element dimensions and height) ===
