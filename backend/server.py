@@ -1194,9 +1194,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         radial_factor = num_rads / 8.0  # 1.0 at 8 radials
         
         ground_improvement = {
-            "wet": {"swr_improvement": 0.05, "gain_bonus": 0, "efficiency_bonus": 8},
-            "average": {"swr_improvement": 0.03, "gain_bonus": 0, "efficiency_bonus": 5},
-            "dry": {"swr_improvement": 0.01, "gain_bonus": 0, "efficiency_bonus": 2}
+            "wet": {"swr_improvement": 0.05, "efficiency_bonus": 8},
+            "average": {"swr_improvement": 0.03, "efficiency_bonus": 5},
+            "dry": {"swr_improvement": 0.01, "efficiency_bonus": 2}
         }
         base_bonus = ground_improvement.get(ground_type, ground_improvement["average"])
         
@@ -1210,7 +1210,6 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         
         g_bonus = {
             "swr_improvement": round(base_bonus["swr_improvement"] * scale, 3),
-            "gain_bonus": round(base_bonus["gain_bonus"] * scale, 2),
             "efficiency_bonus": round(base_bonus["efficiency_bonus"] * scale, 1)
         }
         
