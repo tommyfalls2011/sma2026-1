@@ -879,9 +879,9 @@ export default function AntennaCalculator() {
     const filename = sanitizeFilename(`height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
     let csv = '';
-    csv += '=============================================\n';
+    csv += '---------------------------------------------\n';
     csv += 'HEIGHT OPTIMIZATION REPORT\n';
-    csv += '=============================================\n';
+    csv += '---------------------------------------------\n';
     csv += `Date:, ${new Date().toLocaleString()}\n`;
     csv += `User:, ${userEmail}\n`;
     csv += `Band:, ${inputs.band}\n`;
@@ -955,9 +955,9 @@ export default function AntennaCalculator() {
     csv += '\n';
     
     // --- PERFORMANCE ---
-    csv += '=============================================\n';
+    csv += '---------------------------------------------\n';
     csv += 'PERFORMANCE RESULTS\n';
-    csv += '=============================================\n\n';
+    csv += '---------------------------------------------\n\n';
     
     csv += 'Signal\n';
     csv += `  Gain:, ${results.gain_dbi} dBi\n`;
@@ -1096,9 +1096,9 @@ export default function AntennaCalculator() {
       csv += `${s.frequency}, ${s.swr}, ${s.channel || ''}\n`;
     });
     
-    csv += '\n=============================================\n';
+    csv += '\n---------------------------------------------\n';
     csv += 'END OF REPORT\n';
-    csv += '=============================================\n';
+    csv += '---------------------------------------------\n';
     
     downloadCSV(csv, filename);
   };
