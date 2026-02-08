@@ -1149,6 +1149,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     bandwidth_mhz = round(center_freq * bandwidth_percent / 100, 3)
     
+    # Apply matching network bandwidth effect
+    if feed_type != "direct":
+        bandwidth_mhz = round(bandwidth_mhz * matching_info["bandwidth_mult"], 3)
+    
     multiplication_factor = round(10 ** (gain_dbi / 10), 2)
     
     # === EFFICIENCY CALCULATION ===
@@ -1157,7 +1161,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # R_loss: ohmic + ground + dielectric losses
     
     antenna_orient = input_data.antenna_orientation
-    r_rad = 73.0 if antenna_orient == "horizontal" else (36.5 if antenna_orient == "vertical" else 55.0)  # 45° ≈ average
+    # Dual polarity: average of H and V radiation resistance
+    r_rad = 73.0 if antenna_orient == "horizontal" else (36.5 if antenna_orient == "vertical" else (55.0 if antenna_orient == "dual" else 55.0))  # dual ≈ average H+V
     
     # Ohmic losses from conductor resistance
     avg_element_dia_m = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / n
