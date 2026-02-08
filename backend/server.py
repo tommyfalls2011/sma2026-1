@@ -1044,11 +1044,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_breakdown["corona_adj"] = round(corona_adj, 2)
     
     # Ground gain (height-dependent reinforcement from earth reflections)
-    # G_real = G_free_space + G_ground. Base model assumes "average" soil.
-    # Ground type modifies reflection efficiency:
-    #   wet: 1.05x (better conductor), average: 1.0x, dry: 0.70x (poor reflector)
-    # Radials improve effective soil quality toward the next tier.
-    base_ground_gain = calculate_ground_gain(height_wavelengths, input_data.antenna_orientation)
+    # For dual polarity, use horizontal ground gain model (H elements dominate ground reflection)
+    ground_orient = "horizontal" if is_dual else input_data.antenna_orientation
+    base_ground_gain = calculate_ground_gain(height_wavelengths, ground_orient)
     
     ground_radials = input_data.ground_radials
     ground_type = "average"
