@@ -304,8 +304,10 @@ export default function AdminScreen() {
     if (!discCode || !discValue) { Alert.alert('Error', 'Code and value are required'); return; }
     setCreatingDiscount(true);
     try {
-      const res = await fetch(`${BACKEND_URL}/api/admin/discounts`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      const isEditing = !!editingDiscountId;
+      const url = isEditing ? `${BACKEND_URL}/api/admin/discounts/${editingDiscountId}` : `${BACKEND_URL}/api/admin/discounts`;
+      const res = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           code: discCode, discount_type: discType, value: parseFloat(discValue),
           applies_to: discApplies, tiers: discTiers,
@@ -313,10 +315,27 @@ export default function AdminScreen() {
           user_emails: discEmails ? discEmails.split(',').map((e: string) => e.trim()) : [],
         }),
       });
-      if (res.ok) { setDiscCode(''); setDiscValue(''); setDiscMaxUses(''); setDiscEmails(''); loadDiscounts(); Alert.alert('Success', 'Discount created!'); }
+      if (res.ok) { clearDiscountForm(); loadDiscounts(); Alert.alert('Success', isEditing ? 'Discount updated!' : 'Discount created!'); }
       else { const err = await res.json(); Alert.alert('Error', err.detail || 'Failed'); }
-    } catch (e) { Alert.alert('Error', 'Failed to create discount'); }
+    } catch (e) { Alert.alert('Error', 'Failed to save discount'); }
     setCreatingDiscount(false);
+  };
+
+  const editDiscount = (d: any) => {
+    setEditingDiscountId(d.id);
+    setDiscCode(d.code);
+    setDiscType(d.discount_type || 'percentage');
+    setDiscValue(String(d.value));
+    setDiscApplies(d.applies_to || 'all');
+    setDiscTiers(d.tiers || ['bronze', 'silver', 'gold']);
+    setDiscMaxUses(d.max_uses ? String(d.max_uses) : '');
+    setDiscEmails((d.user_emails || []).join(', '));
+  };
+
+  const clearDiscountForm = () => {
+    setEditingDiscountId(null);
+    setDiscCode(''); setDiscValue(''); setDiscMaxUses(''); setDiscEmails('');
+    setDiscType('percentage'); setDiscApplies('all'); setDiscTiers(['bronze', 'silver', 'gold']);
   };
 
   const deleteDiscount = (id: string) => {
