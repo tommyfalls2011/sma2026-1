@@ -1144,6 +1144,13 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             base_takeoff = max(5, 15.0 - radial_reduction)
         else:
             base_takeoff = 25.0  # No radials = higher angle
+    elif antenna_orient == "slant_45":
+        # 45° slant: between horizontal and vertical takeoff angles
+        if height_wavelengths >= 0.25:
+            horiz_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
+            base_takeoff = horiz_takeoff * 0.85  # slightly lower than horizontal
+        else:
+            base_takeoff = 55 + (0.25 - height_wavelengths) * 60
     elif height_wavelengths >= 0.25:
         # Horizontal: main lobe angle decreases with height
         base_takeoff = math.degrees(math.asin(min(1.0, 1 / (4 * height_wavelengths))))
