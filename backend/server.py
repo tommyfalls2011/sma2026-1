@@ -590,6 +590,7 @@ class AntennaOutput(BaseModel):
     # Take-off angle and ground radials
     takeoff_angle: Optional[float] = None
     takeoff_angle_description: Optional[str] = None
+    height_performance: Optional[str] = None
     ground_radials_info: Optional[dict] = None
     noise_level: Optional[str] = None
     noise_description: Optional[str] = None
