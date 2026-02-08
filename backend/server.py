@@ -992,14 +992,13 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Free-space gain is keyed by element count at standard boom lengths.
     # If actual boom differs from standard, adjust by ~2.5 dB per boom doubling.
     
-    # Dual polarity: each polarization array uses n/2 elements
+    # Dual polarity: user enters elements PER polarization (e.g., 7 = 7H + 7V = 14 total)
     is_dual = input_data.antenna_orientation == "dual"
     dual_info = None
-    effective_n = n  # Elements used for gain lookup
+    effective_n = n  # Elements used for gain lookup = per-polarization count
     
     if is_dual:
-        dual_info = calculate_dual_polarity_gain(n, 0)  # Will fill gain later
-        effective_n = dual_info["elements_per_polarization"]
+        dual_info = calculate_dual_polarity_gain(n, 0)  # n is per-pol, total = n*2
     
     # Calculate boom length from element positions
     positions = sorted([e.position for e in input_data.elements])
