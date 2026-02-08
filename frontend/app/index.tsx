@@ -554,6 +554,7 @@ export default function AntennaCalculator() {
           ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
           antenna_orientation: inputs.antenna_orientation,
           feed_type: inputs.feed_type,
+          dual_active: inputs.dual_active,
         }),
       });
       if (response.ok) setResults(await response.json());
