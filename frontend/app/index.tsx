@@ -1734,6 +1734,11 @@ export default function AntennaCalculator() {
                         <Text style={{ fontSize: 9, color: '#9C27B0' }}>Stacked +{(results.stacked_gain_dbi - results.gain_dbi).toFixed(1)}dB</Text>
                       </View>
                     )}
+                    {results.gain_breakdown?.dual_active_bonus > 0 && (
+                      <View style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 9, color: '#FF9800' }}>H+V Active +{results.gain_breakdown.dual_active_bonus}dB</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               )}
