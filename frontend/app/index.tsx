@@ -322,6 +322,7 @@ export default function AntennaCalculator() {
     ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
     use_reflector: true,
     antenna_orientation: 'horizontal',  // horizontal (flat), vertical, angle45, or dual
+    dual_active: false,  // When dual: both H+V beams transmit simultaneously
     feed_type: 'gamma',  // direct, gamma, hairpin
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
