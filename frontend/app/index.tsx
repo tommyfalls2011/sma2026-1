@@ -1001,6 +1001,40 @@ export default function AntennaCalculator() {
       csv += `  F/B Improvement:, +${results.dual_polarity_info.fb_bonus_db} dB\n\n`;
     }
     
+    // --- STACKING ---
+    if (results.stacking_enabled && results.stacking_info) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  STACKING CONFIGURATION\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `  Antennas Stacked:, ${results.stacking_info.num_antennas}\n`;
+      csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
+      csv += `  Stacking Gain Increase:, +${results.stacking_info.gain_increase_db} dB\n`;
+      csv += `  Stacked Gain:, ${results.stacked_gain_dbi} dBi\n`;
+      csv += `  Stacked Beamwidth H/V:, ${results.stacking_info.new_beamwidth_h}° / ${results.stacking_info.new_beamwidth_v}°\n\n`;
+    }
+    
+    // --- TAPER ---
+    if (results.taper_info?.enabled) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  ELEMENT TAPER\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `  Taper Steps:, ${results.taper_info.num_tapers}\n`;
+      csv += `  Gain Bonus:, +${results.taper_info.gain_bonus} dB\n`;
+      csv += `  Bandwidth Improvement:, ${results.taper_info.bandwidth_improvement}\n\n`;
+    }
+    
+    // --- CORONA BALLS ---
+    if (results.corona_info?.enabled) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  CORONA BALL TIPS\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `  Diameter:, ${results.corona_info.diameter}"\n`;
+      csv += `  Corona Reduction:, ${results.corona_info.corona_reduction}%\n`;
+      csv += `  Gain Effect:, ${results.corona_info.gain_effect} dB\n`;
+      csv += `  Bandwidth Effect:, x${results.corona_info.bandwidth_effect}\n`;
+      csv += `  Description:, ${results.corona_info.description}\n\n`;
+    }
+    
     // --- POWER ---
     if (results.forward_power_100w) {
       csv += '───────────────────────────────────────────────────\n';
