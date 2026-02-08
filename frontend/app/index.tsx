@@ -2300,7 +2300,7 @@ export default function AntennaCalculator() {
 
               {/* Section: Bandwidth */}
               <SpecSection title={results.dual_polarity_info ? "Bandwidth (per beam)" : "Bandwidth"} icon="swap-horizontal-outline" color="#FF9800">
-                <SpecRow label="Total Bandwidth" value={`${results.bandwidth} MHz`} accent="#FF9800" />
+                <SpecRow label={results.dual_polarity_info ? "Bandwidth per Beam" : "Total Bandwidth"} value={`${results.bandwidth} MHz`} accent="#FF9800" />
                 <SpecRow label="Usable @ 1.5:1 SWR" value={`${results.usable_bandwidth_1_5} MHz`} />
                 <SpecRow label="Usable @ 2.0:1 SWR" value={`${results.usable_bandwidth_2_0} MHz`} />
                 {results.dual_polarity_info && (
