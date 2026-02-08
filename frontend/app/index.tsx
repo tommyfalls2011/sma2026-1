@@ -195,11 +195,14 @@ const ElevationPattern = ({ takeoffAngle, gain, orientation }: { takeoffAngle: n
         <View style={styles.elevationLegendRow}>
           <View style={[styles.elevationLegendDot, { backgroundColor: '#4CAF50' }]} />
           <Text style={styles.elevationLegendText}>
-            {takeoffAngle < 15 ? '🌍 Excellent DX (skip zone)' : 
-             takeoffAngle < 25 ? '🌐 Great DX propagation' : 
-             takeoffAngle < 35 ? '📡 Good all-around' : 
-             takeoffAngle < 50 ? '📻 Regional/medium range' : 
-             '🏠 NVIS / Local coverage'}
+            {takeoffAngle < 10 ? 'Elite: Extremely low angle, massive DX' : 
+             takeoffAngle < 15 ? 'Deep DX: Reaching other continents' : 
+             takeoffAngle < 18 ? 'DX Sweet Spot: Maximum ground gain' : 
+             takeoffAngle < 28 ? 'Regional/Mid-Range skip' : 
+             takeoffAngle < 35 ? 'Minimum: Moderate skip' : 
+             takeoffAngle < 50 ? 'Medium: Regional/DX mix' : 
+             takeoffAngle < 70 ? 'Near Vertical: Short distance' :
+             'Inefficient: Ground absorption'}
           </Text>
         </View>
       </View>
