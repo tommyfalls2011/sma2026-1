@@ -793,22 +793,17 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
         }
 
 
-def calculate_dual_polarity_gain(n_total: int, gain_h_single: float) -> dict:
-    """Calculate combined gain for dual-polarity antenna (equal H+V split).
+def calculate_dual_polarity_gain(n_per_pol: int, gain_h_single: float) -> dict:
+    """Calculate combined gain for dual-polarity antenna.
     
-    A dual-polarity Yagi like the Maco Laser 400 has n/2 horizontal elements
-    and n/2 vertical elements sharing the same boom. Each polarization array
-    acts as an independent Yagi with half the total elements.
-    
-    The combined gain is NOT additive in dB — you can only receive one
-    polarization at a time. But the dual array provides:
-    - Gain of n/2 elements per polarization
-    - Both polarization coverage (critical for skip/DX where polarization rotates)
-    - Slightly improved F/B due to element coupling
+    User enters element count per polarization (e.g., 7 = 7H + 7V = 14 total).
+    Each polarization array is a full Yagi with n_per_pol elements.
+    Both sets share the same boom with identical element dimensions,
+    but vertical elements interact with ground differently.
     """
-    n_per_pol = n_total // 2
+    n_total = n_per_pol * 2
     
-    # Each polarization array has n/2 elements
+    # Each polarization array has n_per_pol elements
     gain_per_pol = get_free_space_gain(n_per_pol)
     
     # Cross-coupling between H and V arrays adds ~0.5-1.0 dB 
@@ -822,10 +817,11 @@ def calculate_dual_polarity_gain(n_total: int, gain_h_single: float) -> dict:
     
     return {
         "elements_per_polarization": n_per_pol,
+        "total_elements": n_total,
         "gain_per_polarization_dbi": round(gain_per_pol + coupling_bonus, 2),
         "coupling_bonus_db": round(coupling_bonus, 2),
         "fb_bonus_db": round(fb_bonus, 1),
-        "description": f"{n_per_pol}H + {n_per_pol}V elements on shared boom"
+        "description": f"{n_per_pol}H + {n_per_pol}V = {n_total} total elements on shared boom"
     }
 
 
