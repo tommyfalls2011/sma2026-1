@@ -459,7 +459,8 @@ export default function AntennaCalculator() {
   };
 
   // Get max elements based on subscription
-  const maxElements = user ? getMaxElements() : 3;
+  const tierMaxElements = user ? getMaxElements() : 3;
+  const maxElements = inputs.antenna_orientation === 'vertical' ? Math.min(tierMaxElements, 12) : tierMaxElements;
 
   // Convert element values between inches and meters
   const convertElementUnit = (newUnit: 'inches' | 'meters') => {
