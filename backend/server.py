@@ -494,7 +494,7 @@ class GroundRadialConfig(BaseModel):
     enabled: bool = Field(default=False)
     ground_type: str = Field(default="average")  # wet, dry, average
     wire_diameter: float = Field(default=0.5)  # inches
-    num_radials: int = Field(default=8)  # 8 directions: N, S, E, W, NE, NW, SE, SW
+    num_radials: int = Field(default=8, ge=1, le=128)
 
 class AntennaInput(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
