@@ -1219,17 +1219,18 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * 
                          boom_efficiency * spacing_efficiency * taper_efficiency)
-    antenna_efficiency = round(min(antenna_efficiency * 100, 99.9), 1)
+    antenna_efficiency = round(min(antenna_efficiency * 100, 200.0), 1)
     
     # === REFLECTED POWER CALCULATIONS ===
-    # Reflection coefficient (Gamma)
+    # Reflection coefficient (Gamma) — use full precision for return loss calc
     reflection_coefficient = round(swr_reflection_coeff, 4)
     
-    # Return Loss in dB (how much power is reflected back)
-    if reflection_coefficient > 0:
-        return_loss_db = round(-20 * math.log10(reflection_coefficient), 2)
+    # Return Loss in dB: RL = -20 * log10((SWR-1)/(SWR+1))
+    # Higher = better. Perfect match = infinite (capped at 60dB)
+    if swr_reflection_coeff > 0.0001:
+        return_loss_db = round(-20 * math.log10(swr_reflection_coeff), 2)
     else:
-        return_loss_db = 99.99  # Perfect match (infinite return loss)
+        return_loss_db = 60.0  # Effectively perfect match
     
     # Mismatch Loss in dB (power lost due to reflection)
     mismatch_loss_db = round(-10 * math.log10(swr_mismatch_loss), 3) if swr_mismatch_loss > 0 else 0
@@ -1403,7 +1404,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Apply ground radial benefits to calculations
         swr = max(1.0, swr - g_bonus["swr_improvement"])
         gain_breakdown["final_gain"] = gain_dbi
-        antenna_efficiency = min(99.9, antenna_efficiency + g_bonus["efficiency_bonus"])
+        antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
     
     # === SWR CURVE ===
     swr_curve = []
