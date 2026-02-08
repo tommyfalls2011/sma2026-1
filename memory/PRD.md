@@ -14,25 +14,47 @@ Full-stack mobile application for antenna analysis. React Native (Expo) frontend
 - Authentication (JWT), subscription tiers (Trial/Bronze/Silver/Gold)
 - Admin panel (pricing, users, designs, feature toggles, tutorial editor)
 
-### New Features (This Session)
-1. **Gain Breakdown** - Base gain per element count, final gain with individual bonus contributions (height, boom, taper, corona, radials, reflector)
-2. **Enhanced Height Optimizer** - Factors boom length, element count, ground radials, ground type for varied optimal heights
-3. **Tutorial/Intro Popup** - Scrollable popup on first login, toggle to show/hide, admin-editable content
+### Advanced Physics
+- Gain model using lookup tables and physics-based calculations
+- Polarization models: Horizontal, Vertical, 45-degree Slant (gain, noise, takeoff angle)
+- Ground effects: oscillating gain with height, ground quality impact (wet/average/dry)
+- Antenna efficiency based on radiation resistance and losses
+- Radials up to 128 for vertical antennas (efficiency + SWR improvement)
 
-### Completed in Previous Sessions
-- Advanced physics model (lookup tables, polarization: H/V/Slant, ground effects, radials up to 128)
-- Admin panel: Discounts tab, Notify tab (Resend email integration)
+### Admin Panel Extensions
+- Discounts tab for promo code management
+- Notify tab for user email notifications (Resend API)
+- QR code generation for app download link
+
+### UI/UX
 - Real World / Free Space gain mode toggle
-- Bug fixes: settings persistence, JWT logout, boom lock logic, deployment
-- UI: scrollable admin tabs, SWR 3-decimal rounding
-- Renamed "Boom Lock" → "Boom Restraint" (frontend label + backend notes, Dec 2025)
+- Scrollable admin tabs for mobile
+- SWR limited to 3 decimal places
+- Gain breakdown display (base, height, taper, corona, boom contributions)
+- Tutorial/Intro popup (admin-editable)
+
+### Recent Changes (Dec 2025)
+- Renamed "Boom Lock" to "Boom Restraint" (frontend label + backend notes)
+- Removed dead "+0dB gain" from radial bonus display (was always zero, never affected by any setting)
+- Radial section now shows only efficiency bonus percentage
 
 ## Key Endpoints
-- POST /api/calculate - Main antenna calculation (now includes base_gain_dbi, gain_breakdown)
-- POST /api/optimize-height - Height optimizer (now accepts ground_radials, factors boom/elements)
+- POST /api/calculate - Main antenna calculation
+- POST /api/auto-tune - Auto-tune element dimensions
+- POST /api/optimize-height - Height optimizer
+- GET/POST/DELETE /api/admin/discounts - Discount code management
+- POST /api/admin/notify-users - Send update emails
+- GET /api/admin/qr-code - QR code generation
+- GET /api/auth/me - Current user profile
 - GET /api/tutorial - Public tutorial content
-- PUT /api/admin/tutorial - Admin update tutorial content
-- GET /api/admin/tutorial - Admin get tutorial with metadata
+- PUT /api/admin/tutorial - Admin update tutorial
 
 ## Admin Credentials
 - Email: fallstommy@gmail.com / Password: admin123
+
+## Known Limitations
+- Bulk email notifications MOCKED: sends user list to admin for manual sending (Resend free tier limitation)
+- Frontend changes require new APK build to be visible to end users
+
+## Backlog
+- Refactor server.py (1600+ lines) into modules (routes, models, services)
