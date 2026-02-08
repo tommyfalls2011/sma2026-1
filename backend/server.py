@@ -992,11 +992,21 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     # Dual polarity: user enters elements PER polarization (e.g., 7 = 7H + 7V = 14 total)
     is_dual = input_data.antenna_orientation == "dual"
+    dual_active = is_dual and input_data.dual_active
     dual_info = None
     effective_n = n  # Elements used for gain lookup = per-polarization count
     
     if is_dual:
         dual_info = calculate_dual_polarity_gain(n, 0)  # n is per-pol, total = n*2
+        if dual_active:
+            dual_info["both_active"] = True
+            # Both beams transmitting: coherent power combining adds ~3dB
+            dual_info["combined_gain_bonus_db"] = 3.0
+            dual_info["description"] = f"{n}H + {n}V = {n*2} total (BOTH ACTIVE)"
+        else:
+            dual_info["both_active"] = False
+            dual_info["combined_gain_bonus_db"] = 0
+
     
     # Calculate boom length from element positions
     positions = sorted([e.position for e in input_data.elements])
