@@ -742,16 +742,18 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
     """
     if feed_type == "gamma":
         # Gamma match: brings SWR very close to 1:1
-        # Effectiveness depends on starting SWR — worse starting = less perfect result
-        if swr <= 2.0:
-            matched_swr = 1.05 + (swr - 1.0) * 0.05  # 1.0→1.05, 2.0→1.10
+        # If SWR is already good, gamma can fine-tune it even lower
+        if swr <= 1.2:
+            matched_swr = 1.02 + (swr - 1.0) * 0.15  # Already good → make it great
+        elif swr <= 2.0:
+            matched_swr = 1.05 + (swr - 1.2) * 0.06  # 1.2→1.05, 2.0→1.10
         elif swr <= 3.0:
             matched_swr = 1.10 + (swr - 2.0) * 0.10  # 2.0→1.10, 3.0→1.20
         else:
             matched_swr = 1.20 + (swr - 3.0) * 0.15  # Degrades with very bad starting SWR
         info = {
             "type": "Gamma Match",
-            "description": "Rod + capacitor alongside driven element transforms impedance to 50Ω",
+            "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9",
             "original_swr": round(swr, 3),
             "matched_swr": round(matched_swr, 3),
             "bandwidth_effect": "Slightly narrower (-5%)",
@@ -761,8 +763,10 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
     
     elif feed_type == "hairpin":
         # Hairpin match: good but slightly less precise than gamma
-        if swr <= 2.0:
-            matched_swr = 1.08 + (swr - 1.0) * 0.07  # 1.0→1.08, 2.0→1.15
+        if swr <= 1.2:
+            matched_swr = 1.03 + (swr - 1.0) * 0.20  # Already good → decent improvement
+        elif swr <= 2.0:
+            matched_swr = 1.07 + (swr - 1.2) * 0.10  # 1.2→1.07, 2.0→1.15
         elif swr <= 3.0:
             matched_swr = 1.15 + (swr - 2.0) * 0.12  # 2.0→1.15, 3.0→1.27
         else:
