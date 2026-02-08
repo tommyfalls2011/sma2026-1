@@ -1740,6 +1740,7 @@ async def optimize_height(request: HeightOptimizeRequest):
         swr = result.swr
         gain = result.gain_dbi
         fb = result.fb_ratio
+        efficiency = result.antenna_efficiency  # 0-100%
         
         # Calculate take-off angle for this height
         height_m = height * 0.3048
@@ -1751,9 +1752,26 @@ async def optimize_height(request: HeightOptimizeRequest):
             takeoff_angle = 70 + (0.25 - height_wavelengths) * 80
         takeoff_angle = round(max(5, min(90, takeoff_angle + ground_angle_adj)), 1)
         
-        # === IMPROVED SCORING (factors in boom, elements, ground) ===
+        # === HEIGHT-ADAPTIVE SCORING ===
+        # At low heights: efficiency and SWR dominate (ground absorption is the problem)
+        # At high heights: take-off angle dominates (efficiency is already good, want low angle)
+        # The crossover is around 0.5λ — the minimum functional height
         
-        # SWR score
+        # Efficiency weight: high at low heights, tapers off above 0.5λ
+        if height_wavelengths < 0.25:
+            eff_weight = 3.0   # Efficiency is critical — ground is eating your signal
+            toa_weight = 0.3   # Angle doesn't matter if you have no signal
+        elif height_wavelengths < 0.5:
+            eff_weight = 2.5 - (height_wavelengths - 0.25) * 4.0  # 2.5 → 1.5
+            toa_weight = 0.5 + (height_wavelengths - 0.25) * 3.0  # 0.5 → 1.25
+        elif height_wavelengths < 1.0:
+            eff_weight = 1.0   # Still matters but not dominant
+            toa_weight = 1.5   # Take-off angle becoming primary concern
+        else:
+            eff_weight = 0.5   # Efficiency is fine up here
+            toa_weight = 2.0   # Low angle is the whole point of going this high
+        
+        # SWR score (always important)
         if swr <= 1.5:
             swr_score = 10 - (swr - 1.0) * 4
         elif swr <= 2.0:
@@ -1761,21 +1779,25 @@ async def optimize_height(request: HeightOptimizeRequest):
         else:
             swr_score = max(0, 4 - (swr - 2.0) * 4)
         
+        # Efficiency score (0-100% → 0-10 points, weighted by height)
+        eff_score = (efficiency / 100.0) * 10 * eff_weight
+        
         # Gain score
         gain_score = gain * 2.5
         
         # F/B ratio score
         fb_score = fb * 0.4
         
-        # Take-off angle score
+        # Take-off angle score (weighted by height)
         if takeoff_angle <= 15:
-            takeoff_score = 25
+            raw_toa_score = 25
         elif takeoff_angle <= 25:
-            takeoff_score = 25 - (takeoff_angle - 15) * 1.0
+            raw_toa_score = 25 - (takeoff_angle - 15) * 1.0
         elif takeoff_angle <= 40:
-            takeoff_score = 15 - (takeoff_angle - 25) * 0.8
+            raw_toa_score = 15 - (takeoff_angle - 25) * 0.8
         else:
-            takeoff_score = max(0, 3 - (takeoff_angle - 40) * 0.1)
+            raw_toa_score = max(0, 3 - (takeoff_angle - 40) * 0.1)
+        takeoff_score = raw_toa_score * toa_weight
         
         # === BOOM LENGTH FACTOR ===
         # Longer booms need higher mounting for proper pattern formation
