@@ -435,22 +435,15 @@ def get_standard_boom_in(n: int, wavelength_in: float) -> float:
 def calculate_ground_gain(height_wavelengths: float, orientation: str = "horizontal") -> float:
     """Calculate ground reflection gain (dBi) based on orientation and height.
     Horizontal: oscillating pattern, peaks at integer λ.
-    Vertical: naturally low angle, less ground gain benefit, less height-dependent."""
+    Vertical: naturally low angle, less ground gain benefit, less height-dependent.
+    45-degree: ~3 dB less than horizontal, receives both polarizations."""
     h = height_wavelengths
     if h <= 0:
         return 0.0
     if orientation == "vertical":
-        # Vertical antennas get less ground gain - radial system matters more than height
-        # Peak ~2-3 dBi with good radials, less oscillation
         v_points = [
-            (0.00, 0.0),
-            (0.10, 1.0),
-            (0.25, 1.8),
-            (0.50, 2.5),
-            (1.00, 2.8),
-            (1.50, 2.5),
-            (2.00, 2.6),
-            (2.75, 2.5),
+            (0.00, 0.0), (0.10, 1.0), (0.25, 1.8), (0.50, 2.5),
+            (1.00, 2.8), (1.50, 2.5), (2.00, 2.6), (2.75, 2.5),
         ]
         if h >= v_points[-1][0]:
             return round(v_points[-1][1], 2)
@@ -461,26 +454,26 @@ def calculate_ground_gain(height_wavelengths: float, orientation: str = "horizon
                 frac = (h - h0) / (h1 - h0) if h1 != h0 else 0
                 return round(g0 + frac * (g1 - g0), 2)
         return round(v_points[-1][1], 2)
-    # Horizontal: calibrated to real-world data
-    points = [
-        (0.00, 0.0),
-        (0.25, 2.8),
-        (0.55, 5.2),
-        (1.00, 6.0),
-        (1.50, 5.5),
-        (2.00, 5.9),
-        (2.50, 5.7),
-        (2.75, 5.8),
+    # Horizontal calibration points
+    h_points = [
+        (0.00, 0.0), (0.25, 2.8), (0.55, 5.2), (1.00, 6.0),
+        (1.50, 5.5), (2.00, 5.9), (2.50, 5.7), (2.75, 5.8),
     ]
-    if h >= points[-1][0]:
-        return round(points[-1][1], 2)
-    for i in range(len(points) - 1):
-        h0, g0 = points[i]
-        h1, g1 = points[i + 1]
-        if h0 <= h <= h1:
-            frac = (h - h0) / (h1 - h0) if h1 != h0 else 0
-            return round(g0 + frac * (g1 - g0), 2)
-    return round(points[-1][1], 2)
+    if h >= h_points[-1][0]:
+        base = h_points[-1][1]
+    else:
+        base = 0.0
+        for i in range(len(h_points) - 1):
+            h0, g0 = h_points[i]
+            h1, g1 = h_points[i + 1]
+            if h0 <= h <= h1:
+                frac = (h - h0) / (h1 - h0) if h1 != h0 else 0
+                base = g0 + frac * (g1 - g0)
+                break
+    # 45-degree slant: ~3 dB less than horizontal
+    if orientation == "slant_45":
+        return round(max(0, base - 3.0), 2)
+    return round(base, 2)
 
 
 class TaperSection(BaseModel):
