@@ -1200,14 +1200,19 @@ export default function AdminScreen() {
               <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Restrict to Emails (optional, comma-separated)</Text>
               <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 12, borderWidth: 1, borderColor: '#444' }} value={discEmails} onChangeText={setDiscEmails} placeholder="Leave empty for all users" placeholderTextColor="#555" autoCapitalize="none" />
 
-              <TouchableOpacity onPress={createDiscount} disabled={creatingDiscount} style={{ backgroundColor: '#E91E63', borderRadius: 8, padding: 12, alignItems: 'center', opacity: creatingDiscount ? 0.6 : 1 }}>
+              <TouchableOpacity onPress={createDiscount} disabled={creatingDiscount} style={{ backgroundColor: editingDiscountId ? '#FF9800' : '#E91E63', borderRadius: 8, padding: 12, alignItems: 'center', opacity: creatingDiscount ? 0.6 : 1 }}>
                 {creatingDiscount ? <ActivityIndicator color="#fff" /> : (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Ionicons name="add-circle" size={16} color="#fff" />
-                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Create Discount</Text>
+                    <Ionicons name={editingDiscountId ? 'checkmark-circle' : 'add-circle'} size={16} color="#fff" />
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>{editingDiscountId ? 'Update Discount' : 'Create Discount'}</Text>
                   </View>
                 )}
               </TouchableOpacity>
+              {editingDiscountId && (
+                <TouchableOpacity onPress={clearDiscountForm} style={{ backgroundColor: '#333', borderRadius: 8, padding: 12, alignItems: 'center', marginTop: 8 }}>
+                  <Text style={{ color: '#aaa', fontWeight: '600', fontSize: 13 }}>Cancel Edit</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             <Text style={styles.sectionTitle}>Active Discounts ({discounts.length})</Text>
