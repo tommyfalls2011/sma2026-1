@@ -1261,7 +1261,6 @@ export default function AntennaCalculator() {
                   <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
                 </TouchableOpacity>
               )}
-              </View>
             </View>
 
             {/* Feed Type / Matching */}
