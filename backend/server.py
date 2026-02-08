@@ -811,8 +811,10 @@ def calculate_dual_polarity_gain(n_total: int, gain_h_single: float) -> dict:
     # due to mutual impedance effects on the shared boom
     coupling_bonus = min(1.0, 0.3 + n_per_pol * 0.08)
     
-    # F/B improvement from dual arrays (parasitic coupling helps rejection)
-    fb_bonus = min(6.0, 1.0 + n_per_pol * 0.5)
+    # F/B improvement from dual arrays — cross-polarization coupling creates
+    # deeper nulls in the rear. Dual-pol Yagis like the Maco Laser 400
+    # achieve 40-44 dB F/B due to this effect
+    fb_bonus = min(12.0, 2.0 + n_per_pol * 1.2)
     
     return {
         "elements_per_polarization": n_per_pol,
