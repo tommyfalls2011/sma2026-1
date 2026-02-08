@@ -2692,6 +2692,26 @@ async def create_discount(data: DiscountCreate, admin: dict = Depends(require_ad
     return {"discount": discount}
 
 
+@api_router.put("/admin/discounts/{discount_id}")
+async def update_discount(discount_id: str, data: DiscountCreate, admin: dict = Depends(require_admin)):
+    existing = await db.discounts.find_one({"id": discount_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Discount not found")
+    update_fields = {
+        "code": data.code.upper(),
+        "discount_type": data.discount_type,
+        "value": data.value,
+        "applies_to": data.applies_to,
+        "tiers": data.tiers if data.tiers else ["bronze", "silver", "gold"],
+        "max_uses": data.max_uses,
+        "expires_at": data.expires_at,
+        "user_emails": [e.lower() for e in data.user_emails],
+    }
+    await db.discounts.update_one({"id": discount_id}, {"$set": update_fields})
+    updated = await db.discounts.find_one({"id": discount_id}, {"_id": 0})
+    return {"discount": updated}
+
+
 @api_router.delete("/admin/discounts/{discount_id}")
 async def delete_discount(discount_id: str, admin: dict = Depends(require_admin)):
     result = await db.discounts.delete_one({"id": discount_id})
