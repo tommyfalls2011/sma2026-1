@@ -2254,6 +2254,7 @@ export default function AntennaCalculator() {
                     {results.gain_breakdown.height_bonus > 0 && <SpecRow label="  Height/Ground" value={`+${results.gain_breakdown.height_bonus} dB`} small />}
                     {results.gain_breakdown.boom_bonus > 0 && <SpecRow label="  Boom Bonus" value={`+${results.gain_breakdown.boom_bonus} dB`} small />}
                     {results.gain_breakdown.ground_type && <SpecRow label="  Ground Type" value={`${results.gain_breakdown.ground_type} (${results.gain_breakdown.ground_scale}x)`} small />}
+                    {results.gain_breakdown.dual_active_bonus > 0 && <SpecRow label="  H+V Active" value={`+${results.gain_breakdown.dual_active_bonus} dB`} accent="#FF9800" small />}
                     <View style={{ borderTopWidth: 1, borderTopColor: '#333', marginTop: 4, paddingTop: 4 }}>
                       <SpecRow label="  Final" value={`${results.gain_breakdown.final_gain || results.gain_dbi} dBi`} accent="#4CAF50" small />
                     </View>
