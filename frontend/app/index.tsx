@@ -945,8 +945,7 @@ export default function AntennaCalculator() {
     csv += '\n';
     
     // --- PERFORMANCE ---
-    csv += 'PERFORMANCE RESULTS\n';
-    csv += '---------------------------------------------\n\n';
+    csv += 'PERFORMANCE RESULTS\n\n';
     
     csv += 'Signal\n';
     csv += `  Gain:, ${results.gain_dbi} dBi\n`;
@@ -1069,8 +1068,7 @@ export default function AntennaCalculator() {
       csv += `${s.frequency}, ${s.swr}, ${s.channel || ''}\n`;
     });
     
-    csv += '\n---------------------------------------------\n';
-    csv += 'END OF REPORT\n';
+    csv += '\nEND OF REPORT\n';
     
     downloadCSV(csv, filename);
   };
