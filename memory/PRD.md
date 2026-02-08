@@ -8,53 +8,56 @@ Full-stack mobile application for antenna analysis. React Native (Expo) frontend
 ### Core
 - Antenna calculation (SWR, gain, F/B, beamwidth, bandwidth, far-field pattern)
 - Auto-tune for optimal element dimensions
-- Optimize height for best mounting height
+- Optimize height for best mounting height (efficiency vs takeoff angle balanced scoring)
 - Multi-band support (11m CB, 10m, 12m, 15m, 17m, 20m, 40m, 6m, 2m, 70cm)
 - Save/Load designs, CSV export
 - Authentication (JWT), subscription tiers (Trial/Bronze/Silver/Gold)
-- Admin panel (pricing, users, designs, feature toggles, tutorial editor)
+- Admin panel (pricing, users, designs, feature toggles, tutorial editor, discounts, notifications)
 
 ### Advanced Physics
 - Gain model using lookup tables and physics-based calculations
-- Polarization models: Horizontal, Vertical, 45-degree Slant (gain, noise, takeoff angle)
+- Polarization models: Horizontal, Vertical, 45-degree Slant, **Dual (H+V split)**
+- **Dual Polarity**: N elements split N/2 H + N/2 V on shared boom, cross-coupling gain bonus, enhanced F/B from cross-pol nulling
+- **Feed Match Types**: Direct Feed / Gamma Match / Hairpin Match — affects SWR and bandwidth
 - Ground effects: oscillating gain with height, ground quality impact (wet/average/dry)
 - Antenna efficiency based on radiation resistance and losses
 - Radials up to 128 for vertical antennas (efficiency + SWR improvement)
+- Height performance categories based on wavelength (Inefficient → Elite → Complex)
+- Takeoff angle descriptions aligned with DX propagation terminology
 
 ### Admin Panel Extensions
-- Discounts tab for promo code management
+- Discounts tab with create/edit/delete/toggle functionality
 - Notify tab for user email notifications (Resend API)
 - QR code generation for app download link
 
 ### UI/UX
 - Real World / Free Space gain mode toggle
+- Orientation selector: Horizontal / Vertical / 45° / Dual
+- Feed Match selector: Direct / Gamma / Hairpin
 - Scrollable admin tabs for mobile
 - SWR limited to 3 decimal places
-- Gain breakdown display (base, height, taper, corona, boom contributions)
+- Gain breakdown display with bonus cards
 - Tutorial/Intro popup (admin-editable)
 
-### Recent Changes (Dec 2025)
-- Renamed "Boom Lock" to "Boom Restraint" (frontend label + backend notes)
-- Removed dead "+0dB gain" from radial bonus display (was always zero, never affected by any setting)
-- Radial section now shows only efficiency bonus percentage
+### Validation Benchmark
+- Maco Laser 400 (12-element dual, 31ft boom, gamma match):
+  - Model: 18.56 dBi gain, 39.2 dB F/B, 1.042:1 SWR
+  - Spec: 17 dB gain, 40-44 dB F/B, ≤1.1:1 SWR
 
 ## Key Endpoints
 - POST /api/calculate - Main antenna calculation
 - POST /api/auto-tune - Auto-tune element dimensions
 - POST /api/optimize-height - Height optimizer
-- GET/POST/DELETE /api/admin/discounts - Discount code management
+- GET/POST/PUT/DELETE /api/admin/discounts - Discount code management
 - POST /api/admin/notify-users - Send update emails
 - GET /api/admin/qr-code - QR code generation
-- GET /api/auth/me - Current user profile
-- GET /api/tutorial - Public tutorial content
-- PUT /api/admin/tutorial - Admin update tutorial
 
 ## Admin Credentials
 - Email: fallstommy@gmail.com / Password: admin123
 
 ## Known Limitations
-- Bulk email notifications MOCKED: sends user list to admin for manual sending (Resend free tier limitation)
-- Frontend changes require new APK build to be visible to end users
+- Bulk email notifications MOCKED: sends user list to admin for manual sending (Resend free tier)
+- Frontend changes require new APK build
 
 ## Backlog
-- Refactor server.py (1600+ lines) into modules (routes, models, services)
+- Refactor server.py (1700+ lines) into modules (routes, models, services)
