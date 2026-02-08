@@ -939,7 +939,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     ground_scale = 1.0  # average soil baseline
     if ground_radials and ground_radials.enabled:
         ground_type = ground_radials.ground_type
-        ground_type_scales = {"wet": 1.05, "average": 1.0, "dry": 0.70}
+        # Wet: +15% ground gain (up to +5dB for verticals), better conductivity
+        # Average: baseline
+        # Dry: -30% ground gain, poor RF ground return
+        ground_type_scales = {"wet": 1.15, "average": 1.0, "dry": 0.70}
         ground_scale = ground_type_scales.get(ground_type, 1.0)
         # Radials improve effective ground quality (diminishing returns past 32)
         # 8 radials = small boost, 32 = solid, 64+ = near-perfect
@@ -949,7 +952,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else:
             radial_boost = 0.20 + (num_r - 32) / 96.0 * 0.10  # diminishing past 32
         radial_boost = min(0.30, radial_boost)
-        ground_scale = min(1.10, ground_scale + radial_boost)
+        ground_scale = min(1.20, ground_scale + radial_boost)
+        
+        # Wet ground causes slight SWR detuning (downward frequency shift)
+        if ground_type == "wet":
+            swr = round(swr * 1.03, 2)  # ~3% SWR increase from detuning
     
     height_bonus = round(base_ground_gain * ground_scale, 2)
     gain_dbi += height_bonus
