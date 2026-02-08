@@ -2299,10 +2299,13 @@ export default function AntennaCalculator() {
               </SpecSection>
 
               {/* Section: Bandwidth */}
-              <SpecSection title="Bandwidth" icon="swap-horizontal-outline" color="#FF9800">
+              <SpecSection title={results.dual_polarity_info ? "Bandwidth (per beam)" : "Bandwidth"} icon="swap-horizontal-outline" color="#FF9800">
                 <SpecRow label="Total Bandwidth" value={`${results.bandwidth} MHz`} accent="#FF9800" />
                 <SpecRow label="Usable @ 1.5:1 SWR" value={`${results.usable_bandwidth_1_5} MHz`} />
                 <SpecRow label="Usable @ 2.0:1 SWR" value={`${results.usable_bandwidth_2_0} MHz`} />
+                {results.dual_polarity_info && (
+                  <Text style={{ fontSize: 9, color: '#777', marginTop: 4, fontStyle: 'italic' }}>Each polarization beam has independent bandwidth. Only one beam is active at a time.</Text>
+                )}
               </SpecSection>
 
               {/* Section: Dual Polarity (conditional) */}
