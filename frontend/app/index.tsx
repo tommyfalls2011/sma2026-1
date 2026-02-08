@@ -2119,6 +2119,252 @@ export default function AntennaCalculator() {
           </View>
         </View>
       </Modal>
+
+      {/* Spec Sheet Modal */}
+      <Modal visible={showSpecSheet} transparent animationType="slide" onRequestClose={() => setShowSpecSheet(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' }}>
+          <View style={{ flex: 1, maxWidth: 500, alignSelf: 'center', width: '100%' }}>
+            {/* Header Bar */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="reader-outline" size={20} color="#00BCD4" />
+                <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Antenna Spec Sheet</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity onPress={() => { exportAllData(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
+                  <Ionicons name="download-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>CSV</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowSpecSheet(false)}>
+                  <Ionicons name="close-circle" size={28} color="#888" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {results && (
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} showsVerticalScrollIndicator>
+              
+              {/* Title Card */}
+              <View style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#00BCD4' }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: '#00BCD4', marginBottom: 4 }}>
+                  {inputs.num_elements}-Element {inputs.antenna_orientation === 'dual' ? 'Dual Polarity' : inputs.antenna_orientation === 'horizontal' ? 'Horizontal' : inputs.antenna_orientation === 'vertical' ? 'Vertical' : '45° Slant'} Yagi
+                </Text>
+                <Text style={{ fontSize: 11, color: '#888' }}>
+                  {results.band_info?.name || inputs.band} | {inputs.frequency_mhz} MHz | {inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed'}
+                </Text>
+                {results.dual_polarity_info && (
+                  <Text style={{ fontSize: 11, color: '#FF9800', marginTop: 4 }}>{results.dual_polarity_info.description}</Text>
+                )}
+              </View>
+
+              {/* Key Performance - Hero Numbers */}
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 22, fontWeight: '800', color: '#4CAF50' }}>{results.gain_dbi}</Text>
+                  <Text style={{ fontSize: 9, color: '#888', marginTop: 2 }}>GAIN (dBi)</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 22, fontWeight: '800', color: results.swr <= 1.5 ? '#4CAF50' : results.swr <= 2.0 ? '#FF9800' : '#f44336' }}>{Number(results.swr).toFixed(3)}</Text>
+                  <Text style={{ fontSize: 9, color: '#888', marginTop: 2 }}>SWR</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 12, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 22, fontWeight: '800', color: '#2196F3' }}>{results.fb_ratio}</Text>
+                  <Text style={{ fontSize: 9, color: '#888', marginTop: 2 }}>F/B (dB)</Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#FF9800' }}>{results.multiplication_factor}x</Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>POWER MULT</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#E91E63' }}>{results.antenna_efficiency}%</Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>EFFICIENCY</Text>
+                </View>
+                <View style={{ flex: 1, backgroundColor: '#1a1a1a', borderRadius: 10, padding: 10, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#9C27B0' }}>{results.takeoff_angle || '-'}°</Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>TAKEOFF</Text>
+                </View>
+              </View>
+
+              {/* Section: Configuration */}
+              <SpecSection title="Configuration" icon="settings-outline" color="#00BCD4">
+                <SpecRow label="Band" value={results.band_info?.name || inputs.band} />
+                <SpecRow label="Center Frequency" value={`${inputs.frequency_mhz} MHz`} />
+                <SpecRow label="Polarization" value={inputs.antenna_orientation === 'dual' ? 'Dual (H+V)' : inputs.antenna_orientation === 'horizontal' ? 'Horizontal' : inputs.antenna_orientation === 'vertical' ? 'Vertical' : '45° Slant'} />
+                <SpecRow label="Feed System" value={inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed'} />
+                <SpecRow label="Elements" value={inputs.antenna_orientation === 'dual' ? `${inputs.num_elements} per pol (${inputs.num_elements * 2} total)` : `${inputs.num_elements}`} />
+                <SpecRow label="Height" value={`${inputs.height_from_ground} ${inputs.height_unit}`} />
+                <SpecRow label="Boom" value={`${inputs.boom_diameter} ${inputs.boom_unit} OD`} />
+                <SpecRow label="Gain Mode" value={inputs.gain_mode === 'real_world' ? 'Real World' : 'Free Space'} />
+              </SpecSection>
+
+              {/* Section: Element Table */}
+              <SpecSection title="Element Dimensions" icon="resize-outline" color="#FF9800">
+                <View style={{ backgroundColor: '#252525', borderRadius: 6, overflow: 'hidden' }}>
+                  <View style={{ flexDirection: 'row', backgroundColor: '#333', paddingVertical: 6, paddingHorizontal: 8 }}>
+                    <Text style={{ flex: 0.5, fontSize: 9, fontWeight: '700', color: '#888' }}>#</Text>
+                    <Text style={{ flex: 1.5, fontSize: 9, fontWeight: '700', color: '#888' }}>Type</Text>
+                    <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'right' }}>Length</Text>
+                    <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'right' }}>Dia.</Text>
+                    <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'right' }}>Pos.</Text>
+                  </View>
+                  {inputs.elements.map((e: any, i: number) => (
+                    <View key={i} style={{ flexDirection: 'row', paddingVertical: 5, paddingHorizontal: 8, borderBottomWidth: i < inputs.elements.length - 1 ? 1 : 0, borderBottomColor: '#333' }}>
+                      <Text style={{ flex: 0.5, fontSize: 11, color: '#666' }}>{i + 1}</Text>
+                      <Text style={{ flex: 1.5, fontSize: 11, color: e.element_type === 'reflector' ? '#f44336' : e.element_type === 'driven' ? '#FF9800' : '#4CAF50', fontWeight: '600', textTransform: 'capitalize' }}>{e.element_type}</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'right' }}>{e.length}"</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#aaa', textAlign: 'right' }}>{e.diameter}"</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#aaa', textAlign: 'right' }}>{e.position}"</Text>
+                    </View>
+                  ))}
+                </View>
+              </SpecSection>
+
+              {/* Section: Signal Performance */}
+              <SpecSection title="Signal" icon="pulse-outline" color="#4CAF50">
+                <SpecRow label="Gain" value={`${results.gain_dbi} dBi`} accent="#4CAF50" />
+                <SpecRow label="Base Free-Space Gain" value={`${results.base_gain_dbi || '-'} dBi`} />
+                <SpecRow label="Multiplication Factor" value={`${results.multiplication_factor}x`} accent="#FF9800" />
+                <SpecRow label="Efficiency" value={`${results.antenna_efficiency}%`} />
+                {results.gain_breakdown && (
+                  <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>GAIN BREAKDOWN</Text>
+                    <SpecRow label="  Element Lookup" value={`${results.gain_breakdown.standard_gain} dBi`} small />
+                    <SpecRow label="  Boom Adj." value={`${results.gain_breakdown.boom_adj >= 0 ? '+' : ''}${results.gain_breakdown.boom_adj} dB`} small />
+                    {results.gain_breakdown.taper_bonus > 0 && <SpecRow label="  Taper Bonus" value={`+${results.gain_breakdown.taper_bonus} dB`} small />}
+                    {results.gain_breakdown.height_bonus > 0 && <SpecRow label="  Height/Ground" value={`+${results.gain_breakdown.height_bonus} dB`} small />}
+                    {results.gain_breakdown.boom_bonus > 0 && <SpecRow label="  Boom Bonus" value={`+${results.gain_breakdown.boom_bonus} dB`} small />}
+                    {results.gain_breakdown.ground_type && <SpecRow label="  Ground Type" value={`${results.gain_breakdown.ground_type} (${results.gain_breakdown.ground_scale}x)`} small />}
+                    <View style={{ borderTopWidth: 1, borderTopColor: '#333', marginTop: 4, paddingTop: 4 }}>
+                      <SpecRow label="  Final" value={`${results.gain_breakdown.final_gain || results.gain_dbi} dBi`} accent="#4CAF50" small />
+                    </View>
+                  </View>
+                )}
+              </SpecSection>
+
+              {/* Section: SWR & Impedance */}
+              <SpecSection title="SWR & Impedance" icon="analytics-outline" color="#f44336">
+                <SpecRow label="SWR" value={`${Number(results.swr).toFixed(3)}:1`} accent={results.swr <= 1.5 ? '#4CAF50' : results.swr <= 2.0 ? '#FF9800' : '#f44336'} />
+                <SpecRow label="SWR Rating" value={results.swr_description} />
+                {results.matching_info && results.feed_type !== 'direct' && (
+                  <View style={{ marginTop: 4, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>{results.matching_info.type?.toUpperCase()}</Text>
+                    <SpecRow label="  Before Match" value={`${results.matching_info.original_swr}:1`} small />
+                    <SpecRow label="  After Match" value={`${results.matching_info.matched_swr}:1`} accent="#4CAF50" small />
+                    <SpecRow label="  Bandwidth Effect" value={results.matching_info.bandwidth_effect} small />
+                  </View>
+                )}
+                <SpecRow label="Impedance Range" value={`${results.impedance_low || '-'} - ${results.impedance_high || '-'} \u03a9`} />
+                <SpecRow label="Return Loss" value={`${results.return_loss_db || '-'} dB`} />
+                <SpecRow label="Mismatch Loss" value={`${results.mismatch_loss_db || '-'} dB`} />
+              </SpecSection>
+
+              {/* Section: Radiation Pattern */}
+              <SpecSection title="Radiation Pattern" icon="radio-outline" color="#2196F3">
+                <SpecRow label="F/B Ratio" value={`${results.fb_ratio} dB`} accent="#2196F3" />
+                <SpecRow label="F/S Ratio" value={`${results.fs_ratio} dB`} />
+                <SpecRow label="Horizontal Beamwidth" value={`${results.beamwidth_h}°`} />
+                <SpecRow label="Vertical Beamwidth" value={`${results.beamwidth_v}°`} />
+              </SpecSection>
+
+              {/* Section: Propagation */}
+              <SpecSection title="Propagation" icon="earth-outline" color="#9C27B0">
+                <SpecRow label="Take-off Angle" value={`${results.takeoff_angle || '-'}°`} accent="#9C27B0" />
+                <SpecRow label="Rating" value={results.takeoff_angle_description || '-'} />
+                <SpecRow label="Height Performance" value={results.height_performance || '-'} />
+                <SpecRow label="Noise Level" value={`${results.noise_level || '-'}`} />
+                <Text style={{ fontSize: 10, color: '#777', marginTop: 2, fontStyle: 'italic' }}>{results.noise_description}</Text>
+              </SpecSection>
+
+              {/* Section: Bandwidth */}
+              <SpecSection title="Bandwidth" icon="swap-horizontal-outline" color="#FF9800">
+                <SpecRow label="Total Bandwidth" value={`${results.bandwidth} MHz`} accent="#FF9800" />
+                <SpecRow label="Usable @ 1.5:1 SWR" value={`${results.usable_bandwidth_1_5} MHz`} />
+                <SpecRow label="Usable @ 2.0:1 SWR" value={`${results.usable_bandwidth_2_0} MHz`} />
+              </SpecSection>
+
+              {/* Section: Dual Polarity (conditional) */}
+              {results.dual_polarity_info && (
+                <SpecSection title="Dual Polarity" icon="swap-vertical-outline" color="#FF9800">
+                  <SpecRow label="Configuration" value={results.dual_polarity_info.description} />
+                  <SpecRow label="Gain per Polarization" value={`${results.dual_polarity_info.gain_per_polarization_dbi} dBi`} />
+                  <SpecRow label="Cross-Coupling Bonus" value={`+${results.dual_polarity_info.coupling_bonus_db} dB`} accent="#4CAF50" />
+                  <SpecRow label="F/B Improvement" value={`+${results.dual_polarity_info.fb_bonus_db} dB`} accent="#2196F3" />
+                </SpecSection>
+              )}
+
+              {/* Section: Stacking (conditional) */}
+              {results.stacking_enabled && results.stacking_info && (
+                <SpecSection title="Stacking" icon="layers-outline" color="#E91E63">
+                  <SpecRow label="Antennas" value={`${results.stacking_info.num_antennas} stacked`} />
+                  <SpecRow label="Spacing" value={`${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}\u03bb)`} />
+                  <SpecRow label="Gain Increase" value={`+${results.stacking_info.gain_increase_db} dB`} accent="#4CAF50" />
+                  <SpecRow label="Stacked Gain" value={`${results.stacked_gain_dbi} dBi`} accent="#E91E63" />
+                </SpecSection>
+              )}
+
+              {/* Section: Taper (conditional) */}
+              {results.taper_info?.enabled && (
+                <SpecSection title="Element Taper" icon="git-branch-outline" color="#00BCD4">
+                  <SpecRow label="Taper Steps" value={`${results.taper_info.num_tapers}`} />
+                  <SpecRow label="Gain Bonus" value={`+${results.taper_info.gain_bonus} dB`} accent="#4CAF50" />
+                  <SpecRow label="Bandwidth Improvement" value={results.taper_info.bandwidth_improvement} />
+                </SpecSection>
+              )}
+
+              {/* Section: Corona Balls (conditional) */}
+              {results.corona_info?.enabled && (
+                <SpecSection title="Corona Ball Tips" icon="ellipse-outline" color="#FF5722">
+                  <SpecRow label="Diameter" value={`${results.corona_info.diameter}"`} />
+                  <SpecRow label="Corona Reduction" value={`${results.corona_info.corona_reduction}%`} accent="#4CAF50" />
+                  <SpecRow label="Bandwidth Effect" value={`x${results.corona_info.bandwidth_effect}`} />
+                </SpecSection>
+              )}
+
+              {/* Section: Power Analysis (conditional) */}
+              {results.forward_power_100w && (
+                <SpecSection title="Power Analysis" icon="flash-outline" color="#f44336">
+                  <View style={{ backgroundColor: '#252525', borderRadius: 6, overflow: 'hidden' }}>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#333', paddingVertical: 6, paddingHorizontal: 8 }}>
+                      <Text style={{ flex: 1.5, fontSize: 9, fontWeight: '700', color: '#888' }}></Text>
+                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'center' }}>@ 100W</Text>
+                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'center' }}>@ 1kW</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#333' }}>
+                      <Text style={{ flex: 1.5, fontSize: 11, color: '#4CAF50' }}>Forward</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.forward_power_100w}W</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.forward_power_1kw}W</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 8 }}>
+                      <Text style={{ flex: 1.5, fontSize: 11, color: '#f44336' }}>Reflected</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.reflected_power_100w}W</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.reflected_power_1kw}W</Text>
+                    </View>
+                  </View>
+                </SpecSection>
+              )}
+
+              {/* Section: Ground Radials (conditional) */}
+              {results.ground_radials_info && (
+                <SpecSection title="Ground Radial System" icon="git-network-outline" color="#8BC34A">
+                  <SpecRow label="Ground Type" value={results.ground_radials_info.ground_type} />
+                  <SpecRow label="Number of Radials" value={`${results.ground_radials_info.num_radials}`} />
+                  <SpecRow label="Radial Length" value={`${results.ground_radials_info.radial_length_ft}' (${results.ground_radials_info.radial_length_in}")`} />
+                  <SpecRow label="Total Wire" value={`${results.ground_radials_info.total_wire_length_ft}'`} />
+                  <SpecRow label="SWR Improvement" value={`${results.ground_radials_info.estimated_improvements?.swr_improvement}`} />
+                  <SpecRow label="Efficiency Bonus" value={`+${results.ground_radials_info.estimated_improvements?.efficiency_bonus_percent}%`} accent="#8BC34A" />
+                </SpecSection>
+              )}
+
+              <Text style={{ fontSize: 9, color: '#444', textAlign: 'center', marginTop: 16 }}>Generated {new Date().toLocaleString()} | {user?.email || 'guest'}</Text>
+            </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
