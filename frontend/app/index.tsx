@@ -879,9 +879,9 @@ export default function AntennaCalculator() {
     const filename = sanitizeFilename(`height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
     let csv = '';
-    csv += '═══════════════════════════════════════════\n';
+    csv += '=============================================\n';
     csv += '  HEIGHT OPTIMIZATION REPORT\n';
-    csv += '═══════════════════════════════════════════\n';
+    csv += '=============================================\n';
     csv += `Date:, ${new Date().toLocaleString()}\n`;
     csv += `User:, ${userEmail}\n`;
     csv += `Band:, ${inputs.band}\n`;
@@ -889,17 +889,17 @@ export default function AntennaCalculator() {
     csv += `Orientation:, ${inputs.antenna_orientation}\n`;
     csv += `Feed Match:, ${inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed'}\n\n`;
     
-    csv += '───────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '  OPTIMAL RESULT\n';
-    csv += '───────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += `Best Height:, ${heightOptResult.optimal_height} ft\n`;
     csv += `SWR at Best:, ${heightOptResult.optimal_swr}:1\n`;
     csv += `Gain at Best:, ${heightOptResult.optimal_gain} dBi\n`;
     csv += `F/B at Best:, ${heightOptResult.optimal_fb_ratio} dB\n\n`;
     
-    csv += '───────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '  ALL HEIGHTS TESTED\n';
-    csv += '───────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += 'Height (ft), SWR, Gain (dBi), F/B (dB), Efficiency (%), TOA (deg), Score, Optimal?\n';
     heightOptResult.heights_tested.forEach((h: any) => {
       const isOptimal = h.height === heightOptResult.optimal_height ? '  <<<' : '';
@@ -945,9 +945,9 @@ export default function AntennaCalculator() {
     csv += `Gain Mode:, ${gainMode === 'realworld' ? 'Real World' : 'Free Space'}\n\n`;
     
     // --- ELEMENT TABLE ---
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '  ELEMENT DIMENSIONS\n';
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '#, Type, Length, Diameter, Position from Reflector\n';
     inputs.elements.forEach((e: any, i: number) => {
       csv += `${i + 1}, ${e.element_type}, ${e.length}", ${e.diameter}", ${e.position}"\n`;
@@ -955,9 +955,9 @@ export default function AntennaCalculator() {
     csv += '\n';
     
     // --- PERFORMANCE ---
-    csv += '═══════════════════════════════════════════════════\n';
+    csv += '=============================================\n';
     csv += '  PERFORMANCE RESULTS\n';
-    csv += '═══════════════════════════════════════════════════\n\n';
+    csv += '=============================================\n\n';
     
     csv += '  Signal\n';
     csv += `  Gain:, ${results.gain_dbi} dBi\n`;
@@ -1011,9 +1011,9 @@ export default function AntennaCalculator() {
     
     // --- DUAL POLARITY ---
     if (results.dual_polarity_info) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  DUAL POLARITY DETAILS\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `  Configuration:, ${results.dual_polarity_info.description}\n`;
       csv += `  Gain per Polarization:, ${results.dual_polarity_info.gain_per_polarization_dbi} dBi\n`;
       csv += `  Cross-Coupling Bonus:, +${results.dual_polarity_info.coupling_bonus_db} dB\n`;
@@ -1022,9 +1022,9 @@ export default function AntennaCalculator() {
     
     // --- STACKING ---
     if (results.stacking_enabled && results.stacking_info) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  STACKING CONFIGURATION\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `  Antennas Stacked:, ${results.stacking_info.num_antennas}\n`;
       csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
       csv += `  Stacking Gain Increase:, +${results.stacking_info.gain_increase_db} dB\n`;
@@ -1034,9 +1034,9 @@ export default function AntennaCalculator() {
     
     // --- TAPER ---
     if (results.taper_info?.enabled) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  ELEMENT TAPER\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `  Taper Steps:, ${results.taper_info.num_tapers}\n`;
       csv += `  Gain Bonus:, +${results.taper_info.gain_bonus} dB\n`;
       csv += `  Bandwidth Improvement:, ${results.taper_info.bandwidth_improvement}\n\n`;
@@ -1044,9 +1044,9 @@ export default function AntennaCalculator() {
     
     // --- CORONA BALLS ---
     if (results.corona_info?.enabled) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  CORONA BALL TIPS\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `  Diameter:, ${results.corona_info.diameter}"\n`;
       csv += `  Corona Reduction:, ${results.corona_info.corona_reduction}%\n`;
       csv += `  Gain Effect:, ${results.corona_info.gain_effect} dB\n`;
@@ -1056,9 +1056,9 @@ export default function AntennaCalculator() {
     
     // --- POWER ---
     if (results.forward_power_100w) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  POWER ANALYSIS\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `, @ 100W, @ 1000W\n`;
       csv += `  Forward Power:, ${results.forward_power_100w}W, ${results.forward_power_1kw}W\n`;
       csv += `  Reflected Power:, ${results.reflected_power_100w}W, ${results.reflected_power_1kw}W\n\n`;
@@ -1066,9 +1066,9 @@ export default function AntennaCalculator() {
     
     // --- GROUND RADIALS ---
     if (results.ground_radials_info) {
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += '  GROUND RADIAL SYSTEM\n';
-      csv += '───────────────────────────────────────────────────\n';
+      csv += '---------------------------------------------\n';
       csv += `  Ground Type:, ${results.ground_radials_info.ground_type}\n`;
       csv += `  Radials:, ${results.ground_radials_info.num_radials}\n`;
       csv += `  Radial Length:, ${results.ground_radials_info.radial_length_ft}' (${results.ground_radials_info.radial_length_in}")\n`;
@@ -1078,9 +1078,9 @@ export default function AntennaCalculator() {
     }
     
     // --- FAR-FIELD PATTERN DATA ---
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '  FAR-FIELD RADIATION PATTERN\n';
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += 'Angle (°), Magnitude (%)\n';
     results.far_field_pattern?.forEach((p: any) => {
       csv += `${p.angle}, ${p.magnitude}\n`;
@@ -1088,17 +1088,17 @@ export default function AntennaCalculator() {
     csv += '\n';
     
     // --- SWR CURVE DATA ---
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += '  SWR ACROSS BAND\n';
-    csv += '───────────────────────────────────────────────────\n';
+    csv += '---------------------------------------------\n';
     csv += 'Frequency (MHz), SWR, Channel\n';
     results.swr_curve?.forEach((s: any) => {
       csv += `${s.frequency}, ${s.swr}, ${s.channel || ''}\n`;
     });
     
-    csv += '\n═══════════════════════════════════════════════════\n';
+    csv += '\n=============================================\n';
     csv += '  END OF REPORT\n';
-    csv += '═══════════════════════════════════════════════════\n';
+    csv += '=============================================\n';
     
     downloadCSV(csv, filename);
   };
