@@ -597,6 +597,9 @@ class AntennaOutput(BaseModel):
     ground_radials_info: Optional[dict] = None
     noise_level: Optional[str] = None
     noise_description: Optional[str] = None
+    feed_type: Optional[str] = None
+    matching_info: Optional[dict] = None
+    dual_polarity_info: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
