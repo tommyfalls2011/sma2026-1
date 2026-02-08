@@ -967,6 +967,9 @@ export default function AntennaCalculator() {
       if (results.gain_breakdown.ground_type) {
         csv += `    Ground Type:, ${results.gain_breakdown.ground_type} (scale: ${results.gain_breakdown.ground_scale || '-'})\n`;
       }
+      if (results.gain_breakdown.dual_active_bonus > 0) {
+        csv += `    H+V Active Bonus:, +${results.gain_breakdown.dual_active_bonus} dB\n`;
+      }
       csv += `    Final Gain:, ${results.gain_breakdown.final_gain || results.gain_dbi} dBi\n`;
     }
     csv += '\n';
