@@ -942,9 +942,25 @@ export default function AntennaCalculator() {
     
     csv += '  Signal\n';
     csv += `  Gain:, ${results.gain_dbi} dBi\n`;
+    csv += `  Base Free-Space Gain:, ${results.base_gain_dbi || '-'} dBi\n`;
     csv += `  Gain Description:, ${results.gain_description}\n`;
     csv += `  Multiplication Factor:, ${results.multiplication_factor}x\n`;
-    csv += `  Efficiency:, ${results.antenna_efficiency}%\n\n`;
+    csv += `  Efficiency:, ${results.antenna_efficiency}%\n`;
+    if (results.gain_breakdown) {
+      csv += '\n  Gain Breakdown\n';
+      csv += `    Element Gain (lookup):, ${results.gain_breakdown.standard_gain || '-'} dBi\n`;
+      csv += `    Boom Adjustment:, ${results.gain_breakdown.boom_adj >= 0 ? '+' : ''}${results.gain_breakdown.boom_adj || 0} dB\n`;
+      csv += `    Reflector Adjustment:, ${results.gain_breakdown.reflector_adj >= 0 ? '+' : ''}${results.gain_breakdown.reflector_adj || 0} dB\n`;
+      csv += `    Taper Bonus:, +${results.gain_breakdown.taper_bonus || 0} dB\n`;
+      csv += `    Corona Adjustment:, ${results.gain_breakdown.corona_adj || 0} dB\n`;
+      csv += `    Height/Ground Bonus:, +${results.gain_breakdown.height_bonus || 0} dB\n`;
+      csv += `    Boom Length Bonus:, +${results.gain_breakdown.boom_bonus || 0} dB\n`;
+      if (results.gain_breakdown.ground_type) {
+        csv += `    Ground Type:, ${results.gain_breakdown.ground_type} (scale: ${results.gain_breakdown.ground_scale || '-'})\n`;
+      }
+      csv += `    Final Gain:, ${results.gain_breakdown.final_gain || results.gain_dbi} dBi\n`;
+    }
+    csv += '\n';
     
     csv += '  SWR & Impedance\n';
     csv += `  SWR:, ${Number(results.swr).toFixed(3)}:1, ${results.swr_description}\n`;
