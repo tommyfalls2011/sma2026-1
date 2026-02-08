@@ -123,6 +123,7 @@ export default function AdminScreen() {
   const [discMaxUses, setDiscMaxUses] = useState('');
   const [discEmails, setDiscEmails] = useState('');
   const [creatingDiscount, setCreatingDiscount] = useState(false);
+  const [editingDiscountId, setEditingDiscountId] = useState<string | null>(null);
 
   // Notify state
   const [expoUrl, setExpoUrl] = useState('');
