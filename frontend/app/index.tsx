@@ -925,16 +925,14 @@ export default function AntennaCalculator() {
     const feedLabel = inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed';
     
     let csv = '';
-    csv += '═══════════════════════════════════════════════════\n';
-    csv += '  ANTENNA DESIGN REPORT\n';
-    csv += '═══════════════════════════════════════════════════\n';
+    csv += 'ANTENNA DESIGN REPORT\n';
+    csv += '---------------------------------------------\n';
     csv += `Date:, ${new Date().toLocaleString()}\n`;
     csv += `User:, ${userEmail}\n\n`;
     
     // --- CONFIGURATION ---
-    csv += '───────────────────────────────────────────────────\n';
-    csv += '  CONFIGURATION\n';
-    csv += '───────────────────────────────────────────────────\n';
+    csv += 'CONFIGURATION\n';
+    csv += '---------------------------------------------\n';
     csv += `Band:, ${inputs.band}\n`;
     csv += `Center Frequency:, ${inputs.frequency_mhz} MHz\n`;
     csv += `Antenna Type:, ${isDual ? 'Dual Polarity Yagi' : 'Yagi-Uda'}\n`;
