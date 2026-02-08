@@ -1131,7 +1131,7 @@ export default function AntennaCalculator() {
             </View>
             {isDualOddWarning && (
               <Text style={{ fontSize: 10, color: '#FF9800', textAlign: 'center', marginTop: 4 }}>
-                <Ionicons name="warning-outline" size={10} color="#FF9800" /> Dual polarity requires even element count ({inputs.num_elements}H + {inputs.num_elements}V = {inputs.num_elements * 2} total)
+                <Ionicons name="warning-outline" size={10} color="#FF9800" /> Dual polarity works best with even element count for equal H/V split
               </Text>
             )}
           </View>
