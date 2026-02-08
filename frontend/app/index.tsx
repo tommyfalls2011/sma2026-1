@@ -1249,6 +1249,18 @@ export default function AntennaCalculator() {
                   <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'dual' && styles.orientationBtnTextActive, inputs.antenna_orientation === 'dual' && { color: '#FF9800' }]}>Dual</Text>
                 </TouchableOpacity>
               </View>
+              {inputs.antenna_orientation === 'dual' && (
+                <TouchableOpacity 
+                  onPress={() => setInputs(p => ({ ...p, dual_active: !p.dual_active }))}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: inputs.dual_active ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_active ? '#FF9800' : '#333' }}
+                >
+                  <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_active ? '#FF9800' : '#555', backgroundColor: inputs.dual_active ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
+                    {inputs.dual_active && <Ionicons name="checkmark" size={14} color="#000" />}
+                  </View>
+                  <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
+                </TouchableOpacity>
+              )}
+              </View>
             </View>
 
             {/* Feed Type / Matching */}
