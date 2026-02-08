@@ -1568,6 +1568,17 @@ export default function AntennaCalculator() {
                 </View>
               </View>
               
+              {/* Noise Level Indicator */}
+              {results.noise_level && (
+                <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: results.noise_level === 'Low' ? '#4CAF50' : '#FF9800' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Ionicons name={results.noise_level === 'Low' ? 'volume-low' : 'volume-high'} size={14} color={results.noise_level === 'Low' ? '#4CAF50' : '#FF9800'} />
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: results.noise_level === 'Low' ? '#4CAF50' : '#FF9800' }}>Noise Floor: {results.noise_level}</Text>
+                  </View>
+                  <Text style={{ fontSize: 10, color: '#888' }}>{results.noise_description}</Text>
+                </View>
+              )}
+              
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
               
               {/* Side View / Elevation Pattern */}
