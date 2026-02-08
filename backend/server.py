@@ -986,6 +986,15 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Free-space gain is keyed by element count at standard boom lengths.
     # If actual boom differs from standard, adjust by ~2.5 dB per boom doubling.
     
+    # Dual polarity: each polarization array uses n/2 elements
+    is_dual = input_data.antenna_orientation == "dual"
+    dual_info = None
+    effective_n = n  # Elements used for gain lookup
+    
+    if is_dual:
+        dual_info = calculate_dual_polarity_gain(n, 0)  # Will fill gain later
+        effective_n = dual_info["elements_per_polarization"]
+    
     # Calculate boom length from element positions
     positions = sorted([e.position for e in input_data.elements])
     boom_length_in = max(positions) - min(positions) if len(positions) > 1 else 48
@@ -993,8 +1002,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     # Free-space gain for this element count
     wavelength_in = wavelength / 0.0254  # wavelength in inches
-    standard_gain = get_free_space_gain(n)
-    standard_boom_in = get_standard_boom_in(n, wavelength_in)
+    standard_gain = get_free_space_gain(effective_n)
+    standard_boom_in = get_standard_boom_in(effective_n, wavelength_in)
     
     # Adjust gain if actual boom differs from standard (2.5 dB per doubling)
     boom_adj = 0.0
@@ -1002,6 +1011,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         boom_ratio = boom_length_in / standard_boom_in
         if boom_ratio > 0 and boom_ratio != 1.0:
             boom_adj = round(2.5 * math.log2(boom_ratio), 2)
+    
+    # For dual polarity, the boom is shared so the boom is actually long
+    # relative to n/2 elements — this gives a natural boom bonus
+    if is_dual and dual_info:
+        # Add cross-coupling bonus from shared boom
+        boom_adj += dual_info["coupling_bonus_db"]
     
     gain_dbi = round(standard_gain + boom_adj, 2)
     
