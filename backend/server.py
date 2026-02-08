@@ -432,14 +432,36 @@ def get_standard_boom_in(n: int, wavelength_in: float) -> float:
     return base * scale
 
 
-def calculate_ground_gain(height_wavelengths: float) -> float:
-    """Calculate ground reflection gain (dBi) for horizontal Yagi over average soil.
-    Based on real-world measurements at 27 MHz.
-    Shows oscillating pattern: peaks at integer λ, dips at half-integer λ."""
+def calculate_ground_gain(height_wavelengths: float, orientation: str = "horizontal") -> float:
+    """Calculate ground reflection gain (dBi) based on orientation and height.
+    Horizontal: oscillating pattern, peaks at integer λ.
+    Vertical: naturally low angle, less ground gain benefit, less height-dependent."""
     h = height_wavelengths
     if h <= 0:
         return 0.0
-    # Calibration points from real-world data (height_λ, ground_gain_dB)
+    if orientation == "vertical":
+        # Vertical antennas get less ground gain - radial system matters more than height
+        # Peak ~2-3 dBi with good radials, less oscillation
+        v_points = [
+            (0.00, 0.0),
+            (0.10, 1.0),
+            (0.25, 1.8),
+            (0.50, 2.5),
+            (1.00, 2.8),
+            (1.50, 2.5),
+            (2.00, 2.6),
+            (2.75, 2.5),
+        ]
+        if h >= v_points[-1][0]:
+            return round(v_points[-1][1], 2)
+        for i in range(len(v_points) - 1):
+            h0, g0 = v_points[i]
+            h1, g1 = v_points[i + 1]
+            if h0 <= h <= h1:
+                frac = (h - h0) / (h1 - h0) if h1 != h0 else 0
+                return round(g0 + frac * (g1 - g0), 2)
+        return round(v_points[-1][1], 2)
+    # Horizontal: calibrated to real-world data
     points = [
         (0.00, 0.0),
         (0.25, 2.8),
@@ -450,10 +472,8 @@ def calculate_ground_gain(height_wavelengths: float) -> float:
         (2.50, 5.7),
         (2.75, 5.8),
     ]
-    # Clamp to range
     if h >= points[-1][0]:
         return round(points[-1][1], 2)
-    # Linear interpolation between calibration points
     for i in range(len(points) - 1):
         h0, g0 = points[i]
         h1, g1 = points[i + 1]
