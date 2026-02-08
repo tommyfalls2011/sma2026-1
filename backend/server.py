@@ -952,7 +952,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else:
             radial_boost = 0.20 + (num_r - 32) / 96.0 * 0.10  # diminishing past 32
         radial_boost = min(0.30, radial_boost)
-        ground_scale = min(1.20, ground_scale + radial_boost)
+        ground_scale = min(1.45, ground_scale + radial_boost)
         
         # Wet ground causes slight SWR detuning (handled after SWR calculation below)
     
