@@ -1136,6 +1136,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     # Base take-off angle calculation
     antenna_orient = input_data.antenna_orientation
+    print(f"DEBUG TOA: orient={antenna_orient}, h_wl={height_wavelengths:.4f}, height_m={height_m:.2f}, wavelength={wavelength:.2f}")
     if antenna_orient == "vertical":
         # Vertical antennas have naturally low take-off angle regardless of height
         # Gets lower with better radial system
