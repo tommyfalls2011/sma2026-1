@@ -322,7 +322,7 @@ export default function AntennaCalculator() {
     ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
     use_reflector: true,
     antenna_orientation: 'horizontal',  // horizontal (flat), vertical, angle45, or dual
-    feed_type: 'direct',  // direct, gamma, hairpin
+    feed_type: 'gamma',  // direct, gamma, hairpin
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
