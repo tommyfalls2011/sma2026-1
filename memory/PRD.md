@@ -19,6 +19,14 @@ Full-stack mobile application for antenna analysis. React Native (Expo) frontend
 2. **Enhanced Height Optimizer** - Factors boom length, element count, ground radials, ground type for varied optimal heights
 3. **Tutorial/Intro Popup** - Scrollable popup on first login, toggle to show/hide, admin-editable content
 
+### Completed in Previous Sessions
+- Advanced physics model (lookup tables, polarization: H/V/Slant, ground effects, radials up to 128)
+- Admin panel: Discounts tab, Notify tab (Resend email integration)
+- Real World / Free Space gain mode toggle
+- Bug fixes: settings persistence, JWT logout, boom lock logic, deployment
+- UI: scrollable admin tabs, SWR 3-decimal rounding
+- Renamed "Boom Lock" → "Boom Restraint" (frontend label + backend notes, Dec 2025)
+
 ## Key Endpoints
 - POST /api/calculate - Main antenna calculation (now includes base_gain_dbi, gain_breakdown)
 - POST /api/optimize-height - Height optimizer (now accepts ground_radials, factors boom/elements)
