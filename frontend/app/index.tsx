@@ -1841,21 +1841,21 @@ export default function AntennaCalculator() {
                   <View style={styles.perfItem}>
                     <Text style={styles.perfLabel}>Gain ({gainMode === 'freespace' ? 'FS' : 'RW'})</Text>
                     <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(((gainMode === 'freespace' && results.gain_breakdown ? results.gain_dbi - (results.gain_breakdown.height_bonus || 0) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)) / 100) * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
+                      <View style={[styles.perfBarFill, { width: `${Math.min(((gainMode === 'freespace' && results.gain_breakdown ? results.gain_dbi - (results.gain_breakdown.height_bonus || 0) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)) / 60) * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
                     </View>
                     <Text style={styles.perfValue}>{gainMode === 'freespace' && results.gain_breakdown ? (results.gain_dbi - (results.gain_breakdown.height_bonus || 0)).toFixed(1) : (results.stacking_enabled ? results.stacked_gain_dbi : results.gain_dbi)} dBi</Text>
                   </View>
                   <View style={styles.perfItem}>
                     <Text style={styles.perfLabel}>F/B Ratio</Text>
                     <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fb_ratio / 100 * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
+                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fb_ratio / 60 * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
                     </View>
                     <Text style={styles.perfValue}>{results.fb_ratio} dB</Text>
                   </View>
                   <View style={styles.perfItem}>
                     <Text style={styles.perfLabel}>F/S Ratio</Text>
                     <View style={styles.perfBar}>
-                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fs_ratio / 100 * 100, 100)}%`, backgroundColor: '#9C27B0' }]} />
+                      <View style={[styles.perfBarFill, { width: `${Math.min(results.fs_ratio / 60 * 100, 100)}%`, backgroundColor: '#9C27B0' }]} />
                     </View>
                     <Text style={styles.perfValue}>{results.fs_ratio} dB</Text>
                   </View>
