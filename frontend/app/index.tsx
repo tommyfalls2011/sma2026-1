@@ -907,7 +907,7 @@ export default function AntennaCalculator() {
     // Results
     csv += 'PERFORMANCE RESULTS\n';
     csv += `Gain,${results.gain_dbi} dBi\n`;
-    csv += `SWR,${results.swr}:1\n`;
+    csv += `SWR,${Number(results.swr).toFixed(3)}:1\n`;
     csv += `F/B Ratio,${results.fb_ratio} dB\n`;
     csv += `F/S Ratio,${results.fs_ratio} dB\n`;
     csv += `Horizontal Beamwidth,${results.beamwidth_h}°\n`;
