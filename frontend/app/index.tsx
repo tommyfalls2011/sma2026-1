@@ -857,22 +857,34 @@ export default function AntennaCalculator() {
     const userEmail = user?.email || 'guest';
     const filename = sanitizeFilename(`height_optimization_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
-    // Create CSV content
-    let csv = 'Height (ft),SWR,Gain (dBi),F/B Ratio (dB),Score,Is Optimal\n';
-    heightOptResult.heights_tested.forEach((h: any) => {
-      const isOptimal = h.height === heightOptResult.optimal_height ? 'YES' : '';
-      csv += `${h.height},${h.swr},${h.gain},${h.fb_ratio},${h.score},${isOptimal}\n`;
-    });
+    let csv = '';
+    csv += '═══════════════════════════════════════════\n';
+    csv += '  HEIGHT OPTIMIZATION REPORT\n';
+    csv += '═══════════════════════════════════════════\n';
+    csv += `Date:, ${new Date().toLocaleString()}\n`;
+    csv += `User:, ${userEmail}\n`;
+    csv += `Band:, ${inputs.band}\n`;
+    csv += `Elements:, ${inputs.num_elements}${inputs.antenna_orientation === 'dual' ? ` (${inputs.num_elements}H + ${inputs.num_elements}V Dual)` : ''}\n`;
+    csv += `Orientation:, ${inputs.antenna_orientation}\n`;
+    csv += `Feed Match:, ${inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed'}\n\n`;
     
-    // Add summary
-    csv += '\nSUMMARY\n';
-    csv += `Optimal Height,${heightOptResult.optimal_height} ft\n`;
-    csv += `Best SWR,${heightOptResult.optimal_swr}\n`;
-    csv += `Best Gain,${heightOptResult.optimal_gain} dBi\n`;
-    csv += `Best F/B,${heightOptResult.optimal_fb_ratio} dB\n`;
-    csv += `Total Heights Tested,${heightOptResult.heights_tested.length}\n`;
-    csv += `Export Date,${new Date().toLocaleString()}\n`;
-    csv += `User,${userEmail}\n`;
+    csv += '───────────────────────────────────────────\n';
+    csv += '  OPTIMAL RESULT\n';
+    csv += '───────────────────────────────────────────\n';
+    csv += `Best Height:, ${heightOptResult.optimal_height} ft\n`;
+    csv += `SWR at Best:, ${heightOptResult.optimal_swr}:1\n`;
+    csv += `Gain at Best:, ${heightOptResult.optimal_gain} dBi\n`;
+    csv += `F/B at Best:, ${heightOptResult.optimal_fb_ratio} dB\n\n`;
+    
+    csv += '───────────────────────────────────────────\n';
+    csv += '  ALL HEIGHTS TESTED\n';
+    csv += '───────────────────────────────────────────\n';
+    csv += 'Height (ft), SWR, Gain (dBi), F/B (dB), Efficiency (%), TOA (deg), Score, Optimal?\n';
+    heightOptResult.heights_tested.forEach((h: any) => {
+      const isOptimal = h.height === heightOptResult.optimal_height ? '  <<<' : '';
+      csv += `${h.height}, ${h.swr}, ${h.gain}, ${h.fb_ratio}, ${h.efficiency || '-'}, ${h.takeoff_angle || '-'}, ${h.score},${isOptimal}\n`;
+    });
+    csv += `\nTotal Heights Tested:, ${heightOptResult.heights_tested.length}\n`;
     
     downloadCSV(csv, filename);
   };
@@ -888,55 +900,136 @@ export default function AntennaCalculator() {
     const userEmail = user?.email || 'guest';
     const filename = sanitizeFilename(`antenna_results_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.csv';
     
-    // Create CSV content
-    let csv = 'ANTENNA CALCULATION RESULTS\n';
-    csv += `Export Date,${new Date().toLocaleString()}\n`;
-    csv += `User,${userEmail}\n\n`;
+    const isDual = inputs.antenna_orientation === 'dual';
+    const feedLabel = inputs.feed_type === 'gamma' ? 'Gamma Match' : inputs.feed_type === 'hairpin' ? 'Hairpin Match' : 'Direct Feed';
     
-    // Input parameters
-    csv += 'INPUT PARAMETERS\n';
-    csv += `Band,${inputs.band}\n`;
-    csv += `Frequency,${inputs.frequency_mhz} MHz\n`;
-    csv += `Height,${inputs.height_from_ground} ${inputs.height_unit}\n`;
-    csv += `Boom Diameter,${inputs.boom_diameter} ${inputs.boom_unit}\n`;
-    csv += `Number of Elements,${inputs.num_elements}\n`;
-    csv += `Uses Reflector,${inputs.use_reflector ? 'Yes' : 'No'}\n\n`;
+    let csv = '';
+    csv += '═══════════════════════════════════════════════════\n';
+    csv += '  ANTENNA DESIGN REPORT\n';
+    csv += '═══════════════════════════════════════════════════\n';
+    csv += `Date:, ${new Date().toLocaleString()}\n`;
+    csv += `User:, ${userEmail}\n\n`;
     
-    // Element details
-    csv += 'ELEMENT DIMENSIONS\n';
-    csv += 'Type,Length,Diameter,Position\n';
-    inputs.elements.forEach(e => {
-      csv += `${e.element_type},${e.length},${e.diameter},${e.position}\n`;
+    // --- CONFIGURATION ---
+    csv += '───────────────────────────────────────────────────\n';
+    csv += '  CONFIGURATION\n';
+    csv += '───────────────────────────────────────────────────\n';
+    csv += `Band:, ${inputs.band}\n`;
+    csv += `Center Frequency:, ${inputs.frequency_mhz} MHz\n`;
+    csv += `Antenna Type:, ${isDual ? 'Dual Polarity Yagi' : 'Yagi-Uda'}\n`;
+    csv += `Polarization:, ${inputs.antenna_orientation === 'horizontal' ? 'Horizontal' : inputs.antenna_orientation === 'vertical' ? 'Vertical' : inputs.antenna_orientation === 'angle45' ? '45° Slant' : 'Dual (H+V)'}\n`;
+    csv += `Feed System:, ${feedLabel}\n`;
+    csv += `Elements:, ${inputs.num_elements}${isDual ? ` per polarization (${inputs.num_elements}H + ${inputs.num_elements}V = ${inputs.num_elements * 2} total)` : ''}\n`;
+    csv += `Reflector:, ${inputs.use_reflector ? 'Yes' : 'No'}\n`;
+    csv += `Height:, ${inputs.height_from_ground} ${inputs.height_unit}\n`;
+    csv += `Boom:, ${inputs.boom_diameter} ${inputs.boom_unit} diameter\n`;
+    csv += `Gain Mode:, ${inputs.gain_mode === 'real_world' ? 'Real World' : 'Free Space'}\n\n`;
+    
+    // --- ELEMENT TABLE ---
+    csv += '───────────────────────────────────────────────────\n';
+    csv += '  ELEMENT DIMENSIONS\n';
+    csv += '───────────────────────────────────────────────────\n';
+    csv += '#, Type, Length, Diameter, Position from Reflector\n';
+    inputs.elements.forEach((e: any, i: number) => {
+      csv += `${i + 1}, ${e.element_type}, ${e.length}", ${e.diameter}", ${e.position}"\n`;
     });
     csv += '\n';
     
-    // Results
-    csv += 'PERFORMANCE RESULTS\n';
-    csv += `Gain,${results.gain_dbi} dBi\n`;
-    csv += `SWR,${Number(results.swr).toFixed(3)}:1\n`;
-    csv += `F/B Ratio,${results.fb_ratio} dB\n`;
-    csv += `F/S Ratio,${results.fs_ratio} dB\n`;
-    csv += `Horizontal Beamwidth,${results.beamwidth_h}°\n`;
-    csv += `Vertical Beamwidth,${results.beamwidth_v}°\n`;
-    csv += `Bandwidth @1.5 SWR,${results.usable_bandwidth_1_5} MHz\n`;
-    csv += `Bandwidth @2.0 SWR,${results.usable_bandwidth_2_0} MHz\n`;
-    csv += `Efficiency,${results.antenna_efficiency}%\n`;
-    csv += `Multiplication Factor,${results.multiplication_factor}x\n\n`;
+    // --- PERFORMANCE ---
+    csv += '═══════════════════════════════════════════════════\n';
+    csv += '  PERFORMANCE RESULTS\n';
+    csv += '═══════════════════════════════════════════════════\n\n';
     
-    // Far-field pattern
-    csv += 'FAR-FIELD PATTERN\n';
-    csv += 'Angle (degrees),Magnitude (%)\n';
+    csv += '  Signal\n';
+    csv += `  Gain:, ${results.gain_dbi} dBi\n`;
+    csv += `  Gain Description:, ${results.gain_description}\n`;
+    csv += `  Multiplication Factor:, ${results.multiplication_factor}x\n`;
+    csv += `  Efficiency:, ${results.antenna_efficiency}%\n\n`;
+    
+    csv += '  SWR & Impedance\n';
+    csv += `  SWR:, ${Number(results.swr).toFixed(3)}:1, ${results.swr_description}\n`;
+    if (results.matching_info && results.feed_type !== 'direct') {
+      csv += `  Feed Match:, ${results.matching_info.type}\n`;
+      csv += `  Original SWR:, ${results.matching_info.original_swr}:1\n`;
+      csv += `  Matched SWR:, ${results.matching_info.matched_swr}:1\n`;
+    }
+    csv += `  Impedance Range:, ${results.impedance_low || '-'} - ${results.impedance_high || '-'} Ohms\n`;
+    csv += `  Return Loss:, ${results.return_loss_db || '-'} dB\n`;
+    csv += `  Mismatch Loss:, ${results.mismatch_loss_db || '-'} dB\n\n`;
+    
+    csv += '  Radiation Pattern\n';
+    csv += `  F/B Ratio:, ${results.fb_ratio} dB\n`;
+    csv += `  F/S Ratio:, ${results.fs_ratio} dB\n`;
+    csv += `  Horizontal Beamwidth:, ${results.beamwidth_h}°\n`;
+    csv += `  Vertical Beamwidth:, ${results.beamwidth_v}°\n\n`;
+    
+    csv += '  Propagation\n';
+    csv += `  Take-off Angle:, ${results.takeoff_angle || '-'}°\n`;
+    csv += `  Angle Rating:, ${results.takeoff_angle_description || '-'}\n`;
+    csv += `  Height Performance:, ${results.height_performance || '-'}\n`;
+    csv += `  Noise Level:, ${results.noise_level || '-'} — ${results.noise_description || ''}\n\n`;
+    
+    csv += '  Bandwidth\n';
+    csv += `  Total Bandwidth:, ${results.bandwidth} MHz\n`;
+    csv += `  Usable @ 1.5:1 SWR:, ${results.usable_bandwidth_1_5} MHz\n`;
+    csv += `  Usable @ 2.0:1 SWR:, ${results.usable_bandwidth_2_0} MHz\n\n`;
+    
+    // --- DUAL POLARITY ---
+    if (results.dual_polarity_info) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  DUAL POLARITY DETAILS\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `  Configuration:, ${results.dual_polarity_info.description}\n`;
+      csv += `  Gain per Polarization:, ${results.dual_polarity_info.gain_per_polarization_dbi} dBi\n`;
+      csv += `  Cross-Coupling Bonus:, +${results.dual_polarity_info.coupling_bonus_db} dB\n`;
+      csv += `  F/B Improvement:, +${results.dual_polarity_info.fb_bonus_db} dB\n\n`;
+    }
+    
+    // --- POWER ---
+    if (results.forward_power_100w) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  POWER ANALYSIS\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `, @ 100W, @ 1000W\n`;
+      csv += `  Forward Power:, ${results.forward_power_100w}W, ${results.forward_power_1kw}W\n`;
+      csv += `  Reflected Power:, ${results.reflected_power_100w}W, ${results.reflected_power_1kw}W\n\n`;
+    }
+    
+    // --- GROUND RADIALS ---
+    if (results.ground_radials_info) {
+      csv += '───────────────────────────────────────────────────\n';
+      csv += '  GROUND RADIAL SYSTEM\n';
+      csv += '───────────────────────────────────────────────────\n';
+      csv += `  Ground Type:, ${results.ground_radials_info.ground_type}\n`;
+      csv += `  Radials:, ${results.ground_radials_info.num_radials}\n`;
+      csv += `  Radial Length:, ${results.ground_radials_info.radial_length_ft}' (${results.ground_radials_info.radial_length_in}")\n`;
+      csv += `  Total Wire:, ${results.ground_radials_info.total_wire_length_ft}'\n`;
+      csv += `  SWR Improvement:, ${results.ground_radials_info.estimated_improvements?.swr_improvement}\n`;
+      csv += `  Efficiency Bonus:, +${results.ground_radials_info.estimated_improvements?.efficiency_bonus_percent}%\n\n`;
+    }
+    
+    // --- FAR-FIELD PATTERN DATA ---
+    csv += '───────────────────────────────────────────────────\n';
+    csv += '  FAR-FIELD RADIATION PATTERN\n';
+    csv += '───────────────────────────────────────────────────\n';
+    csv += 'Angle (°), Magnitude (%)\n';
     results.far_field_pattern?.forEach((p: any) => {
-      csv += `${p.angle},${p.magnitude}\n`;
+      csv += `${p.angle}, ${p.magnitude}\n`;
     });
     csv += '\n';
     
-    // SWR curve
-    csv += 'SWR CURVE\n';
-    csv += 'Frequency (MHz),SWR,Channel\n';
+    // --- SWR CURVE DATA ---
+    csv += '───────────────────────────────────────────────────\n';
+    csv += '  SWR ACROSS BAND\n';
+    csv += '───────────────────────────────────────────────────\n';
+    csv += 'Frequency (MHz), SWR, Channel\n';
     results.swr_curve?.forEach((s: any) => {
-      csv += `${s.frequency},${s.swr},${s.channel}\n`;
+      csv += `${s.frequency}, ${s.swr}, ${s.channel || ''}\n`;
     });
+    
+    csv += '\n═══════════════════════════════════════════════════\n';
+    csv += '  END OF REPORT\n';
+    csv += '═══════════════════════════════════════════════════\n';
     
     downloadCSV(csv, filename);
   };
