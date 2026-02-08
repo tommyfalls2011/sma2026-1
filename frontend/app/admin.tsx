@@ -1159,8 +1159,8 @@ export default function AdminScreen() {
         {/* === DISCOUNTS TAB === */}
         {activeTab === 'discounts' && (
           <>
-            <Text style={styles.sectionTitle}>Create Discount Code</Text>
-            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#333' }}>
+            <Text style={styles.sectionTitle}>{editingDiscountId ? 'Edit Discount Code' : 'Create Discount Code'}</Text>
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: editingDiscountId ? '#FF9800' : '#333' }}>
               <Text style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>Code</Text>
               <TextInput style={{ backgroundColor: '#252525', borderRadius: 6, color: '#fff', padding: 10, fontSize: 14, marginBottom: 8, borderWidth: 1, borderColor: '#444' }} value={discCode} onChangeText={(t) => setDiscCode(t.toUpperCase())} placeholder="e.g. TEST50" placeholderTextColor="#555" autoCapitalize="characters" />
 
