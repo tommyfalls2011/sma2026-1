@@ -1094,6 +1094,38 @@ export default function AntennaCalculator() {
                   <Text style={styles.orientationIcon}>/</Text>
                   <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'angle45' && styles.orientationBtnTextActive]}>45°</Text>
                 </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.antenna_orientation === 'dual' && styles.orientationBtnActive, inputs.antenna_orientation === 'dual' && { borderColor: '#FF9800' }]} 
+                  onPress={() => setInputs(p => ({ ...p, antenna_orientation: 'dual' }))}
+                >
+                  <Text style={styles.orientationIcon}>+</Text>
+                  <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'dual' && styles.orientationBtnTextActive, inputs.antenna_orientation === 'dual' && { color: '#FF9800' }]}>Dual</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Feed Type / Matching */}
+            <View style={styles.orientationSection}>
+              <Text style={styles.orientationLabel}><Ionicons name="git-merge-outline" size={12} color="#888" /> Feed Match</Text>
+              <View style={styles.orientationToggle}>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.feed_type === 'direct' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, feed_type: 'direct' }))}
+                >
+                  <Text style={[styles.orientationBtnText, inputs.feed_type === 'direct' && styles.orientationBtnTextActive]}>Direct</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.feed_type === 'gamma' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, feed_type: 'gamma' }))}
+                >
+                  <Text style={[styles.orientationBtnText, inputs.feed_type === 'gamma' && styles.orientationBtnTextActive]}>Gamma</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.orientationBtn, inputs.feed_type === 'hairpin' && styles.orientationBtnActive]} 
+                  onPress={() => setInputs(p => ({ ...p, feed_type: 'hairpin' }))}
+                >
+                  <Text style={[styles.orientationBtnText, inputs.feed_type === 'hairpin' && styles.orientationBtnTextActive]}>Hairpin</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
