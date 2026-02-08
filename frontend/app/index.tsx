@@ -1013,7 +1013,21 @@ export default function AntennaCalculator() {
       csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
       csv += `  Stacking Gain Increase:, +${results.stacking_info.gain_increase_db} dB\n`;
       csv += `  Stacked Gain:, ${results.stacked_gain_dbi} dBi\n`;
-      csv += `  Stacked Beamwidth H/V:, ${results.stacking_info.new_beamwidth_h}° / ${results.stacking_info.new_beamwidth_v}°\n\n`;
+      csv += `  Stacked Beamwidth H/V:, ${results.stacking_info.new_beamwidth_h}° / ${results.stacking_info.new_beamwidth_v}°\n`;
+      if (results.stacking_info.power_splitter) {
+        csv += '\n  POWER SPLITTER\n';
+        csv += `  Type:, ${results.stacking_info.power_splitter.type}\n`;
+        csv += `  Input Impedance:, ${results.stacking_info.power_splitter.input_impedance}\n`;
+        csv += `  Combined Load:, ${results.stacking_info.power_splitter.combined_load}\n`;
+        csv += `  Matching Method:, ${results.stacking_info.power_splitter.matching_method}\n`;
+        csv += `  Quarter-Wave Line:, ${results.stacking_info.power_splitter.quarter_wave_ft}' (${results.stacking_info.power_splitter.quarter_wave_in}")\n`;
+        csv += `  Power per Antenna @ 100W:, ${results.stacking_info.power_splitter.power_per_antenna_100w}W\n`;
+        csv += `  Power per Antenna @ 1kW:, ${results.stacking_info.power_splitter.power_per_antenna_1kw}W\n`;
+        csv += `  Min Power Rating:, ${results.stacking_info.power_splitter.min_power_rating}\n`;
+        csv += `  Phase Requirement:, ${results.stacking_info.power_splitter.phase_lines}\n`;
+        csv += `  Isolation:, ${results.stacking_info.power_splitter.isolation_note}\n`;
+      }
+      csv += '\n';
     }
     
     // --- TAPER ---
