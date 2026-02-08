@@ -948,9 +948,9 @@ export default function AntennaCalculator() {
     csv += '---------------------------------------------\n';
     csv += 'ELEMENT DIMENSIONS\n';
     csv += '---------------------------------------------\n';
-    csv += '#, Type, Length, Diameter, Position from Reflector\n';
+    csv += '#, Type, Length (in), Diameter (in), Position (in)\n';
     inputs.elements.forEach((e: any, i: number) => {
-      csv += `${i + 1}, ${e.element_type}, ${e.length}", ${e.diameter}", ${e.position}"\n`;
+      csv += `${i + 1}, ${e.element_type}, ${e.length}, ${e.diameter}, ${e.position}\n`;
     });
     csv += '\n';
     
