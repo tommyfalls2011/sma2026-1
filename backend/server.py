@@ -983,6 +983,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     swr = round(max(1.0, min(swr, 5.0)), 2)
     
+    # Wet ground detuning: shifts resonant frequency down, slightly increases SWR
+    if ground_radials and ground_radials.enabled and ground_radials.ground_type == "wet":
+        swr = round(swr * 1.03, 2)
+    
     # === F/B and F/S RATIOS ===
     if n == 2: fb_ratio, fs_ratio = 14, 8
     elif n == 3: fb_ratio, fs_ratio = 20, 12
