@@ -1558,6 +1558,9 @@ export default function AntennaCalculator() {
                   <Text style={styles.takeoffValue}>{results.takeoff_angle}°</Text>
                   <Text style={styles.takeoffDesc}>{results.takeoff_angle_description}</Text>
                 </View>
+                {results.height_performance && (
+                  <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 6, paddingHorizontal: 4 }}>{results.height_performance}</Text>
+                )}
                 <View style={styles.takeoffBar}>
                   <View style={[styles.takeoffBarFill, { width: `${Math.min((90 - (results.takeoff_angle || 45)) / 85 * 100, 100)}%` }]} />
                 </View>
