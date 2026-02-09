@@ -2,6 +2,31 @@ node_modules
 .expo
 dist
 web-build
-*.log
 .git
 .metro-cache
+*.log
+*.map
+
+# Backend - not needed for mobile build
+../backend
+../src
+../tests
+../test_reports
+../memory
+../.emergent
+
+# Cache and temp files
+.cache
+*.tsbuildinfo
+__pycache__
+*.pyc
+.env.local
+.env.development
+
+# Large unnecessary files
+android/app/build
+ios/Pods
+ios/build
+*.apk
+*.aab
+*.ipa
