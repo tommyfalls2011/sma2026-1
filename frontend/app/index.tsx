@@ -478,6 +478,8 @@ export default function AntennaCalculator() {
       ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
       use_reflector: true,
       antenna_orientation: 'horizontal',
+      dual_active: false,
+      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
     }));
     
     // Clear results
