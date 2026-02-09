@@ -1763,10 +1763,22 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Noise level based on orientation
         noise_level="Moderate" if input_data.antenna_orientation in ("dual", "angle45") else ("High" if input_data.antenna_orientation == "vertical" else "Low"),
         noise_description="Dual polarity receives both H and V — moderate noise, excellent for fading/skip" if input_data.antenna_orientation == "dual" else ("Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else ("45° slant receives both polarizations — moderate noise, good for fading" if input_data.antenna_orientation == "angle45" else "Horizontal polarization has a quieter receive noise floor")),
+        # Wind load calculation
+        num_stacked = stacking.num_antennas if stacking_enabled and stacking else 1
+        element_dicts = [{"length": e.length, "diameter": e.diameter, "position": e.position} for e in input_data.elements]
+        wind_load_info = calculate_wind_load(
+            elements=element_dicts,
+            boom_dia_in=boom_dia_in,
+            boom_length_in=boom_length_in,
+            is_dual=is_dual,
+            num_stacked=num_stacked,
+        )
+        
         # Feed type and matching info
         feed_type=feed_type,
         matching_info=matching_info,
         dual_polarity_info=dual_info,
+        wind_load=wind_load_info,
     )
 
 
