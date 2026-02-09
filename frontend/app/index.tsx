@@ -2335,12 +2335,40 @@ export default function AntennaCalculator() {
               {/* Section: Stacking (conditional) */}
               {results.stacking_enabled && results.stacking_info && (
                 <SpecSection title="Stacking" icon="layers-outline" color="#E91E63">
-                  <SpecRow label="Antennas" value={`${results.stacking_info.num_antennas} stacked`} />
+                  <SpecRow label="Antennas" value={`${results.stacking_info.num_antennas} stacked ${results.stacking_info.orientation}`} />
                   <SpecRow label="Spacing" value={`${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}\u03bb)`} />
+                  <SpecRow label="Spacing Status" value={results.stacking_info.spacing_status || '-'} accent={results.stacking_info.spacing_status === 'Optimal' ? '#4CAF50' : results.stacking_info.spacing_status === 'Good' ? '#FF9800' : '#f44336'} />
+                  <SpecRow label="Isolation" value={`~${results.stacking_info.isolation_db}dB`} />
                   <SpecRow label="Gain Increase" value={`+${results.stacking_info.gain_increase_db} dB`} accent="#4CAF50" />
                   <SpecRow label="Stacked Gain" value={`${results.stacked_gain_dbi} dBi`} accent="#E91E63" />
+                  <SpecRow label="Optimal Spacing" value={`${results.stacking_info.optimal_spacing_ft}'`} />
+                  <SpecRow label="Min Spacing" value={`${results.stacking_info.min_spacing_ft}'`} />
+                  {results.stacking_info.vertical_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>VERTICAL STACKING</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.vertical_notes.effect}</Text>
+                      <SpecRow label="  Isolation" value={results.stacking_info.vertical_notes.isolation} small />
+                      {results.stacking_info.vertical_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.vertical_notes.coupling_warning}</Text> : null}
+                    </View>
+                  )}
+                  {results.stacking_info.dual_stacking && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>DUAL-POL STACKING</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.dual_stacking.note}</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.dual_stacking.cross_pol}</Text>
+                      {results.stacking_info.dual_stacking.mimo_note ? <Text style={{ fontSize: 10, color: '#2196F3', marginBottom: 2 }}>{results.stacking_info.dual_stacking.mimo_note}</Text> : null}
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2 }}>{results.stacking_info.dual_stacking.wind_load}</Text>
+                    </View>
+                  )}
+                  {results.stacking_info.phasing && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>PHASING</Text>
+                      <SpecRow label="  Requirement" value={results.stacking_info.phasing.requirement} small />
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2, fontStyle: 'italic' }}>{results.stacking_info.phasing.cable_note}</Text>
+                    </View>
+                  )}
                   {results.stacking_info.power_splitter && (
-                    <View style={{ marginTop: 8, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
                       <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>POWER SPLITTER</Text>
                       <SpecRow label="  Type" value={results.stacking_info.power_splitter.type} small />
                       <SpecRow label="  Input" value={results.stacking_info.power_splitter.input_impedance} small />
@@ -2350,8 +2378,6 @@ export default function AntennaCalculator() {
                       <SpecRow label="  Power @ 100W" value={`${results.stacking_info.power_splitter.power_per_antenna_100w}W each`} small />
                       <SpecRow label="  Power @ 1kW" value={`${results.stacking_info.power_splitter.power_per_antenna_1kw}W each`} small />
                       <SpecRow label="  Min Rating" value={results.stacking_info.power_splitter.min_power_rating} small />
-                      <Text style={{ fontSize: 9, color: '#777', marginTop: 4, fontStyle: 'italic' }}>{results.stacking_info.power_splitter.phase_lines}</Text>
-                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2, fontStyle: 'italic' }}>{results.stacking_info.power_splitter.isolation_note}</Text>
                     </View>
                   )}
                 </SpecSection>
