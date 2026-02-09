@@ -498,10 +498,13 @@ class ElementDimension(BaseModel):
 
 class StackingConfig(BaseModel):
     enabled: bool = Field(default=False)
-    orientation: str = Field(default="vertical")
+    orientation: str = Field(default="vertical")  # vertical, horizontal
+    layout: str = Field(default="line")  # line (2x1, 3x1, 4x1) or quad (2x2)
     num_antennas: int = Field(default=2, ge=2, le=8)
     spacing: float = Field(default=20, gt=0)
     spacing_unit: str = Field(default="ft")
+    h_spacing: Optional[float] = Field(default=None)  # horizontal spacing for quad layout
+    h_spacing_unit: str = Field(default="ft")
 
 class GroundRadialConfig(BaseModel):
     enabled: bool = Field(default=False)
