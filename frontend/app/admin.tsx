@@ -733,6 +733,10 @@ export default function AdminScreen() {
           <Ionicons name="mail" size={14} color={activeTab === 'notify' ? '#fff' : '#888'} />
           <Text style={[styles.tabPillText, activeTab === 'notify' && styles.tabPillTextActive]}>Notify</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'changelog' && styles.tabPillActive]} onPress={() => { setActiveTab('changelog'); loadChangelog(); }}>
+          <Ionicons name="git-commit" size={14} color={activeTab === 'changelog' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'changelog' && styles.tabPillTextActive]}>Changes</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <ScrollView
