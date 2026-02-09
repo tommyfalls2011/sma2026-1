@@ -563,6 +563,7 @@ class AntennaInput(BaseModel):
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
     ground_radials: Optional[GroundRadialConfig] = Field(default=None)
+    boom_grounded: bool = Field(default=True)  # True = elements electrically bonded to boom, False = insulated
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
@@ -641,6 +642,7 @@ class AntennaOutput(BaseModel):
     matching_info: Optional[dict] = None
     dual_polarity_info: Optional[dict] = None
     wind_load: Optional[dict] = None
+    boom_correction_info: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
