@@ -2839,20 +2839,25 @@ export default function AntennaCalculator() {
               {/* Section: Boom Correction */}
               {results.boom_correction_info && (
                 <SpecSection title={`Boom ${results.boom_correction_info.boom_grounded ? 'Grounded' : 'Insulated'}`} icon={results.boom_correction_info.boom_grounded ? 'flash' : 'shield'} color={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'}>
-                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_grounded ? 'Electrically Bonded' : 'Insulated'} accent={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'} />
+                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_grounded ? 'Electrically Bonded' : 'Insulated (Free-Space)'} accent={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'} />
                   {results.boom_correction_info.enabled && (
                     <>
                       <SpecRow label="Boom/Element Ratio" value={`${results.boom_correction_info.boom_to_element_ratio}:1`} />
-                      <SpecRow label="Correction/Side" value={`${results.boom_correction_info.correction_per_side_in}"`} />
-                      <SpecRow label="Total Correction" value={`${results.boom_correction_info.correction_total_in}" per element`} accent="#FF9800" />
+                      <SpecRow label="Shorten Each Element" value={`${results.boom_correction_info.correction_total_in}" total`} accent="#FF9800" />
+                      <SpecRow label="Per Side" value={`${results.boom_correction_info.correction_per_side_in}"`} small />
                       <SpecRow label="Gain Effect" value={`${results.boom_correction_info.gain_adj_db} dB`} />
                       <SpecRow label="F/B Effect" value={`${results.boom_correction_info.fb_adj_db} dB`} />
                       <SpecRow label="Impedance Shift" value={`${results.boom_correction_info.impedance_shift_ohm} ohm`} />
-                      <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
                     </>
                   )}
-                  {!results.boom_correction_info.enabled && (
-                    <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                  <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                  {results.boom_correction_info.practical_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>PRACTICAL NOTES</Text>
+                      {results.boom_correction_info.practical_notes.map((note: string, i: number) => (
+                        <Text key={i} style={{ fontSize: 9, color: '#aaa', marginBottom: 2 }}>{'\u2022'} {note}</Text>
+                      ))}
+                    </View>
                   )}
                 </SpecSection>
               )}
