@@ -2070,6 +2070,144 @@ async def auto_tune(request: AutoTuneRequest):
     return auto_tune_antenna(request)
 
 
+
+class StackingOptimizeRequest(BaseModel):
+    num_elements: int = Field(..., ge=2, le=20)
+    elements: List[ElementDimension]
+    height_from_ground: float = Field(..., gt=0)
+    height_unit: str = Field(default="ft")
+    boom_diameter: float = Field(..., gt=0)
+    boom_unit: str = Field(default="inches")
+    band: str = Field(default="11m_cb")
+    frequency_mhz: Optional[float] = Field(default=None)
+    antenna_orientation: str = Field(default="horizontal")
+    dual_active: bool = Field(default=False)
+    dual_selected_beam: str = Field(default="horizontal")
+    feed_type: str = Field(default="gamma")
+    stacking_orientation: str = Field(default="vertical")  # vertical, horizontal
+    stacking_layout: str = Field(default="line")  # line or quad
+    num_antennas: int = Field(default=2, ge=2, le=8)
+    min_spacing_ft: int = Field(default=15)
+    max_spacing_ft: int = Field(default=40)
+    taper: Optional[TaperConfig] = Field(default=None)
+    corona_balls: Optional[CoronaBallConfig] = Field(default=None)
+    ground_radials: Optional[GroundRadialConfig] = Field(default=None)
+
+class StackingOptimizeResult(BaseModel):
+    best_spacing_ft: float
+    best_gain_dbi: float
+    best_gain_increase: float
+    best_beamwidth_h: float
+    best_beamwidth_v: float
+    best_h_spacing_ft: Optional[float] = None
+    all_results: List[dict]
+
+@api_router.post("/optimize-stacking", response_model=StackingOptimizeResult)
+async def optimize_stacking(request: StackingOptimizeRequest):
+    """Sweep center-to-center spacing from min to max and find the spacing that yields best stacked gain."""
+    band_info = BAND_DEFINITIONS.get(request.band, BAND_DEFINITIONS["11m_cb"])
+    center_freq = request.frequency_mhz if request.frequency_mhz else band_info["center"]
+    wavelength = 299792458 / (center_freq * 1e6)
+    
+    # First, calculate the base antenna gain (unstacked)
+    base_input = AntennaInput(
+        num_elements=request.num_elements,
+        elements=request.elements,
+        height_from_ground=request.height_from_ground,
+        height_unit=request.height_unit,
+        boom_diameter=request.boom_diameter,
+        boom_unit=request.boom_unit,
+        band=request.band,
+        frequency_mhz=request.frequency_mhz,
+        antenna_orientation=request.antenna_orientation,
+        dual_active=request.dual_active,
+        dual_selected_beam=request.dual_selected_beam,
+        feed_type=request.feed_type,
+        stacking=None,
+        taper=request.taper,
+        corona_balls=request.corona_balls,
+        ground_radials=request.ground_radials,
+    )
+    base_result = calculate_antenna_parameters(base_input)
+    base_gain = base_result.gain_dbi
+    base_bw_h = base_result.beamwidth_h
+    base_bw_v = base_result.beamwidth_v
+    
+    best_score = -999
+    best_spacing = request.min_spacing_ft
+    best_gain = base_gain
+    best_increase = 0
+    best_bw_h = base_bw_h
+    best_bw_v = base_bw_v
+    best_h_spacing = None
+    all_results = []
+    
+    is_quad = request.stacking_layout == "quad"
+    
+    for spacing_ft in range(request.min_spacing_ft, request.max_spacing_ft + 1):
+        spacing_m = spacing_ft * 0.3048
+        spacing_wl = spacing_m / wavelength
+        
+        if is_quad:
+            # For quad: test V spacing, use same for H spacing
+            v_gain, v_inc = calculate_stacking_gain(base_gain, 2, spacing_wl, "vertical")
+            h_gain, h_inc = calculate_stacking_gain(v_gain, 2, spacing_wl, "horizontal")
+            total_gain = h_gain
+            total_increase = round(total_gain - base_gain, 2)
+            new_bw_v = calculate_stacked_beamwidth(base_bw_v, 2, spacing_wl)
+            new_bw_h = calculate_stacked_beamwidth(base_bw_h, 2, spacing_wl)
+        else:
+            total_gain, total_increase = calculate_stacking_gain(base_gain, request.num_antennas, spacing_wl, request.stacking_orientation)
+            if request.stacking_orientation == "vertical":
+                new_bw_v = calculate_stacked_beamwidth(base_bw_v, request.num_antennas, spacing_wl)
+                new_bw_h = base_bw_h
+            else:
+                new_bw_h = calculate_stacked_beamwidth(base_bw_h, request.num_antennas, spacing_wl)
+                new_bw_v = base_bw_v
+        
+        # Score: prioritize gain, penalize extreme spacings
+        score = total_gain
+        if spacing_wl < 0.5:
+            score -= 3  # heavy penalty for too-close
+        elif spacing_wl > 2.0:
+            score -= 0.5  # mild penalty for diminishing returns
+        
+        spacing_status = "Too close" if spacing_wl < 0.25 else ("Minimum" if spacing_wl < 0.5 else ("Good" if spacing_wl < 1.0 else ("Optimal" if spacing_wl < 2.0 else "Wide")))
+        
+        result_entry = {
+            "spacing_ft": spacing_ft,
+            "spacing_wl": round(spacing_wl, 3),
+            "stacked_gain_dbi": round(total_gain, 2),
+            "gain_increase": round(total_increase, 2),
+            "beamwidth_h": round(new_bw_h, 1),
+            "beamwidth_v": round(new_bw_v, 1),
+            "spacing_status": spacing_status,
+            "score": round(score, 2),
+        }
+        all_results.append(result_entry)
+        
+        if score > best_score:
+            best_score = score
+            best_spacing = spacing_ft
+            best_gain = round(total_gain, 2)
+            best_increase = round(total_increase, 2)
+            best_bw_h = round(new_bw_h, 1)
+            best_bw_v = round(new_bw_v, 1)
+            if is_quad:
+                best_h_spacing = spacing_ft
+    
+    return StackingOptimizeResult(
+        best_spacing_ft=best_spacing,
+        best_gain_dbi=best_gain,
+        best_gain_increase=best_increase,
+        best_beamwidth_h=best_bw_h,
+        best_beamwidth_v=best_bw_v,
+        best_h_spacing_ft=best_h_spacing,
+        all_results=all_results,
+    )
+
+
+
 class HeightOptimizeRequest(BaseModel):
     num_elements: int
     elements: List[ElementDimension]
