@@ -15,6 +15,8 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 9. Admin panel for managing discounts
 10. Email system (welcome, password reset, receipts, announcements)
 11. App update checker via GitHub
+12. Visual antenna element viewer (top-down SVG)
+13. Boom grounded/insulated correction (DL6WU/G3SEK formula)
 
 ## Architecture
 - **Backend**: Python/FastAPI at `/app/backend/server.py`
@@ -23,7 +25,7 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 - **Email**: Resend API
 
 ## Key API Endpoints
-- `POST /api/calculate` - Main antenna calculation
+- `POST /api/calculate` - Main antenna calculation (includes boom_grounded param)
 - `POST /api/auto-tune` - Auto-optimize antenna parameters
 - `POST /api/optimize-height` - Find optimal antenna height
 - `POST /api/optimize-stacking` - Sweep spacing 15-40ft for best gain
@@ -36,39 +38,15 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 - `POST /api/admin/send-update-email` - Bulk announcement emails
 - Admin CRUD for discounts, users, pricing
 
-## What's Been Implemented (32 items)
-- [x] Renamed "Boom Lock" to "Boom Restraint"
-- [x] Discount Editing in Admin Panel
-- [x] Removed Hardcoded "+0dB Radial Gain"
-- [x] Updated Antenna Height Performance Model & Optimizer
-- [x] Added Dual Polarity & Feed Matching (Gamma/Hairpin)
-- [x] Created "View Specs" UI Modal
-- [x] Overhauled CSV Export
-- [x] Fixed Return Loss Calculation & Efficiency Cap
-- [x] Added Power Splitter Details for Stacking
-- [x] Added "Dual Active" (H+V) Toggle & +3dB Gain Logic
-- [x] Fixed Multiple UI Bugs & JSX Errors
-- [x] Implemented Auto-Scaling UI Performance Bars
-- [x] Added Wind Load Calculations
-- [x] Improved Vertical Stacking Model
-- [x] Removed "Capture Area (sr)" Metric
-- [x] Added 2x, 3x, 4x Line Stacking
-- [x] **2x2 Quad Stack Feature** (Dec 2025)
-- [x] Wavelength Spacing Preset Buttons (½λ, ¾λ, 1λ)
-- [x] Spacing Fine-Tune Arrows (±25% nudge)
-- [x] Auto-Recalculate on Input Change (300ms debounce)
-- [x] Collinear Stacking Guidance
-- [x] Far-Field Pattern Analysis (V & H stacking)
-- [x] Horizontal Stacking Notes
-- [x] Stacking Spacing Optimizer Backend
-- [x] Changelog in MongoDB + Admin Panel viewer
-- [x] Impact flags (BIG/MODERATE/LIGHT)
-- [x] Built-in changelog (hardcoded in APK)
-- [x] Resend Email System
-- [x] Password Reset Flow (Forgot Password)
-- [x] Welcome Emails
-- [x] Subscription Receipts
-- [x] App Update System (GitHub update.json + build date comparison)
+## What's Been Implemented
+- [x] All 32 items from previous sessions (see changelog)
+- [x] **Visual Antenna Element Viewer** (Feb 2026) - Top-down SVG showing boom, elements, spacing labels
+- [x] **Boom Grounded/Insulated Toggle** (Feb 2026) - G3SEK/DL6WU correction formula implementation
+  - Backend: `boom_grounded` field in AntennaInput, `boom_correction_info` in output
+  - Affects gain, SWR, F/B ratio, impedance based on boom-to-element diameter ratio
+  - Correction scales with frequency (larger at VHF) and boom diameter
+  - Displayed in results bonus cards, spec sheet, and CSV export
+  - 16/16 backend tests passed
 
 ## Update System
 - `APP_BUILD_DATE` in index.tsx line 15 - update before each build
@@ -76,7 +54,14 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 - App checks GitHub on launch, shows green banner if newer build exists
 
 ## Prioritized Backlog
+### P0
+- User verification of Popular Channels quick-pick feature
+- User verification of dual-polarity checkbox logic
+- User verification of Gamma/Hairpin match technical notes
+
 ### P1
-- Refactor `index.tsx` into smaller components (~2800+ lines)
+- Refactor `index.tsx` into smaller components (~3100+ lines)
+- EAS Build stability (create reliable pre-build script)
+
 ### P2  
 - Custom domain for Resend emails (currently uses onboarding@resend.dev)
