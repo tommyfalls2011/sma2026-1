@@ -1848,8 +1848,6 @@ export default function AntennaCalculator() {
                   </View>
                   <View style={styles.beamwidthItem}>
                     <Ionicons name="radio" size={14} color="#4CAF50" />
-                    <Text style={styles.beamwidthLabel}>Capture Area</Text>
-                    <Text style={styles.beamwidthValue}>{(results.beamwidth_h * results.beamwidth_v / 100).toFixed(1)} sr</Text>
                   </View>
                 </View>
               </View>
