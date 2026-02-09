@@ -400,6 +400,30 @@ export default function AntennaCalculator() {
   const [gainMode, setGainMode] = useState<'realworld' | 'freespace'>('realworld');
   const [optimizingStacking, setOptimizingStacking] = useState(false);
 
+  // Update checker state
+  const [updateAvailable, setUpdateAvailable] = useState<{version: string; apkUrl: string; notes: string; forceUpdate: boolean} | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+
+  // Check GitHub for updates on launch
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      try {
+        const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.version && data.version !== APP_VERSION && data.apkUrl) {
+          const [rMajor, rMinor, rPatch] = data.version.split('.').map(Number);
+          const [cMajor, cMinor, cPatch] = APP_VERSION.split('.').map(Number);
+          const isNewer = rMajor > cMajor || (rMajor === cMajor && rMinor > cMinor) || (rMajor === cMajor && rMinor === cMinor && rPatch > cPatch);
+          if (isNewer) {
+            setUpdateAvailable({ version: data.version, apkUrl: data.apkUrl, notes: data.releaseNotes || '', forceUpdate: data.forceUpdate || false });
+          }
+        }
+      } catch (e) { /* silently fail if offline */ }
+    };
+    checkForUpdates();
+  }, []);
+
   // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
     let cancelled = false;
