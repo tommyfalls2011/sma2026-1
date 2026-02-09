@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from './context/AuthContext';
 
+const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
+
 export default function LoginScreen() {
   const router = useRouter();
   const { login, register } = useAuth();
@@ -14,6 +16,47 @@ export default function LoginScreen() {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetStep, setResetStep] = useState<'email' | 'code'>('email');
+  const [resetMessage, setResetMessage] = useState('');
+
+  const handleForgotPassword = async () => {
+    if (resetStep === 'email') {
+      if (!resetEmail) { setError('Enter your email'); return; }
+      setLoading(true);
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail }),
+        });
+        const data = await res.json();
+        setResetMessage(data.message);
+        setResetStep('code');
+        setError('');
+      } catch (e) { setError('Failed to send reset email'); }
+      setLoading(false);
+    } else {
+      if (!resetCode || !newPassword) { setError('Enter code and new password'); return; }
+      setLoading(true);
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: resetCode, new_password: newPassword }),
+        });
+        if (res.ok) {
+          setResetMessage('Password reset! You can now sign in.');
+          setTimeout(() => { setShowForgotPassword(false); setResetStep('email'); setResetMessage(''); setResetCode(''); setNewPassword(''); setResetEmail(''); }, 2000);
+        } else {
+          const data = await res.json();
+          setError(data.detail || 'Invalid code');
+        }
+      } catch (e) { setError('Reset failed'); }
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setError('');
