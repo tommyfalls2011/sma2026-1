@@ -177,7 +177,56 @@ export default function LoginScreen() {
                 <Text style={styles.switchButtonLink}>{isLogin ? 'Sign Up' : 'Sign In'}</Text>
               </Text>
             </TouchableOpacity>
+
+            {isLogin && (
+              <TouchableOpacity onPress={() => { setShowForgotPassword(true); setError(''); setResetMessage(''); }} style={{ marginTop: 8, alignItems: 'center' }}>
+                <Text style={{ color: '#FF9800', fontSize: 13 }}>Forgot Password?</Text>
+              </TouchableOpacity>
+            )}
           </View>
+
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20, zIndex: 999 }}>
+              <View style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#333' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>Reset Password</Text>
+                  <TouchableOpacity onPress={() => { setShowForgotPassword(false); setResetStep('email'); setError(''); setResetMessage(''); }}>
+                    <Ionicons name="close" size={22} color="#888" />
+                  </TouchableOpacity>
+                </View>
+
+                {resetMessage ? <Text style={{ color: '#4CAF50', fontSize: 13, marginBottom: 12 }}>{resetMessage}</Text> : null}
+                {error ? <Text style={{ color: '#f44336', fontSize: 13, marginBottom: 12 }}>{error}</Text> : null}
+
+                {resetStep === 'email' ? (
+                  <>
+                    <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 12 }}>Enter your email and we'll send a reset code.</Text>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="mail-outline" size={18} color="#888" style={styles.inputIcon} />
+                      <TextInput style={styles.input} placeholder="email@example.com" placeholderTextColor="#555" value={resetEmail} onChangeText={setResetEmail} keyboardType="email-address" autoCapitalize="none" />
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 12 }}>Enter the 8-character code from your email and a new password.</Text>
+                    <View style={[styles.inputWrapper, { marginBottom: 10 }]}>
+                      <Ionicons name="key-outline" size={18} color="#888" style={styles.inputIcon} />
+                      <TextInput style={styles.input} placeholder="Reset Code" placeholderTextColor="#555" value={resetCode} onChangeText={setResetCode} autoCapitalize="characters" />
+                    </View>
+                    <View style={styles.inputWrapper}>
+                      <Ionicons name="lock-closed-outline" size={18} color="#888" style={styles.inputIcon} />
+                      <TextInput style={styles.input} placeholder="New Password" placeholderTextColor="#555" value={newPassword} onChangeText={setNewPassword} secureTextEntry />
+                    </View>
+                  </>
+                )}
+
+                <TouchableOpacity onPress={handleForgotPassword} disabled={loading} style={{ backgroundColor: '#FF9800', borderRadius: 8, paddingVertical: 12, marginTop: 16, alignItems: 'center' }}>
+                  {loading ? <ActivityIndicator color="#000" /> : <Text style={{ color: '#000', fontWeight: '700', fontSize: 14 }}>{resetStep === 'email' ? 'Send Reset Code' : 'Reset Password'}</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {/* Pricing Preview */}
           <View style={styles.pricingPreview}>
