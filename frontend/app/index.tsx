@@ -1700,6 +1700,23 @@ export default function AntennaCalculator() {
               )}
               {inputs.stacking.layout === 'quad' && (
                 <View>
+                  <Text style={{ fontSize: 10, color: '#E91E63', marginBottom: 6, fontWeight: '600' }}>Wavelength Spacing:</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                    {[{ label: '½λ', mult: 0.5 }, { label: '¾λ', mult: 0.75 }, { label: '1λ', mult: 1.0 }].map(opt => {
+                      const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
+                      const wlFt = (984 / freqMhz) * opt.mult;
+                      const wlFtStr = wlFt.toFixed(1);
+                      const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
+                      const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
+                      return (
+                        <TouchableOpacity key={opt.label} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } }))}
+                          style={{ flex: 1, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#E91E63' : '#333', backgroundColor: isActive ? 'rgba(233,30,99,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#E91E63' : '#888' }}>{opt.label}</Text>
+                          <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
                   <View style={[styles.rowSpaced, { marginBottom: 6 }]}><View style={{ flex: 1 }}><Text style={styles.inputLabel}>V Spacing (up/down)</Text><TextInput style={styles.input} value={inputs.stacking.spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
                   <View style={[styles.rowSpaced]}><View style={{ flex: 1 }}><Text style={styles.inputLabel}>H Spacing (side-by-side)</Text><TextInput style={styles.input} value={inputs.stacking.h_spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.h_spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.h_spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.h_spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.h_spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
                   <Text style={{ fontSize: 9, color: '#E91E63', marginTop: 4 }}>2x2 Quad: 4 identical antennas in H-frame (2V x 2H). Narrows both beamwidths.</Text>
