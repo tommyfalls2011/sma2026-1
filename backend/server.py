@@ -678,6 +678,83 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     return value
 
 
+def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavelength: float, boom_grounded: bool) -> dict:
+    """Calculate boom correction using DL6WU/G3SEK formula.
+    
+    When elements are electrically bonded to a metal boom, the boom effectively
+    shortens each element. This detunes parasitic elements, shifting resonance
+    upward and degrading SWR, gain, and F/B ratio slightly.
+    
+    Returns a dict with correction factors to apply to SWR, gain, F/B, and impedance.
+    """
+    if not boom_grounded or boom_dia_m <= 0 or avg_element_dia_m <= 0:
+        return {
+            "enabled": False,
+            "boom_grounded": boom_grounded,
+            "swr_factor": 1.0,
+            "gain_adj_db": 0.0,
+            "fb_adj_db": 0.0,
+            "impedance_shift_ohm": 0.0,
+            "correction_per_side_in": 0.0,
+            "description": "Insulated boom — no element correction needed"
+        }
+    
+    # Boom diameter as fraction of wavelength (BD)
+    bd = boom_dia_m / wavelength
+    
+    # DL6WU/G3SEK boom correction formula (BC in wavelength fraction)
+    # BC = 733*BD*(0.055 - BD) - 504*BD*(0.03 - BD)
+    # Valid for BD up to ~0.055 wavelengths
+    bc = 733 * bd * (0.055 - bd) - 504 * bd * (0.03 - bd)
+    bc = max(0, bc)  # correction is always positive (shortening)
+    
+    # Convert correction to inches for display
+    correction_in = bc * wavelength * 39.3701
+    
+    # Boom-to-element diameter ratio affects severity
+    dia_ratio = boom_dia_m / avg_element_dia_m
+    dia_ratio = min(dia_ratio, 5.0)  # cap at 5:1
+    
+    # SWR degradation: detuned parasitics worsen match
+    # Typical: 2-8% SWR increase depending on correction magnitude
+    swr_penalty = 1.0 + 0.03 * dia_ratio * min(bc * 100, 1.0)
+    swr_penalty = min(swr_penalty, 1.15)  # cap at 15% SWR increase
+    
+    # Gain reduction: detuned parasitics reduce directivity
+    # Typical: 0.1-0.4 dB loss
+    gain_adj = -0.1 * dia_ratio * min(bc * 100, 1.0)
+    gain_adj = max(gain_adj, -0.5)  # cap at -0.5 dB
+    
+    # F/B degradation: reflector detuning hurts front-to-back
+    fb_adj = -0.5 * dia_ratio * min(bc * 100, 1.0)
+    fb_adj = max(fb_adj, -2.0)  # cap at -2 dB
+    
+    # Impedance shift: grounded boom lowers driven element impedance
+    impedance_shift = -3.0 * dia_ratio * min(bc * 100, 1.0)
+    impedance_shift = max(impedance_shift, -15.0)  # cap at -15 ohm
+    
+    # Description
+    if correction_in < 0.1:
+        desc = "Minimal boom effect — thin boom relative to wavelength"
+    elif correction_in < 0.3:
+        desc = f"Moderate boom correction: ~{correction_in:.2f}\" per side. Consider lengthening elements to compensate."
+    else:
+        desc = f"Significant boom correction: ~{correction_in:.2f}\" per side. Elements should be lengthened by {2*correction_in:.2f}\" total to restore resonance."
+    
+    return {
+        "enabled": True,
+        "boom_grounded": True,
+        "swr_factor": round(swr_penalty, 4),
+        "gain_adj_db": round(gain_adj, 2),
+        "fb_adj_db": round(fb_adj, 2),
+        "impedance_shift_ohm": round(impedance_shift, 1),
+        "correction_per_side_in": round(correction_in, 3),
+        "correction_total_in": round(2 * correction_in, 3),
+        "boom_to_element_ratio": round(dia_ratio, 2),
+        "description": desc
+    }
+
+
 def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: float, taper_enabled: bool = False, height_wavelengths: float = 1.0) -> float:
     """Calculate SWR based on element dimensions relative to wavelength and height."""
     driven = None
