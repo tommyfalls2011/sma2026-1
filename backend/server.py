@@ -1712,6 +1712,18 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "sections": taper_effects["sections"]
         }
     
+    # Wind load calculation
+    boom_dia_in = boom_dia_m / 0.0254
+    num_stacked = stacking.num_antennas if stacking_enabled and stacking else 1
+    element_dicts = [{"length": e.length, "diameter": e.diameter, "position": e.position} for e in input_data.elements]
+    wind_load_info = calculate_wind_load(
+        elements=element_dicts,
+        boom_dia_in=boom_dia_in,
+        boom_length_in=boom_length_in,
+        is_dual=is_dual,
+        num_stacked=num_stacked,
+    )
+    
     return AntennaOutput(
         swr=swr,
         swr_description=f"{swr_desc} match - {swr}:1",
