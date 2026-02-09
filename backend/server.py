@@ -523,6 +523,7 @@ class AntennaInput(BaseModel):
     frequency_mhz: Optional[float] = Field(default=None)
     antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
     dual_active: bool = Field(default=False)  # Both H+V beams active simultaneously
+    dual_selected_beam: str = Field(default="horizontal")  # Which beam selected in dual mode: horizontal or vertical
     feed_type: str = Field(default="direct")  # direct, gamma, hairpin
     stacking: Optional[StackingConfig] = Field(default=None)
     taper: Optional[TaperConfig] = Field(default=None)
