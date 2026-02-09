@@ -2547,6 +2547,17 @@ export default function AntennaCalculator() {
                     <SpecRow label="  Before Match" value={`${results.matching_info.original_swr}:1`} small />
                     <SpecRow label="  After Match" value={`${results.matching_info.matched_swr}:1`} accent="#4CAF50" small />
                     <SpecRow label="  Bandwidth Effect" value={results.matching_info.bandwidth_effect} small />
+                    {results.matching_info.technical_notes && (
+                      <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#333' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '700', color: '#555', marginBottom: 3 }}>HOW IT WORKS</Text>
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.mechanism}</Text>
+                        {results.matching_info.technical_notes.asymmetry && <Text style={{ fontSize: 9, color: '#FF9800', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.asymmetry}</Text>}
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.pattern_impact}</Text>
+                        <Text style={{ fontSize: 9, color: '#4CAF50', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.advantage}</Text>
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.tuning}</Text>
+                        <Text style={{ fontSize: 9, color: '#888', fontStyle: 'italic', lineHeight: 14 }}>{results.matching_info.technical_notes.mitigation || results.matching_info.technical_notes.tradeoff}</Text>
+                      </View>
+                    )}
                   </View>
                 )}
                 <SpecRow label="Impedance Range" value={`${results.impedance_low || '-'} - ${results.impedance_high || '-'} \u03a9`} />
