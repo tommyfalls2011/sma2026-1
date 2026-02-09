@@ -115,6 +115,7 @@ export default function AdminScreen() {
 
   // Discounts state
   const [discounts, setDiscounts] = useState<any[]>([]);
+  const [changelogEntries, setChangelogEntries] = useState<any[]>([]);
   const [discCode, setDiscCode] = useState('');
   const [discType, setDiscType] = useState<'percentage' | 'fixed'>('percentage');
   const [discValue, setDiscValue] = useState('');
