@@ -558,6 +558,7 @@ export default function AntennaCalculator() {
           antenna_orientation: inputs.antenna_orientation,
           feed_type: inputs.feed_type,
           dual_active: inputs.dual_active,
+          dual_selected_beam: inputs.antenna_orientation === 'dual' ? inputs.dual_selected_beam : undefined,
         }),
       });
       if (response.ok) setResults(await response.json());
