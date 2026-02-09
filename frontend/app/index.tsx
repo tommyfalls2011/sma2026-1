@@ -1596,18 +1596,23 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Boom Ø</Text><TextInput style={styles.input} value={inputs.boom_diameter} onChangeText={v => setInputs(p => ({ ...p, boom_diameter: v }))} keyboardType="decimal-pad" /></View>
               <View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'mm' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'mm' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'mm' && styles.unitBtnTextActive]}>mm</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View>
             </View>
-            {/* Boom Grounded / Insulated Toggle */}
-            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-              <TouchableOpacity onPress={() => setInputs(p => ({ ...p, boom_grounded: true }))}
-                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: inputs.boom_grounded ? '#FF9800' : '#333', backgroundColor: inputs.boom_grounded ? 'rgba(255,152,0,0.15)' : '#1a1a1a' }}>
-                <Ionicons name="flash" size={14} color={inputs.boom_grounded ? '#FF9800' : '#555'} />
-                <Text style={{ fontSize: 11, fontWeight: '600', color: inputs.boom_grounded ? '#FF9800' : '#888' }}>Grounded</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setInputs(p => ({ ...p, boom_grounded: false }))}
-                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: !inputs.boom_grounded ? '#2196F3' : '#333', backgroundColor: !inputs.boom_grounded ? 'rgba(33,150,243,0.15)' : '#1a1a1a' }}>
-                <Ionicons name="shield" size={14} color={!inputs.boom_grounded ? '#2196F3' : '#555'} />
-                <Text style={{ fontSize: 11, fontWeight: '600', color: !inputs.boom_grounded ? '#2196F3' : '#888' }}>Insulated</Text>
-              </TouchableOpacity>
+            {/* Element Mount Type - 3 options */}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+              {([
+                { key: 'bonded', label: 'Bonded', icon: 'flash', color: '#FF9800', desc: 'Welded/bolted to metal boom' },
+                { key: 'insulated', label: 'Insulated', icon: 'shield-half', color: '#2196F3', desc: 'Sleeves on metal boom' },
+                { key: 'nonconductive', label: 'Non-Cond', icon: 'leaf', color: '#4CAF50', desc: 'PVC/wood/fiberglass boom' },
+              ] as const).map(opt => {
+                const active = inputs.boom_mount === opt.key;
+                return (
+                  <TouchableOpacity key={opt.key} onPress={() => setInputs(p => ({ ...p, boom_mount: opt.key as any, boom_grounded: opt.key === 'bonded' }))}
+                    style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 7, borderRadius: 6, borderWidth: 1, borderColor: active ? opt.color : '#333', backgroundColor: active ? `${opt.color}22` : '#1a1a1a' }}>
+                    <Ionicons name={opt.icon as any} size={14} color={active ? opt.color : '#555'} />
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: active ? opt.color : '#888' }}>{opt.label}</Text>
+                    <Text style={{ fontSize: 7, color: active ? opt.color + 'AA' : '#555' }}>{opt.desc}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
             {/* Optimize Height Button */}
             <TouchableOpacity style={styles.optimizeHeightBtn} onPress={optimizeHeight} disabled={optimizingHeight}>
