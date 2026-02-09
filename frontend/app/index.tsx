@@ -575,9 +575,13 @@ export default function AntennaCalculator() {
 
   useEffect(() => { calculateAntenna(); }, []);
 
-  // Auto-recalculate when stacking spacing changes via wavelength buttons
-  const [stackingSpacingTrigger, setStackingSpacingTrigger] = useState(0);
-  useEffect(() => { if (stackingSpacingTrigger > 0) calculateAntenna(); }, [stackingSpacingTrigger]);
+  // Auto-recalculate on any input change (debounced)
+  const autoCalcTimer = useRef<any>(null);
+  useEffect(() => {
+    if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current);
+    autoCalcTimer.current = setTimeout(() => calculateAntenna(), 300);
+    return () => { if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current); };
+  }, [JSON.stringify(inputs)]);
 
   const optimizeStacking = async () => {
     setOptimizingStacking(true);
