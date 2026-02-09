@@ -2436,6 +2436,43 @@ export default function AntennaCalculator() {
                 </SpecSection>
               )}
 
+              {/* Section: Wind Load */}
+              {results.wind_load && (
+                <SpecSection title="Wind Load & Mechanical" icon="thunderstorm-outline" color="#FF5722">
+                  <SpecRow label="Total Wind Area" value={`${results.wind_load.total_area_sqft} sq ft`} />
+                  <SpecRow label="Total Weight" value={`${results.wind_load.total_weight_lbs} lbs`} accent="#FF5722" />
+                  <View style={{ marginTop: 4, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>WEIGHT BREAKDOWN</Text>
+                    <SpecRow label="  Elements" value={`${results.wind_load.element_weight_lbs} lbs`} small />
+                    <SpecRow label="  Boom ({results.wind_load.boom_length_ft}ft)" value={`${results.wind_load.boom_weight_lbs} lbs`} small />
+                    <SpecRow label="  Hardware/Truss" value={`${results.wind_load.hardware_weight_lbs} lbs`} small />
+                    {results.wind_load.has_truss && <Text style={{ fontSize: 9, color: '#FF9800', marginTop: 2 }}>Boom truss/support wires recommended (boom &gt; 12ft)</Text>}
+                  </View>
+                  <SpecRow label="Turn Radius" value={`${results.wind_load.turn_radius_ft}' (${results.wind_load.turn_radius_in}")`} />
+                  <SpecRow label="Survival Rating" value={`${results.wind_load.survival_mph} mph`} accent={results.wind_load.survival_mph >= 90 ? '#4CAF50' : results.wind_load.survival_mph >= 70 ? '#FF9800' : '#f44336'} />
+                  {results.wind_load.num_stacked > 1 && <SpecRow label="Stacked" value={`${results.wind_load.num_stacked}x (values include all antennas)`} />}
+                  <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>WIND FORCE BY SPEED</Text>
+                    <View style={{ flexDirection: 'row', backgroundColor: '#252525', borderRadius: 4, paddingVertical: 4, paddingHorizontal: 6, marginBottom: 4 }}>
+                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888' }}>MPH</Text>
+                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'right' }}>Force</Text>
+                      <Text style={{ flex: 1.2, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'right' }}>Torque</Text>
+                    </View>
+                    {['50','70','80','90','100','120'].map(mph => {
+                      const r = results.wind_load.wind_ratings?.[mph];
+                      if (!r) return null;
+                      return (
+                        <View key={mph} style={{ flexDirection: 'row', paddingVertical: 3, paddingHorizontal: 6 }}>
+                          <Text style={{ flex: 1, fontSize: 10, color: '#aaa' }}>{mph}</Text>
+                          <Text style={{ flex: 1, fontSize: 10, color: r.force_lbs > 200 ? '#f44336' : '#fff', textAlign: 'right' }}>{r.force_lbs} lbs</Text>
+                          <Text style={{ flex: 1.2, fontSize: 10, color: r.torque_ft_lbs > 400 ? '#f44336' : '#fff', textAlign: 'right' }}>{r.torque_ft_lbs} ft-lbs</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </SpecSection>
+              )}
+
               <Text style={{ fontSize: 9, color: '#444', textAlign: 'center', marginTop: 16 }}>Generated {new Date().toLocaleString()} | {user?.email || 'guest'}</Text>
             </ScrollView>
             )}
