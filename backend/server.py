@@ -827,6 +827,14 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
             "matched_swr": round(matched_swr, 3),
             "bandwidth_effect": "Broadband (minimal effect)",
             "bandwidth_mult": 1.0,
+            "technical_notes": {
+                "mechanism": "A short length of transmission line (hairpin or beta match) is connected across the feedpoint terminals. The shorted stub acts as an inductor to cancel the capacitive reactance of the split driven element.",
+                "asymmetry": "Symmetrical design \u2014 no beam skew. The hairpin is balanced across both sides of the driven element.",
+                "pattern_impact": "No pattern distortion \u2014 maintains symmetrical radiation pattern.",
+                "advantage": "Simple construction, broadband performance, no capacitor needed. Maintains balanced feed without a balun. Easy to tune by adjusting hairpin length.",
+                "tuning": "Adjust the length and spacing of the hairpin conductors. Longer hairpin = more inductance. Typical hairpin is 2-4 inches of wire or rod.",
+                "tradeoff": "Requires a split driven element (gap at center). Slightly less precise impedance match than gamma at a single frequency, but better bandwidth.",
+            },
         }
         return round(max(1.0, matched_swr), 3), info
     
