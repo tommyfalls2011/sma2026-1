@@ -577,7 +577,7 @@ export default function AntennaCalculator() {
           num_elements: inputs.num_elements,
           elements: elementsForApi,
           height_from_ground: parseFloat(inputs.height_from_ground) || 0, height_unit: inputs.height_unit,
-          boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit,
+          boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit, boom_grounded: inputs.boom_grounded,
           band: inputs.band, frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
           stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0, h_spacing: inputs.stacking.layout === 'quad' ? (parseFloat(inputs.stacking.h_spacing) || 0) : null } : null,
           taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
