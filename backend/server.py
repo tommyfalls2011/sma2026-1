@@ -2629,6 +2629,22 @@ async def register_user(user_data: UserCreate):
     await db.users.insert_one(user)
     token = create_token(user["id"], user["email"])
     
+    # Send welcome email
+    welcome_html = email_wrapper("Welcome!", f"""
+        <h2 style="color:#fff;">Welcome to SMA Antenna Calc, {user_data.name}!</h2>
+        <p style="color:#ccc;line-height:1.6;">Your account has been created. You have a <strong style="color:#FF9800;">free trial</strong> to explore the app.</p>
+        <p style="color:#ccc;line-height:1.6;">Features include:</p>
+        <ul style="color:#aaa;line-height:1.8;">
+            <li>Advanced Yagi antenna modeling</li>
+            <li>Gain, SWR, F/B ratio calculations</li>
+            <li>Stacking configurations (Line &amp; 2x2 Quad)</li>
+            <li>Wind load analysis</li>
+            <li>Height optimizer</li>
+        </ul>
+        <p style="color:#ccc;">Enjoy the app and 73!</p>
+    """)
+    await send_email(user["email"], "Welcome to SMA Antenna Calc!", welcome_html)
+    
     return {
         "token": token,
         "user": {
