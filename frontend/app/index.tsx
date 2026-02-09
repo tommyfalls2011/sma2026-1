@@ -1306,6 +1306,30 @@ export default function AntennaCalculator() {
             )}
           </View>
           
+          {/* Update Available Banner */}
+          {updateAvailable && !updateDismissed && (
+            <View style={{ marginHorizontal: 12, marginBottom: 8, backgroundColor: '#1a3a1a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#4CAF50' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Ionicons name="arrow-up-circle" size={16} color="#4CAF50" />
+                    <Text style={{ color: '#4CAF50', fontWeight: '700', fontSize: 12 }}>Update Available v{updateAvailable.version}</Text>
+                  </View>
+                  {updateAvailable.notes ? <Text style={{ color: '#aaa', fontSize: 10, marginBottom: 6 }}>{updateAvailable.notes}</Text> : null}
+                  <TouchableOpacity onPress={() => Linking.openURL(updateAvailable.apkUrl)} style={{ backgroundColor: '#4CAF50', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' }}>
+                    <Text style={{ color: '#000', fontWeight: '700', fontSize: 11 }}>Download APK</Text>
+                  </TouchableOpacity>
+                </View>
+                {!updateAvailable.forceUpdate && (
+                  <TouchableOpacity onPress={() => setUpdateDismissed(true)} style={{ padding: 4 }}>
+                    <Ionicons name="close" size={18} color="#666" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Text style={{ color: '#555', fontSize: 9, marginTop: 4 }}>Current: v{APP_VERSION}</Text>
+            </View>
+          )}
+
           {/* Action Buttons Row */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
             {user && (
