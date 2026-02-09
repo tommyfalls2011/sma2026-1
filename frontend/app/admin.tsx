@@ -115,7 +115,36 @@ export default function AdminScreen() {
 
   // Discounts state
   const [discounts, setDiscounts] = useState<any[]>([]);
-  const [changelogEntries, setChangelogEntries] = useState<any[]>([]);
+  const BUILTIN_CHANGELOG = [
+    {id:"1",order:1,category:"UI",impact:"light",title:"Renamed Boom Lock to Boom Restraint",description:"Updated all references from 'Boom Lock' to 'Boom Restraint' throughout the app for accuracy."},
+    {id:"2",order:2,category:"Admin",impact:"moderate",title:"Discount Editing in Admin Panel",description:"Added ability to edit existing discounts (code, type, value, tiers, expiry) via the admin panel."},
+    {id:"3",order:3,category:"UI",impact:"light",title:"Removed Hardcoded +0dB Radial Gain",description:"Removed confusing '+0dB gain' from the radial bonus display that appeared even when no radials were configured."},
+    {id:"4",order:4,category:"Physics",impact:"big",title:"Updated Antenna Height Performance Model",description:"Rewrote height-based performance calculations using real take-off angle physics data. Updated height optimizer scoring."},
+    {id:"5",order:5,category:"Feature",impact:"big",title:"Added Dual Polarity Antenna Orientation",description:"New 'Dual' orientation modeling both H and V beams on the same boom with element count doubling and per-beam bandwidth."},
+    {id:"6",order:6,category:"Feature",impact:"moderate",title:"Added Feed Matching Systems",description:"Added Gamma Match and Hairpin Match feed matching options with SWR adjustment calculations. Default set to Gamma Match."},
+    {id:"7",order:7,category:"UI",impact:"big",title:"Created View Specs Modal",description:"Built a scrollable spec sheet modal displaying all calculated data in categorized sections (Performance, Impedance, Stacking, Wind Load)."},
+    {id:"8",order:8,category:"Feature",impact:"moderate",title:"Overhauled CSV Export",description:"Rewrote CSV export for readability. Removed characters causing spreadsheet errors, added comprehensive sections for all data."},
+    {id:"9",order:9,category:"Bug Fix",impact:"light",title:"Fixed Return Loss Calculation",description:"Corrected Return Loss formula and added proper handling for near-perfect SWR values causing math errors."},
+    {id:"10",order:10,category:"Bug Fix",impact:"light",title:"Fixed Efficiency Display Cap",description:"Efficiency was incorrectly capped at 99.9%. Fixed to show actual calculated efficiency values."},
+    {id:"11",order:11,category:"Feature",impact:"moderate",title:"Added Power Splitter Details for Stacking",description:"Added detailed power splitter/divider information (type, loss, impedance) for all stacking configurations."},
+    {id:"12",order:12,category:"Feature",impact:"moderate",title:"Added Dual Active (H+V) Toggle",description:"Checkbox to simulate both H and V beams transmitting simultaneously in dual-pol mode. Adds +3dB coherent power combining."},
+    {id:"13",order:13,category:"Bug Fix",impact:"light",title:"Fixed Multiple UI/JSX Errors",description:"Resolved JSX errors from incorrect component nesting, fixed gain mode display in spec sheet, clarified bandwidth labels."},
+    {id:"14",order:14,category:"UI",impact:"moderate",title:"Auto-Scaling Performance Bars",description:"Made Gain, F/B, and F/S performance metric bars auto-scaling to prevent clipping on high-performance antennas."},
+    {id:"15",order:15,category:"Feature",impact:"big",title:"Added Wind Load Calculations",description:"Comprehensive wind load analysis: element drag, boom drag, total force at 70/85/100 mph, weight calculations, structural recommendations."},
+    {id:"16",order:16,category:"Physics",impact:"big",title:"Improved Vertical Stacking Model",description:"Added detailed vertical stacking guidance including collinear alignment requirements, spacing recommendations, and dual-pol stacking notes."},
+    {id:"17",order:17,category:"UI",impact:"light",title:"Removed Capture Area (sr) Metric",description:"Removed confusing 'Capture Area' in steradians that was not useful for practical antenna work."},
+    {id:"18",order:18,category:"Feature",impact:"big",title:"Added 2x, 3x, 4x Line Stacking",description:"Support for stacking 2, 3, or 4 antennas in vertical or horizontal line arrays with gain, beamwidth, and spacing calculations."},
+    {id:"19",order:19,category:"Feature",impact:"big",title:"Added 2x2 Quad Stacking",description:"2x2 quad stack: 4 identical antennas in H-frame (2V x 2H). ~+5-6dB gain, narrows both beamwidths. Includes quad notes and wind load x4."},
+    {id:"20",order:20,category:"Feature",impact:"moderate",title:"Wavelength Spacing Preset Buttons",description:"Added 1/2, 3/4, and 1 wave quick-set buttons for stacking spacing. Shows actual footage for current frequency."},
+    {id:"21",order:21,category:"Feature",impact:"light",title:"Spacing Fine-Tune Arrows",description:"Left/right nudge arrows under each wavelength button. Each press adjusts spacing by +/-25% of that button's wavelength value."},
+    {id:"22",order:22,category:"Feature",impact:"moderate",title:"Auto-Recalculate on Input Change",description:"App automatically recalculates all results on any input change with 300ms debounce. No manual Calculate button needed."},
+    {id:"23",order:23,category:"Physics",impact:"big",title:"Collinear Stacking Guidance",description:"Comprehensive collinear alignment notes: far-field pattern behavior, stagger/offset warnings, mutual coupling risks, feed line requirements."},
+    {id:"24",order:24,category:"Physics",impact:"moderate",title:"Far-Field Pattern Analysis for Stacking",description:"Far-field descriptions for vertical (elevation compresses, azimuth stays omni) and horizontal stacking (azimuth becomes directional)."},
+    {id:"25",order:25,category:"Physics",impact:"moderate",title:"Horizontal Stacking Notes",description:"Horizontal stacking section in spec sheet: directional pattern warning, dead zone tradeoff, elevation/azimuth behavior differences."},
+    {id:"26",order:26,category:"Feature",impact:"moderate",title:"Stacking Spacing Optimizer (Backend)",description:"POST /api/optimize-stacking sweeps 15-40ft spacing, scores each option, returns optimal spacing. Weights ~1 wavelength for vertical."},
+    {id:"27",order:27,category:"Feature",impact:"light",title:"Changelog Database Storage",description:"All app changes stored in MongoDB changelog collection with GET /api/changelog endpoint and admin panel viewer."},
+  ];
+  const [changelogEntries, setChangelogEntries] = useState<any[]>(BUILTIN_CHANGELOG);
   const [discCode, setDiscCode] = useState('');
   const [discType, setDiscType] = useState<'percentage' | 'fixed'>('percentage');
   const [discValue, setDiscValue] = useState('');
