@@ -1571,6 +1571,19 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Boom Ø</Text><TextInput style={styles.input} value={inputs.boom_diameter} onChangeText={v => setInputs(p => ({ ...p, boom_diameter: v }))} keyboardType="decimal-pad" /></View>
               <View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'mm' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'mm' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'mm' && styles.unitBtnTextActive]}>mm</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View>
             </View>
+            {/* Boom Grounded / Insulated Toggle */}
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+              <TouchableOpacity onPress={() => setInputs(p => ({ ...p, boom_grounded: true }))}
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: inputs.boom_grounded ? '#FF9800' : '#333', backgroundColor: inputs.boom_grounded ? 'rgba(255,152,0,0.15)' : '#1a1a1a' }}>
+                <Ionicons name="flash" size={14} color={inputs.boom_grounded ? '#FF9800' : '#555'} />
+                <Text style={{ fontSize: 11, fontWeight: '600', color: inputs.boom_grounded ? '#FF9800' : '#888' }}>Grounded</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setInputs(p => ({ ...p, boom_grounded: false }))}
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: !inputs.boom_grounded ? '#2196F3' : '#333', backgroundColor: !inputs.boom_grounded ? 'rgba(33,150,243,0.15)' : '#1a1a1a' }}>
+                <Ionicons name="shield" size={14} color={!inputs.boom_grounded ? '#2196F3' : '#555'} />
+                <Text style={{ fontSize: 11, fontWeight: '600', color: !inputs.boom_grounded ? '#2196F3' : '#888' }}>Insulated</Text>
+              </TouchableOpacity>
+            </View>
             {/* Optimize Height Button */}
             <TouchableOpacity style={styles.optimizeHeightBtn} onPress={optimizeHeight} disabled={optimizingHeight}>
               {optimizingHeight ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="trending-up" size={14} color="#fff" /><Text style={styles.optimizeHeightBtnText}>Optimize Height (10'-100')</Text></>}
