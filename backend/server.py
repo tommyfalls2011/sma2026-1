@@ -1723,11 +1723,27 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             }
         
         # Vertical stacking specific notes
-        if stacking.orientation == "vertical":
+        if stacking.orientation == "vertical" and not is_quad:
             stacking_info["vertical_notes"] = {
                 "effect": "Narrows vertical beamwidth, focuses energy toward horizon — increases gain without narrowing horizontal coverage",
                 "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
                 "coupling_warning": "Below 0.25 lambda spacing causes severe mutual coupling and detuning" if spacing_wavelengths < 0.25 else "",
+            }
+        
+        # Quad-specific notes
+        if is_quad:
+            h_spacing_val = stacking.h_spacing if stacking.h_spacing else stacking.spacing
+            h_spacing_unit = stacking.h_spacing_unit if stacking.h_spacing else stacking.spacing_unit
+            stacking_info["quad_notes"] = {
+                "layout": "2x2 H-Frame (2 vertical x 2 horizontal)",
+                "effect": "Narrows BOTH vertical and horizontal beamwidth — tube-like pattern focused on target",
+                "v_spacing": f"{stacking.spacing} {stacking.spacing_unit} (vertical)",
+                "h_spacing": f"{h_spacing_val} {h_spacing_unit} (horizontal)",
+                "h_frame_note": "Two antennas on horizontal cross-arm, two stacked vertically on mast",
+                "isolation": f"~{round(isolation_db)}dB vertical isolation at current spacing",
+                "coupling_warning": "Below 0.25 lambda spacing causes severe mutual coupling and detuning" if spacing_wavelengths < 0.25 else "",
+                "identical_note": "All 4 antennas MUST be identical models for proper pattern formation",
+                "phasing_note": "Use 4-way equal-length phasing harness — all cables identical to the millimeter",
             }
         beamwidth_h, beamwidth_v = new_beamwidth_h, new_beamwidth_v
     
