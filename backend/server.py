@@ -565,7 +565,6 @@ class AntennaInput(BaseModel):
     ground_radials: Optional[GroundRadialConfig] = Field(default=None)
     boom_grounded: bool = Field(default=True)  # Legacy: True = bonded, False = nonconductive
     boom_mount: str = Field(default="bonded")  # "bonded" | "insulated" | "nonconductive"
-    use_reflector: bool = Field(default=True)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
