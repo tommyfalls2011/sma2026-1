@@ -1,0 +1,9 @@
+{
+  "version": "3.0.0",
+  "versionCode": 3,
+  "releaseDate": "2025-12-01",
+  "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer",
+  "apkUrl": "",
+  "minVersion": "1.0.0",
+  "forceUpdate": false
+}
