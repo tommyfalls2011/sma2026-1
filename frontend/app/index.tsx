@@ -1326,7 +1326,7 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={{ color: '#555', fontSize: 9, marginTop: 4 }}>Current: v{APP_VERSION}</Text>
+              <Text style={{ color: '#555', fontSize: 9, marginTop: 4 }}>Installed: {new Date(APP_BUILD_DATE).toLocaleString()}{updateAvailable.buildDate ? ` | New: ${new Date(updateAvailable.buildDate).toLocaleString()}` : ''}</Text>
             </View>
           )}
 
