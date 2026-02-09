@@ -301,6 +301,21 @@ export default function AdminScreen() {
     } catch (e) { console.error('Load discounts error:', e); }
   };
 
+  // === CHANGELOG FUNCTIONS ===
+  const loadChangelog = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/changelog`);
+      if (res.ok) { const d = await res.json(); setChangelogEntries(d.changes || []); }
+    } catch (e) { console.error('Load changelog error:', e); }
+  };
+
+  const deleteChangelogEntry = async (id: string) => {
+    try {
+      await fetch(`${BACKEND_URL}/api/admin/changelog/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      setChangelogEntries(prev => prev.filter(c => c.id !== id));
+    } catch (e) { console.error('Delete changelog error:', e); }
+  };
+
   const createDiscount = async () => {
     if (!discCode || !discValue) { Alert.alert('Error', 'Code and value are required'); return; }
     setCreatingDiscount(true);
