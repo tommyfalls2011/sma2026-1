@@ -602,6 +602,7 @@ class AntennaOutput(BaseModel):
     feed_type: Optional[str] = None
     matching_info: Optional[dict] = None
     dual_polarity_info: Optional[dict] = None
+    wind_load: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
