@@ -412,12 +412,11 @@ export default function AntennaCalculator() {
         const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
         if (!res.ok) return;
         const data = await res.json();
-        if (data.version && data.version !== APP_VERSION && data.apkUrl) {
-          const [rMajor, rMinor, rPatch] = data.version.split('.').map(Number);
-          const [cMajor, cMinor, cPatch] = APP_VERSION.split('.').map(Number);
-          const isNewer = rMajor > cMajor || (rMajor === cMajor && rMinor > cMinor) || (rMajor === cMajor && rMinor === cMinor && rPatch > cPatch);
-          if (isNewer) {
-            setUpdateAvailable({ version: data.version, apkUrl: data.apkUrl, notes: data.releaseNotes || '', forceUpdate: data.forceUpdate || false });
+        if (data.apkUrl && data.buildDate) {
+          const remoteBuild = new Date(data.buildDate).getTime();
+          const localBuild = new Date(APP_BUILD_DATE).getTime();
+          if (remoteBuild > localBuild) {
+            setUpdateAvailable({ version: data.version, apkUrl: data.apkUrl, notes: data.releaseNotes || '', forceUpdate: data.forceUpdate || false, buildDate: data.buildDate });
           }
         }
       } catch (e) { /* silently fail if offline */ }
