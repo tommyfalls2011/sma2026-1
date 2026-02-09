@@ -1522,6 +1522,46 @@ export default function AntennaCalculator() {
             </View>
           </View>
 
+          {/* Visual Element Viewer - Top Down */}
+          <View style={{ backgroundColor: '#111', borderRadius: 8, padding: 8, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+            <Text style={{ fontSize: 9, color: '#555', marginBottom: 4 }}>TOP VIEW (looking down on boom)</Text>
+            <Svg width={screenWidth - 40} height={80}>
+              {(() => {
+                const w = screenWidth - 40;
+                const pad = 20;
+                const elements = inputs.elements;
+                const positions = elements.map(e => parseFloat(e.position) || 0);
+                const lengths = elements.map(e => parseFloat(e.length) || 0);
+                const maxPos = Math.max(...positions, 1);
+                const maxLen = Math.max(...lengths, 1);
+                const scale = (w - pad * 2) / maxPos;
+                const yCenter = 40;
+                const boomY = yCenter;
+                const nodes: any[] = [];
+                // Boom line
+                const boomStart = pad;
+                const boomEnd = pad + maxPos * scale;
+                nodes.push(<Line key="boom" x1={boomStart} y1={boomY} x2={boomEnd} y2={boomY} stroke="#444" strokeWidth={3} />);
+                // Elements
+                elements.forEach((el, i) => {
+                  const x = pad + positions[i] * scale;
+                  const halfLen = (lengths[i] / maxLen) * 30;
+                  const color = el.element_type === 'reflector' ? '#f44336' : el.element_type === 'driven' ? '#4CAF50' : '#2196F3';
+                  nodes.push(<Line key={`el-${i}`} x1={x} y1={yCenter - halfLen} x2={x} y2={yCenter + halfLen} stroke={color} strokeWidth={2.5} strokeLinecap="round" />);
+                  nodes.push(<SvgText key={`lbl-${i}`} x={x} y={12} fill={color} fontSize={7} textAnchor="middle" fontWeight="bold">{el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`}</SvgText>);
+                  // Spacing label between elements
+                  if (i > 0) {
+                    const prevX = pad + positions[i - 1] * scale;
+                    const midX = (prevX + x) / 2;
+                    const spacing = (positions[i] - positions[i - 1]).toFixed(1);
+                    nodes.push(<SvgText key={`sp-${i}`} x={midX} y={74} fill="#666" fontSize={7} textAnchor="middle">{spacing}"</SvgText>);
+                  }
+                });
+                return nodes;
+              })()}
+            </Svg>
+          </View>
+
           {/* Physical Setup */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}><Ionicons name="construct-outline" size={14} color="#4CAF50" /> Setup</Text>
