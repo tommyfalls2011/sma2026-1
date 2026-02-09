@@ -1199,17 +1199,23 @@ export default function AntennaCalculator() {
     
     // --- BOOM CORRECTION ---
     if (results.boom_correction_info) {
-      csv += 'BOOM CORRECTION (DL6WU/G3SEK)\n';
-      csv += `  Mount Type:, ${results.boom_correction_info.boom_grounded ? 'Grounded (Bonded)' : 'Insulated'}\n`;
+      csv += 'BOOM CORRECTION (G3SEK/DL6WU)\n';
+      csv += `  Mount Type:, ${results.boom_correction_info.boom_grounded ? 'Grounded (Electrically Bonded)' : 'Insulated (Free-Space)'}\n`;
       if (results.boom_correction_info.enabled) {
         csv += `  Boom/Element Ratio:, ${results.boom_correction_info.boom_to_element_ratio}:1\n`;
-        csv += `  Correction/Side:, ${results.boom_correction_info.correction_per_side_in}"\n`;
-        csv += `  Total Correction:, ${results.boom_correction_info.correction_total_in}" per element\n`;
+        csv += `  Shorten Each Element:, ${results.boom_correction_info.correction_total_in}" total\n`;
+        csv += `  Per Side:, ${results.boom_correction_info.correction_per_side_in}"\n`;
         csv += `  Gain Effect:, ${results.boom_correction_info.gain_adj_db} dB\n`;
         csv += `  F/B Effect:, ${results.boom_correction_info.fb_adj_db} dB\n`;
         csv += `  Impedance Shift:, ${results.boom_correction_info.impedance_shift_ohm} ohm\n`;
       }
-      csv += `  Note:, ${results.boom_correction_info.description}\n\n`;
+      csv += `  Note:, ${results.boom_correction_info.description}\n`;
+      if (results.boom_correction_info.practical_notes) {
+        results.boom_correction_info.practical_notes.forEach((note: string) => {
+          csv += `  -, ${note}\n`;
+        });
+      }
+      csv += '\n';
     }
     
     // --- FAR-FIELD PATTERN DATA ---
