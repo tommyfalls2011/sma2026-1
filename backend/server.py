@@ -3494,6 +3494,22 @@ async def get_user_emails(admin: dict = Depends(require_admin)):
     return {"users": users}
 
 
+
+# --- Changelog API ---
+@api_router.get("/changelog")
+async def get_changelog():
+    changes = await db.changelog.find({}, {"_id": 0}).sort("order", 1).to_list(1000)
+    return {"changes": changes}
+
+@api_router.delete("/admin/changelog/{change_id}")
+async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_admin)):
+    result = await db.changelog.delete_one({"id": change_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"message": "Deleted"}
+
+
+
 app.include_router(api_router)
 
 app.add_middleware(
