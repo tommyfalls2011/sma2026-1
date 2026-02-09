@@ -828,12 +828,15 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
             "bandwidth_effect": "Broadband (minimal effect)",
             "bandwidth_mult": 1.0,
             "technical_notes": {
-                "mechanism": "A short length of transmission line (hairpin or beta match) is connected across the feedpoint terminals. The shorted stub acts as an inductor to cancel the capacitive reactance of the split driven element.",
-                "asymmetry": "Symmetrical design \u2014 no beam skew. The hairpin is balanced across both sides of the driven element.",
-                "pattern_impact": "No pattern distortion \u2014 maintains symmetrical radiation pattern.",
-                "advantage": "Simple construction, broadband performance, no capacitor needed. Maintains balanced feed without a balun. Easy to tune by adjusting hairpin length.",
-                "tuning": "Adjust the length and spacing of the hairpin conductors. Longer hairpin = more inductance. Typical hairpin is 2-4 inches of wire or rod.",
+                "mechanism": "A short length of transmission line (hairpin or beta match) is connected across the feedpoint terminals. The shorted stub acts as an inductor to cancel the capacitive reactance of the slightly shortened driven element, transforming the low feedpoint impedance (typically 15\u201325\u03a9) up to 50\u03a9.",
+                "asymmetry": "Symmetrical design \u2014 no beam skew. The hairpin is balanced across both sides of the driven element, preserving radiation pattern symmetry.",
+                "pattern_stabilization": "Stabilizes the pattern by ensuring proper impedance match. Without matching, high SWR causes RF current on the coax shield (feedline radiation) which severely distorts the pattern, skews lobes, and reduces F/B ratio.",
+                "balance": "Balanced matching system \u2014 when used with a 1:1 current balun, it preserves symmetry of radiation lobes and prevents common-mode currents.",
+                "pattern_impact": "Physically small relative to wavelength, positioned at the center (neutral) point of the driven element \u2014 its own radiation is negligible, creates no new lobes or nulls.",
+                "advantage": "Simple construction, broadband performance, no capacitor needed. Maintains balanced feed. The driven element is slightly shortened to create the necessary capacitive reactance for the match.",
+                "tuning": "Adjust the length and spacing of the hairpin conductors. Longer hairpin = more inductance. Typical hairpin is 2\u20134 inches of wire or rod. Element shortening ensures operation at designed resonant frequency for best gain and pattern.",
                 "tradeoff": "Requires a split driven element (gap at center). Slightly less precise impedance match than gamma at a single frequency, but better bandwidth.",
+                "balun_note": "IMPORTANT: Always use a current choke balun alongside the hairpin to prevent the coax from becoming part of the radiating structure.",
             },
         }
         return round(max(1.0, matched_swr), 3), info
