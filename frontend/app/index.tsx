@@ -396,6 +396,7 @@ export default function AntennaCalculator() {
   const [showSpecSheet, setShowSpecSheet] = useState(false);
   const [designerInfoContent, setDesignerInfoContent] = useState('');
   const [gainMode, setGainMode] = useState<'realworld' | 'freespace'>('realworld');
+  const [optimizingStacking, setOptimizingStacking] = useState(false);
 
   // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
