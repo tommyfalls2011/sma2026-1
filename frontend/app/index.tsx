@@ -575,6 +575,53 @@ export default function AntennaCalculator() {
 
   useEffect(() => { calculateAntenna(); }, []);
 
+  const optimizeStacking = async () => {
+    setOptimizingStacking(true);
+    try {
+      const elementsForApi = elementUnit === 'meters' 
+        ? inputs.elements.map(e => ({ element_type: e.element_type, length: parseFloat(e.length) * 39.3701, diameter: parseFloat(e.diameter) * 39.3701, position: parseFloat(e.position) * 39.3701 }))
+        : inputs.elements.map(e => ({ element_type: e.element_type, length: parseFloat(e.length) || 0, diameter: parseFloat(e.diameter) || 0, position: parseFloat(e.position) || 0 }));
+      const response = await fetch(`${BACKEND_URL}/api/optimize-stacking`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          num_elements: inputs.num_elements,
+          elements: elementsForApi,
+          height_from_ground: parseFloat(inputs.height_from_ground) || 0,
+          height_unit: inputs.height_unit,
+          boom_diameter: parseFloat(inputs.boom_diameter) || 0,
+          boom_unit: inputs.boom_unit,
+          band: inputs.band,
+          frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+          antenna_orientation: inputs.antenna_orientation,
+          dual_active: inputs.dual_active,
+          dual_selected_beam: inputs.dual_selected_beam,
+          feed_type: inputs.feed_type,
+          stacking_orientation: inputs.stacking.orientation,
+          stacking_layout: inputs.stacking.layout,
+          num_antennas: inputs.stacking.layout === 'quad' ? 4 : inputs.stacking.num_antennas,
+          min_spacing_ft: 15,
+          max_spacing_ft: 40,
+          taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
+          corona_balls: inputs.corona_balls.enabled ? { ...inputs.corona_balls, diameter: parseFloat(inputs.corona_balls.diameter) || 1.0 } : null,
+          ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInputs(p => ({
+          ...p,
+          stacking: {
+            ...p.stacking,
+            spacing: data.best_spacing_ft.toString(),
+            spacing_unit: 'ft',
+            ...(p.stacking.layout === 'quad' ? { h_spacing: (data.best_h_spacing_ft || data.best_spacing_ft).toString(), h_spacing_unit: 'ft' } : {}),
+          }
+        }));
+      }
+    } catch (err) { console.error(err); }
+    setOptimizingStacking(false);
+  };
+
   const autoTune = async () => {
     setTuning(true);
     try {
