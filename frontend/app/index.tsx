@@ -1072,6 +1072,26 @@ export default function AntennaCalculator() {
       csv += `  Efficiency Bonus:, +${results.ground_radials_info.estimated_improvements?.efficiency_bonus_percent}%\n\n`;
     }
     
+    // --- WIND LOAD ---
+    if (results.wind_load) {
+      csv += 'WIND LOAD & MECHANICAL\n';
+      csv += `  Total Wind Area:, ${results.wind_load.total_area_sqft} sq ft\n`;
+      csv += `  Total Weight:, ${results.wind_load.total_weight_lbs} lbs\n`;
+      csv += `  Elements:, ${results.wind_load.element_weight_lbs} lbs\n`;
+      csv += `  Boom (${results.wind_load.boom_length_ft}ft):, ${results.wind_load.boom_weight_lbs} lbs\n`;
+      csv += `  Hardware/Truss:, ${results.wind_load.hardware_weight_lbs} lbs\n`;
+      csv += `  Turn Radius:, ${results.wind_load.turn_radius_ft}' (${results.wind_load.turn_radius_in}")\n`;
+      csv += `  Survival Rating:, ${results.wind_load.survival_mph} mph\n`;
+      if (results.wind_load.has_truss) csv += `  Truss:, Boom support wires recommended (boom > 12ft)\n`;
+      csv += '\n  WIND FORCE BY SPEED\n';
+      csv += '  MPH, Force (lbs), Torque (ft-lbs)\n';
+      ['50','70','80','90','100','120'].forEach(mph => {
+        const r = results.wind_load.wind_ratings?.[mph];
+        if (r) csv += `  ${mph}, ${r.force_lbs}, ${r.torque_ft_lbs}\n`;
+      });
+      csv += '\n';
+    }
+    
     // --- FAR-FIELD PATTERN DATA ---
     csv += 'FAR-FIELD RADIATION PATTERN\n';
     csv += 'Angle (°), Magnitude (%)\n';
