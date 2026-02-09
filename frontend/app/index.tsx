@@ -1201,8 +1201,10 @@ export default function AntennaCalculator() {
     // --- BOOM CORRECTION ---
     if (results.boom_correction_info) {
       csv += 'BOOM CORRECTION (G3SEK/DL6WU)\n';
-      csv += `  Mount Type:, ${results.boom_correction_info.boom_grounded ? 'Grounded (Electrically Bonded)' : 'Insulated (Free-Space)'}\n`;
+      const mt = results.boom_correction_info.boom_mount;
+      csv += `  Mount Type:, ${mt === 'bonded' ? 'Bonded (Elements to Metal Boom)' : mt === 'insulated' ? 'Insulated on Metal Boom' : 'Non-Conductive Boom'}\n`;
       if (results.boom_correction_info.enabled) {
+        csv += `  Correction Level:, ${(results.boom_correction_info.correction_multiplier * 100).toFixed(0)}% of full DL6WU\n`;
         csv += `  Boom/Element Ratio:, ${results.boom_correction_info.boom_to_element_ratio}:1\n`;
         csv += `  Shorten Each Element:, ${results.boom_correction_info.correction_total_in}" total\n`;
         csv += `  Per Side:, ${results.boom_correction_info.correction_per_side_in}"\n`;
@@ -1211,7 +1213,15 @@ export default function AntennaCalculator() {
         csv += `  Impedance Shift:, ${results.boom_correction_info.impedance_shift_ohm} ohm\n`;
       }
       csv += `  Note:, ${results.boom_correction_info.description}\n`;
+      if (results.boom_correction_info.corrected_elements?.length > 0) {
+        csv += '\n  CORRECTED CUT LIST\n';
+        csv += '  Element, Original, Corrected, Correction\n';
+        results.boom_correction_info.corrected_elements.forEach((el: any) => {
+          csv += `  ${el.type}, ${el.original_length}", ${el.corrected_length}", -${el.correction}"\n`;
+        });
+      }
       if (results.boom_correction_info.practical_notes) {
+        csv += '\n  PRACTICAL NOTES\n';
         results.boom_correction_info.practical_notes.forEach((note: string) => {
           csv += `  -, ${note}\n`;
         });
