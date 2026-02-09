@@ -13,7 +13,7 @@ const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adap
 const { width: screenWidth } = Dimensions.get('window');
 const APP_VERSION = '3.1.5';
 const APP_BUILD_DATE = '2026-02-09T12:00:00';
-const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/2d5373acc10905c29146afb5fd894c97/raw/';
+const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
 const TIER_COLORS: Record<string, string> = {
   trial: '#888',
