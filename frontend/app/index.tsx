@@ -316,7 +316,7 @@ export default function AntennaCalculator() {
       { element_type: 'driven', length: '204', diameter: '0.5', position: '48' },
     ],
     height_from_ground: '54', height_unit: 'ft', boom_diameter: '1.5', boom_unit: 'inches', band: '11m_cb', frequency_mhz: '27.185',
-    stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
+    stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
     taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '36', start_diameter: '0.625', end_diameter: '0.5' }, { length: '36', start_diameter: '0.5', end_diameter: '0.375' }] },
     corona_balls: { enabled: false, diameter: '1.0' },
     ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
