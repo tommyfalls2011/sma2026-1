@@ -1745,14 +1745,27 @@ export default function AntennaCalculator() {
                       const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
                       const wlFt = (984 / freqMhz) * opt.mult;
                       const wlFtStr = wlFt.toFixed(1);
+                      const step = (984 / freqMhz) * 0.25;
                       const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
                       const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
                       return (
-                        <TouchableOpacity key={opt.label} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } }))}
-                          style={{ flex: 1, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#E91E63' : '#333', backgroundColor: isActive ? 'rgba(233,30,99,0.15)' : '#1a1a1a', alignItems: 'center' }}>
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#E91E63' : '#888' }}>{opt.label}</Text>
-                          <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
-                        </TouchableOpacity>
+                        <View key={opt.label} style={{ flex: 1, alignItems: 'center' }}>
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } }))}
+                            style={{ width: '100%', paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#E91E63' : '#333', backgroundColor: isActive ? 'rgba(233,30,99,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#E91E63' : '#888' }}>{opt.label}</Text>
+                            <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
+                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
+                            <TouchableOpacity onPress={() => { const v = Math.max(1, wlFt - step).toFixed(1); setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } })); }}
+                              style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                              <Ionicons name="arrow-back" size={12} color="#E91E63" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => { const v = (wlFt + step).toFixed(1); setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } })); }}
+                              style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                              <Ionicons name="arrow-forward" size={12} color="#E91E63" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       );
                     })}
                   </View>
