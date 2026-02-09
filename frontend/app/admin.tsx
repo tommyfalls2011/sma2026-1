@@ -143,6 +143,11 @@ export default function AdminScreen() {
     {id:"25",order:25,category:"Physics",impact:"moderate",title:"Horizontal Stacking Notes",description:"Horizontal stacking section in spec sheet: directional pattern warning, dead zone tradeoff, elevation/azimuth behavior differences."},
     {id:"26",order:26,category:"Feature",impact:"moderate",title:"Stacking Spacing Optimizer (Backend)",description:"POST /api/optimize-stacking sweeps 15-40ft spacing, scores each option, returns optimal spacing. Weights ~1 wavelength for vertical."},
     {id:"27",order:27,category:"Feature",impact:"light",title:"Changelog Database Storage",description:"All app changes stored in MongoDB changelog collection with GET /api/changelog endpoint and admin panel viewer."},
+    {id:"28",order:28,category:"Feature",impact:"big",title:"Resend Email System",description:"Full email system via Resend: welcome emails on registration, password reset with code verification, subscription receipts, and announcement/bulk emails from admin panel."},
+    {id:"29",order:29,category:"Feature",impact:"big",title:"Password Reset Flow",description:"Forgot Password on login screen. Sends 8-character reset code via email, user enters code + new password to reset. 1-hour expiry."},
+    {id:"30",order:30,category:"Feature",impact:"moderate",title:"Welcome Emails",description:"Automatic welcome email sent when new users register, listing app features and trial info."},
+    {id:"31",order:31,category:"Feature",impact:"moderate",title:"Subscription Receipts",description:"Users can request email receipt of their subscription details (plan, expiry, status)."},
+    {id:"32",order:32,category:"Feature",impact:"big",title:"App Update System",description:"Built-in update checker: app reads update.json from GitHub on launch, compares build dates, shows green banner with Download APK button if newer build available."},
   ];
   const [changelogEntries, setChangelogEntries] = useState<any[]>(BUILTIN_CHANGELOG);
   const [discCode, setDiscCode] = useState('');
