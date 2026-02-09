@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
 const APP_VERSION = '3.0.0';
-const APP_BUILD_DATE = '2026-02-09T17:00:00Z';
+const APP_BUILD_DATE = '2026-02-09T12:00:00';
 const UPDATE_CHECK_URL = 'https://raw.githubusercontent.com/tommyfalls2011/sma2026-1/main/frontend/update.json';
 
 const TIER_COLORS: Record<string, string> = {
