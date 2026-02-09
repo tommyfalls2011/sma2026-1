@@ -323,6 +323,7 @@ export default function AntennaCalculator() {
     use_reflector: true,
     antenna_orientation: 'horizontal',  // horizontal (flat), vertical, angle45, or dual
     dual_active: false,  // When dual: both H+V beams transmit simultaneously
+    dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',  // Which beam is selected in dual mode
     feed_type: 'gamma',  // direct, gamma, hairpin
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
