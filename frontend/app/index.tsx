@@ -402,7 +402,7 @@ export default function AntennaCalculator() {
   const [optimizingStacking, setOptimizingStacking] = useState(false);
 
   // Update checker state
-  const [updateAvailable, setUpdateAvailable] = useState<{version: string; apkUrl: string; notes: string; forceUpdate: boolean} | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState<{version: string; apkUrl: string; notes: string; forceUpdate: boolean; buildDate?: string} | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
   // Check GitHub for updates on launch
