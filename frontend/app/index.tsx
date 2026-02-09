@@ -328,6 +328,7 @@ export default function AntennaCalculator() {
     dual_active: false,  // When dual: both H+V beams transmit simultaneously
     dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',  // Which beam is selected in dual mode
     feed_type: 'gamma',  // direct, gamma, hairpin
+    boom_grounded: true,  // boom electrically grounded to elements or insulated
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
