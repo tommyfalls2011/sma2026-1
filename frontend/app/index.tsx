@@ -2442,11 +2442,17 @@ export default function AntennaCalculator() {
                   <SpecRow label="Optimal Spacing" value={`${results.stacking_info.optimal_spacing_ft}'`} />
                   <SpecRow label="Min Spacing" value={`${results.stacking_info.min_spacing_ft}'`} />
                   {results.stacking_info.vertical_notes && (
-                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>VERTICAL STACKING</Text>
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8, borderLeftWidth: 2, borderLeftColor: '#4CAF50' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#4CAF50', marginBottom: 4 }}>COLLINEAR VERTICAL STACKING</Text>
+                      <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: '600', marginBottom: 4 }}>{results.stacking_info.vertical_notes.alignment}</Text>
                       <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.vertical_notes.effect}</Text>
+                      <SpecRow label="  1λ Spacing" value={results.stacking_info.vertical_notes.one_wavelength_ft} small />
+                      <SpecRow label="  Alignment" value={results.stacking_info.vertical_notes.alignment_status} small />
                       <SpecRow label="  Isolation" value={results.stacking_info.vertical_notes.isolation} small />
-                      {results.stacking_info.vertical_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.vertical_notes.coupling_warning}</Text> : null}
+                      <Text style={{ fontSize: 9, color: '#FF9800', marginTop: 4 }}>{results.stacking_info.vertical_notes.best_practice}</Text>
+                      <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.vertical_notes.stagger_warning}</Text>
+                      <Text style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>{results.stacking_info.vertical_notes.feed_line_note}</Text>
+                      {results.stacking_info.vertical_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', fontWeight: '700', marginTop: 2 }}>{results.stacking_info.vertical_notes.coupling_warning}</Text> : null}
                     </View>
                   )}
                   {results.stacking_info.dual_stacking && (
