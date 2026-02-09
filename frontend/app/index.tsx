@@ -1051,6 +1051,9 @@ export default function AntennaCalculator() {
       csv += `    Corona Adjustment:, ${results.gain_breakdown.corona_adj || 0} dB\n`;
       csv += `    Height/Ground Bonus:, +${results.gain_breakdown.height_bonus || 0} dB\n`;
       csv += `    Boom Length Bonus:, +${results.gain_breakdown.boom_bonus || 0} dB\n`;
+      if (results.gain_breakdown.boom_grounded_adj) {
+        csv += `    Boom Grounded Adj:, ${results.gain_breakdown.boom_grounded_adj} dB\n`;
+      }
       if (results.gain_breakdown.ground_type) {
         csv += `    Ground Type:, ${results.gain_breakdown.ground_type} (scale: ${results.gain_breakdown.ground_scale || '-'})\n`;
       }
