@@ -1014,11 +1014,26 @@ export default function AntennaCalculator() {
     // --- STACKING ---
     if (results.stacking_enabled && results.stacking_info) {
         csv += 'STACKING CONFIGURATION\n';
+        csv += `  Layout:, ${results.stacking_info.layout === 'quad' ? '2x2 Quad (H-Frame)' : `${results.stacking_info.num_antennas}x Line (${results.stacking_info.orientation})`}\n`;
         csv += `  Antennas Stacked:, ${results.stacking_info.num_antennas}\n`;
       csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
+      if (results.stacking_info.quad_notes) {
+        csv += `  H Spacing:, ${results.stacking_info.quad_notes.h_spacing}\n`;
+      }
       csv += `  Stacking Gain Increase:, +${results.stacking_info.gain_increase_db} dB\n`;
       csv += `  Stacked Gain:, ${results.stacked_gain_dbi} dBi\n`;
       csv += `  Stacked Beamwidth H/V:, ${results.stacking_info.new_beamwidth_h}° / ${results.stacking_info.new_beamwidth_v}°\n`;
+      csv += `  Spacing Status:, ${results.stacking_info.spacing_status || '-'}\n`;
+      csv += `  Isolation:, ~${results.stacking_info.isolation_db}dB\n`;
+      if (results.stacking_info.quad_notes) {
+        csv += '\n  2x2 QUAD NOTES\n';
+        csv += `  Layout:, ${results.stacking_info.quad_notes.layout}\n`;
+        csv += `  Effect:, ${results.stacking_info.quad_notes.effect}\n`;
+        csv += `  V Spacing:, ${results.stacking_info.quad_notes.v_spacing}\n`;
+        csv += `  H Spacing:, ${results.stacking_info.quad_notes.h_spacing}\n`;
+        csv += `  H-Frame Note:, ${results.stacking_info.quad_notes.h_frame_note}\n`;
+        csv += `  Identical Note:, ${results.stacking_info.quad_notes.identical_note}\n`;
+      }
       if (results.stacking_info.power_splitter) {
         csv += '\n  POWER SPLITTER\n';
         csv += `  Type:, ${results.stacking_info.power_splitter.type}\n`;
@@ -1649,7 +1664,7 @@ export default function AntennaCalculator() {
               {/* Bonuses */}
               {results.taper_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-merge" size={12} color="#E91E63" /> Taper: +{results.taper_info.gain_bonus}dB, +{results.taper_info.bandwidth_improvement} BW</Text></View>}
               {results.corona_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="ellipse" size={12} color="#00BCD4" /> Corona: {results.corona_info.corona_reduction}% reduction</Text></View>}
-              {results.stacking_enabled && results.stacking_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="layers" size={12} color="#9C27B0" /> Stacked: +{results.stacking_info.gain_increase_db}dB ({results.gain_dbi}→{results.stacked_gain_dbi})</Text></View>}
+              {results.stacking_enabled && results.stacking_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="layers" size={12} color="#9C27B0" /> {results.stacking_info.layout === 'quad' ? '2x2 Quad' : 'Stacked'}: +{results.stacking_info.gain_increase_db}dB ({results.gain_dbi}→{results.stacked_gain_dbi})</Text></View>}
               {results.ground_radials_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-network" size={12} color="#8BC34A" /> Ground Radials ({results.ground_radials_info.ground_type}): +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% eff</Text></View>}
               {results.matching_info && results.feed_type !== 'direct' && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-merge" size={12} color="#2196F3" /> {results.matching_info.type}: SWR {results.matching_info.original_swr}→{results.matching_info.matched_swr} {results.matching_info.bandwidth_effect}</Text></View>}
               {results.dual_polarity_info && <View style={[styles.bonusCard, { borderLeftWidth: 2, borderLeftColor: '#FF9800' }]}><Text style={styles.bonusText}><Ionicons name="swap-horizontal" size={12} color="#FF9800" /> Dual Pol: {results.dual_polarity_info.description} | +{results.dual_polarity_info.coupling_bonus_db}dB coupling | +{results.dual_polarity_info.fb_bonus_db}dB F/B</Text></View>}
