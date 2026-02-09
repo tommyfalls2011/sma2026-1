@@ -2850,10 +2850,11 @@ export default function AntennaCalculator() {
 
               {/* Section: Boom Correction */}
               {results.boom_correction_info && (
-                <SpecSection title={`Boom ${results.boom_correction_info.boom_grounded ? 'Grounded' : 'Insulated'}`} icon={results.boom_correction_info.boom_grounded ? 'flash' : 'shield'} color={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'}>
-                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_grounded ? 'Electrically Bonded' : 'Insulated (Free-Space)'} accent={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'} />
+                <SpecSection title={`Boom: ${results.boom_correction_info.boom_mount === 'bonded' ? 'Bonded' : results.boom_correction_info.boom_mount === 'insulated' ? 'Insulated' : 'Non-Conductive'}`} icon={results.boom_correction_info.boom_mount === 'bonded' ? 'flash' : results.boom_correction_info.boom_mount === 'nonconductive' ? 'leaf' : 'shield-half'} color={results.boom_correction_info.boom_mount === 'bonded' ? '#FF9800' : results.boom_correction_info.boom_mount === 'insulated' ? '#2196F3' : '#4CAF50'}>
+                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_mount === 'bonded' ? 'Elements Bonded to Metal Boom' : results.boom_correction_info.boom_mount === 'insulated' ? 'Insulated on Metal Boom' : 'Non-Conductive Boom'} accent={results.boom_correction_info.boom_mount === 'bonded' ? '#FF9800' : results.boom_correction_info.boom_mount === 'insulated' ? '#2196F3' : '#4CAF50'} />
                   {results.boom_correction_info.enabled && (
                     <>
+                      <SpecRow label="Correction" value={`${(results.boom_correction_info.correction_multiplier * 100).toFixed(0)}% of full DL6WU`} />
                       <SpecRow label="Boom/Element Ratio" value={`${results.boom_correction_info.boom_to_element_ratio}:1`} />
                       <SpecRow label="Shorten Each Element" value={`${results.boom_correction_info.correction_total_in}" total`} accent="#FF9800" />
                       <SpecRow label="Per Side" value={`${results.boom_correction_info.correction_per_side_in}"`} small />
@@ -2863,6 +2864,29 @@ export default function AntennaCalculator() {
                     </>
                   )}
                   <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                  {/* CORRECTED CUT LIST */}
+                  {results.boom_correction_info.corrected_elements && results.boom_correction_info.corrected_elements.length > 0 && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1a2a1a', borderRadius: 6, padding: 8, borderWidth: 1, borderColor: '#4CAF5044' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#4CAF50', marginBottom: 6 }}>CORRECTED CUT LIST</Text>
+                      <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#666' }}>ELEMENT</Text>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#666', textAlign: 'center' }}>ORIGINAL</Text>
+                        <Text style={{ flex: 0.3, fontSize: 8, color: '#666', textAlign: 'center' }}></Text>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#4CAF50', textAlign: 'center' }}>CUT TO</Text>
+                      </View>
+                      {results.boom_correction_info.corrected_elements.map((el: any, i: number) => (
+                        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 3, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: '#333' }}>
+                          <Text style={{ flex: 1, fontSize: 9, fontWeight: '600', color: el.type === 'reflector' ? '#f44336' : el.type === 'driven' ? '#4CAF50' : '#2196F3' }}>
+                            {el.type === 'reflector' ? 'Reflector' : el.type === 'driven' ? 'Driven' : `Director ${i - (results.boom_correction_info.corrected_elements[0]?.type === 'reflector' ? 2 : 1) + 1}`}
+                          </Text>
+                          <Text style={{ flex: 1, fontSize: 10, color: '#999', textAlign: 'center' }}>{el.original_length}"</Text>
+                          <Text style={{ flex: 0.3, fontSize: 10, color: '#FF9800', textAlign: 'center' }}>{'\u2192'}</Text>
+                          <Text style={{ flex: 1, fontSize: 10, fontWeight: '700', color: '#4CAF50', textAlign: 'center' }}>{el.corrected_length}"</Text>
+                        </View>
+                      ))}
+                      <Text style={{ fontSize: 7, color: '#666', marginTop: 4, fontStyle: 'italic' }}>Lengths shortened by {results.boom_correction_info.correction_total_in}" to compensate for boom capacitance</Text>
+                    </View>
+                  )}
                   {results.boom_correction_info.practical_notes && (
                     <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
                       <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>PRACTICAL NOTES</Text>
