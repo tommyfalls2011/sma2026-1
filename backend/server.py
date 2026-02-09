@@ -1390,6 +1390,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if feed_type != "direct":
         swr = round(matched_swr, 3)
     
+    # Apply boom grounded SWR correction (detuned parasitics worsen match)
+    if boom_correction["enabled"]:
+        swr = round(swr * boom_correction["swr_factor"], 3)
+        swr = round(max(1.0, min(swr, 5.0)), 2)
+    
     # === F/B and F/S RATIOS ===
     if n == 2: fb_ratio, fs_ratio = 14, 8
     elif n == 3: fb_ratio, fs_ratio = 20, 12
