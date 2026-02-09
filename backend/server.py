@@ -2016,6 +2016,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         matching_info=matching_info,
         dual_polarity_info=dual_info,
         wind_load=wind_load_info,
+        boom_correction_info=boom_correction if boom_correction.get("enabled") else boom_correction,
     )
 
 
