@@ -1339,9 +1339,12 @@ export default function AdminScreen() {
                   <View key={entry.id} style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#333', borderLeftWidth: 3, borderLeftColor: catColor }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                           <View style={{ backgroundColor: catColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
                             <Text style={{ fontSize: 9, color: '#fff', fontWeight: '700' }}>{entry.category}</Text>
+                          </View>
+                          <View style={{ backgroundColor: entry.impact === 'big' ? '#f44336' : entry.impact === 'moderate' ? '#FF9800' : '#4CAF50', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 9, color: '#fff', fontWeight: '700' }}>{entry.impact === 'big' ? 'BIG' : entry.impact === 'moderate' ? 'MODERATE' : 'LIGHT'}</Text>
                           </View>
                           <Text style={{ fontSize: 9, color: '#666' }}>#{entry.order}</Text>
                         </View>
