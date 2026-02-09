@@ -1289,6 +1289,22 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # === BOOM CORRECTION (DL6WU/G3SEK) ===
     boom_correction = calculate_boom_correction(boom_dia_m, avg_element_dia, wavelength, input_data.boom_grounded, input_data.boom_mount)
     
+    # Populate corrected cut list for each element
+    if boom_correction.get("enabled") and boom_correction.get("correction_total_in", 0) > 0:
+        correction_total = boom_correction["correction_total_in"]
+        corrected_elements = []
+        for el in input_data.elements:
+            original_len = el.length
+            corrected_len = round(original_len - correction_total, 3)
+            corrected_elements.append({
+                "type": el.element_type,
+                "original_length": original_len,
+                "corrected_length": corrected_len,
+                "correction": round(correction_total, 3),
+                "unit": "in"
+            })
+        boom_correction["corrected_elements"] = corrected_elements
+    
     # Check if antenna has a reflector
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
