@@ -1367,6 +1367,24 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1, zIndex: 2000 }}><Dropdown label="Band" value={inputs.band} options={BANDS.map(b => ({ value: b.id, label: b.name }))} onChange={handleBandChange} /></View>
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Freq (MHz)</Text><TextInput style={styles.input} value={inputs.frequency_mhz} onChangeText={v => setInputs(p => ({ ...p, frequency_mhz: v }))} keyboardType="decimal-pad" /></View>
             </View>
+            {inputs.band === '11m_cb' && (
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                {[
+                  { label: 'Ch6 Super Bowl', freq: '27.025' },
+                  { label: 'Ch11 Trax', freq: '27.085' },
+                  { label: 'Ch19 Truckers', freq: '27.185' },
+                  { label: 'Ch28 High Rollers', freq: '27.285' },
+                ].map(ch => {
+                  const isActive = inputs.frequency_mhz === ch.freq;
+                  return (
+                    <TouchableOpacity key={ch.freq} onPress={() => setInputs(p => ({ ...p, frequency_mhz: ch.freq }))}
+                      style={{ flex: 1, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#FF9800' : '#333', backgroundColor: isActive ? 'rgba(255,152,0,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 8, fontWeight: '700', color: isActive ? '#FF9800' : '#888' }}>{ch.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
             
             {/* Antenna Orientation */}
             <View style={styles.orientationSection}>
