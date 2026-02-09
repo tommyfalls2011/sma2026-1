@@ -2552,10 +2552,13 @@ export default function AntennaCalculator() {
                         <Text style={{ fontSize: 9, fontWeight: '700', color: '#555', marginBottom: 3 }}>HOW IT WORKS</Text>
                         <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.mechanism}</Text>
                         {results.matching_info.technical_notes.asymmetry && <Text style={{ fontSize: 9, color: '#FF9800', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.asymmetry}</Text>}
+                        {results.matching_info.technical_notes.pattern_stabilization && <Text style={{ fontSize: 9, color: '#4CAF50', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.pattern_stabilization}</Text>}
+                        {results.matching_info.technical_notes.balance && <Text style={{ fontSize: 9, color: '#2196F3', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.balance}</Text>}
                         <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.pattern_impact}</Text>
                         <Text style={{ fontSize: 9, color: '#4CAF50', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.advantage}</Text>
                         <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.tuning}</Text>
                         <Text style={{ fontSize: 9, color: '#888', fontStyle: 'italic', lineHeight: 14 }}>{results.matching_info.technical_notes.mitigation || results.matching_info.technical_notes.tradeoff}</Text>
+                        {results.matching_info.technical_notes.balun_note && <Text style={{ fontSize: 9, color: '#f44336', fontWeight: '700', lineHeight: 14, marginTop: 3 }}>{results.matching_info.technical_notes.balun_note}</Text>}
                       </View>
                     )}
                   </View>
