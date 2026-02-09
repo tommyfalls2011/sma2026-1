@@ -1415,6 +1415,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     fb_ratio += taper_effects["fb_bonus"]
     fs_ratio += taper_effects["fs_bonus"]
+    
+    # Boom grounded correction: detuned parasitics reduce F/B
+    if boom_correction["enabled"]:
+        fb_ratio += boom_correction["fb_adj_db"]
+        fs_ratio += boom_correction["fb_adj_db"] * 0.5  # F/S affected less
+    
     fb_ratio = round(min(fb_ratio, 65), 1)
     fs_ratio = round(min(fs_ratio, 30), 1)
     
