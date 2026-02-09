@@ -1747,11 +1747,7 @@ export default function AntennaCalculator() {
               <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Boom center to boom center. Min recommended: 0.5λ of lowest frequency.</Text>
               {inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && (
                 <Text style={{ fontSize: 9, color: '#4CAF50', marginTop: 4, fontStyle: 'italic' }}>Collinear: Keep antennas on same vertical axis, element-to-element. Do NOT stagger or offset.</Text>
-              )}
-              <TouchableOpacity onPress={optimizeStacking} disabled={optimizingStacking} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: optimizingStacking ? '#333' : '#9C27B0', borderRadius: 8, paddingVertical: 10, marginTop: 8, gap: 6 }}>
-                <Ionicons name={optimizingStacking ? 'hourglass-outline' : 'flash'} size={14} color="#fff" />
-                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{optimizingStacking ? 'Calculating 15\'-40\'...' : 'Auto Spacing (15\'-40\')'}</Text>
-              </TouchableOpacity></>            )}
+              )}</>            )}
           </View>
 
           {/* Results */}
