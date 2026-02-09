@@ -1504,7 +1504,26 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             new_beamwidth_v = beamwidth_v
         
         stacked_pattern = generate_stacked_pattern(far_field_pattern, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
-        optimal_spacing_ft = round((wavelength * 0.65) / 0.3048, 1)
+        # Stacking guidance based on orientation and polarization
+        is_dual_stacking = is_dual
+        min_spacing_wl = 0.5 if stacking.orientation == "vertical" else 0.65
+        optimal_spacing_wl = 1.0 if stacking.orientation == "vertical" else 0.65
+        optimal_spacing_ft = round((wavelength * optimal_spacing_wl) / 0.3048, 1)
+        
+        # Isolation estimate based on spacing (vertical stacking)
+        if stacking.orientation == "vertical":
+            if spacing_wavelengths >= 2.0:
+                isolation_db = 30
+            elif spacing_wavelengths >= 1.0:
+                isolation_db = 20 + (spacing_wavelengths - 1.0) * 10
+            elif spacing_wavelengths >= 0.5:
+                isolation_db = 12 + (spacing_wavelengths - 0.5) * 16
+            else:
+                isolation_db = max(5, spacing_wavelengths * 24)
+        else:
+            isolation_db = 15  # Horizontal stacking has less natural isolation
+        
+        spacing_status = "Too close — high mutual coupling" if spacing_wavelengths < 0.25 else ("Minimum — some coupling" if spacing_wavelengths < 0.5 else ("Good" if spacing_wavelengths < 1.0 else ("Optimal" if spacing_wavelengths < 2.0 else "Wide — diminishing returns")))
         
         stacking_info = {
             "orientation": stacking.orientation,
@@ -1517,6 +1536,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "new_beamwidth_v": new_beamwidth_v,
             "stacked_multiplication_factor": round(10 ** (stacked_gain_dbi / 10), 2),
             "optimal_spacing_ft": optimal_spacing_ft,
+            "min_spacing_ft": round((wavelength * min_spacing_wl) / 0.3048, 1),
+            "spacing_status": spacing_status,
+            "isolation_db": round(isolation_db, 1),
+            "phasing": {
+                "requirement": "0 deg phase — all feed lines identical length",
+                "cable_note": "Cable lengths must match to the millimeter for proper phasing",
+                "combiner": f"{stacking.num_antennas}:1 Hybrid Splitter/Combiner or Power Divider",
+            },
             "power_splitter": {
                 "type": f"{stacking.num_antennas}:1 Power Splitter/Combiner",
                 "input_impedance": "50 ohm",
@@ -1526,11 +1553,30 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 "quarter_wave_in": round((wavelength * 0.25) / 0.0254, 1),
                 "power_per_antenna_100w": round(100 / stacking.num_antennas, 1),
                 "power_per_antenna_1kw": round(1000 / stacking.num_antennas, 1),
-                "phase_lines": f"All feed lines must be identical length for 0 deg phase shift",
+                "phase_lines": "All feed lines must be identical length for 0 deg phase shift",
                 "min_power_rating": f"{round(1000 / stacking.num_antennas * 1.5)} W per port recommended",
                 "isolation_note": "Port isolation prevents mismatch on one antenna from degrading others",
             },
         }
+        
+        # Add dual-pol stacking specific info
+        if is_dual_stacking:
+            stacking_info["dual_stacking"] = {
+                "note": "Stack identical dual-pol antennas only — mismatched models cause pattern distortion",
+                "cross_pol": "Each antenna maintains H+V elements at their original angles",
+                "mimo_capable": stacking.num_antennas >= 2,
+                "mimo_note": "2x2 MIMO possible with +45/-45 deg cross-polarization for multipath diversity" if stacking.num_antennas >= 2 else "",
+                "weatherproofing": "Use self-amalgamating tape on all exterior connectors to prevent water ingress",
+                "wind_load": f"Stacked array of {stacking.num_antennas} antennas — verify mast rating for total weight and wind surface area",
+            }
+        
+        # Vertical stacking specific notes
+        if stacking.orientation == "vertical":
+            stacking_info["vertical_notes"] = {
+                "effect": "Narrows vertical beamwidth, focuses energy toward horizon — increases gain without narrowing horizontal coverage",
+                "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
+                "coupling_warning": "Below 0.25 lambda spacing causes severe mutual coupling and detuning" if spacing_wavelengths < 0.25 else "",
+            }
         beamwidth_h, beamwidth_v = new_beamwidth_h, new_beamwidth_v
     
     swr_desc = "Perfect" if swr <= 1.1 else ("Excellent" if swr <= 1.3 else ("Very Good" if swr <= 1.5 else ("Good" if swr <= 2.0 else "Fair")))
