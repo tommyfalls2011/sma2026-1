@@ -1618,16 +1618,41 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         stacking = input_data.stacking
         spacing_m = convert_spacing_to_meters(stacking.spacing, stacking.spacing_unit)
         spacing_wavelengths = spacing_m / wavelength
-        stacked_gain_dbi, gain_increase = calculate_stacking_gain(gain_dbi, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
         
-        if stacking.orientation == "vertical":
-            new_beamwidth_v = calculate_stacked_beamwidth(beamwidth_v, stacking.num_antennas, spacing_wavelengths)
-            new_beamwidth_h = beamwidth_h
+        if stacking.layout == "quad":
+            # 2x2 Quad Stack: 4 antennas in H-frame arrangement
+            # 2 vertical × 2 horizontal = narrows both beamwidths
+            num_v = 2  # vertical stack
+            num_h = 2  # horizontal stack
+            
+            # Horizontal spacing
+            h_spacing_val = stacking.h_spacing if stacking.h_spacing else stacking.spacing
+            h_spacing_unit = stacking.h_spacing_unit if stacking.h_spacing else stacking.spacing_unit
+            h_spacing_m = convert_spacing_to_meters(h_spacing_val, h_spacing_unit)
+            h_spacing_wavelengths = h_spacing_m / wavelength
+            
+            # Gain: each doubling adds ~2.5-3dB, quad = 4 antennas ≈ +4.5 to +6dB
+            v_gain, v_increase = calculate_stacking_gain(gain_dbi, num_v, spacing_wavelengths, "vertical")
+            stacked_gain_dbi, h_increase = calculate_stacking_gain(v_gain, num_h, h_spacing_wavelengths, "horizontal")
+            gain_increase = round(stacked_gain_dbi - gain_dbi, 1)
+            
+            # Both beamwidths narrow
+            new_beamwidth_v = calculate_stacked_beamwidth(beamwidth_v, num_v, spacing_wavelengths)
+            new_beamwidth_h = calculate_stacked_beamwidth(beamwidth_h, num_h, h_spacing_wavelengths)
+            
+            stacked_pattern = generate_stacked_pattern(far_field_pattern, 4, spacing_wavelengths, "vertical")
         else:
-            new_beamwidth_h = calculate_stacked_beamwidth(beamwidth_h, stacking.num_antennas, spacing_wavelengths)
-            new_beamwidth_v = beamwidth_v
-        
-        stacked_pattern = generate_stacked_pattern(far_field_pattern, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
+            # Line stack: all in one direction
+            stacked_gain_dbi, gain_increase = calculate_stacking_gain(gain_dbi, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
+            
+            if stacking.orientation == "vertical":
+                new_beamwidth_v = calculate_stacked_beamwidth(beamwidth_v, stacking.num_antennas, spacing_wavelengths)
+                new_beamwidth_h = beamwidth_h
+            else:
+                new_beamwidth_h = calculate_stacked_beamwidth(beamwidth_h, stacking.num_antennas, spacing_wavelengths)
+                new_beamwidth_v = beamwidth_v
+            
+            stacked_pattern = generate_stacked_pattern(far_field_pattern, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
         # Stacking guidance based on orientation and polarization
         is_dual_stacking = is_dual
         min_spacing_wl = 0.5 if stacking.orientation == "vertical" else 0.65
