@@ -1705,7 +1705,11 @@ export default function AntennaCalculator() {
                   <Text style={{ fontSize: 9, color: '#E91E63', marginTop: 4 }}>2x2 Quad: 4 identical antennas in H-frame (2V x 2H). Narrows both beamwidths.</Text>
                 </View>
               )}
-              <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Boom center to boom center. Min recommended: 0.5λ of lowest frequency.</Text></>            )}
+              <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Boom center to boom center. Min recommended: 0.5λ of lowest frequency.</Text>
+              <TouchableOpacity onPress={optimizeStacking} disabled={optimizingStacking} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: optimizingStacking ? '#333' : '#9C27B0', borderRadius: 8, paddingVertical: 10, marginTop: 8, gap: 6 }}>
+                <Ionicons name={optimizingStacking ? 'hourglass-outline' : 'flash'} size={14} color="#fff" />
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{optimizingStacking ? 'Calculating 15\'-40\'...' : 'Auto Spacing (15\'-40\')'}</Text>
+              </TouchableOpacity></>            )}
           </View>
 
           {/* Results */}
