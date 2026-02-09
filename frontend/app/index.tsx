@@ -2817,6 +2817,27 @@ export default function AntennaCalculator() {
                 </SpecSection>
               )}
 
+              {/* Section: Boom Correction */}
+              {results.boom_correction_info && (
+                <SpecSection title={`Boom ${results.boom_correction_info.boom_grounded ? 'Grounded' : 'Insulated'}`} icon={results.boom_correction_info.boom_grounded ? 'flash' : 'shield'} color={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'}>
+                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_grounded ? 'Electrically Bonded' : 'Insulated'} accent={results.boom_correction_info.boom_grounded ? '#FF9800' : '#2196F3'} />
+                  {results.boom_correction_info.enabled && (
+                    <>
+                      <SpecRow label="Boom/Element Ratio" value={`${results.boom_correction_info.boom_to_element_ratio}:1`} />
+                      <SpecRow label="Correction/Side" value={`${results.boom_correction_info.correction_per_side_in}"`} />
+                      <SpecRow label="Total Correction" value={`${results.boom_correction_info.correction_total_in}" per element`} accent="#FF9800" />
+                      <SpecRow label="Gain Effect" value={`${results.boom_correction_info.gain_adj_db} dB`} />
+                      <SpecRow label="F/B Effect" value={`${results.boom_correction_info.fb_adj_db} dB`} />
+                      <SpecRow label="Impedance Shift" value={`${results.boom_correction_info.impedance_shift_ohm} ohm`} />
+                      <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                    </>
+                  )}
+                  {!results.boom_correction_info.enabled && (
+                    <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                  )}
+                </SpecSection>
+              )}
+
               {/* Section: Wind Load */}
               {results.wind_load && (
                 <SpecSection title="Wind Load & Mechanical" icon="thunderstorm-outline" color="#FF5722">
