@@ -1722,11 +1722,11 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 8, color: isActive ? '#CE93D8' : '#666', marginTop: 1 }}>{wlFtStr} ft</Text>
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
-                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: Math.max(1, wlFt - step).toFixed(1), spacing_unit: 'ft' } }))}
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: Math.max(1, (parseFloat(p.stacking.spacing) || 0) - 1).toFixed(1), spacing_unit: 'ft' } }))}
                             style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                             <Ionicons name="arrow-back" size={12} color="#9C27B0" />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: (wlFt + step).toFixed(1), spacing_unit: 'ft' } }))}
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: ((parseFloat(p.stacking.spacing) || 0) + 1).toFixed(1), spacing_unit: 'ft' } }))}
                             style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                             <Ionicons name="arrow-forward" size={12} color="#9C27B0" />
                           </TouchableOpacity>
