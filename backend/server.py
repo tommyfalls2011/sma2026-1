@@ -1736,10 +1736,35 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 "one_wavelength_ft": f"{one_wl_ft} ft (1λ at {center_freq} MHz)",
                 "alignment_status": alignment_status,
                 "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
-                "stagger_warning": "Offsetting antennas creates directional nulls, reduces gain, causes impedance detuning and phasing cancellation",
-                "coupling_warning": "Below 0.25λ spacing causes severe mutual coupling — antennas act as parasitic elements and detune each other, raising SWR" if spacing_wavelengths < 0.25 else "",
-                "feed_line_note": "Feed lines from splitter to each antenna MUST be identical length and type to maintain in-phase operation",
+                "far_field": {
+                    "elevation": "Compresses toward horizon — squashed donut pattern, thinner but reaches further",
+                    "azimuth": "Remains omnidirectional (360°) — antennas centered on same axis, no left/right interference",
+                    "summary": "Vertical collinear stack: Maximum distance in ALL directions"
+                },
+                "stagger_warning": "DO NOT offset horizontally — creates clover-leaf pattern with directional nulls, dead zones, and tower shadowing distortion",
+                "stagger_effects": {
+                    "nulls": "Horizontal offset causes phased array effect — signal strong in some directions, severely weak in others",
+                    "gain_loss": "Loses the vertical compression that provides ~3dB horizon gain, energy wasted in unneeded directions",
+                    "detuning": "Close side-by-side placement causes mutual coupling — antennas act as parasitic elements, raising SWR",
+                    "phasing": "Horizontal offset means signals arrive at different times — may cancel instead of combine"
+                },
+                "coupling_warning": "Below 0.25λ spacing causes severe mutual coupling — antennas detune each other, SWR rises, potential transmitter damage" if spacing_wavelengths < 0.25 else "",
+                "feed_line_note": "Feed lines MUST be identical length and type — mismatched cables tilt the main lobe up into space or down into ground",
                 "best_practice": f"Ideal spacing: ~1λ ({one_wl_ft} ft center-to-center) for maximum gain with minimal interference",
+            }
+        
+        # Horizontal stacking specific notes
+        if stacking.orientation == "horizontal" and not is_quad:
+            stacking_info["horizontal_notes"] = {
+                "effect": "Narrows horizontal beamwidth — pattern becomes directional with focused lobes",
+                "far_field": {
+                    "elevation": "Stays wide — no vertical compression, does not improve horizon gain",
+                    "azimuth": "Becomes directional with lobes and nulls — NOT omnidirectional",
+                    "summary": "Horizontal stack: Intentional coverage in specific directions only"
+                },
+                "tradeoff": "Horizontal stacking sacrifices omnidirectional coverage for directional gain — creates dead zones at 90° to the stacking axis",
+                "feed_line_note": "Feed lines MUST be identical length and type to maintain in-phase operation",
+                "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
             }
         
         # Quad-specific notes
