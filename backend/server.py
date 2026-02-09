@@ -838,6 +838,126 @@ def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float
     return min(swr, 10.0)
 
 
+
+def calculate_wind_load(elements: list, boom_dia_in: float, boom_length_in: float, 
+                         is_dual: bool = False, num_stacked: int = 1) -> dict:
+    """Calculate wind load for the antenna assembly.
+    
+    Uses standard EIA/TIA-222 wind load formula:
+    Force (lbs) = P × Cd × A
+    Where P = wind pressure (psf) = 0.00256 × V² (mph)
+    Cd = drag coefficient (1.2 for round tubes, 2.0 for flat plates)
+    A = projected area (sq ft)
+    
+    Components: elements (round tubes), boom (round tube), 
+    boom-to-mast plate, guy wire supports (estimated)
+    """
+    # --- ELEMENT AREA ---
+    # Each element is a round tube: projected area = length × diameter
+    total_element_area_sqin = 0
+    element_weight_lbs = 0
+    for e in elements:
+        length_in = float(e.get('length', 0) if isinstance(e, dict) else e.length)
+        dia_in = float(e.get('diameter', 0.5) if isinstance(e, dict) else e.diameter)
+        area = length_in * dia_in  # sq inches projected
+        total_element_area_sqin += area
+        # Weight: aluminum 6063-T6, ~0.098 lb/cu.in
+        volume = math.pi * (dia_in/2)**2 * length_in  # cubic inches
+        element_weight_lbs += volume * 0.098
+    
+    # For dual polarity: double the elements (H + V sets)
+    if is_dual:
+        total_element_area_sqin *= 2
+        element_weight_lbs *= 2
+    
+    # --- BOOM AREA ---
+    boom_area_sqin = boom_length_in * boom_dia_in  # projected side area
+    boom_volume = math.pi * (boom_dia_in/2)**2 * boom_length_in
+    boom_weight_lbs = boom_volume * 0.098  # aluminum
+    
+    # --- HARDWARE ---
+    # Boom-to-mast plate: ~6"×6" flat plate
+    hardware_area_sqin = 36  # mast plate
+    hardware_weight_lbs = 2.0  # plate + U-bolts
+    
+    # Element-to-boom clamps: ~1 sq in each
+    num_elements = len(elements) * (2 if is_dual else 1)
+    hardware_area_sqin += num_elements * 1.0
+    hardware_weight_lbs += num_elements * 0.15  # each clamp ~0.15 lbs
+    
+    # Boom support/truss wires (for booms > 12 feet)
+    boom_length_ft = boom_length_in / 12
+    truss_area_sqin = 0
+    truss_weight_lbs = 0
+    if boom_length_ft > 12:
+        # Truss wire: ~0.125" dia steel, runs boom length × 2 (top and bottom)
+        truss_length_in = boom_length_in * 2
+        truss_area_sqin = truss_length_in * 0.125
+        truss_weight_lbs = truss_length_in * 0.005  # steel wire
+    
+    # --- TOTALS ---
+    total_area_sqin = total_element_area_sqin + boom_area_sqin + hardware_area_sqin + truss_area_sqin
+    total_area_sqft = total_area_sqin / 144
+    
+    total_weight_lbs = element_weight_lbs + boom_weight_lbs + hardware_weight_lbs + truss_weight_lbs
+    
+    # For stacking: multiply by number of antennas
+    if num_stacked > 1:
+        total_area_sqft *= num_stacked
+        total_weight_lbs *= num_stacked
+    
+    # Drag coefficient: 1.2 for round tubes (elements + boom), weighted avg with flat hardware
+    cd = 1.2
+    
+    # Calculate force at various wind speeds
+    # P (psf) = 0.00256 × V²
+    wind_ratings = {}
+    for mph in [50, 70, 80, 90, 100, 120]:
+        pressure_psf = 0.00256 * mph**2
+        force_lbs = pressure_psf * cd * total_area_sqft
+        torque_ft_lbs = force_lbs * (boom_length_ft / 2)  # at center of boom
+        wind_ratings[str(mph)] = {
+            "force_lbs": round(force_lbs, 1),
+            "torque_ft_lbs": round(torque_ft_lbs, 1),
+        }
+    
+    # Survival rating: find max wind where force < 200 lbs (typical rotator limit)
+    # and torque < 400 ft-lbs
+    survival_mph = 120
+    for mph in range(120, 30, -1):
+        pressure_psf = 0.00256 * mph**2
+        force = pressure_psf * cd * total_area_sqft
+        torque = force * (boom_length_ft / 2)
+        if force <= 200 and torque <= 400:
+            survival_mph = mph
+            break
+    
+    # Turn radius: half the longest element
+    longest_element = 0
+    for e in elements:
+        length_in = float(e.get('length', 0) if isinstance(e, dict) else e.length)
+        if length_in > longest_element:
+            longest_element = length_in
+    turn_radius_in = math.sqrt((longest_element/2)**2 + (boom_length_in/2)**2)
+    turn_radius_ft = turn_radius_in / 12
+    
+    return {
+        "total_area_sqft": round(total_area_sqft, 2),
+        "total_weight_lbs": round(total_weight_lbs, 1),
+        "element_weight_lbs": round(element_weight_lbs, 1),
+        "boom_weight_lbs": round(boom_weight_lbs, 1),
+        "hardware_weight_lbs": round(hardware_weight_lbs + truss_weight_lbs, 1),
+        "has_truss": boom_length_ft > 12,
+        "boom_length_ft": round(boom_length_ft, 1),
+        "turn_radius_ft": round(turn_radius_ft, 1),
+        "turn_radius_in": round(turn_radius_in, 1),
+        "survival_mph": survival_mph,
+        "wind_ratings": wind_ratings,
+        "num_stacked": num_stacked,
+        "drag_coefficient": cd,
+    }
+
+
 def calculate_taper_effects(taper: TaperConfig, num_elements: int) -> dict:
     if not taper or not taper.enabled:
         return {"gain_bonus": 0, "bandwidth_mult": 1.0, "swr_mult": 1.0, "fb_bonus": 0, "fs_bonus": 0}
