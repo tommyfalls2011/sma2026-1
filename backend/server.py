@@ -1476,6 +1476,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     bandwidth_mhz = round(center_freq * bandwidth_percent / 100, 3)
     
+    # Apply boom grounded bandwidth narrowing (grounded boom = more SWR-sensitive)
+    if boom_correction["enabled"]:
+        bandwidth_mhz = round(bandwidth_mhz * boom_correction["bandwidth_mult"], 3)
+    
     # Apply matching network bandwidth effect
     if feed_type != "direct":
         bandwidth_mhz = round(bandwidth_mhz * matching_info["bandwidth_mult"], 3)
