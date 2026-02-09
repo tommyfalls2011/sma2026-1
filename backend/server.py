@@ -1239,6 +1239,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     avg_element_dia = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / len(input_data.elements)
     
+    # === BOOM CORRECTION (DL6WU/G3SEK) ===
+    boom_correction = calculate_boom_correction(boom_dia_m, avg_element_dia, wavelength, input_data.boom_grounded)
+    
     # Check if antenna has a reflector
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
