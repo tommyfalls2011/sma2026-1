@@ -35,7 +35,7 @@ interface ElementDimension { element_type: 'reflector' | 'driven' | 'director'; 
 interface TaperSection { length: string; start_diameter: string; end_diameter: string; }
 interface TaperConfig { enabled: boolean; num_tapers: number; center_length: string; sections: TaperSection[]; }
 interface CoronaBallConfig { enabled: boolean; diameter: string; }
-interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; }
+interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; layout: 'line' | 'quad'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; h_spacing: string; h_spacing_unit: 'ft' | 'inches'; }
 interface AntennaInput { num_elements: number; elements: ElementDimension[]; height_from_ground: string; height_unit: 'ft' | 'inches'; boom_diameter: string; boom_unit: 'mm' | 'inches'; band: string; frequency_mhz: string; stacking: StackingConfig; taper: TaperConfig; corona_balls: CoronaBallConfig; use_reflector: boolean; }
 interface AntennaOutput { swr: number; swr_description: string; fb_ratio: number; fs_ratio: number; beamwidth_h: number; beamwidth_v: number; bandwidth: number; gain_dbi: number; gain_description: string; base_gain_dbi?: number; gain_breakdown?: { element_gain: number; reflector_adj: number; taper_bonus: number; corona_adj: number; height_bonus: number; boom_bonus: number; ground_radials_bonus?: number; final_gain: number; ground_type?: string; ground_scale?: number }; multiplication_factor: number; antenna_efficiency: number; far_field_pattern: any[]; swr_curve: any[]; usable_bandwidth_1_5: number; usable_bandwidth_2_0: number; center_frequency: number; band_info: any; stacking_enabled: boolean; stacking_info?: any; stacked_gain_dbi?: number; stacked_pattern?: any[]; taper_info?: any; corona_info?: any; reflection_coefficient?: number; return_loss_db?: number; mismatch_loss_db?: number; reflected_power_100w?: number; reflected_power_1kw?: number; forward_power_100w?: number; forward_power_1kw?: number; impedance_high?: number; impedance_low?: number; takeoff_angle?: number; takeoff_angle_description?: string; height_performance?: string; ground_radials_info?: any; noise_level?: string; noise_description?: string; feed_type?: string; matching_info?: any; dual_polarity_info?: any; }
 interface HeightOptResult { optimal_height: number; optimal_swr: number; optimal_gain: number; optimal_fb_ratio: number; heights_tested: { height: number; swr: number; gain: number; fb_ratio: number }[]; }
@@ -471,7 +471,7 @@ export default function AntennaCalculator() {
       height_from_ground: '54', height_unit: 'ft',
       boom_diameter: '1.5', boom_unit: 'inches',
       band: currentBand, frequency_mhz: currentFreq,
-      stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
+      stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
       taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '36', start_diameter: '0.625', end_diameter: '0.5' }, { length: '36', start_diameter: '0.5', end_diameter: '0.375' }] },
       corona_balls: { enabled: false, diameter: '1.0' },
       ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
@@ -548,7 +548,7 @@ export default function AntennaCalculator() {
           height_from_ground: parseFloat(inputs.height_from_ground) || 0, height_unit: inputs.height_unit,
           boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit,
           band: inputs.band, frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
-          stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0 } : null,
+          stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0, h_spacing: inputs.stacking.layout === 'quad' ? (parseFloat(inputs.stacking.h_spacing) || 0) : null } : null,
           taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
           corona_balls: inputs.corona_balls.enabled ? { ...inputs.corona_balls, diameter: parseFloat(inputs.corona_balls.diameter) || 1.0 } : null,
           ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
