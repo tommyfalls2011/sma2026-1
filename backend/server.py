@@ -1727,10 +1727,19 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         
         # Vertical stacking specific notes
         if stacking.orientation == "vertical" and not is_quad:
+            one_wl_ft = round(wavelength / 0.3048, 1)
+            spacing_vs_wl = spacing_wavelengths
+            alignment_status = "Optimal collinear" if 0.8 <= spacing_vs_wl <= 1.2 else ("Acceptable" if 0.5 <= spacing_vs_wl <= 2.0 else "Sub-optimal")
             stacking_info["vertical_notes"] = {
-                "effect": "Narrows vertical beamwidth, focuses energy toward horizon — increases gain without narrowing horizontal coverage",
+                "alignment": "COLLINEAR — antennas must be on the same vertical axis, element-to-element, not staggered or offset",
+                "effect": "Narrows vertical beamwidth like a venetian blind, focusing power toward the horizon — increases gain without narrowing horizontal coverage",
+                "one_wavelength_ft": f"{one_wl_ft} ft (1λ at {center_freq} MHz)",
+                "alignment_status": alignment_status,
                 "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
-                "coupling_warning": "Below 0.25 lambda spacing causes severe mutual coupling and detuning" if spacing_wavelengths < 0.25 else "",
+                "stagger_warning": "Offsetting antennas creates directional nulls, reduces gain, causes impedance detuning and phasing cancellation",
+                "coupling_warning": "Below 0.25λ spacing causes severe mutual coupling — antennas act as parasitic elements and detune each other, raising SWR" if spacing_wavelengths < 0.25 else "",
+                "feed_line_note": "Feed lines from splitter to each antenna MUST be identical length and type to maintain in-phase operation",
+                "best_practice": f"Ideal spacing: ~1λ ({one_wl_ft} ft center-to-center) for maximum gain with minimal interference",
             }
         
         # Quad-specific notes
