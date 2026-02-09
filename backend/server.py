@@ -679,99 +679,114 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     return value
 
 
-def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavelength: float, boom_grounded: bool) -> dict:
+def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavelength: float, boom_grounded: bool, boom_mount: str = "bonded") -> dict:
     """Calculate boom correction using G3SEK empirical formula.
     
-    When elements are electrically bonded (grounded) to a metal boom, the boom
-    adds capacitance making elements appear electrically LONGER than their physical
-    length. To compensate, elements must be physically SHORTENED by the boom
-    correction factor. If uncorrected, the antenna detunes (resonance shifts lower),
-    degrading SWR, gain, F/B ratio, and pattern symmetry.
-    
-    Insulated elements behave like free-space radiators — no correction needed,
-    more stable SWR across the band, and easier to match theoretical designs.
+    Three mount configurations:
+    - "bonded": Elements electrically bonded to metal boom (welded/bolted through).
+      Boom adds capacitance -> elements appear electrically longer -> must shorten.
+      Full DL6WU correction applies (100%).
+    - "insulated": Elements mounted on metal boom with insulating sleeves/standoffs.
+      Boom still influences elements via proximity coupling but effect is reduced.
+      Partial correction applies (~55% of full).
+    - "nonconductive": Non-conductive boom (PVC, wood, fiberglass).
+      Elements behave as free-space radiators. No correction needed.
     """
-    if not boom_grounded or boom_dia_m <= 0 or avg_element_dia_m <= 0:
+    mount = boom_mount
+    if mount not in ("bonded", "insulated", "nonconductive"):
+        mount = "bonded" if boom_grounded else "nonconductive"
+    
+    mount_multipliers = {"bonded": 1.0, "insulated": 0.55, "nonconductive": 0.0}
+    k = mount_multipliers.get(mount, 1.0)
+    
+    mount_labels = {
+        "bonded": "Bonded to Metal Boom",
+        "insulated": "Insulated on Metal Boom",
+        "nonconductive": "Non-Conductive Boom"
+    }
+    
+    if k == 0 or boom_dia_m <= 0 or avg_element_dia_m <= 0:
+        if mount == "nonconductive":
+            notes = [
+                "Elements match theoretical free-space dimensions",
+                "More stable SWR across the band",
+                "Higher achievable F/B ratio",
+                "Non-conductive boom (PVC/wood/fiberglass) — no element coupling",
+                "Add separate ground path for static/lightning protection"
+            ]
+            desc = "Non-conductive boom — elements at free-space length, no correction needed. Cleanest, most predictable pattern."
+        else:
+            notes = [
+                "Elements match theoretical free-space dimensions",
+                "More stable SWR across the band",
+                "Higher achievable F/B ratio",
+                "Insulating sleeves reduce boom influence at each mount point",
+                "Metal boom still provides partial static discharge path"
+            ]
+            desc = "Insulated mount on metal boom — elements near free-space length. Pattern is cleaner and more predictable."
         return {
             "enabled": False,
-            "boom_grounded": boom_grounded,
+            "boom_mount": mount,
+            "boom_grounded": mount == "bonded",
             "swr_factor": 1.0,
             "gain_adj_db": 0.0,
             "fb_adj_db": 0.0,
             "impedance_shift_ohm": 0.0,
             "bandwidth_mult": 1.0,
             "correction_per_side_in": 0.0,
-            "description": "Insulated boom — elements at free-space length, no correction needed. "
-                           "Pattern is cleaner and more predictable. Requires insulators at each element mount.",
-            "practical_notes": [
-                "Elements match theoretical free-space dimensions",
-                "More stable SWR across the band",
-                "Higher achievable F/B ratio",
-                "Requires insulating sleeves or non-conductive boom",
-                "Less inherent static/lightning protection — add separate ground path"
-            ]
+            "correction_total_in": 0.0,
+            "corrected_elements": [],
+            "description": desc,
+            "practical_notes": notes
         }
     
-    # Boom diameter as fraction of wavelength
     bd = boom_dia_m / wavelength
-    
-    # G3SEK formula: C = 12.5975*B - 114.5*B^2
-    # C = correction as fraction of boom diameter, B = boom dia in wavelengths
     c_frac = 12.5975 * bd - 114.5 * bd * bd
-    c_frac = max(0, min(c_frac, 0.5))  # sanity clamp
+    c_frac = max(0, min(c_frac, 0.5))
+    c_frac *= k
     
-    # Correction per side in inches
-    # Elements must be SHORTENED by this amount on each side to compensate
     boom_dia_in = boom_dia_m * 39.3701
     correction_per_side_in = c_frac * boom_dia_in
     
-    # Boom-to-element diameter ratio affects severity
-    dia_ratio = boom_dia_m / avg_element_dia_m
-    dia_ratio = min(dia_ratio, 5.0)
-    
-    # Normalized correction magnitude (0-1 range, typical 0.02-0.15)
+    dia_ratio = min(boom_dia_m / avg_element_dia_m, 5.0)
     correction_magnitude = min(c_frac * dia_ratio, 1.0)
     
-    # SWR degradation: boom capacitance detunes elements, worsens match
-    swr_penalty = 1.0 + 0.04 * correction_magnitude
-    swr_penalty = min(swr_penalty, 1.10)
+    swr_penalty = min(1.0 + 0.04 * correction_magnitude, 1.10)
+    gain_adj = max(-0.15 * correction_magnitude, -0.3)
+    fb_adj = max(-0.8 * correction_magnitude, -1.5)
+    impedance_shift = max(-5.0 * correction_magnitude, -10.0)
+    bandwidth_mult = max(1.0 - 0.03 * correction_magnitude, 0.92)
     
-    # Gain reduction: boom interference can degrade directivity (0.05-0.3 dB)
-    gain_adj = -0.15 * correction_magnitude
-    gain_adj = max(gain_adj, -0.3)
-    
-    # F/B degradation: boom reradiation increases sidelobes, reduces pattern cleanness
-    fb_adj = -0.8 * correction_magnitude
-    fb_adj = max(fb_adj, -1.5)
-    
-    # Impedance shift: grounded boom lowers driven element impedance
-    impedance_shift = -5.0 * correction_magnitude
-    impedance_shift = max(impedance_shift, -10.0)
-    
-    # Bandwidth narrowing: grounded boom is more SWR-sensitive across the band
-    bandwidth_mult = 1.0 - 0.03 * correction_magnitude
-    bandwidth_mult = max(bandwidth_mult, 0.92)
-    
+    label = mount_labels.get(mount, mount)
+    total_corr = 2 * correction_per_side_in
     if correction_per_side_in < 0.05:
-        desc = "Minimal boom correction — negligible capacitive loading at this frequency."
+        desc = f"{label} — minimal correction at this frequency."
     elif correction_per_side_in < 0.2:
-        desc = (f"Shorten each element by ~{2*correction_per_side_in:.2f}\" total "
-                f"({correction_per_side_in:.2f}\"/side) to compensate for boom capacitance.")
+        desc = f"{label}: shorten each element by ~{total_corr:.2f}\" total ({correction_per_side_in:.2f}\"/side)."
     else:
-        desc = (f"Significant boom loading: shorten each element by ~{2*correction_per_side_in:.2f}\" total "
-                f"({correction_per_side_in:.2f}\"/side). At this boom/element ratio, precise correction is critical.")
+        desc = f"{label}: shorten each element by ~{total_corr:.2f}\" total ({correction_per_side_in:.2f}\"/side). Precise correction critical."
     
-    practical_notes = [
-        f"Boom adds capacitance — elements appear {2*correction_per_side_in:.2f}\" electrically longer",
-        f"Shorten each element by {2*correction_per_side_in:.2f}\" total to restore resonance",
-        "Mechanically stronger — elements welded/bolted directly to boom",
-        "Good static and lightning protection (DC ground path)",
-        "SWR more sensitive to boom diameter — verify with analyzer after build"
-    ]
+    if mount == "bonded":
+        notes = [
+            f"Boom adds capacitance — elements appear {total_corr:.2f}\" electrically longer",
+            f"Shorten each element by {total_corr:.2f}\" total to restore resonance",
+            "Mechanically strongest — elements welded/bolted directly through boom",
+            "Excellent static and lightning protection (DC ground path)",
+            "SWR more sensitive to boom diameter — verify with analyzer after build"
+        ]
+    else:
+        notes = [
+            f"Proximity coupling: elements appear {total_corr:.2f}\" electrically longer (reduced vs bonded)",
+            f"Shorten each element by {total_corr:.2f}\" total to restore resonance",
+            "Insulating sleeves reduce boom influence but don't eliminate it",
+            "Metal boom still provides partial static discharge",
+            "Easier to match theoretical designs than fully bonded mount"
+        ]
     
     return {
         "enabled": True,
-        "boom_grounded": True,
+        "boom_mount": mount,
+        "boom_grounded": mount == "bonded",
         "swr_factor": round(swr_penalty, 4),
         "gain_adj_db": round(gain_adj, 2),
         "fb_adj_db": round(fb_adj, 2),
@@ -780,8 +795,10 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
         "correction_per_side_in": round(correction_per_side_in, 3),
         "correction_total_in": round(2 * correction_per_side_in, 3),
         "boom_to_element_ratio": round(dia_ratio, 2),
+        "correction_multiplier": k,
+        "corrected_elements": [],
         "description": desc,
-        "practical_notes": practical_notes
+        "practical_notes": notes
     }
 
 
