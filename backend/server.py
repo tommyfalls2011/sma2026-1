@@ -1356,6 +1356,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_dbi += boom_bonus
     gain_breakdown["boom_bonus"] = round(boom_bonus, 2)
     
+    # Boom grounded correction: detuned elements reduce gain
+    if boom_correction["enabled"]:
+        boom_grounded_adj = boom_correction["gain_adj_db"]
+        gain_dbi += boom_grounded_adj
+        gain_breakdown["boom_grounded_adj"] = round(boom_grounded_adj, 2)
+    
     gain_dbi = round(min(gain_dbi, 45.0), 2)
     
     # Apply dual_active combined gain bonus (+3dB when both H+V transmit simultaneously)
