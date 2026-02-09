@@ -1293,38 +1293,15 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
               {inputs.antenna_orientation === 'dual' && (
-                <View style={{ marginTop: 6 }}>
-                  <Text style={{ fontSize: 10, color: '#FF9800', marginBottom: 6, fontWeight: '600' }}>Selected Beam:</Text>
-                  <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <TouchableOpacity 
-                      onPress={() => setInputs(p => ({ ...p, dual_selected_beam: 'horizontal' }))}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: inputs.dual_selected_beam === 'horizontal' ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#333' }}
-                    >
-                      <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#555', backgroundColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
-                        {inputs.dual_selected_beam === 'horizontal' && <Ionicons name="checkmark" size={14} color="#000" />}
-                      </View>
-                      <Text style={{ fontSize: 11, color: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#888' }}>Horizontal</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => setInputs(p => ({ ...p, dual_selected_beam: 'vertical' }))}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: inputs.dual_selected_beam === 'vertical' ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#333' }}
-                    >
-                      <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#555', backgroundColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
-                        {inputs.dual_selected_beam === 'vertical' && <Ionicons name="checkmark" size={14} color="#000" />}
-                      </View>
-                      <Text style={{ fontSize: 11, color: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#888' }}>Vertical</Text>
-                    </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => setInputs(p => ({ ...p, dual_active: !p.dual_active }))}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: inputs.dual_active ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_active ? '#FF9800' : '#333' }}
+                >
+                  <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_active ? '#FF9800' : '#555', backgroundColor: inputs.dual_active ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
+                    {inputs.dual_active && <Ionicons name="checkmark" size={14} color="#000" />}
                   </View>
-                  <TouchableOpacity 
-                    onPress={() => setInputs(p => ({ ...p, dual_active: !p.dual_active }))}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: inputs.dual_active ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_active ? '#FF9800' : '#333' }}
-                  >
-                    <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_active ? '#FF9800' : '#555', backgroundColor: inputs.dual_active ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
-                      {inputs.dual_active && <Ionicons name="checkmark" size={14} color="#000" />}
-                    </View>
-                    <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
-                  </TouchableOpacity>
-                </View>
+                  <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
+                </TouchableOpacity>
               )}
             </View>
 
