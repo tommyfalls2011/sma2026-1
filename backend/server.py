@@ -2174,14 +2174,22 @@ async def optimize_stacking(request: StackingOptimizeRequest):
                 new_bw_h = calculate_stacked_beamwidth(base_bw_h, request.num_antennas, spacing_wl)
                 new_bw_v = base_bw_v
         
-        # Score: prioritize gain, penalize extreme spacings
+        # Score: prioritize gain, bonus for ~1λ collinear spacing (especially vertical)
         score = total_gain
         if spacing_wl < 0.5:
-            score -= 3  # heavy penalty for too-close
+            score -= 3  # heavy penalty for too-close — mutual coupling detuning
         elif spacing_wl > 2.0:
             score -= 0.5  # mild penalty for diminishing returns
         
-        spacing_status = "Too close" if spacing_wl < 0.25 else ("Minimum" if spacing_wl < 0.5 else ("Good" if spacing_wl < 1.0 else ("Optimal" if spacing_wl < 2.0 else "Wide")))
+        # Bonus for ~1λ spacing — optimal collinear alignment for vertical stacking
+        if request.stacking_orientation == "vertical" or is_quad:
+            wl_distance = abs(spacing_wl - 1.0)
+            if wl_distance < 0.2:
+                score += 0.5  # strong bonus near 1λ
+            elif wl_distance < 0.4:
+                score += 0.2  # mild bonus near 1λ
+        
+        spacing_status = "Too close" if spacing_wl < 0.25 else ("Mutual coupling risk" if spacing_wl < 0.5 else ("Good" if spacing_wl < 0.8 else ("Optimal (≈1λ)" if spacing_wl < 1.2 else ("Good" if spacing_wl < 2.0 else "Wide"))))
         
         result_entry = {
             "spacing_ft": spacing_ft,
