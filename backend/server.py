@@ -1655,12 +1655,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             stacked_pattern = generate_stacked_pattern(far_field_pattern, stacking.num_antennas, spacing_wavelengths, stacking.orientation)
         # Stacking guidance based on orientation and polarization
         is_dual_stacking = is_dual
-        min_spacing_wl = 0.5 if stacking.orientation == "vertical" else 0.65
-        optimal_spacing_wl = 1.0 if stacking.orientation == "vertical" else 0.65
+        is_quad = stacking.layout == "quad"
+        actual_num = 4 if is_quad else stacking.num_antennas
+        min_spacing_wl = 0.5 if stacking.orientation == "vertical" or is_quad else 0.65
+        optimal_spacing_wl = 1.0 if stacking.orientation == "vertical" or is_quad else 0.65
         optimal_spacing_ft = round((wavelength * optimal_spacing_wl) / 0.3048, 1)
         
         # Isolation estimate based on spacing (vertical stacking)
-        if stacking.orientation == "vertical":
+        if stacking.orientation == "vertical" or is_quad:
             if spacing_wavelengths >= 2.0:
                 isolation_db = 30
             elif spacing_wavelengths >= 1.0:
@@ -1670,13 +1672,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             else:
                 isolation_db = max(5, spacing_wavelengths * 24)
         else:
-            isolation_db = 15  # Horizontal stacking has less natural isolation
+            isolation_db = 15
         
         spacing_status = "Too close — high mutual coupling" if spacing_wavelengths < 0.25 else ("Minimum — some coupling" if spacing_wavelengths < 0.5 else ("Good" if spacing_wavelengths < 1.0 else ("Optimal" if spacing_wavelengths < 2.0 else "Wide — diminishing returns")))
         
         stacking_info = {
             "orientation": stacking.orientation,
-            "num_antennas": stacking.num_antennas,
+            "layout": stacking.layout,
+            "num_antennas": actual_num,
             "spacing": stacking.spacing,
             "spacing_unit": stacking.spacing_unit,
             "spacing_wavelengths": round(spacing_wavelengths, 3),
