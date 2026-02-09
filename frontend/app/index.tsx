@@ -2543,6 +2543,7 @@ export default function AntennaCalculator() {
                 <SpecRow label="Elements" value={inputs.antenna_orientation === 'dual' ? `${inputs.num_elements} per pol (${inputs.num_elements * 2} total)` : `${inputs.num_elements}`} />
                 <SpecRow label="Height" value={`${inputs.height_from_ground} ${inputs.height_unit}`} />
                 <SpecRow label="Boom" value={`${inputs.boom_diameter} ${inputs.boom_unit} OD`} />
+                <SpecRow label="Boom Mount" value={inputs.boom_grounded ? 'Grounded (bonded)' : 'Insulated'} accent={inputs.boom_grounded ? '#FF9800' : '#2196F3'} />
                 <SpecRow label="Gain Mode" value={gainMode === 'realworld' ? 'Real World' : 'Free Space'} />
               </SpecSection>
 
