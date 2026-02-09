@@ -1714,7 +1714,7 @@ export default function AntennaCalculator() {
                     const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
                     const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
                     return (
-                      <TouchableOpacity key={opt.label} onPress={() => { setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft' } })); setStackingSpacingTrigger(t => t + 1); }}
+                      <TouchableOpacity key={opt.label} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft' } }))}
                         style={{ flex: 1, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#9C27B0' : '#333', backgroundColor: isActive ? 'rgba(156,39,176,0.15)' : '#1a1a1a', alignItems: 'center' }}>
                         <Text style={{ fontSize: 11, fontWeight: '700', color: isActive ? '#CE93D8' : '#888' }}>{opt.label}</Text>
                         <Text style={{ fontSize: 8, color: isActive ? '#CE93D8' : '#666', marginTop: 1 }}>{wlFtStr} ft</Text>
@@ -1735,7 +1735,7 @@ export default function AntennaCalculator() {
                       const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
                       const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
                       return (
-                        <TouchableOpacity key={opt.label} onPress={() => { setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } })); setStackingSpacingTrigger(t => t + 1); }}
+                        <TouchableOpacity key={opt.label} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } }))}
                           style={{ flex: 1, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#E91E63' : '#333', backgroundColor: isActive ? 'rgba(233,30,99,0.15)' : '#1a1a1a', alignItems: 'center' }}>
                           <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#E91E63' : '#888' }}>{opt.label}</Text>
                           <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
