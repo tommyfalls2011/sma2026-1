@@ -1696,7 +1696,25 @@ export default function AntennaCalculator() {
             {inputs.stacking.enabled && (
               <><View style={styles.orientationToggle}><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'vertical' } }))}><Ionicons name="swap-vertical" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnTextActive]}>V</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'horizontal' } }))}><Ionicons name="swap-horizontal" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnTextActive]}>H</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'quad' && styles.orientBtnActive, inputs.stacking.layout === 'quad' && { borderColor: '#E91E63' }]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'quad', num_antennas: 4 } }))}><Ionicons name="grid" size={16} color={inputs.stacking.layout === 'quad' ? '#E91E63' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'quad' && { color: '#E91E63', fontWeight: '700' }]}>2x2</Text></TouchableOpacity></View>
               {inputs.stacking.layout !== 'quad' && (
+                <View>
                 <View style={[styles.rowSpaced, { zIndex: 1500 }]}><View style={{ flex: 1, zIndex: 1500 }}><Dropdown value={inputs.stacking.num_antennas.toString()} options={[2,3,4].map(n => ({ value: n.toString(), label: `${n}x` }))} onChange={(v: string) => setInputs(p => ({ ...p, stacking: { ...p.stacking, num_antennas: parseInt(v) } }))} /></View><View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Spacing (center-to-center)</Text><TextInput style={styles.input} value={inputs.stacking.spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                  {[{ label: '½λ', mult: 0.5 }, { label: '¾λ', mult: 0.75 }, { label: '1λ', mult: 1.0 }].map(opt => {
+                    const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
+                    const wlFt = (984 / freqMhz) * opt.mult;
+                    const wlFtStr = wlFt.toFixed(1);
+                    const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
+                    const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
+                    return (
+                      <TouchableOpacity key={opt.label} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft' } }))}
+                        style={{ flex: 1, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#9C27B0' : '#333', backgroundColor: isActive ? 'rgba(156,39,176,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: isActive ? '#CE93D8' : '#888' }}>{opt.label}</Text>
+                        <Text style={{ fontSize: 8, color: isActive ? '#CE93D8' : '#666', marginTop: 1 }}>{wlFtStr} ft</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                </View>
               )}
               {inputs.stacking.layout === 'quad' && (
                 <View>
