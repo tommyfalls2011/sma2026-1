@@ -2362,7 +2362,7 @@ export default function AntennaCalculator() {
               {/* Section: Stacking (conditional) */}
               {results.stacking_enabled && results.stacking_info && (
                 <SpecSection title="Stacking" icon="layers-outline" color="#E91E63">
-                  <SpecRow label="Antennas" value={`${results.stacking_info.num_antennas} stacked ${results.stacking_info.orientation}`} />
+                  <SpecRow label="Antennas" value={results.stacking_info.layout === 'quad' ? `${results.stacking_info.num_antennas} in 2x2 Quad (H-Frame)` : `${results.stacking_info.num_antennas} stacked ${results.stacking_info.orientation}`} />
                   <SpecRow label="Spacing" value={`${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}\u03bb)`} />
                   <SpecRow label="Spacing Status" value={results.stacking_info.spacing_status || '-'} accent={results.stacking_info.spacing_status === 'Optimal' ? '#4CAF50' : results.stacking_info.spacing_status === 'Good' ? '#FF9800' : '#f44336'} />
                   <SpecRow label="Isolation" value={`~${results.stacking_info.isolation_db}dB`} />
@@ -2385,6 +2385,20 @@ export default function AntennaCalculator() {
                       <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.dual_stacking.cross_pol}</Text>
                       {results.stacking_info.dual_stacking.mimo_note ? <Text style={{ fontSize: 10, color: '#2196F3', marginBottom: 2 }}>{results.stacking_info.dual_stacking.mimo_note}</Text> : null}
                       <Text style={{ fontSize: 9, color: '#777', marginTop: 2 }}>{results.stacking_info.dual_stacking.wind_load}</Text>
+                    </View>
+                  )}
+                  {results.stacking_info.quad_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8, borderLeftWidth: 2, borderLeftColor: '#E91E63' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#E91E63', marginBottom: 4 }}>2x2 QUAD STACK</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.quad_notes.layout}</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.quad_notes.effect}</Text>
+                      <SpecRow label="  V Spacing" value={results.stacking_info.quad_notes.v_spacing} small />
+                      <SpecRow label="  H Spacing" value={results.stacking_info.quad_notes.h_spacing} small />
+                      <Text style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>{results.stacking_info.quad_notes.h_frame_note}</Text>
+                      <SpecRow label="  Isolation" value={results.stacking_info.quad_notes.isolation} small />
+                      {results.stacking_info.quad_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.quad_notes.coupling_warning}</Text> : null}
+                      <Text style={{ fontSize: 9, color: '#E91E63', marginTop: 4, fontStyle: 'italic' }}>{results.stacking_info.quad_notes.identical_note}</Text>
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2 }}>{results.stacking_info.quad_notes.phasing_note}</Text>
                     </View>
                   )}
                   {results.stacking_info.phasing && (
