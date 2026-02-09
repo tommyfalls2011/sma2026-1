@@ -334,8 +334,14 @@ export default function AdminScreen() {
   const loadChangelog = async () => {
     try {
       const res = await fetch(`${BACKEND_URL}/api/changelog`);
-      if (res.ok) { const d = await res.json(); setChangelogEntries(d.changes || []); }
-    } catch (e) { console.error('Load changelog error:', e); }
+      if (res.ok) {
+        const d = await res.json();
+        const apiChanges = d.changes || [];
+        if (apiChanges.length > BUILTIN_CHANGELOG.length) {
+          setChangelogEntries(apiChanges);
+        }
+      }
+    } catch (e) { /* Use built-in data if API unavailable */ }
   };
 
   const deleteChangelogEntry = async (id: string) => {
