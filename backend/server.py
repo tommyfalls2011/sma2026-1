@@ -2688,6 +2688,111 @@ async def login_user(credentials: UserLogin):
         }
     }
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest):
+    """Send password reset email with a 1-hour token."""
+    user = await db.users.find_one({"email": req.email.lower()})
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "If that email exists, a reset link has been sent."}
+    
+    reset_token = str(uuid.uuid4())
+    await db.password_resets.insert_one({
+        "user_id": user["id"],
+        "email": user["email"],
+        "token": reset_token,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(hours=1),
+        "used": False,
+    })
+    
+    reset_html = email_wrapper("Password Reset", f"""
+        <h2 style="color:#fff;">Password Reset Requested</h2>
+        <p style="color:#ccc;line-height:1.6;">We received a request to reset your password. Use this code in the app:</p>
+        <div style="text-align:center;margin:20px 0;">
+            <div style="display:inline-block;background:#4CAF50;color:#000;font-size:24px;font-weight:bold;padding:15px 30px;border-radius:8px;letter-spacing:4px;">{reset_token[:8].upper()}</div>
+        </div>
+        <p style="color:#aaa;font-size:12px;">This code expires in 1 hour. If you didn't request this, ignore this email.</p>
+    """)
+    await send_email(user["email"], "SMA Antenna Calc - Password Reset", reset_html)
+    
+    return {"message": "If that email exists, a reset link has been sent."}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(req: ResetPasswordRequest):
+    """Reset password using a token from email."""
+    # Look up token (match first 8 chars uppercase)
+    resets = await db.password_resets.find({"used": False}).to_list(100)
+    reset_entry = None
+    for r in resets:
+        if r["token"][:8].upper() == req.token.strip().upper():
+            reset_entry = r
+            break
+    
+    if not reset_entry:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+    
+    if datetime.utcnow() > reset_entry["expires_at"]:
+        raise HTTPException(status_code=400, detail="Reset code has expired")
+    
+    # Update password
+    new_hash = hash_password(req.new_password)
+    await db.users.update_one({"id": reset_entry["user_id"]}, {"$set": {"password": new_hash}})
+    await db.password_resets.update_one({"_id": reset_entry["_id"]}, {"$set": {"used": True}})
+    
+    # Send confirmation email
+    confirm_html = email_wrapper("Password Changed", f"""
+        <h2 style="color:#fff;">Password Updated</h2>
+        <p style="color:#ccc;line-height:1.6;">Your password has been successfully changed. If you didn't do this, contact support immediately.</p>
+    """)
+    await send_email(reset_entry["email"], "SMA Antenna Calc - Password Changed", confirm_html)
+    
+    return {"message": "Password has been reset successfully"}
+
+@api_router.post("/auth/send-receipt")
+async def send_subscription_receipt(user: dict = Depends(require_user)):
+    """Send subscription receipt to user's email."""
+    tier = user.get("subscription_tier", "trial")
+    expires = user.get("subscription_expires")
+    expires_str = expires.strftime("%B %d, %Y") if expires else "N/A"
+    
+    receipt_html = email_wrapper("Subscription Receipt", f"""
+        <h2 style="color:#fff;">Subscription Confirmation</h2>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Account</td>
+                <td style="padding:10px;color:#fff;">{user['email']}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Plan</td>
+                <td style="padding:10px;color:#4CAF50;font-weight:bold;">{tier.upper()}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Valid Until</td>
+                <td style="padding:10px;color:#fff;">{expires_str}</td>
+            </tr>
+            <tr>
+                <td style="padding:10px;color:#888;">Status</td>
+                <td style="padding:10px;color:#4CAF50;">Active</td>
+            </tr>
+        </table>
+        <p style="color:#aaa;font-size:12px;">Thank you for supporting SMA Antenna Calc!</p>
+    """)
+    
+    sent = await send_email(user["email"], "SMA Antenna Calc - Subscription Receipt", receipt_html)
+    if sent:
+        return {"message": "Receipt sent to your email"}
+    raise HTTPException(status_code=500, detail="Failed to send receipt email")
+
+
+
 @api_router.get("/auth/me")
 async def get_current_user_info(user: dict = Depends(require_user)):
     """Get current user info and subscription status"""
