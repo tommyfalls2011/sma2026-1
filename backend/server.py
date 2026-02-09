@@ -799,6 +799,14 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
             "matched_swr": round(matched_swr, 3),
             "bandwidth_effect": "Slightly narrower (-5%)",
             "bandwidth_mult": 0.95,
+            "technical_notes": {
+                "mechanism": "Series LC network \u2014 gamma rod provides inductance (L), series capacitor provides capacitance (C). Movable shorting strap adjusts the impedance transformation ratio.",
+                "asymmetry": "The gamma rod increases conductor diameter on one side of the driven element, creating a slight physical asymmetry that can skew the radiation pattern a few degrees toward the match side.",
+                "pattern_impact": "Minor beam skew, typically only a few degrees \u2014 generally negligible for most operations.",
+                "advantage": "Feeds balanced Yagi antennas with unbalanced coax without needing a separate balun. Simple, effective, widely used on CB and amateur antennas.",
+                "tuning": "Adjust the shorting strap position and series capacitor value for lowest SWR. Proper tuning minimizes pattern distortion.",
+                "mitigation": "Ensure the match is properly tuned \u2014 correct capacitor and shorting strap positions reduce the beam skew to negligible levels.",
+            },
         }
         return round(max(1.0, matched_swr), 3), info
     
