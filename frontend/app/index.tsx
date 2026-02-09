@@ -1289,7 +1289,10 @@ export default function AntennaCalculator() {
           <View style={styles.userHeader}>
             <TouchableOpacity style={styles.userHeaderLeft} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
               <Ionicons name="radio-outline" size={24} color="#4CAF50" />
-              <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
+              <View>
+                <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
+                <Text style={{ fontSize: 9, color: '#555' }}>v{APP_VERSION} | Built: {new Date(APP_BUILD_DATE).toLocaleDateString()}</Text>
+              </View>
             </TouchableOpacity>
             
             {user ? (
