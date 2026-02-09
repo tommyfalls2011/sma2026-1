@@ -1323,6 +1323,42 @@ export default function AdminScreen() {
             </View>
           </>
         )}
+
+        {activeTab === 'changelog' && (
+          <>
+            <Text style={styles.sectionTitle}>App Changelog ({changelogEntries.length} entries)</Text>
+            {changelogEntries.length === 0 ? (
+              <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: '#333' }}>
+                <Text style={{ color: '#888', fontSize: 13 }}>No changelog entries found</Text>
+              </View>
+            ) : (
+              changelogEntries.map((entry: any) => {
+                const catColors: Record<string, string> = { Feature: '#4CAF50', 'Bug Fix': '#f44336', UI: '#2196F3', Physics: '#FF9800', Admin: '#9C27B0' };
+                const catColor = catColors[entry.category] || '#888';
+                return (
+                  <View key={entry.id} style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#333', borderLeftWidth: 3, borderLeftColor: catColor }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <View style={{ backgroundColor: catColor, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text style={{ fontSize: 9, color: '#fff', fontWeight: '700' }}>{entry.category}</Text>
+                          </View>
+                          <Text style={{ fontSize: 9, color: '#666' }}>#{entry.order}</Text>
+                        </View>
+                        <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600', marginBottom: 4 }}>{entry.title}</Text>
+                        <Text style={{ fontSize: 11, color: '#aaa', lineHeight: 16 }}>{entry.description}</Text>
+                      </View>
+                      <TouchableOpacity onPress={() => confirmAction('Delete Entry', `Remove "${entry.title}" from changelog?`, () => deleteChangelogEntry(entry.id))} style={{ padding: 4, marginLeft: 8 }}>
+                        <Ionicons name="trash-outline" size={16} color="#f44336" />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={{ fontSize: 9, color: '#555', marginTop: 4 }}>{entry.created_at ? new Date(entry.created_at).toLocaleDateString() : ''}</Text>
+                  </View>
+                );
+              })
+            )}
+          </>
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
