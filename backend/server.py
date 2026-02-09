@@ -681,9 +681,14 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
 def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavelength: float, boom_grounded: bool) -> dict:
     """Calculate boom correction using G3SEK empirical formula.
     
-    When elements are electrically bonded to a metal boom, the boom effectively
-    shortens each element. This detunes parasitic elements, shifting resonance
-    upward and degrading SWR, gain, and F/B ratio slightly.
+    When elements are electrically bonded (grounded) to a metal boom, the boom
+    adds capacitance making elements appear electrically LONGER than their physical
+    length. To compensate, elements must be physically SHORTENED by the boom
+    correction factor. If uncorrected, the antenna detunes (resonance shifts lower),
+    degrading SWR, gain, F/B ratio, and pattern symmetry.
+    
+    Insulated elements behave like free-space radiators — no correction needed,
+    more stable SWR across the band, and easier to match theoretical designs.
     """
     if not boom_grounded or boom_dia_m <= 0 or avg_element_dia_m <= 0:
         return {
@@ -693,8 +698,17 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
             "gain_adj_db": 0.0,
             "fb_adj_db": 0.0,
             "impedance_shift_ohm": 0.0,
+            "bandwidth_mult": 1.0,
             "correction_per_side_in": 0.0,
-            "description": "Insulated boom — no element correction needed"
+            "description": "Insulated boom — elements at free-space length, no correction needed. "
+                           "Pattern is cleaner and more predictable. Requires insulators at each element mount.",
+            "practical_notes": [
+                "Elements match theoretical free-space dimensions",
+                "More stable SWR across the band",
+                "Higher achievable F/B ratio",
+                "Requires insulating sleeves or non-conductive boom",
+                "Less inherent static/lightning protection — add separate ground path"
+            ]
         }
     
     # Boom diameter as fraction of wavelength
@@ -705,7 +719,8 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
     c_frac = 12.5975 * bd - 114.5 * bd * bd
     c_frac = max(0, min(c_frac, 0.5))  # sanity clamp
     
-    # Correction per side in inches (each element is shortened by this amount on each side)
+    # Correction per side in inches
+    # Elements must be SHORTENED by this amount on each side to compensate
     boom_dia_in = boom_dia_m * 39.3701
     correction_per_side_in = c_frac * boom_dia_in
     
@@ -716,15 +731,15 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
     # Normalized correction magnitude (0-1 range, typical 0.02-0.15)
     correction_magnitude = min(c_frac * dia_ratio, 1.0)
     
-    # SWR degradation: detuned parasitics worsen match (2-8%)
+    # SWR degradation: boom capacitance detunes elements, worsens match
     swr_penalty = 1.0 + 0.04 * correction_magnitude
     swr_penalty = min(swr_penalty, 1.10)
     
-    # Gain reduction: 0.05-0.3 dB
+    # Gain reduction: boom interference can degrade directivity (0.05-0.3 dB)
     gain_adj = -0.15 * correction_magnitude
     gain_adj = max(gain_adj, -0.3)
     
-    # F/B degradation: 0.2-1.5 dB
+    # F/B degradation: boom reradiation increases sidelobes, reduces pattern cleanness
     fb_adj = -0.8 * correction_magnitude
     fb_adj = max(fb_adj, -1.5)
     
@@ -732,12 +747,26 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
     impedance_shift = -5.0 * correction_magnitude
     impedance_shift = max(impedance_shift, -10.0)
     
+    # Bandwidth narrowing: grounded boom is more SWR-sensitive across the band
+    bandwidth_mult = 1.0 - 0.03 * correction_magnitude
+    bandwidth_mult = max(bandwidth_mult, 0.92)
+    
     if correction_per_side_in < 0.05:
-        desc = "Minimal boom correction — negligible effect at this frequency"
+        desc = "Minimal boom correction — negligible capacitive loading at this frequency."
     elif correction_per_side_in < 0.2:
-        desc = f"Small boom correction: ~{correction_per_side_in:.2f}\" per side ({2*correction_per_side_in:.2f}\" total per element)"
+        desc = (f"Shorten each element by ~{2*correction_per_side_in:.2f}\" total "
+                f"({correction_per_side_in:.2f}\"/side) to compensate for boom capacitance.")
     else:
-        desc = f"Boom correction: ~{correction_per_side_in:.2f}\" per side. Lengthen elements by {2*correction_per_side_in:.2f}\" to compensate."
+        desc = (f"Significant boom loading: shorten each element by ~{2*correction_per_side_in:.2f}\" total "
+                f"({correction_per_side_in:.2f}\"/side). At this boom/element ratio, precise correction is critical.")
+    
+    practical_notes = [
+        f"Boom adds capacitance — elements appear {2*correction_per_side_in:.2f}\" electrically longer",
+        f"Shorten each element by {2*correction_per_side_in:.2f}\" total to restore resonance",
+        "Mechanically stronger — elements welded/bolted directly to boom",
+        "Good static and lightning protection (DC ground path)",
+        "SWR more sensitive to boom diameter — verify with analyzer after build"
+    ]
     
     return {
         "enabled": True,
@@ -746,10 +775,12 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
         "gain_adj_db": round(gain_adj, 2),
         "fb_adj_db": round(fb_adj, 2),
         "impedance_shift_ohm": round(impedance_shift, 1),
+        "bandwidth_mult": round(bandwidth_mult, 4),
         "correction_per_side_in": round(correction_per_side_in, 3),
         "correction_total_in": round(2 * correction_per_side_in, 3),
         "boom_to_element_ratio": round(dia_ratio, 2),
-        "description": desc
+        "description": desc,
+        "practical_notes": practical_notes
     }
 
 
