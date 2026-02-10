@@ -1,54 +1,69 @@
 # Antenna Modeling Tool - Product Requirements Document
 
 ## Original Problem Statement
-Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo frontend with FastAPI backend. Supports complex physics calculations including gain, SWR, impedance, F/B ratio, takeoff angle, ground effects, dual polarization, stacking configurations, feed matching, and wind load analysis.
-
-## Core Requirements
-1. Calculate gain, SWR, F/B ratio, takeoff angle, and other performance metrics
-2. Model different antenna orientations (Horizontal, Vertical, 45-degree, Dual Polarity)
-3. Feed matching systems (Gamma, Hairpin)
-4. Antenna stacking (2x, 3x, 4x linear arrays + 2x2 Quad)
-5. Height optimizer with dynamic scoring
-6. Wind load calculation and mechanical analysis
-7. Detailed "View Specs" modal with boom correction and corrected cut list
-8. CSV export feature (includes all correction data)
-9. Admin panel for managing discounts/changelog
-10. Email system (welcome, password reset, receipts, announcements via Resend)
-11. App update checker via GitHub Gist
-12. Visual antenna element viewer (top-down SVG)
-13. 3-way boom mount selector with full physics:
-    - **Bonded**: Elements welded/bolted to metal boom (100% DL6WU correction)
-    - **Insulated**: Elements on metal boom with insulating sleeves (55% correction)
-    - **Non-conductive**: PVC/wood/fiberglass boom (0% correction)
-14. Corrected Cut List: Shows original vs corrected element lengths per mount type
+Advanced antenna modeling tool for Yagi antennas. React Native/Expo frontend + FastAPI backend + MongoDB.
 
 ## Architecture
 - **Backend**: Python/FastAPI at `/app/backend/server.py`
 - **Frontend**: React Native/Expo at `/app/frontend/app/index.tsx`
-- **Database**: MongoDB (users, changelog, password_resets, discounts)
-- **Email**: Resend API
+- **Admin**: `/app/frontend/app/admin.tsx`
+- **Database**: MongoDB
+- **Production**: Railway (`helpful-adaptation-production.up.railway.app`)
 
 ## What's Been Implemented
-- All 32 items from previous sessions
-- **Visual Antenna Element Viewer** (Feb 2026) - Top-down SVG
-- **3-Way Boom Mount Selector** (Feb 2026):
-  - Bonded/Insulated/Non-Conductive with distinct physics
-  - G3SEK/DL6WU correction formula with mount-type multiplier
-  - Affects gain, SWR, F/B, impedance, bandwidth
-  - Practical notes per mount type
-  - Corrected Cut List showing original -> corrected lengths
-  - Displayed in results cards, spec sheet, CSV export
-  - Backward compatible with legacy boom_grounded parameter
-  - 27/27 backend tests passed + 16/16 previous iteration
+
+### Core Calculator
+- Gain, SWR, F/B ratio, takeoff angle, impedance, bandwidth
+- Multiple orientations (Horizontal, Vertical, 45-degree, Dual Polarity)
+- Feed matching (Gamma, Hairpin, Direct)
+- Stacking (2x, 3x, 4x linear + 2x2 Quad)
+- Height optimizer, wind load, corona effects
+
+### 3-Way Boom Mount Selector (Feb 2026)
+- Bonded / Insulated / Non-conductive with G3SEK/DL6WU correction
+- Corrected Cut List showing original -> corrected element lengths
+- 27/27 backend tests passed
+
+### App Update System (Feb 2026 - Fixed)
+- **Root cause found**: Phone APK hits Railway which had no update endpoint
+- **Fix**: Added `GET /api/app-update` (reads from MongoDB, hardcoded fallback)
+- **Fix**: Added `PUT /api/app-update` (admin-only, saves to MongoDB)
+- **Fix**: App now tries backend first, Gist fallback second
+- **Fix**: Debug log panel shows exactly what happened during update check
+- **Admin Panel**: New "Updates" tab to push updates without code changes
+  - Version, Build Date (with NOW button), APK URL, Release Notes, Force Update toggle
+  - One-click "Push Update to All Users"
+  - How-it-works guide built in
+
+### Other Features
+- Visual antenna element viewer (top-down SVG)
+- Wavelength presets, auto-recalculation
+- Admin panel (pricing, users, designs, tutorial, designer, discounts, notify, changelog, updates)
+- Email system via Resend (welcome, password reset, receipts)
+- App update checker with Gist fallback
+
+## Key API Endpoints
+- `POST /api/calculate` - Main calculation
+- `GET /api/app-update` - Get update info (public, no auth)
+- `PUT /api/app-update` - Push update (admin auth required)
+- Auth: register, login, forgot-password, reset-password
+- Admin: discounts, users, pricing, changelog, send-update-email
+
+## Deployment Checklist
+After pushing to GitHub and deploying to Railway:
+1. The `/api/app-update` endpoint will be live on Railway
+2. Go to Admin Panel > Updates tab
+3. Enter version, click NOW for build date, paste APK URL
+4. Hit "Push Update to All Users"
+5. All installed apps see the banner on next launch
 
 ## Prioritized Backlog
 ### P0
-- User verification of Popular Channels quick-pick
-- User verification of dual-polarity checkbox logic
-- User verification of Gamma/Hairpin match technical notes
+- Deploy to Railway (so phone update check works)
+- User verification of Popular Channels, dual-polarity, Gamma/Hairpin notes
 
 ### P1
-- Refactor `index.tsx` into smaller components (~3100+ lines)
+- Refactor `index.tsx` (~3100+ lines) into smaller components
 - EAS Build stability (pre-build script)
 
 ### P2
