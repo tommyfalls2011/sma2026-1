@@ -67,17 +67,20 @@ Advanced antenna modeling tool for Yagi antennas. React Native/Expo frontend + F
 - TODO: Android SDK, EAS CLI, first local build
 
 ## Known Issues
-- Spec sheet modal: CSV and X buttons hidden behind status bar (needs top padding)
 - Package version conflicts: Worklets version must match Reanimated expectations
+
+## Recently Fixed (Feb 10, 2026)
+- PUT /api/app-update 500 error: ObjectId serialization fix (insert_one mutates dict)
+- POST /api/app-update: Same ObjectId fix applied preventively
+- Spec sheet modal: Added paddingTop using Constants.statusBarHeight
 
 ## Prioritized Backlog
 ### P0
-- Fix spec sheet modal top padding (CSV/X buttons hidden)
+- Deploy latest backend to Railway (user action - sync production with these fixes)
 - Complete VM local build setup (Guest Additions → Android SDK → EAS CLI)
-- Deploy latest backend to Railway
 
 ### P1
-- Refactor `index.tsx` (~3100+ lines) into smaller components
+- Refactor `index.tsx` (~3200+ lines) into smaller components
 - User verification of Popular Channels, dual-polarity, Gamma/Hairpin notes
 
 ### P2
