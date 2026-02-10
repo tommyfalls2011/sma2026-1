@@ -1246,19 +1246,40 @@ def calculate_stacked_beamwidth(base_beamwidth: float, num_antennas: int, spacin
 
 
 def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacing_wavelengths: float, orientation: str) -> List[dict]:
+    """Generate stacked array radiation pattern using proper array factor multiplication.
+    
+    For a uniform linear array of N elements with spacing d:
+    AF = sin(N*psi/2) / (N*sin(psi/2))  where psi = 2*pi*d*cos(theta)/lambda
+    
+    For vertical stacking, the array axis is along elevation (theta from zenith).
+    For horizontal stacking, the array axis is along azimuth.
+    """
     stacked_pattern = []
     for point in base_pattern:
         angle = point["angle"]
         base_mag = point["magnitude"]
         theta_rad = math.radians(angle)
+        
         if orientation == "vertical":
-            array_factor = 1.0
-            if 60 < angle < 120 or 240 < angle < 300:
-                array_factor = 0.7 + 0.3 * abs(math.sin(num_antennas * math.pi * spacing_wavelengths * math.sin(theta_rad)))
+            # Vertical stack: array broadside is horizontal (0°/180°)
+            # Elements stacked along elevation axis
+            # psi depends on elevation angle component
+            psi = 2 * math.pi * spacing_wavelengths * math.sin(theta_rad)
         else:
+            # Horizontal stack: array broadside is forward (0°)
             psi = 2 * math.pi * spacing_wavelengths * math.cos(theta_rad)
-            array_factor = 1.0 if abs(math.sin(psi / 2)) < 0.001 else abs(math.sin(num_antennas * psi / 2) / (num_antennas * math.sin(psi / 2)))
-        stacked_pattern.append({"angle": angle, "magnitude": round(max(base_mag * array_factor, 1), 1)})
+        
+        # Array factor for N-element uniform array
+        half_psi = psi / 2
+        if abs(math.sin(half_psi)) < 0.001:
+            array_factor = 1.0  # Main lobe (L'Hopital's rule)
+        else:
+            array_factor = abs(math.sin(num_antennas * half_psi) / (num_antennas * math.sin(half_psi)))
+        
+        stacked_mag = max(base_mag * array_factor, 1.0)
+        stacked_pattern.append({"angle": angle, "magnitude": round(stacked_mag, 1)})
+    
+    # Normalize to 100%
     max_mag = max(p["magnitude"] for p in stacked_pattern)
     if max_mag > 0:
         for p in stacked_pattern:
