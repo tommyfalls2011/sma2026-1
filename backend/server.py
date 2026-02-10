@@ -2358,20 +2358,22 @@ async def update_app_update(data: dict, credentials: HTTPAuthorizationCredential
     }
     await update_col.delete_many({})
     await update_col.insert_one(update_data)
-    return {"status": "ok", "data": update_data}
+    # Return a clean copy without _id (insert_one mutates the dict)
+    return {"status": "ok", "data": {k: v for k, v in update_data.items() if k != "_id"}}
 
 @api_router.post("/app-update")
 async def set_app_update(data: dict):
     """Legacy: same as PUT but without auth for backward compat."""
     update_col = db["app_update"]
     await update_col.delete_many({})
-    await update_col.insert_one({
+    doc = {
         "version": data.get("version", ""),
         "buildDate": data.get("buildDate", ""),
         "releaseNotes": data.get("releaseNotes", ""),
         "apkUrl": data.get("apkUrl", ""),
         "forceUpdate": data.get("forceUpdate", False)
-    })
+    }
+    await update_col.insert_one(doc)
     return {"status": "ok"}
 
 @api_router.get("/bands")
