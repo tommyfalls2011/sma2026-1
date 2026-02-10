@@ -1287,7 +1287,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     avg_element_dia = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / len(input_data.elements)
     
     # === BOOM CORRECTION (DL6WU/G3SEK) ===
-    boom_correction = calculate_boom_correction(boom_dia_m, avg_element_dia, wavelength, input_data.boom_grounded, input_data.boom_mount)
+    boom_correction = calculate_boom_correction(boom_dia_m, avg_element_dia, wavelength, input_data.boom_grounded, input_data.boom_mount or ("bonded" if input_data.boom_grounded else "nonconductive"))
     
     # Populate corrected cut list for each element
     if boom_correction.get("enabled") and boom_correction.get("correction_total_in", 0) > 0:
