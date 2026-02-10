@@ -24,47 +24,61 @@ Advanced antenna modeling tool for Yagi antennas. React Native/Expo frontend + F
 - Corrected Cut List showing original -> corrected element lengths
 - 27/27 backend tests passed
 
-### App Update System (Feb 2026 - Fixed)
-- **Root cause found**: Phone APK hits Railway which had no update endpoint
-- **Fix**: Added `GET /api/app-update` (reads from MongoDB, hardcoded fallback)
-- **Fix**: Added `PUT /api/app-update` (admin-only, saves to MongoDB)
-- **Fix**: App now tries backend first, Gist fallback second
-- **Fix**: Debug log panel shows exactly what happened during update check
-- **Admin Panel**: New "Updates" tab to push updates without code changes
-  - Version, Build Date (with NOW button), APK URL, Release Notes, Force Update toggle
-  - One-click "Push Update to All Users"
-  - How-it-works guide built in
+### App Update System (Feb 2026 - WORKING)
+- App reads version from app.json via direct import + Constants fallback
+- Checks Railway backend first (`/api/app-update`), Gist fallback
+- Railway POST endpoint to push updates (no code deploy needed)
+- Admin Panel "Updates" tab for GUI-based update pushing
+- Debug log panel for troubleshooting
+- tsconfig.json: resolveJsonModule: true (required for JSON imports)
 
-### Other Features
-- Visual antenna element viewer (top-down SVG)
-- Wavelength presets, auto-recalculation
-- Admin panel (pricing, users, designs, tutorial, designer, discounts, notify, changelog, updates)
-- Email system via Resend (welcome, password reset, receipts)
-- App update checker with Gist fallback
+### Stacking Pattern Fix (Feb 2026)
+- Fixed array factor formula for vertical stacking (was not applying properly)
+- Now uses proper phased array math: AF = sin(N*psi/2) / (N*sin(psi/2))
 
-## Key API Endpoints
-- `POST /api/calculate` - Main calculation
-- `GET /api/app-update` - Get update info (public, no auth)
-- `PUT /api/app-update` - Push update (admin auth required)
-- Auth: register, login, forgot-password, reset-password
-- Admin: discounts, users, pricing, changelog, send-update-email
+### Visual Element Viewer
+- TOP VIEW label: white, 12px, bold (was gray 9px)
+- Element labels bumped to 10px, spacing labels to 9px
 
-## Deployment Checklist
-After pushing to GitHub and deploying to Railway:
-1. The `/api/app-update` endpoint will be live on Railway
-2. Go to Admin Panel > Updates tab
-3. Enter version, click NOW for build date, paste APK URL
-4. Hit "Push Update to All Users"
-5. All installed apps see the banner on next launch
+### Package Versions Fixed
+- All 22 packages synced with SDK 54 via `npx expo install --fix`
+- react-native-worklets must match react-native-reanimated version
+- Reanimated 4.1.1 requires Worklets 0.5.x
+
+## Key Deployment Info
+- **app.json version**: 4.0.2, versionCode: 4
+- **Railway update endpoint**: POST to `/api/app-update` with JSON body
+- **Gist URL**: `https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/`
+- **PowerShell update command**: `Invoke-RestMethod -Uri "https://helpful-adaptation-production.up.railway.app/api/app-update" -Method POST -ContentType "application/json" -Body '{"version":"X.X.X",...}'`
+
+## Build Workflow
+1. Change version in `app.json` (done by Emergent)
+2. Save to GitHub from Emergent
+3. On PC: `git fetch origin main && git reset --hard origin/main`
+4. `Remove-Item -Recurse -Force node_modules, package-lock.json`
+5. `npm install --legacy-peer-deps`
+6. `eas build --profile preview --platform android`
+7. Update Railway + Gist with new APK URL
+
+## VM Local Build Setup (IN PROGRESS)
+- Ubuntu 24.04 LTS installed in VirtualBox
+- Node 20, default-jdk installed
+- BLOCKED: Copy/paste not working (need Guest Additions)
+- TODO: Android SDK, EAS CLI, first local build
+
+## Known Issues
+- Spec sheet modal: CSV and X buttons hidden behind status bar (needs top padding)
+- Package version conflicts: Worklets version must match Reanimated expectations
 
 ## Prioritized Backlog
 ### P0
-- Deploy to Railway (so phone update check works)
-- User verification of Popular Channels, dual-polarity, Gamma/Hairpin notes
+- Fix spec sheet modal top padding (CSV/X buttons hidden)
+- Complete VM local build setup (Guest Additions → Android SDK → EAS CLI)
+- Deploy latest backend to Railway
 
 ### P1
 - Refactor `index.tsx` (~3100+ lines) into smaller components
-- EAS Build stability (pre-build script)
+- User verification of Popular Channels, dual-polarity, Gamma/Hairpin notes
 
 ### P2
 - Custom domain for Resend emails
