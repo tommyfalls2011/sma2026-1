@@ -115,6 +115,16 @@ export default function AdminScreen() {
 
   // Discounts state
   const [discounts, setDiscounts] = useState<any[]>([]);
+
+  // App Update state
+  const [updateVersion, setUpdateVersion] = useState('');
+  const [updateBuildDate, setUpdateBuildDate] = useState('');
+  const [updateNotes, setUpdateNotes] = useState('');
+  const [updateApkUrl, setUpdateApkUrl] = useState('');
+  const [updateForce, setUpdateForce] = useState(false);
+  const [savingUpdate, setSavingUpdate] = useState(false);
+  const [updateLoaded, setUpdateLoaded] = useState(false);
+
   const BUILTIN_CHANGELOG = [
     {id:"1",order:1,category:"UI",impact:"light",title:"Renamed Boom Lock to Boom Restraint",description:"Updated all references from 'Boom Lock' to 'Boom Restraint' throughout the app for accuracy."},
     {id:"2",order:2,category:"Admin",impact:"moderate",title:"Discount Editing in Admin Panel",description:"Added ability to edit existing discounts (code, type, value, tiers, expiry) via the admin panel."},
