@@ -8,11 +8,12 @@ import { useAuth } from './context/AuthContext';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import appJson from '../app.json';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
-const APP_VERSION = appJson.expo.version;
+const APP_VERSION = Constants.expoConfig?.version || Constants.manifest?.version || appJson?.expo?.version || '4.0.2';
 const APP_BUILD_DATE = '2026-02-10T12:00:00';
 const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
