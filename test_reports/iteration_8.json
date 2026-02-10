@@ -1,0 +1,51 @@
+{
+  "iteration": 8,
+  "date": "2026-02-10",
+  "tests": [
+    {
+      "name": "PUT /api/app-update - Admin update",
+      "status": "PASS",
+      "details": "Fixed ObjectId serialization error. Now returns clean JSON without _id. Status 200."
+    },
+    {
+      "name": "GET /api/app-update - Public read",
+      "status": "PASS",
+      "details": "Returns persisted update data from MongoDB correctly."
+    },
+    {
+      "name": "POST /api/app-update - Legacy update",
+      "status": "PASS",
+      "details": "Fixed same ObjectId issue. Returns {status: ok}."
+    },
+    {
+      "name": "PUT /api/app-update - Auth enforcement",
+      "status": "PASS",
+      "details": "Returns 401 when called without Bearer token."
+    },
+    {
+      "name": "Spec sheet modal - Status bar padding",
+      "status": "PASS (code review)",
+      "details": "Added paddingTop: Constants.statusBarHeight to spec sheet modal outer View. Requires APK rebuild to test on device."
+    }
+  ],
+  "fixes_applied": [
+    {
+      "file": "backend/server.py",
+      "issue": "PUT /api/app-update returned 500 Internal Server Error due to ObjectId serialization",
+      "root_cause": "insert_one() mutates the dict by adding _id (ObjectId), which was then returned in the response. ObjectId is not JSON serializable.",
+      "fix": "Return a filtered copy of update_data excluding _id key: {k: v for k, v in update_data.items() if k != '_id'}"
+    },
+    {
+      "file": "backend/server.py",
+      "issue": "POST /api/app-update (legacy) could have same ObjectId issue",
+      "root_cause": "Same as above - insert_one mutates input dict",
+      "fix": "Used a separate doc variable and don't return the inserted dict"
+    },
+    {
+      "file": "frontend/app/index.tsx",
+      "issue": "Spec sheet modal CSV/X buttons hidden behind phone status bar",
+      "root_cause": "No top padding on the modal container",
+      "fix": "Added paddingTop: Constants.statusBarHeight || 0 to the outer View of the spec sheet modal"
+    }
+  ]
+}
