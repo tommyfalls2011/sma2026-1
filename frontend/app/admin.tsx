@@ -393,11 +393,13 @@ export default function AdminScreen() {
           forceUpdate: updateForce,
         }),
       });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { data = { detail: text }; }
       if (res.ok) {
         Alert.alert('Saved', 'Update info pushed. All users will see the update banner on next app launch.');
       } else {
-        const err = await res.json();
-        Alert.alert('Error', err.detail || 'Failed to save');
+        Alert.alert('Error', data.detail || 'Failed to save');
       }
     } catch (e: any) {
       Alert.alert('Error', e.message);
