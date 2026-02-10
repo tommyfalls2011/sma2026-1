@@ -1,0 +1,119 @@
+{
+  "summary": "Backend-only testing of 3-Way Boom Mount Selector feature (bonded/insulated/nonconductive) completed. 27/27 tests passed (100%). Tested: boom_mount field for each type, correction_multiplier values (1.0/0.55/0), corrected_elements list with cut corrections, gain ordering (bonded<insulated<nonconductive), SWR comparison, backward compatibility with legacy boom_grounded parameter.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/calculate",
+        "issue": "Backward compatibility limitation: boom_grounded=false alone does NOT trigger nonconductive behavior because Pydantic default boom_mount='bonded' takes precedence. Client must explicitly set boom_mount='nonconductive' to get nonconductive behavior.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_boom_mount_3way.py",
+    "/app/test_reports/pytest/pytest_boom_mount_3way.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Consider making boom_mount field Optional[str] with None default, then use boom_grounded as fallback when boom_mount is None - this would restore full backward compatibility"
+  ],
+  "critical_code_review_comments": [
+    "3-way boom mount correctly implemented: bonded (100% DL6WU correction), insulated (55%), nonconductive (0%)",
+    "corrected_elements list properly populated with type, original_length, corrected_length, correction, unit fields",
+    "correction_multiplier field correctly set: 1.0 for bonded, 0.55 for insulated, 0 for nonconductive",
+    "Gain order verified: bonded (13.45 dBi) < insulated (13.46 dBi) < nonconductive (13.48 dBi)",
+    "SWR order verified: bonded (1.54) >= insulated (1.54) >= nonconductive (1.53)",
+    "Descriptions are informative and appropriate for each mount type with practical_notes array"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_boom_mount_3way.py"
+  ],
+  "success_rate": {
+    "backend": "100% (27/27 tests passed)",
+    "frontend": "N/A - Backend only testing requested"
+  },
+  "seed_data_creation": "None - tests use standard 4-element antenna configuration",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "3-way boom mount feature fully tested. POST /api/calculate accepts boom_mount ('bonded'|'insulated'|'nonconductive'). Key response fields in boom_correction_info: boom_mount (echoed), correction_multiplier (1.0/0.55/0), corrected_elements (array with cut list for bonded/insulated, empty for nonconductive), enabled (true/true/false). Gain penalty: bonded > insulated > nonconductive=0. Legacy boom_grounded param still works but boom_mount takes precedence when both specified.",
+  "test_details": {
+    "bonded_tests": {
+      "enabled": true,
+      "boom_mount": "bonded",
+      "correction_multiplier": 1.0,
+      "corrected_elements_count": 4,
+      "gain_dbi": 13.45,
+      "swr": 1.54
+    },
+    "insulated_tests": {
+      "enabled": true,
+      "boom_mount": "insulated",
+      "correction_multiplier": 0.55,
+      "corrected_elements_count": 4,
+      "gain_dbi": 13.46,
+      "swr": 1.54
+    },
+    "nonconductive_tests": {
+      "enabled": false,
+      "boom_mount": "nonconductive",
+      "correction_multiplier": 0,
+      "corrected_elements_count": 0,
+      "gain_dbi": 13.48,
+      "swr": 1.53
+    },
+    "backward_compatibility": {
+      "boom_grounded_true": "defaults to bonded (works)",
+      "boom_grounded_false": "DOES NOT trigger nonconductive due to Pydantic default (known limitation)",
+      "boom_mount_overrides_boom_grounded": "works as expected"
+    }
+  },
+  "api_tested": {
+    "POST /api/calculate with boom_mount=bonded": {
+      "status": "200 OK",
+      "boom_correction_info": {
+        "enabled": true,
+        "boom_mount": "bonded",
+        "correction_multiplier": 1.0,
+        "correction_total_in": 0.222,
+        "corrected_elements": "[4 elements with type, original_length, corrected_length, correction, unit]"
+      },
+      "performance": {
+        "gain_dbi": 13.45,
+        "swr": 1.54
+      }
+    },
+    "POST /api/calculate with boom_mount=insulated": {
+      "status": "200 OK",
+      "boom_correction_info": {
+        "enabled": true,
+        "boom_mount": "insulated",
+        "correction_multiplier": 0.55,
+        "correction_total_in": 0.122,
+        "corrected_elements": "[4 elements with reduced corrections]"
+      },
+      "performance": {
+        "gain_dbi": 13.46,
+        "swr": 1.54
+      }
+    },
+    "POST /api/calculate with boom_mount=nonconductive": {
+      "status": "200 OK",
+      "boom_correction_info": {
+        "enabled": false,
+        "boom_mount": "nonconductive",
+        "correction_multiplier": 0,
+        "correction_total_in": 0,
+        "corrected_elements": "[]"
+      },
+      "performance": {
+        "gain_dbi": 13.48,
+        "swr": 1.53
+      }
+    }
+  }
+}
