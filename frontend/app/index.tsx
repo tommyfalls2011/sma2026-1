@@ -406,22 +406,69 @@ export default function AntennaCalculator() {
   // Update checker state
   const [updateAvailable, setUpdateAvailable] = useState<{version: string; apkUrl: string; notes: string; forceUpdate: boolean; buildDate?: string} | null>(null);
   const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [updateDebug, setUpdateDebug] = useState('');
 
-  // Check GitHub for updates on launch
+  // Check for updates on launch — tries own backend first, falls back to Gist
   useEffect(() => {
     const checkForUpdates = async () => {
+      let debugLog = '';
+      const logD = (msg: string) => { debugLog += msg + '\n'; };
+      
+      logD(`Local: v${APP_VERSION} built ${APP_BUILD_DATE}`);
+      const localBuild = new Date(APP_BUILD_DATE).getTime();
+      logD(`Local timestamp: ${localBuild}`);
+      
+      // Source 1: Own backend (no CDN caching)
+      let data: any = null;
       try {
-        const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.apkUrl && data.buildDate) {
-          const remoteBuild = new Date(data.buildDate).getTime();
-          const localBuild = new Date(APP_BUILD_DATE).getTime();
-          if (remoteBuild > localBuild) {
-            setUpdateAvailable({ version: data.version, apkUrl: data.apkUrl, notes: data.releaseNotes || '', forceUpdate: data.forceUpdate || false, buildDate: data.buildDate });
-          }
+        logD(`Trying backend: ${BACKEND_URL}/api/app-update`);
+        const res = await fetch(`${BACKEND_URL}/api/app-update?t=${Date.now()}`);
+        logD(`Backend response: ${res.status}`);
+        if (res.ok) {
+          data = await res.json();
+          logD(`Backend data: v${data.version} built ${data.buildDate}`);
         }
-      } catch (e) { /* silently fail if offline */ }
+      } catch (e: any) {
+        logD(`Backend failed: ${e.message}`);
+      }
+      
+      // Source 2: Gist fallback
+      if (!data || !data.buildDate) {
+        try {
+          logD(`Trying Gist: ${UPDATE_CHECK_URL}`);
+          const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
+          logD(`Gist response: ${res.status}`);
+          if (res.ok) {
+            data = await res.json();
+            logD(`Gist data: v${data.version} built ${data.buildDate}`);
+          }
+        } catch (e: any) {
+          logD(`Gist failed: ${e.message}`);
+        }
+      }
+      
+      if (data && data.apkUrl && data.buildDate) {
+        const remoteBuild = new Date(data.buildDate).getTime();
+        logD(`Remote timestamp: ${remoteBuild}`);
+        logD(`Diff: ${((remoteBuild - localBuild) / 3600000).toFixed(1)} hours`);
+        
+        if (remoteBuild > localBuild) {
+          logD('UPDATE AVAILABLE — showing banner');
+          setUpdateAvailable({
+            version: data.version,
+            apkUrl: data.apkUrl,
+            notes: data.releaseNotes || '',
+            forceUpdate: data.forceUpdate || false,
+            buildDate: data.buildDate,
+          });
+        } else {
+          logD('App is up to date (or newer than server)');
+        }
+      } else {
+        logD('No valid update data received from either source');
+      }
+      
+      setUpdateDebug(debugLog);
     };
     checkForUpdates();
   }, []);
