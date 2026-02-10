@@ -2313,8 +2313,8 @@ async def get_app_update():
     """Returns the latest app update info. Edit this to push updates to users."""
     return {
         "version": "3.2.5",
-        "buildDate": "2026-02-09T19:05:00",
-        "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer, Update System",
+        "buildDate": "2026-03-01T00:00:00",
+        "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer, Update System, 3-Way Boom Mount Selector, Corrected Cut List",
         "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk",
         "forceUpdate": False
     }

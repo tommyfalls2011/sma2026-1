@@ -1,7 +1,7 @@
 {
-  "version": "3.0.0",
-  "buildDate": "2025-12-09T04:00:00Z",
-  "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer",
-  "apkUrl": "https://expo.dev/artifacts/eas/bwh9hQtnSFcJgdcFrZRdzk.apk",
+  "version": "3.2.5",
+  "buildDate": "2026-03-01T00:00:00",
+  "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer, Update System, 3-Way Boom Mount Selector, Corrected Cut List",
+  "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk",
   "forceUpdate": false
 }
