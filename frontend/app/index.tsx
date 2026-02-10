@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import Constants from 'expo-constants';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions, Switch, Alert, Modal, FlatList, AppState, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,11 +8,12 @@ import { useAuth } from './context/AuthContext';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import appJson from '../app.json';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
-const APP_VERSION = Constants.expoConfig?.version || '3.2.5';
-const APP_BUILD_DATE = '2026-02-10T12:00:00'; // Fallback — version comparison is primary
+const APP_VERSION = appJson.expo.version;
+const APP_BUILD_DATE = '2026-02-10T12:00:00';
 const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
 const TIER_COLORS: Record<string, string> = {
