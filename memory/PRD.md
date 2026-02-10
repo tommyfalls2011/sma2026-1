@@ -10,17 +10,17 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 4. Antenna stacking (2x, 3x, 4x linear arrays + 2x2 Quad)
 5. Height optimizer with dynamic scoring
 6. Wind load calculation and mechanical analysis
-7. Detailed "View Specs" modal with boom correction section
-8. CSV export feature (includes boom correction data)
+7. Detailed "View Specs" modal with boom correction and corrected cut list
+8. CSV export feature (includes all correction data)
 9. Admin panel for managing discounts/changelog
 10. Email system (welcome, password reset, receipts, announcements via Resend)
 11. App update checker via GitHub Gist
 12. Visual antenna element viewer (top-down SVG)
-13. Boom grounded/insulated correction (G3SEK/DL6WU formula) with full physics:
-    - Grounded: boom capacitance makes elements electrically longer → shorten to compensate
-    - Insulated: free-space behavior, no correction needed
-    - Affects: gain, SWR, F/B, impedance, bandwidth
-    - Includes practical notes for each mode (safety, mechanical, tuning)
+13. 3-way boom mount selector with full physics:
+    - **Bonded**: Elements welded/bolted to metal boom (100% DL6WU correction)
+    - **Insulated**: Elements on metal boom with insulating sleeves (55% correction)
+    - **Non-conductive**: PVC/wood/fiberglass boom (0% correction)
+14. Corrected Cut List: Shows original vs corrected element lengths per mount type
 
 ## Architecture
 - **Backend**: Python/FastAPI at `/app/backend/server.py`
@@ -28,25 +28,18 @@ Advanced antenna modeling tool for Yagi antennas. Built as a React Native/Expo f
 - **Database**: MongoDB (users, changelog, password_resets, discounts)
 - **Email**: Resend API
 
-## Key API Endpoints
-- `POST /api/calculate` - Main antenna calculation (includes boom_grounded param)
-- `POST /api/auto-tune` - Auto-optimize antenna parameters
-- `POST /api/optimize-height` - Find optimal antenna height
-- `POST /api/optimize-stacking` - Sweep spacing for best gain
-- Auth endpoints: register, login, forgot-password, reset-password, send-receipt
-- `GET /api/changelog` - Changelog entries
-- Admin CRUD for discounts, users, pricing
-
 ## What's Been Implemented
 - All 32 items from previous sessions
-- **Visual Antenna Element Viewer** (Feb 2026) - Top-down SVG with boom, elements, spacing
-- **Boom Grounded/Insulated Toggle** (Feb 2026) - Complete G3SEK/DL6WU implementation:
-  - Backend: boom_grounded field, boom_correction_info output with practical_notes
-  - Affects gain (-0.02 to -0.3 dB), SWR (+2-10%), F/B (-0.1 to -1.5 dB), impedance, bandwidth
-  - Correction scales with frequency and boom/element diameter ratio
-  - Description: "Shorten elements by X" (grounded) vs "Free-space, no correction" (insulated)
-  - Displayed in: results bonus cards, spec sheet section, CSV export
-  - 16/16 backend tests passed
+- **Visual Antenna Element Viewer** (Feb 2026) - Top-down SVG
+- **3-Way Boom Mount Selector** (Feb 2026):
+  - Bonded/Insulated/Non-Conductive with distinct physics
+  - G3SEK/DL6WU correction formula with mount-type multiplier
+  - Affects gain, SWR, F/B, impedance, bandwidth
+  - Practical notes per mount type
+  - Corrected Cut List showing original -> corrected lengths
+  - Displayed in results cards, spec sheet, CSV export
+  - Backward compatible with legacy boom_grounded parameter
+  - 27/27 backend tests passed + 16/16 previous iteration
 
 ## Prioritized Backlog
 ### P0
