@@ -564,7 +564,7 @@ class AntennaInput(BaseModel):
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
     ground_radials: Optional[GroundRadialConfig] = Field(default=None)
     boom_grounded: bool = Field(default=True)  # Legacy: True = bonded, False = nonconductive
-    boom_mount: str = Field(default="bonded")  # "bonded" | "insulated" | "nonconductive"
+    boom_mount: Optional[str] = Field(default=None)  # "bonded" | "insulated" | "nonconductive" (overrides boom_grounded)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
