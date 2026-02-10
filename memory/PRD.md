@@ -46,25 +46,29 @@ Advanced antenna modeling tool for Yagi antennas. React Native/Expo frontend + F
 - Reanimated 4.1.1 requires Worklets 0.5.x
 
 ## Key Deployment Info
-- **app.json version**: 4.0.2, versionCode: 4
+- **app.json version**: 4.0.3, versionCode: 4
 - **Railway update endpoint**: POST to `/api/app-update` with JSON body
 - **Gist URL**: `https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/`
 - **PowerShell update command**: `Invoke-RestMethod -Uri "https://helpful-adaptation-production.up.railway.app/api/app-update" -Method POST -ContentType "application/json" -Body '{"version":"X.X.X",...}'`
+- **GitHub Releases APK**: `https://github.com/tommyfalls2011/sma2026-1/releases/download/v4.0.3/build-1770724104797.apk`
 
 ## Build Workflow
 1. Change version in `app.json` (done by Emergent)
 2. Save to GitHub from Emergent
-3. On PC: `git fetch origin main && git reset --hard origin/main`
-4. `Remove-Item -Recurse -Force node_modules, package-lock.json`
+3. On Ubuntu VM: `cd ~/sma2026-1 && git fetch origin main && git reset --hard origin/main`
+4. `cd frontend && rm -rf node_modules package-lock.json`
 5. `npm install --legacy-peer-deps`
-6. `eas build --profile preview --platform android`
-7. Update Railway + Gist with new APK URL
+6. `export GRADLE_OPTS="-Xmx4g -XX:MaxMetaspaceSize=1g"`
+7. `eas build --local --profile preview --platform android`
+8. Upload: `gh release create vX.X.X /home/admin2/sma2026-1/frontend/build-*.apk --title "vX.X.X" --notes "..."`
+9. Get URL: `gh release view vX.X.X --json assets -q '.assets[0].url'`
+10. Update Railway with new APK URL (via admin panel or POST to /api/app-update)
 
-## VM Local Build Setup (IN PROGRESS)
-- Ubuntu 24.04 LTS installed in VirtualBox
-- Node 20, default-jdk installed
-- BLOCKED: Copy/paste not working (need Guest Additions)
-- TODO: Android SDK, EAS CLI, first local build
+## VM Local Build Setup (COMPLETE)
+- Ubuntu 24.04 LTS in VirtualBox (16GB RAM, 6 cores)
+- Node 20, default-jdk, Android SDK, EAS CLI installed
+- GitHub CLI (`gh`) authenticated
+- Successfully built v4.0.3 APK locally
 
 ## Known Issues
 - Package version conflicts: Worklets version must match Reanimated expectations
