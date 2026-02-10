@@ -1467,6 +1467,94 @@ export default function AdminScreen() {
             )}
           </>
         )}
+
+        {activeTab === 'updates' && (
+          <>
+            <Text style={styles.sectionTitle}>Push App Update</Text>
+            <Text style={{ color: '#888', fontSize: 11, marginBottom: 12 }}>
+              Fill in the fields below and hit Save. All installed apps will see the update banner on their next launch.
+            </Text>
+
+            <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#333', marginBottom: 12 }}>
+              <Text style={{ color: '#aaa', fontSize: 11, fontWeight: '600', marginBottom: 6 }}>Version</Text>
+              <TextInput
+                style={{ backgroundColor: '#111', borderRadius: 6, padding: 10, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: '#333', marginBottom: 12 }}
+                value={updateVersion}
+                onChangeText={setUpdateVersion}
+                placeholder="3.2.5"
+                placeholderTextColor="#555"
+              />
+
+              <Text style={{ color: '#aaa', fontSize: 11, fontWeight: '600', marginBottom: 6 }}>Build Date (ISO format)</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                <TextInput
+                  style={{ flex: 1, backgroundColor: '#111', borderRadius: 6, padding: 10, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: '#333' }}
+                  value={updateBuildDate}
+                  onChangeText={setUpdateBuildDate}
+                  placeholder="2026-03-01T00:00:00"
+                  placeholderTextColor="#555"
+                />
+                <TouchableOpacity onPress={setUpdateBuildDateNow} style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 12, justifyContent: 'center' }}>
+                  <Text style={{ color: '#4CAF50', fontSize: 11, fontWeight: '700' }}>NOW</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ color: '#aaa', fontSize: 11, fontWeight: '600', marginBottom: 6 }}>APK Download URL</Text>
+              <TextInput
+                style={{ backgroundColor: '#111', borderRadius: 6, padding: 10, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: '#333', marginBottom: 12 }}
+                value={updateApkUrl}
+                onChangeText={setUpdateApkUrl}
+                placeholder="https://expo.dev/artifacts/eas/..."
+                placeholderTextColor="#555"
+              />
+
+              <Text style={{ color: '#aaa', fontSize: 11, fontWeight: '600', marginBottom: 6 }}>Release Notes</Text>
+              <TextInput
+                style={{ backgroundColor: '#111', borderRadius: 6, padding: 10, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: '#333', marginBottom: 12, minHeight: 60 }}
+                value={updateNotes}
+                onChangeText={setUpdateNotes}
+                placeholder="What's new in this update..."
+                placeholderTextColor="#555"
+                multiline
+              />
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View>
+                  <Text style={{ color: '#aaa', fontSize: 11, fontWeight: '600' }}>Force Update</Text>
+                  <Text style={{ color: '#666', fontSize: 9 }}>Banner cannot be dismissed</Text>
+                </View>
+                <Switch value={updateForce} onValueChange={setUpdateForce} trackColor={{ false: '#333', true: '#4CAF50' }} />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={saveAppUpdate}
+              disabled={savingUpdate}
+              style={{ backgroundColor: savingUpdate ? '#333' : '#4CAF50', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 12 }}
+            >
+              {savingUpdate ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="cloud-upload" size={18} color="#000" />
+                  <Text style={{ color: '#000', fontWeight: '700', fontSize: 14 }}>Push Update to All Users</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={{ backgroundColor: '#1a2a1a', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#4CAF5044' }}>
+              <Text style={{ color: '#4CAF50', fontSize: 11, fontWeight: '700', marginBottom: 6 }}>How It Works</Text>
+              <Text style={{ color: '#aaa', fontSize: 10, lineHeight: 16 }}>
+                1. Build a new APK with EAS Build{'\n'}
+                2. Copy the APK download URL from Expo{'\n'}
+                3. Paste it here, set the version and click NOW for build date{'\n'}
+                4. Hit "Push Update" — users see the banner instantly{'\n'}
+                {'\n'}
+                The build date must be NEWER than what's in the installed APK. The "NOW" button sets it to the current time, which is always newer.
+              </Text>
+            </View>
+          </>
+        )}
       </ScrollView>
       
       {/* Add User Modal */}
