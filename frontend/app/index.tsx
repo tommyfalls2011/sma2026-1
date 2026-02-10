@@ -411,13 +411,24 @@ export default function AntennaCalculator() {
 
   // Check for updates on launch — tries own backend first, falls back to Gist
   useEffect(() => {
+    const compareVersions = (local: string, remote: string): boolean => {
+      // Returns true if remote > local (e.g. "3.3.0" > "3.2.5")
+      const lParts = local.split('.').map(Number);
+      const rParts = remote.split('.').map(Number);
+      for (let i = 0; i < 3; i++) {
+        const l = lParts[i] || 0;
+        const r = rParts[i] || 0;
+        if (r > l) return true;
+        if (r < l) return false;
+      }
+      return false; // equal
+    };
+
     const checkForUpdates = async () => {
       let debugLog = '';
       const logD = (msg: string) => { debugLog += msg + '\n'; };
       
-      logD(`Local: v${APP_VERSION} built ${APP_BUILD_DATE}`);
-      const localBuild = new Date(APP_BUILD_DATE).getTime();
-      logD(`Local timestamp: ${localBuild}`);
+      logD(`Installed: v${APP_VERSION}`);
       
       // Source 1: Own backend (no CDN caching)
       let data: any = null;
@@ -427,34 +438,33 @@ export default function AntennaCalculator() {
         logD(`Backend response: ${res.status}`);
         if (res.ok) {
           data = await res.json();
-          logD(`Backend data: v${data.version} built ${data.buildDate}`);
+          logD(`Backend: v${data.version}`);
         }
       } catch (e: any) {
         logD(`Backend failed: ${e.message}`);
       }
       
       // Source 2: Gist fallback
-      if (!data || !data.buildDate) {
+      if (!data || !data.version) {
         try {
-          logD(`Trying Gist: ${UPDATE_CHECK_URL}`);
+          logD(`Trying Gist...`);
           const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
           logD(`Gist response: ${res.status}`);
           if (res.ok) {
             data = await res.json();
-            logD(`Gist data: v${data.version} built ${data.buildDate}`);
+            logD(`Gist: v${data.version}`);
           }
         } catch (e: any) {
           logD(`Gist failed: ${e.message}`);
         }
       }
       
-      if (data && data.apkUrl && data.buildDate) {
-        const remoteBuild = new Date(data.buildDate).getTime();
-        logD(`Remote timestamp: ${remoteBuild}`);
-        logD(`Diff: ${((remoteBuild - localBuild) / 3600000).toFixed(1)} hours`);
+      if (data && data.version && data.apkUrl) {
+        const isNewer = compareVersions(APP_VERSION, data.version);
+        logD(`Compare: v${APP_VERSION} vs v${data.version} → ${isNewer ? 'UPDATE AVAILABLE' : 'up to date'}`);
         
-        if (remoteBuild > localBuild) {
-          logD('UPDATE AVAILABLE — showing banner');
+        if (isNewer) {
+          logD('Showing update banner');
           setUpdateAvailable({
             version: data.version,
             apkUrl: data.apkUrl,
@@ -462,11 +472,9 @@ export default function AntennaCalculator() {
             forceUpdate: data.forceUpdate || false,
             buildDate: data.buildDate,
           });
-        } else {
-          logD('App is up to date (or newer than server)');
         }
       } else {
-        logD('No valid update data received from either source');
+        logD('No valid update data from either source');
       }
       
       setUpdateDebug(debugLog);
