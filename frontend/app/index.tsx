@@ -1651,13 +1651,13 @@ export default function AntennaCalculator() {
                   const halfLen = (lengths[i] / maxLen) * 30;
                   const color = el.element_type === 'reflector' ? '#f44336' : el.element_type === 'driven' ? '#4CAF50' : '#2196F3';
                   nodes.push(<Line key={`el-${i}`} x1={x} y1={yCenter - halfLen} x2={x} y2={yCenter + halfLen} stroke={color} strokeWidth={2.5} strokeLinecap="round" />);
-                  nodes.push(<SvgText key={`lbl-${i}`} x={x} y={12} fill={color} fontSize={7} textAnchor="middle" fontWeight="bold">{el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`}</SvgText>);
+                  nodes.push(<SvgText key={`lbl-${i}`} x={x} y={12} fill={color} fontSize={10} textAnchor="middle" fontWeight="bold">{el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`}</SvgText>);
                   // Spacing label between elements
                   if (i > 0) {
                     const prevX = pad + positions[i - 1] * scale;
                     const midX = (prevX + x) / 2;
                     const spacing = (positions[i] - positions[i - 1]).toFixed(1);
-                    nodes.push(<SvgText key={`sp-${i}`} x={midX} y={74} fill="#666" fontSize={7} textAnchor="middle">{spacing}"</SvgText>);
+                    nodes.push(<SvgText key={`sp-${i}`} x={midX} y={74} fill="#aaa" fontSize={9} textAnchor="middle">{spacing}"</SvgText>);
                   }
                 });
                 return nodes;
