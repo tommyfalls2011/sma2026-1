@@ -2310,7 +2310,11 @@ async def root():
 # === UPDATE CHECK ENDPOINT (no CDN caching) ===
 @api_router.get("/app-update")
 async def get_app_update():
-    """Returns the latest app update info. Edit this to push updates to users."""
+    """Returns the latest app update info from DB, with hardcoded fallback."""
+    update_col = db["app_update"]
+    doc = await update_col.find_one({}, {"_id": 0})
+    if doc:
+        return doc
     return {
         "version": "3.2.5",
         "buildDate": "2026-03-01T00:00:00",
@@ -2319,9 +2323,25 @@ async def get_app_update():
         "forceUpdate": False
     }
 
+@api_router.put("/app-update")
+async def update_app_update(data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Admin-only: Update the app update info stored in DB."""
+    user = await require_admin(credentials)
+    update_col = db["app_update"]
+    update_data = {
+        "version": data.get("version", ""),
+        "buildDate": data.get("buildDate", ""),
+        "releaseNotes": data.get("releaseNotes", ""),
+        "apkUrl": data.get("apkUrl", ""),
+        "forceUpdate": data.get("forceUpdate", False)
+    }
+    await update_col.delete_many({})
+    await update_col.insert_one(update_data)
+    return {"status": "ok", "data": update_data}
+
 @api_router.post("/app-update")
 async def set_app_update(data: dict):
-    """Admin endpoint to update the app update info."""
+    """Legacy: same as PUT but without auth for backward compat."""
     update_col = db["app_update"]
     await update_col.delete_many({})
     await update_col.insert_one({
