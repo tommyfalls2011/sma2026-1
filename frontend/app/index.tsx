@@ -1415,6 +1415,18 @@ export default function AntennaCalculator() {
               <Text style={{ color: '#555', fontSize: 9, marginTop: 4 }}>Installed: {new Date(APP_BUILD_DATE).toLocaleString()}{updateAvailable.buildDate ? ` | New: ${new Date(updateAvailable.buildDate).toLocaleString()}` : ''}</Text>
             </View>
           )}
+          
+          {/* Update Debug Panel — tap version number to toggle */}
+          {updateDebug ? (
+            <TouchableOpacity onPress={() => setUpdateDebug(prev => prev.startsWith('HIDDEN:') ? prev.replace('HIDDEN:', '') : 'HIDDEN:' + prev)}>
+              {!updateDebug.startsWith('HIDDEN:') && (
+                <View style={{ marginHorizontal: 12, marginBottom: 6, backgroundColor: '#1a1a2a', borderRadius: 6, padding: 8, borderWidth: 1, borderColor: '#333' }}>
+                  <Text style={{ fontSize: 8, fontWeight: '700', color: '#666', marginBottom: 2 }}>UPDATE CHECK LOG (tap to hide)</Text>
+                  <Text style={{ fontSize: 8, color: '#888', fontFamily: 'monospace' }}>{updateDebug}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ) : null}
 
           {/* Action Buttons Row */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
