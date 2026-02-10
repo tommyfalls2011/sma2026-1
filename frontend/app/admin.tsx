@@ -359,6 +359,57 @@ export default function AdminScreen() {
     } catch (e) { /* Use built-in data if API unavailable */ }
   };
 
+  const loadAppUpdate = async () => {
+    if (updateLoaded) return;
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/app-update`);
+      if (res.ok) {
+        const d = await res.json();
+        setUpdateVersion(d.version || '');
+        setUpdateBuildDate(d.buildDate || '');
+        setUpdateNotes(d.releaseNotes || '');
+        setUpdateApkUrl(d.apkUrl || '');
+        setUpdateForce(d.forceUpdate || false);
+        setUpdateLoaded(true);
+      }
+    } catch (e) { console.error('Load update error:', e); }
+  };
+
+  const saveAppUpdate = async () => {
+    if (!updateVersion || !updateBuildDate || !updateApkUrl) {
+      Alert.alert('Error', 'Version, Build Date, and APK URL are required');
+      return;
+    }
+    setSavingUpdate(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/app-update`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          version: updateVersion,
+          buildDate: updateBuildDate,
+          releaseNotes: updateNotes,
+          apkUrl: updateApkUrl,
+          forceUpdate: updateForce,
+        }),
+      });
+      if (res.ok) {
+        Alert.alert('Saved', 'Update info pushed. All users will see the update banner on next app launch.');
+      } else {
+        const err = await res.json();
+        Alert.alert('Error', err.detail || 'Failed to save');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    } finally {
+      setSavingUpdate(false);
+    }
+  };
+
+  const setUpdateBuildDateNow = () => {
+    setUpdateBuildDate(new Date().toISOString().replace(/\.\d{3}Z$/, ''));
+  };
+
   const deleteChangelogEntry = async (id: string) => {
     try {
       await fetch(`${BACKEND_URL}/api/admin/changelog/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
