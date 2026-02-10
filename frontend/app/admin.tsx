@@ -787,6 +787,10 @@ export default function AdminScreen() {
           <Ionicons name="git-commit" size={14} color={activeTab === 'changelog' ? '#fff' : '#888'} />
           <Text style={[styles.tabPillText, activeTab === 'changelog' && styles.tabPillTextActive]}>Changes</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'updates' && styles.tabPillActive]} onPress={() => { setActiveTab('updates'); loadAppUpdate(); }}>
+          <Ionicons name="cloud-upload" size={14} color={activeTab === 'updates' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'updates' && styles.tabPillTextActive]}>Updates</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <ScrollView
