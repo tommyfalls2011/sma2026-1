@@ -23,7 +23,7 @@ export default function Home() {
               SWING<br/>MASTER<br/><span className="text-brand-400">AMPS</span>
             </h1>
             <p className="mt-6 text-lg text-dark-300 max-w-xl mx-auto leading-relaxed">
-              Premium CB amplifiers built with quality components. From 2-pill to 6-pill configurations, we build amps that push the power you need.
+              Premium HF amplifiers built with quality components. From 1-pill to 16-pill configurations, we build amps that push the power you need.
             </p>
             <div className="mt-8 flex justify-center gap-4">
               <Link to="/products" className="font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold" data-testid="hero-shop-btn">
