@@ -3937,7 +3937,7 @@ async def store_register(data: dict):
     member_id = str(uuid.uuid4())
     member = {
         "id": member_id, "name": name, "email": email,
-        "password_hash": bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+        "password_hash": hash_password(password),
         "is_admin": email == "fallstommy@gmail.com",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -3950,7 +3950,7 @@ async def store_login(data: dict):
     email = data.get("email", "").strip().lower()
     password = data.get("password", "")
     member = await store_db.store_members.find_one({"email": email}, {"_id": 0})
-    if not member or not bcrypt.checkpw(password.encode(), member["password_hash"].encode()):
+    if not member or not verify_password(password, member["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_token(member["id"], email)
     return {"token": token, "user": {"id": member["id"], "name": member["name"], "email": email, "is_admin": member.get("is_admin", False)}}
