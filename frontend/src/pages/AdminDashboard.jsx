@@ -11,7 +11,8 @@ export default function AdminDashboard() {
   const [members, setMembers] = useState([])
   const [tab, setTab] = useState('products')
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ name: '', price: '', short_desc: '', description: '', image_url: '', in_stock: true, specs: '' })
+  const [form, setForm] = useState({ name: '', price: '', short_desc: '', description: '', image_url: '', gallery: [], in_stock: true, specs: '' })
+  const [galleryInput, setGalleryInput] = useState('')
 
   useEffect(() => {
     if (!user?.is_admin) { navigate('/'); return }
