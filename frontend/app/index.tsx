@@ -1399,7 +1399,7 @@ export default function AntennaCalculator() {
             <TouchableOpacity style={styles.userHeaderLeft} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
               <Ionicons name="radio-outline" size={24} color="#4CAF50" />
               <View>
-                <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
+                <Text style={styles.headerTitle}>SMA Antenna Calculator</Text>
                 <Text style={{ fontSize: 9, color: '#ccc' }}>v{APP_VERSION} | Built: {new Date(APP_BUILD_DATE).toLocaleDateString()}</Text>
               </View>
             </TouchableOpacity>
@@ -3043,7 +3043,7 @@ export default function AntennaCalculator() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' }, flex: { flex: 1 }, scrollView: { flex: 1 }, scrollContent: { padding: 10, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
   userHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 4, marginBottom: 8 },
   userHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   userBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, gap: 6 },
