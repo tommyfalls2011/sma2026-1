@@ -4048,3 +4048,4 @@ async def shutdown_db_client():
 @app.on_event("startup")
 async def startup_load_settings():
     await load_settings_from_db()
+    await seed_store_products()
