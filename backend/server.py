@@ -3931,6 +3931,11 @@ async def download_feature_graphic():
 async def download_screenshot(num: int):
     return FileResponse(f"/app/backend/screenshot_{num}.png", filename=f"screenshot_{num}.png", media_type="image/png")
 
+@api_router.get("/download/app-icon")
+async def download_app_icon():
+    return FileResponse("/app/backend/app-icon-512.png", filename="app-icon-512.png", media_type="image/png")
+
+
 
 
 
