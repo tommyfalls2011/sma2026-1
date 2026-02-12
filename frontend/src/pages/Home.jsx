@@ -17,15 +17,15 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 relative">
-          <div className="max-w-3xl">
+          <div className="text-center mx-auto">
             <p className="font-display text-brand-400 tracking-[0.4em] uppercase text-sm mb-4" data-testid="hero-subtitle">Hand-Built in North Carolina</p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[0.95]" data-testid="hero-title">
               SWING<br/>MASTER<br/><span className="text-brand-400">AMPS</span>
             </h1>
-            <p className="mt-6 text-lg text-dark-300 max-w-xl leading-relaxed">
+            <p className="mt-6 text-lg text-dark-300 max-w-xl mx-auto leading-relaxed">
               Premium CB amplifiers built with quality components. From 2-pill to 6-pill configurations, we build amps that push the power you need.
             </p>
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex justify-center gap-4">
               <Link to="/products" className="font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold" data-testid="hero-shop-btn">
                 Shop Amps
               </Link>
