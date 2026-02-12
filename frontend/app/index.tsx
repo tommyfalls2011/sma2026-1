@@ -1400,7 +1400,7 @@ export default function AntennaCalculator() {
               <Ionicons name="radio-outline" size={24} color="#4CAF50" />
               <View>
                 <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
-                <Text style={{ fontSize: 9, color: '#555' }}>v{APP_VERSION} | Built: {new Date(APP_BUILD_DATE).toLocaleDateString()}</Text>
+                <Text style={{ fontSize: 9, color: '#ccc' }}>v{APP_VERSION} | Built: {new Date(APP_BUILD_DATE).toLocaleDateString()}</Text>
               </View>
             </TouchableOpacity>
             
@@ -1427,7 +1427,7 @@ export default function AntennaCalculator() {
                     <Ionicons name="arrow-up-circle" size={16} color="#4CAF50" />
                     <Text style={{ color: '#4CAF50', fontWeight: '700', fontSize: 12 }}>Update Available v{updateAvailable.version}</Text>
                   </View>
-                  {updateAvailable.notes ? <Text style={{ color: '#aaa', fontSize: 10, marginBottom: 6 }}>{updateAvailable.notes}</Text> : null}
+                  {updateAvailable.notes ? <Text style={{ color: '#ddd', fontSize: 10, marginBottom: 6 }}>{updateAvailable.notes}</Text> : null}
                   <TouchableOpacity onPress={() => Linking.openURL(updateAvailable.apkUrl)} style={{ backgroundColor: '#4CAF50', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' }}>
                     <Text style={{ color: '#000', fontWeight: '700', fontSize: 11 }}>Download APK</Text>
                   </TouchableOpacity>
@@ -1438,7 +1438,7 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={{ color: '#555', fontSize: 9, marginTop: 4 }}>Installed: {new Date(APP_BUILD_DATE).toLocaleString()}{updateAvailable.buildDate ? ` | New: ${new Date(updateAvailable.buildDate).toLocaleString()}` : ''}</Text>
+              <Text style={{ color: '#bbb', fontSize: 9, marginTop: 4 }}>Installed: {new Date(APP_BUILD_DATE).toLocaleString()}{updateAvailable.buildDate ? ` | New: ${new Date(updateAvailable.buildDate).toLocaleString()}` : ''}</Text>
             </View>
           )}
           
