@@ -3927,6 +3927,11 @@ async def download_store_site():
 async def download_feature_graphic():
     return FileResponse("/app/backend/feature-graphic-1024x500.png", filename="feature-graphic-1024x500.png", media_type="image/png")
 
+@api_router.get("/download/screenshot/{num}")
+async def download_screenshot(num: int):
+    return FileResponse(f"/app/backend/screenshot_{num}.png", filename=f"screenshot_{num}.png", media_type="image/png")
+
+
 
 
 # ============================================================
