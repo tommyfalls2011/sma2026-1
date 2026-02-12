@@ -3923,6 +3923,11 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
 async def download_store_site():
     return FileResponse("/app/backend/sma-store-site.zip", filename="sma-store-site.zip", media_type="application/zip")
 
+@api_router.get("/download/feature-graphic")
+async def download_feature_graphic():
+    return FileResponse("/app/backend/feature-graphic-1024x500.png", filename="feature-graphic-1024x500.png", media_type="image/png")
+
+
 
 # ============================================================
 # STORE API ENDPOINTS
