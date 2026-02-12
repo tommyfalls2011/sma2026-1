@@ -9,8 +9,8 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-dark-950/95 backdrop-blur-md border-b border-dark-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-3" data-testid="nav-logo">
+        <div className="flex items-center justify-center h-16">
+          <Link to="/" className="flex items-center gap-3 absolute left-1/2 -translate-x-1/2" data-testid="nav-logo">
             <div className="w-10 h-10 bg-brand-500 rounded-sm flex items-center justify-center">
               <span className="font-display font-bold text-dark-950 text-lg">S</span>
             </div>
