@@ -83,7 +83,7 @@ export default function AdminDashboard() {
             </div>
             <div className="mt-4 flex gap-3">
               <button onClick={saveProduct} className="font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-6 py-3 rounded-sm hover:bg-brand-400 transition-colors font-semibold" data-testid="product-form-save">{editing ? 'Update' : 'Add Product'}</button>
-              {editing && <button onClick={() => { setEditing(null); setForm({ name: '', price: '', short_desc: '', description: '', image_url: '', in_stock: true, specs: '' }) }} className="text-sm text-dark-400 hover:text-white px-4">Cancel</button>}
+              {editing && <button onClick={() => { setEditing(null); setGalleryInput(''); setForm({ name: '', price: '', short_desc: '', description: '', image_url: '', gallery: [], in_stock: true, specs: '' }) }} className="text-sm text-dark-400 hover:text-white px-4">Cancel</button>}
             </div>
           </div>
 
