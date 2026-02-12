@@ -46,11 +46,10 @@ Advanced antenna modeling tool for Yagi antennas. React Native/Expo frontend + F
 - Reanimated 4.1.1 requires Worklets 0.5.x
 
 ## Key Deployment Info
-- **app.json version**: 4.0.3, versionCode: 4
+- **app.json version**: 4.0.4, versionCode: 5
 - **Railway update endpoint**: POST to `/api/app-update` with JSON body
-- **Gist URL**: `https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/`
-- **PowerShell update command**: `Invoke-RestMethod -Uri "https://helpful-adaptation-production.up.railway.app/api/app-update" -Method POST -ContentType "application/json" -Body '{"version":"X.X.X",...}'`
-- **GitHub Releases APK**: `https://github.com/tommyfalls2011/sma2026-1/releases/download/v4.0.3/build-1770724104797.apk`
+- **GitHub Releases APK**: `https://github.com/tommyfalls2011/sma2026-1/releases/download/v4.0.4/build-1770876299276.apk`
+- **AAB built**: `build-1770877664931.aab` ready for Play Store upload
 
 ## Build Workflow
 1. Change version in `app.json` (done by Emergent)
