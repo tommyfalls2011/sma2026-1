@@ -3919,6 +3919,11 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
     return {"message": "Deleted"}
 
 
+@api_router.get("/download/store-site")
+async def download_store_site():
+    return FileResponse("/app/backend/sma-store-site.zip", filename="sma-store-site.zip", media_type="application/zip")
+
+
 # ============================================================
 # STORE API ENDPOINTS
 # ============================================================
