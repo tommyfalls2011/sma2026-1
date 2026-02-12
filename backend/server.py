@@ -3918,6 +3918,114 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
     return {"message": "Deleted"}
 
 
+# ============================================================
+# STORE API ENDPOINTS
+# ============================================================
+import uuid
+
+store_db = db
+
+@api_router.post("/store/register")
+async def store_register(data: dict):
+    email = data.get("email", "").strip().lower()
+    name = data.get("name", "").strip()
+    password = data.get("password", "")
+    if not email or not name or not password:
+        raise HTTPException(status_code=400, detail="All fields required")
+    if await store_db.store_members.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    member_id = str(uuid.uuid4())
+    member = {
+        "id": member_id, "name": name, "email": email,
+        "password_hash": bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+        "is_admin": email == "fallstommy@gmail.com",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.store_members.insert_one(member)
+    token = create_token(member_id, email)
+    return {"token": token, "user": {"id": member_id, "name": name, "email": email, "is_admin": member.get("is_admin", False)}}
+
+@api_router.post("/store/login")
+async def store_login(data: dict):
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    member = await store_db.store_members.find_one({"email": email}, {"_id": 0})
+    if not member or not bcrypt.checkpw(password.encode(), member["password_hash"].encode()):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_token(member["id"], email)
+    return {"token": token, "user": {"id": member["id"], "name": member["name"], "email": email, "is_admin": member.get("is_admin", False)}}
+
+@api_router.get("/store/me")
+async def store_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Not found")
+    return member
+
+@api_router.get("/store/products")
+async def store_products():
+    products = await store_db.store_products.find({}, {"_id": 0}).to_list(100)
+    return products
+
+@api_router.get("/store/products/{product_id}")
+async def store_product(product_id: str):
+    product = await store_db.store_products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+async def require_store_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not member or not member.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin required")
+    return member
+
+@api_router.post("/store/admin/products")
+async def store_create_product(data: dict, admin: dict = Depends(require_store_admin)):
+    product = {
+        "id": str(uuid.uuid4()), "name": data.get("name", ""), "price": data.get("price", 0),
+        "short_desc": data.get("short_desc", ""), "description": data.get("description", ""),
+        "image_url": data.get("image_url", ""), "in_stock": data.get("in_stock", True),
+        "specs": data.get("specs", []), "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.store_products.insert_one(product)
+    return {k: v for k, v in product.items() if k != "_id"}
+
+@api_router.put("/store/admin/products/{product_id}")
+async def store_update_product(product_id: str, data: dict, admin: dict = Depends(require_store_admin)):
+    update = {k: v for k, v in data.items() if k not in ["id", "_id"]}
+    result = await store_db.store_products.update_one({"id": product_id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"status": "ok"}
+
+@api_router.delete("/store/admin/products/{product_id}")
+async def store_delete_product(product_id: str, admin: dict = Depends(require_store_admin)):
+    result = await store_db.store_products.delete_one({"id": product_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"status": "ok"}
+
+@api_router.get("/store/admin/members")
+async def store_list_members(admin: dict = Depends(require_store_admin)):
+    members = await store_db.store_members.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return members
+
+# Seed default products on startup
+async def seed_store_products():
+    count = await store_db.store_products.count_documents({})
+    if count == 0:
+        defaults = [
+            {"id": str(uuid.uuid4()), "name": "2-Pill Amplifier", "price": 450, "short_desc": "Compact 2-transistor amp for everyday use", "description": "Our entry-level 2-pill amplifier delivers solid power in a compact package. Perfect for operators who want reliable amplification without breaking the bank. Hand-built and tested in North Carolina.", "image_url": "https://images.unsplash.com/photo-1673023239309-ae54f5ef3b04?w=600", "in_stock": True, "specs": ["2 transistor pills", "Hand-built in NC", "Compact design", "Tested before shipping"], "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "name": "4-Pill Amplifier", "price": 650, "short_desc": "Mid-range 4-transistor powerhouse", "description": "The 4-pill is our most popular model. More power, more headroom. Built with quality components for operators who demand performance on the airwaves.", "image_url": "https://images.unsplash.com/photo-1672689933227-2ce1249c46a9?w=600", "in_stock": True, "specs": ["4 transistor pills", "Increased power output", "Quality components", "Hand-tested", "Heavy-duty build"], "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "name": "6-Pill Amplifier", "price": 1050, "short_desc": "Premium 6-transistor beast for maximum power", "description": "Our flagship 6-pill amplifier is the ultimate in CB amplification. Maximum power, maximum range. Built for serious operators who accept nothing less than the best.", "image_url": "https://images.unsplash.com/photo-1727036195443-d2ba0ad73311?w=600", "in_stock": True, "specs": ["6 transistor pills", "Maximum power output", "Premium components", "Professional grade", "Hand-built and tested", "Heavy-duty enclosure"], "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+        await store_db.store_products.insert_many(defaults)
+
+
+
 
 app.include_router(api_router)
 
