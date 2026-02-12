@@ -4015,7 +4015,8 @@ async def store_create_product(data: dict, admin: dict = Depends(require_store_a
     product = {
         "id": str(uuid.uuid4()), "name": data.get("name", ""), "price": data.get("price", 0),
         "short_desc": data.get("short_desc", ""), "description": data.get("description", ""),
-        "image_url": data.get("image_url", ""), "in_stock": data.get("in_stock", True),
+        "image_url": data.get("image_url", ""), "gallery": data.get("gallery", []),
+        "in_stock": data.get("in_stock", True),
         "specs": data.get("specs", []), "created_at": datetime.now(timezone.utc).isoformat()
     }
     await store_db.store_products.insert_one(product)
