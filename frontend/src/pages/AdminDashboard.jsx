@@ -112,7 +112,7 @@ export default function AdminDashboard() {
                 <img src={p.image_url || 'https://images.unsplash.com/photo-1672689933227-2ce1249c46a9?w=100'} alt={p.name} className="w-16 h-16 object-cover rounded-sm" />
                 <div className="flex-1">
                   <h3 className="font-display font-semibold text-white">{p.name}</h3>
-                  <p className="text-sm text-dark-400">${p.price} - {p.in_stock ? 'In Stock' : 'Sold Out'}</p>
+                  <p className="text-sm text-dark-400">${p.price} - {p.in_stock ? 'In Stock' : 'Sold Out'}{p.gallery?.length > 0 && ` - ${p.gallery.length + 1} photos`}</p>
                 </div>
                 <button onClick={() => editProduct(p)} className="text-sm text-brand-400 hover:text-brand-300">Edit</button>
                 <button onClick={() => deleteProduct(p.id)} className="text-sm text-red-400 hover:text-red-300">Delete</button>
