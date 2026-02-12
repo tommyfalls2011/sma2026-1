@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "expo": "node expo-shim.js",
     "dev": "vite --port 3000 --host 0.0.0.0",
     "start": "vite --port 3000 --host 0.0.0.0",
     "build": "vite build",
