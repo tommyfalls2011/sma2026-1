@@ -45,7 +45,8 @@ export default function AdminDashboard() {
 
   const editProduct = (p) => {
     setEditing(p.id)
-    setForm({ name: p.name, price: p.price.toString(), short_desc: p.short_desc || '', description: p.description || '', image_url: p.image_url || '', in_stock: p.in_stock, specs: (p.specs || []).join('\n') })
+    setForm({ name: p.name, price: p.price.toString(), short_desc: p.short_desc || '', description: p.description || '', image_url: p.image_url || '', gallery: p.gallery || [], in_stock: p.in_stock, specs: (p.specs || []).join('\n') })
+    setGalleryInput('')
     setTab('products')
   }
 
