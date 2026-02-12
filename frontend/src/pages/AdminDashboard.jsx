@@ -27,12 +27,13 @@ export default function AdminDashboard() {
   }
 
   const saveProduct = async () => {
-    const body = { ...form, price: parseFloat(form.price), specs: form.specs.split('\n').filter(Boolean) }
+    const body = { ...form, price: parseFloat(form.price), specs: form.specs.split('\n').filter(Boolean), gallery: form.gallery }
     const url = editing ? `${API}/api/store/admin/products/${editing}` : `${API}/api/store/admin/products`
     const method = editing ? 'PUT' : 'POST'
     await fetch(url, { method, headers, body: JSON.stringify(body) })
     setEditing(null)
-    setForm({ name: '', price: '', short_desc: '', description: '', image_url: '', in_stock: true, specs: '' })
+    setForm({ name: '', price: '', short_desc: '', description: '', image_url: '', gallery: [], in_stock: true, specs: '' })
+    setGalleryInput('')
     loadData()
   }
 
