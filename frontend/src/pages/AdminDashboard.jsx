@@ -73,7 +73,25 @@ export default function AdminDashboard() {
               <input placeholder="Product Name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500" data-testid="product-form-name" />
               <input placeholder="Price" type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500" data-testid="product-form-price" />
               <input placeholder="Short Description" value={form.short_desc} onChange={e => setForm(f => ({ ...f, short_desc: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-short-desc" />
-              <input placeholder="Image URL" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-image" />
+              <input placeholder="Main Image URL" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-image" />
+              {/* Gallery Images */}
+              <div className="sm:col-span-2 space-y-3">
+                <label className="text-sm text-dark-400 font-display">Additional Gallery Images</label>
+                <div className="flex gap-2">
+                  <input placeholder="Paste image URL and click Add" value={galleryInput} onChange={e => setGalleryInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && galleryInput.trim()) { e.preventDefault(); setForm(f => ({ ...f, gallery: [...f.gallery, galleryInput.trim()] })); setGalleryInput('') }}} className="flex-1 bg-dark-800 border border-dark-700 text-white px-4 py-2 rounded-sm focus:outline-none focus:border-brand-500 text-sm" data-testid="gallery-url-input" />
+                  <button type="button" onClick={() => { if (galleryInput.trim()) { setForm(f => ({ ...f, gallery: [...f.gallery, galleryInput.trim()] })); setGalleryInput('') }}} className="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-4 py-2 rounded-sm text-sm hover:bg-brand-500/30 transition-colors font-display" data-testid="gallery-add-btn">Add</button>
+                </div>
+                {form.gallery.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {form.gallery.map((url, i) => (
+                      <div key={i} className="relative group">
+                        <img src={url} alt={`Gallery ${i + 1}`} className="w-20 h-20 object-cover rounded-sm border border-dark-700" />
+                        <button type="button" onClick={() => setForm(f => ({ ...f, gallery: f.gallery.filter((_, idx) => idx !== i) }))} className="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-5 h-5 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" data-testid={`gallery-remove-${i}`}>x</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <textarea placeholder="Full Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-desc" />
               <textarea placeholder="Specs (one per line)" value={form.specs} onChange={e => setForm(f => ({ ...f, specs: e.target.value }))} rows={3} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-specs" />
               <label className="flex items-center gap-2 text-dark-400">
