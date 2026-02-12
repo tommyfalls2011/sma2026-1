@@ -10,12 +10,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50 bg-dark-950/95 backdrop-blur-md border-b border-dark-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative flex items-center justify-between h-16">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="hidden md:flex text-sm font-medium text-dark-300 hover:text-brand-400 transition-colors" data-testid="nav-home">Home</Link>
-            <Link to="/products" className="hidden md:flex text-sm font-medium text-dark-300 hover:text-brand-400 transition-colors" data-testid="nav-products">Shop</Link>
-          </div>
-
-          <Link to="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3" data-testid="nav-logo">
+          <Link to="/" className="flex items-center gap-3" data-testid="nav-logo">
             <div className="w-10 h-10 bg-brand-500 rounded-sm flex items-center justify-center">
               <span className="font-display font-bold text-dark-950 text-lg">S</span>
             </div>
@@ -24,6 +19,11 @@ export default function Navbar() {
               <span className="block text-[10px] text-brand-400 tracking-[0.3em] uppercase -mt-1">Amplifiers</span>
             </div>
           </Link>
+
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-8">
+            <Link to="/" className="text-sm font-medium text-dark-300 hover:text-brand-400 transition-colors" data-testid="nav-home">Home</Link>
+            <Link to="/products" className="text-sm font-medium text-dark-300 hover:text-brand-400 transition-colors" data-testid="nav-products">Shop</Link>
+          </div>
 
           <div className="flex items-center gap-4">
             <Link to="/cart" className="relative text-dark-300 hover:text-brand-400 transition-colors" data-testid="nav-cart">
