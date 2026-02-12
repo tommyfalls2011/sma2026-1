@@ -3923,7 +3923,9 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
 # ============================================================
 import uuid
 
-store_db = db
+import motor.motor_asyncio as motor_async
+_store_client = motor_async.AsyncIOMotorClient(os.environ.get("STORE_MONGO_URL"))
+store_db = _store_client["sma_store"]
 
 @api_router.post("/store/register")
 async def store_register(data: dict):
