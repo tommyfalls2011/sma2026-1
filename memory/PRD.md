@@ -70,10 +70,11 @@ An antenna modeling calculator app (React Native) was previously built and is on
 - ~~Multi-image product gallery~~ DONE
 - ~~Image upload from computer~~ DONE
 - ~~Download APK button on homepage~~ DONE
+- ~~Stripe payment checkout~~ DONE
 
 ### P1
-- Implement payment processing (Stripe/PayPal integration)
-- Implement shipping calculation
+- Implement shipping calculation (more options beyond flat rate)
+- Add order management in admin dashboard
 
 ### P2
 - Refactor codebase: separate React Native app and Vite website into distinct directories
