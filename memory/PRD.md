@@ -52,6 +52,12 @@ An antenna modeling calculator app (React Native) was previously built and is on
 - App update system via Railway backend
 - Local build workflow on Ubuntu VM established
 
+### APK Download Button on Homepage (Feb 13, 2026 - COMPLETE)
+- **Backend**: `GET /api/store/latest-apk` checks GitHub Releases API, compares with cached version in DB, auto-updates if newer
+- **Frontend**: Download section on homepage shows version, file size, and "Download APK" button linking to GitHub release
+- **Auto-updating**: When you push a new release on GitHub, the website automatically picks it up
+- **Tested**: 12/12 backend tests passed, all frontend elements verified
+
 ## Key Technical Info
 - **Store Admin**: fallstommy@gmail.com / admin123
 - **Store API**: `/api/store/products`, `/api/store/register`, `/api/store/login`
