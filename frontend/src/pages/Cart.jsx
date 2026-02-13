@@ -92,16 +92,17 @@ export default function Cart() {
           </div>
         </div>
         <div className="mt-6 space-y-3">
-          <p className="text-xs text-dark-500">Payment Options: Stripe, PayPal, or CashApp ($tfcp2011)</p>
+          {error && <p className="text-red-400 text-sm" data-testid="checkout-error">{error}</p>}
+          <p className="text-xs text-dark-500">Payment Options: Stripe (Credit/Debit) or CashApp ($tfcp2011)</p>
           {user ? (
-            <button className="w-full font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold" data-testid="checkout-btn">
-              Proceed to Checkout
+            <button onClick={handleCheckout} disabled={loading} className="w-full font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold disabled:opacity-50" data-testid="checkout-btn">
+              {loading ? 'Redirecting to Stripe...' : 'Proceed to Checkout'}
             </button>
           ) : (
             <Link to="/login" className="block text-center w-full font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold">
               Sign In to Checkout
             </Link>
-          )}
+          )}}
         </div>
       </div>
     </div>
