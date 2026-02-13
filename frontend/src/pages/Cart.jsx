@@ -80,10 +80,27 @@ export default function Cart() {
 
       {/* Summary */}
       <div className="mt-8 bg-dark-900 border border-dark-800 rounded-sm p-6">
+        {/* Shipping Options */}
+        <div className="mb-4">
+          <p className="text-sm text-dark-400 mb-2 font-display">Shipping Method</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'standard', label: 'Standard', desc: '5-7 business days', price: SHIPPING_RATES.standard },
+              { key: 'priority', label: 'Priority', desc: '2-3 business days', price: SHIPPING_RATES.priority },
+              { key: 'express', label: 'Express', desc: '1-2 business days', price: SHIPPING_RATES.express },
+            ].map(opt => (
+              <button key={opt.key} onClick={() => setShippingMethod(opt.key)} className={`p-3 rounded-sm border text-left transition-colors ${shippingMethod === opt.key ? 'border-brand-500 bg-brand-500/10' : 'border-dark-700 bg-dark-800 hover:border-dark-600'}`} data-testid={`shipping-${opt.key}`}>
+                <span className={`block text-sm font-display font-semibold ${shippingMethod === opt.key ? 'text-brand-400' : 'text-white'}`}>{opt.label}</span>
+                <span className="block text-xs text-dark-400">{opt.desc}</span>
+                <span className="block text-sm text-dark-300 mt-1">${opt.price.toFixed(2)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="space-y-3">
           <div className="flex justify-between text-sm text-dark-400"><span>Subtotal</span><span>${total.toFixed(2)}</span></div>
-          <div className="flex justify-between text-sm text-dark-400"><span>NC Sales Tax (6.75%)</span><span>${tax.toFixed(2)}</span></div>
-          <div className="flex justify-between text-sm text-dark-400"><span>Shipping (Standard)</span><span>${shipping.toFixed(2)}</span></div>
+          <div className="flex justify-between text-sm text-dark-400"><span>NC Sales Tax (7.5%)</span><span>${tax.toFixed(2)}</span></div>
+          <div className="flex justify-between text-sm text-dark-400"><span>Shipping ({shippingMethod.charAt(0).toUpperCase() + shippingMethod.slice(1)})</span><span>${shipping.toFixed(2)}</span></div>
           <div className="border-t border-dark-700 pt-3 flex justify-between">
             <span className="font-display text-lg font-bold text-white">Total</span>
             <span className="font-display text-2xl font-bold text-brand-400" data-testid="cart-total">${grandTotal.toFixed(2)}</span>
