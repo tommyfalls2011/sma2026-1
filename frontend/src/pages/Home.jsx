@@ -6,9 +6,11 @@ const API = import.meta.env.REACT_APP_BACKEND_URL || ''
 
 export default function Home() {
   const [products, setProducts] = useState([])
+  const [apk, setApk] = useState(null)
 
   useEffect(() => {
     fetch(`${API}/api/store/products`).then(r => r.json()).then(setProducts).catch(() => {})
+    fetch(`${API}/api/store/latest-apk`).then(r => r.json()).then(d => { if (d.download_url) setApk(d) }).catch(() => {})
   }, [])
 
   return (
