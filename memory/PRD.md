@@ -59,15 +59,12 @@ An antenna modeling calculator app (React Native) was previously built and is on
 - **Tested**: 12/12 backend tests passed, all frontend elements verified
 
 ### Stripe Payment Checkout (Feb 13, 2026 - COMPLETE)
-- **Backend**: `POST /api/store/checkout` creates Stripe Checkout Session with server-side price validation (6.75% NC tax + $15 shipping)
-- **Backend**: `GET /api/store/checkout/status/{session_id}` polls Stripe for payment status, updates DB
-- **Backend**: `POST /api/webhook/stripe` handles Stripe webhooks
-- **Backend**: `GET /api/store/orders` returns user's order history
-- **Frontend Cart**: "Proceed to Checkout" button creates session and redirects to Stripe's hosted checkout
-- **Frontend**: `/checkout/success` page polls for status with spinner states (checking → processing → success/error)
-- **Security**: Prices are always calculated server-side from DB, never from frontend
-- **Payment transactions**: Stored in `payment_transactions` collection with full order details
-- **Tested**: 14/14 backend, 100% frontend (iteration 12)
+- **Backend**: Full Stripe Checkout with server-side price validation (7.5% NC Durham County tax + configurable shipping)
+- **Shipping Options**: Standard ($15, 5-7 days), Priority ($25, 2-3 days), Express ($45, 1-2 days)
+- **Admin Orders Tab**: View all orders with payment status badges, order status dropdown (initiated → processing → shipped → delivered → cancelled)
+- **Frontend Cart**: Shipping method selector, dynamic total recalculation, Stripe redirect
+- **Frontend**: `/checkout/success` page with payment status polling
+- **Tested**: 17/17 backend, 100% frontend (iteration 13)
 
 ## Key Technical Info
 - **Store Admin**: fallstommy@gmail.com / admin123
