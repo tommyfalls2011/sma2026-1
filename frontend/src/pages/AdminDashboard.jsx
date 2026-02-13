@@ -27,6 +27,35 @@ export default function AdminDashboard() {
     fetch(`${API}/api/store/admin/members`, { headers }).then(r => r.json()).then(setMembers).catch(() => {})
   }
 
+  const uploadImage = async (target) => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/jpeg,image/png,image/webp,image/gif'
+    input.onchange = async (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 10 * 1024 * 1024) { alert('File too large. Max 10 MB.'); return }
+      setUploading(true)
+      const fd = new FormData()
+      fd.append('file', file)
+      try {
+        const res = await fetch(`${API}/api/store/admin/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+        const data = await res.json()
+        if (res.ok && data.url) {
+          if (target === 'main') {
+            setForm(f => ({ ...f, image_url: data.url }))
+          } else {
+            setForm(f => ({ ...f, gallery: [...f.gallery, data.url] }))
+          }
+        } else {
+          alert(data.detail || 'Upload failed')
+        }
+      } catch { alert('Upload failed') }
+      setUploading(false)
+    }
+    input.click()
+  }
+
   const saveProduct = async () => {
     const body = { ...form, price: parseFloat(form.price), specs: form.specs.split('\n').filter(Boolean), gallery: form.gallery }
     const url = editing ? `${API}/api/store/admin/products/${editing}` : `${API}/api/store/admin/products`
