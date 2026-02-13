@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', price: '', short_desc: '', description: '', image_url: '', gallery: [], in_stock: true, specs: '' })
   const [galleryInput, setGalleryInput] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (!user?.is_admin) { navigate('/'); return }
