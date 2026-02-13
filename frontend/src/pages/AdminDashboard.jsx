@@ -167,6 +167,58 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {tab === 'orders' && (
+        <div className="space-y-4" data-testid="orders-tab">
+          {orders.length === 0 ? (
+            <div className="bg-dark-900 border border-dark-800 rounded-sm p-8 text-center">
+              <p className="text-dark-400">No orders yet</p>
+            </div>
+          ) : orders.map(o => (
+            <div key={o.id} className="bg-dark-900 border border-dark-800 rounded-sm p-5" data-testid={`order-${o.id}`}>
+              <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+                <div>
+                  <p className="text-xs text-dark-500 font-mono">{o.id}</p>
+                  <p className="text-sm text-white mt-1">{o.email}</p>
+                  <p className="text-xs text-dark-500 mt-1">{new Date(o.created_at).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-display text-xl font-bold text-brand-400">${o.total?.toFixed(2)}</p>
+                  <div className="flex items-center gap-2 mt-1 justify-end">
+                    <span className={`text-xs px-2 py-0.5 rounded-sm font-display ${o.payment_status === 'paid' ? 'bg-green-500/10 text-green-400' : o.payment_status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-dark-700 text-dark-400'}`} data-testid={`order-payment-${o.id}`}>
+                      {o.payment_status}
+                    </span>
+                    <select
+                      value={o.status || 'initiated'}
+                      onChange={async (e) => {
+                        await fetch(`${API}/api/store/admin/orders/${o.id}/status`, { method: 'PUT', headers, body: JSON.stringify({ status: e.target.value }) })
+                        loadData()
+                      }}
+                      className="bg-dark-800 border border-dark-700 text-white text-xs px-2 py-1 rounded-sm focus:outline-none"
+                      data-testid={`order-status-${o.id}`}
+                    >
+                      {['initiated', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-dark-800 pt-3 space-y-1">
+                {(o.items || []).map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-dark-300">{item.name} x{item.qty}</span>
+                    <span className="text-dark-400">${(item.price * item.qty).toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-xs text-dark-500 pt-1">
+                  <span>Tax: ${o.tax?.toFixed(2)} | Shipping: ${o.shipping?.toFixed(2)} ({o.shipping_method || 'standard'})</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {tab === 'members' && (
         <div className="bg-dark-900 border border-dark-800 rounded-sm overflow-hidden">
           <table className="w-full">
