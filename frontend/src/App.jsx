@@ -9,6 +9,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import AdminDashboard from './pages/AdminDashboard'
+import CheckoutSuccess from './pages/CheckoutSuccess'
 import PlayStoreListing from './pages/PlayStoreListing'
 
 export default function App() {
