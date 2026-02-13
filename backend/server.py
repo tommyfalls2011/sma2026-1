@@ -4096,6 +4096,144 @@ async def get_latest_apk():
             return stored.get("value", {})
         return {"error": "Could not check GitHub"}
 
+# ============================================================
+# STRIPE CHECKOUT ENDPOINTS
+# ============================================================
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+from fastapi import Request
+
+NC_TAX_RATE = 0.0675
+SHIPPING_STANDARD = 15.00
+
+@api_router.post("/store/checkout")
+async def store_checkout(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = payload["user_id"]
+    user_email = payload.get("email", "")
+
+    cart_items = data.get("items", [])
+    origin_url = data.get("origin_url", "")
+    if not cart_items or not origin_url:
+        raise HTTPException(status_code=400, detail="Cart items and origin_url required")
+
+    # Look up actual prices from DB (never trust frontend prices)
+    subtotal = 0.0
+    order_items = []
+    for ci in cart_items:
+        product = await store_db.store_products.find_one({"id": ci["id"]}, {"_id": 0})
+        if not product:
+            raise HTTPException(status_code=400, detail=f"Product {ci['id']} not found")
+        if not product.get("in_stock"):
+            raise HTTPException(status_code=400, detail=f"{product['name']} is sold out")
+        qty = max(1, int(ci.get("qty", 1)))
+        item_total = float(product["price"]) * qty
+        subtotal += item_total
+        order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
+
+    tax = round(subtotal * NC_TAX_RATE, 2)
+    shipping = SHIPPING_STANDARD if len(order_items) > 0 else 0.0
+    grand_total = round(subtotal + tax + shipping, 2)
+
+    # Create Stripe checkout session
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+
+    success_url = f"{origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin_url}/cart"
+
+    order_id = str(uuid.uuid4())
+    checkout_req = CheckoutSessionRequest(
+        amount=grand_total,
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={"order_id": order_id, "user_id": user_id, "email": user_email}
+    )
+    session = await stripe_checkout.create_checkout_session(checkout_req)
+
+    # Store payment transaction
+    transaction = {
+        "id": order_id,
+        "session_id": session.session_id,
+        "user_id": user_id,
+        "email": user_email,
+        "items": order_items,
+        "subtotal": subtotal,
+        "tax": tax,
+        "shipping": shipping,
+        "total": grand_total,
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.payment_transactions.insert_one(transaction)
+
+    return {"url": session.url, "session_id": session.session_id, "order_id": order_id}
+
+@api_router.get("/store/checkout/status/{session_id}")
+async def store_checkout_status(session_id: str, request: Request):
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+
+    status = await stripe_checkout.get_checkout_status(session_id)
+
+    # Update transaction in DB (only once per status change)
+    txn = await store_db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if txn and txn.get("payment_status") != status.payment_status:
+        await store_db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": status.payment_status, "status": status.status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    return {
+        "status": status.status,
+        "payment_status": status.payment_status,
+        "amount_total": status.amount_total,
+        "currency": status.currency,
+        "order_id": txn["id"] if txn else None
+    }
+
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    body = await request.body()
+    sig = request.headers.get("Stripe-Signature", "")
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    try:
+        event = await stripe_checkout.handle_webhook(body, sig)
+        if event.payment_status == "paid" and event.session_id:
+            await store_db.payment_transactions.update_one(
+                {"session_id": event.session_id, "payment_status": {"$ne": "paid"}},
+                {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+@api_router.get("/store/orders")
+async def store_user_orders(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    orders = await store_db.payment_transactions.find(
+        {"user_id": payload["user_id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return orders
+
 # Seed default products on startup
 async def seed_store_products():
     count = await store_db.store_products.count_documents({})
