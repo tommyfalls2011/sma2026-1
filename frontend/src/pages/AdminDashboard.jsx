@@ -89,9 +89,9 @@ export default function AdminDashboard() {
       <h1 className="font-display text-3xl font-bold text-white mb-8" data-testid="admin-title">Admin Dashboard</h1>
 
       <div className="flex gap-4 mb-8">
-        {['products', 'members'].map(t => (
+        {['products', 'orders', 'members'].map(t => (
           <button key={t} onClick={() => setTab(t)} className={`font-display uppercase tracking-wider text-sm px-6 py-2 rounded-sm transition-colors ${tab === t ? 'bg-brand-500 text-dark-950' : 'bg-dark-800 text-dark-400 hover:text-white'}`} data-testid={`tab-${t}`}>
-            {t} ({t === 'products' ? products.length : members.length})
+            {t} ({t === 'products' ? products.length : t === 'orders' ? orders.length : members.length})
           </button>
         ))}
       </div>
