@@ -1,13 +1,46 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
+const API = import.meta.env.REACT_APP_BACKEND_URL || ''
 const NC_TAX_RATE = 0.0675
 const SHIPPING_RATES = { standard: 15, priority: 25, express: 45 }
 
 export default function Cart() {
   const { items, removeItem, updateQty, total, count, clearCart } = useCart()
-  const { user } = useAuth()
+  const { user, token } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const tax = total * NC_TAX_RATE
+  const shipping = count > 0 ? SHIPPING_RATES.standard : 0
+  const grandTotal = total + tax + shipping
+
+  const handleCheckout = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch(`${API}/api/store/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          items: items.map(i => ({ id: i.id, qty: i.qty })),
+          origin_url: window.location.origin
+        })
+      })
+      const data = await res.json()
+      if (res.ok && data.url) {
+        window.location.href = data.url
+      } else {
+        setError(data.detail || 'Failed to create checkout session')
+        setLoading(false)
+      }
+    } catch {
+      setError('Network error. Please try again.')
+      setLoading(false)
+    }
+  }
 
   const tax = total * NC_TAX_RATE
   const shipping = count > 0 ? SHIPPING_RATES.standard : 0
