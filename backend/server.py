@@ -4242,6 +4242,24 @@ async def store_user_orders(credentials: HTTPAuthorizationCredentials = Depends(
     ).sort("created_at", -1).to_list(100)
     return orders
 
+@api_router.get("/store/admin/orders")
+async def store_admin_orders(admin: dict = Depends(require_store_admin)):
+    orders = await store_db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return orders
+
+@api_router.put("/store/admin/orders/{order_id}/status")
+async def store_admin_update_order_status(order_id: str, data: dict, admin: dict = Depends(require_store_admin)):
+    new_status = data.get("status")
+    if new_status not in ["initiated", "processing", "shipped", "delivered", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await store_db.payment_transactions.update_one(
+        {"id": order_id},
+        {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"status": "ok"}
+
 # Seed default products on startup
 async def seed_store_products():
     count = await store_db.store_products.count_documents({})
