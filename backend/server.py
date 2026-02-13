@@ -4104,6 +4104,7 @@ from fastapi import Request
 
 NC_TAX_RATE = 0.075
 SHIPPING_STANDARD = 15.00
+SHIPPING_RATES = {"standard": 15.00, "priority": 25.00, "express": 45.00}
 
 @api_router.post("/store/checkout")
 async def store_checkout(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
