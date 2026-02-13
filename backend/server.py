@@ -4102,7 +4102,7 @@ async def get_latest_apk():
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
 from fastapi import Request
 
-NC_TAX_RATE = 0.0675
+NC_TAX_RATE = 0.075
 SHIPPING_STANDARD = 15.00
 
 @api_router.post("/store/checkout")

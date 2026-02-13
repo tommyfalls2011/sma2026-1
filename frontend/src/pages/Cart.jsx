@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 
 const API = import.meta.env.REACT_APP_BACKEND_URL || ''
-const NC_TAX_RATE = 0.0675
+const NC_TAX_RATE = 0.075
 const SHIPPING_RATES = { standard: 15, priority: 25, express: 45 }
 
 export default function Cart() {
