@@ -4295,6 +4295,20 @@ async def store_upload_image(file: UploadFile = File(...), admin: dict = Depends
     return {"url": f"/api/uploads/{filename}", "filename": filename}
 
 
+# Download website build endpoint
+@api_router.get("/download-build")
+async def download_build():
+    """Download the latest website build zip"""
+    zip_path = UPLOAD_DIR / "sma-website-build.zip"
+    if not zip_path.exists():
+        raise HTTPException(status_code=404, detail="Build not found")
+    return FileResponse(
+        path=str(zip_path),
+        filename="sma-website-build.zip",
+        media_type="application/zip"
+    )
+
+
 app.include_router(api_router)
 
 # Mount uploads directory for serving uploaded images
