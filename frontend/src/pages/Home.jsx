@@ -86,6 +86,31 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Antenna Calculator App Download */}
+      {apk && (
+        <section className="border-t border-dark-800" data-testid="apk-download-section">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="bg-dark-900 border border-dark-800 rounded-sm p-8 sm:p-10 flex flex-col sm:flex-row items-center gap-8">
+              <div className="w-16 h-16 bg-brand-500/10 rounded-sm flex items-center justify-center shrink-0">
+                <svg className="w-8 h-8 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-brand-400 text-xs tracking-[0.3em] uppercase font-display">Free Android App</p>
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-white mt-1">SMA Antenna Calculator</h3>
+                <p className="text-dark-400 text-sm mt-2">Design and model Yagi antennas. Calculate gain, SWR, F/B ratio, and more.</p>
+                <div className="flex items-center gap-4 mt-2 justify-center sm:justify-start">
+                  <span className="text-xs text-dark-500" data-testid="apk-version">{apk.version}</span>
+                  <span className="text-xs text-dark-500">{apk.size_mb} MB</span>
+                </div>
+              </div>
+              <a href={apk.download_url} target="_blank" rel="noopener noreferrer" className="font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold whitespace-nowrap" data-testid="apk-download-btn">
+                Download APK
+              </a>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
