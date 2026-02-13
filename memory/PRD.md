@@ -68,9 +68,10 @@ An antenna modeling calculator app (React Native) was previously built and is on
 
 ### P0 (Completed)
 - ~~Multi-image product gallery~~ DONE
+- ~~Image upload from computer~~ DONE
+- ~~Download APK button on homepage~~ DONE
 
 ### P1
-- Add "Download APK" button to website homepage (links to GitHub Releases)
 - Implement payment processing (Stripe/PayPal integration)
 - Implement shipping calculation
 
