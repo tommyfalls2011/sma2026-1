@@ -4005,7 +4005,14 @@ async def store_product(product_id: str):
     return product
 
 async def require_store_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
     if not member or not member.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin required")
