@@ -4050,6 +4050,52 @@ async def store_list_members(admin: dict = Depends(require_store_admin)):
     members = await store_db.store_members.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
     return members
 
+# APK Version Check - compares GitHub releases with stored version
+import httpx
+
+GITHUB_REPO = "tommyfalls2011/sma2026-1"
+
+@api_router.get("/store/latest-apk")
+async def get_latest_apk():
+    """Check GitHub for latest APK release and compare with stored version."""
+    stored = await store_db.store_settings.find_one({"key": "apk_version"}, {"_id": 0})
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest")
+            if resp.status_code != 200:
+                if stored:
+                    return stored.get("value", {})
+                return {"error": "No release found"}
+            gh = resp.json()
+            tag = gh.get("tag_name", "")
+            assets = gh.get("assets", [])
+            apk_asset = next((a for a in assets if a["name"].endswith(".apk")), None)
+            if not apk_asset:
+                if stored:
+                    return stored.get("value", {})
+                return {"error": "No APK in latest release"}
+            github_info = {
+                "version": tag,
+                "download_url": apk_asset["browser_download_url"],
+                "filename": apk_asset["name"],
+                "size_mb": round(apk_asset["size"] / (1024 * 1024), 1),
+                "published_at": gh.get("published_at", ""),
+                "release_name": gh.get("name", tag),
+            }
+            stored_version = stored.get("value", {}).get("version") if stored else None
+            if stored_version != tag:
+                await store_db.store_settings.update_one(
+                    {"key": "apk_version"},
+                    {"$set": {"key": "apk_version", "value": github_info}},
+                    upsert=True
+                )
+                github_info["updated"] = True
+            return github_info
+    except Exception:
+        if stored:
+            return stored.get("value", {})
+        return {"error": "Could not check GitHub"}
+
 # Seed default products on startup
 async def seed_store_products():
     count = await store_db.store_products.count_documents({})
