@@ -4057,7 +4057,31 @@ async def seed_store_products():
 
 
 
+# Image Upload endpoint
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+@api_router.post("/store/admin/upload")
+async def store_upload_image(file: UploadFile = File(...), admin: dict = Depends(require_store_admin)):
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"File type {ext} not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}")
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Max 10 MB.")
+    filename = f"{uuid.uuid4().hex}{ext}"
+    filepath = UPLOAD_DIR / filename
+    with open(filepath, "wb") as f:
+        f.write(contents)
+    return {"url": f"/api/uploads/{filename}", "filename": filename}
+
+
 app.include_router(api_router)
+
+# Mount uploads directory for serving uploaded images
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
