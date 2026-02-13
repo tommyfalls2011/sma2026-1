@@ -12,9 +12,10 @@ export default function Cart() {
   const { user, token } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [shippingMethod, setShippingMethod] = useState('standard')
 
   const tax = total * NC_TAX_RATE
-  const shipping = count > 0 ? SHIPPING_RATES.standard : 0
+  const shipping = count > 0 ? SHIPPING_RATES[shippingMethod] : 0
   const grandTotal = total + tax + shipping
 
   const handleCheckout = async () => {
