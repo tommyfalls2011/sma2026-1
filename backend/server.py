@@ -4172,6 +4172,7 @@ async def store_checkout(data: dict, request: Request, credentials: HTTPAuthoriz
         "subtotal": subtotal,
         "tax": tax,
         "shipping": shipping,
+        "shipping_method": shipping_method,
         "total": grand_total,
         "payment_status": "pending",
         "status": "initiated",
