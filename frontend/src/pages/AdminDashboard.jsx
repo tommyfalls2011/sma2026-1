@@ -103,7 +103,17 @@ export default function AdminDashboard() {
               <input placeholder="Product Name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500" data-testid="product-form-name" />
               <input placeholder="Price" type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500" data-testid="product-form-price" />
               <input placeholder="Short Description" value={form.short_desc} onChange={e => setForm(f => ({ ...f, short_desc: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-short-desc" />
-              <input placeholder="Main Image URL" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500 sm:col-span-2" data-testid="product-form-image" />
+              <div className="sm:col-span-2 flex gap-2">
+                <input placeholder="Main Image URL" value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))} className="flex-1 bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-sm focus:outline-none focus:border-brand-500" data-testid="product-form-image" />
+                <button type="button" onClick={() => uploadImage('main')} disabled={uploading} className="bg-dark-700 text-dark-300 border border-dark-600 px-4 py-3 rounded-sm text-sm hover:bg-dark-600 hover:text-white transition-colors font-display whitespace-nowrap disabled:opacity-50" data-testid="upload-main-image-btn">
+                  {uploading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+              {form.image_url && (
+                <div className="sm:col-span-2">
+                  <img src={form.image_url} alt="Main preview" className="w-24 h-24 object-cover rounded-sm border border-dark-700" />
+                </div>
+              )}
               {/* Gallery Images */}
               <div className="sm:col-span-2 space-y-3">
                 <label className="text-sm text-dark-400 font-display">Additional Gallery Images</label>
