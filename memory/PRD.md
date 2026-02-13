@@ -39,6 +39,12 @@ An antenna modeling calculator app (React Native) was previously built and is on
 - **Backward compatible**: Products without gallery display correctly
 - **Tested**: 9/9 backend tests passed, all frontend flows verified
 
+### Image Upload Feature (Feb 12, 2026 - COMPLETE)
+- **Backend**: POST /api/store/admin/upload accepts JPG/PNG/WEBP/GIF up to 10MB, stores with UUID filenames, serves via /api/uploads/
+- **Admin**: Upload buttons for main image and gallery images, shows preview after upload, "Uploading..." state indicator
+- **Auth fix**: Improved require_store_admin with proper null check and JWT exception handling
+- **Tested**: 12/12 backend tests passed, all frontend upload flows verified
+
 ### Antenna Calculator App (On Hold)
 - Feature-rich calculator with gain, SWR, F/B ratio, impedance, bandwidth
 - Multiple orientations, feed matching, stacking patterns
