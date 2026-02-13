@@ -27,7 +27,8 @@ export default function Cart() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           items: items.map(i => ({ id: i.id, qty: i.qty })),
-          origin_url: window.location.origin
+          origin_url: window.location.origin,
+          shipping: shippingMethod
         })
       })
       const data = await res.json()
