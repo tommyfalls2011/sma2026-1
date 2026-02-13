@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [members, setMembers] = useState([])
+  const [orders, setOrders] = useState([])
   const [tab, setTab] = useState('products')
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState({ name: '', price: '', short_desc: '', description: '', image_url: '', gallery: [], in_stock: true, specs: '' })
