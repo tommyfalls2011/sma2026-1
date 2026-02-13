@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const loadData = () => {
     fetch(`${API}/api/store/products`).then(r => r.json()).then(setProducts)
     fetch(`${API}/api/store/admin/members`, { headers }).then(r => r.json()).then(setMembers).catch(() => {})
+    fetch(`${API}/api/store/admin/orders`, { headers }).then(r => r.json()).then(setOrders).catch(() => {})
   }
 
   const uploadImage = async (target) => {
