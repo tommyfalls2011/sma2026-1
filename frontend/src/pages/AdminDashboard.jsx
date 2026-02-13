@@ -120,6 +120,9 @@ export default function AdminDashboard() {
                 <div className="flex gap-2">
                   <input placeholder="Paste image URL and click Add" value={galleryInput} onChange={e => setGalleryInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && galleryInput.trim()) { e.preventDefault(); setForm(f => ({ ...f, gallery: [...f.gallery, galleryInput.trim()] })); setGalleryInput('') }}} className="flex-1 bg-dark-800 border border-dark-700 text-white px-4 py-2 rounded-sm focus:outline-none focus:border-brand-500 text-sm" data-testid="gallery-url-input" />
                   <button type="button" onClick={() => { if (galleryInput.trim()) { setForm(f => ({ ...f, gallery: [...f.gallery, galleryInput.trim()] })); setGalleryInput('') }}} className="bg-brand-500/20 text-brand-400 border border-brand-500/30 px-4 py-2 rounded-sm text-sm hover:bg-brand-500/30 transition-colors font-display" data-testid="gallery-add-btn">Add</button>
+                  <button type="button" onClick={() => uploadImage('gallery')} disabled={uploading} className="bg-dark-700 text-dark-300 border border-dark-600 px-4 py-2 rounded-sm text-sm hover:bg-dark-600 hover:text-white transition-colors font-display whitespace-nowrap disabled:opacity-50" data-testid="upload-gallery-image-btn">
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
                 </div>
                 {form.gallery.length > 0 && (
                   <div className="flex flex-wrap gap-2">
