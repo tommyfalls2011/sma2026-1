@@ -598,7 +598,7 @@ index 8bd7706..5491bec 100644
 -----+from typing import Dict, Any
 -----+
 -----+# Backend URL from frontend/.env
------+BASE_URL = "https://cb-amp-hub.preview.emergentagent.com/api"
+-----+BASE_URL = "https://cbamps-store.preview.emergentagent.com/api"
 -----+
 -----+def test_height_optimizer_fix():
 -----+    """
@@ -2333,7 +2333,7 @@ index 8bd7706..5491bec 100644
 ---+from typing import Dict, Any
 ---+
 ---+# Backend URL from frontend .env
----+BACKEND_URL = "https://cb-amp-hub.preview.emergentagent.com/api"
+---+BACKEND_URL = "https://cbamps-store.preview.emergentagent.com/api"
 ---+
 ---+def test_calculate_no_reflector():
 ---+    """Test 1: Calculate with 3 elements WITHOUT reflector"""
