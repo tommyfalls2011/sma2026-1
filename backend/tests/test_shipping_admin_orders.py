@@ -21,7 +21,7 @@ SHIPPING_RATES = {"standard": 15.00, "priority": 25.00, "express": 45.00}
 @pytest.fixture(scope="module")
 def admin_token():
     """Login as admin and get token"""
-    response = requests.post(f"{BASE_URL}/api/store/auth/login", json={
+    response = requests.post(f"{BASE_URL}/api/store/login", json={
         "email": ADMIN_EMAIL,
         "password": ADMIN_PASSWORD
     })
