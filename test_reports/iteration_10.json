@@ -1,0 +1,74 @@
+{
+  "summary": "Image upload feature fully tested. Backend: 12/12 tests passed (100%). Frontend: All upload UI flows verified. Feature includes: file upload endpoint with validation, static file serving, upload buttons for main image and gallery, Uploading state, image preview, and integration with product creation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/store/admin/upload", "issue": "FIXED - require_store_admin was returning 500 instead of 401 when no auth provided. Added proper null check and error handling."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_upload_feature.py",
+    "/app/test_reports/pytest/pytest_upload.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend upload endpoint correctly validates file extensions (.jpg, .jpeg, .png, .webp, .gif) and max size (10MB)",
+    "Files are stored with UUID filenames in /app/backend/uploads/ for security",
+    "StaticFiles mount at /api/uploads serves uploaded images correctly",
+    "Frontend upload handler properly uses FormData for multipart/form-data requests",
+    "Upload buttons show 'Uploading...' state during upload (disabled state)",
+    "Main image preview shows after upload completion",
+    "Gallery thumbnails appear after upload with remove button on hover"
+  ],
+  "updated_files": [
+    "/app/backend/server.py",
+    "/app/backend/tests/test_upload_feature.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all upload UI flows tested)"
+  },
+  "test_credentials": "Admin: fallstommy@gmail.com / admin123",
+  "seed_data_creation": "Created and cleaned up TEST Upload Demo Amp product during testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Image upload feature fully implemented and tested. Backend: POST /api/store/admin/upload accepts multipart file, validates type/size, stores in /app/backend/uploads/, returns URL. GET /api/uploads/{filename} serves files. Frontend: AdminDashboard.jsx has upload buttons (data-testid: upload-main-image-btn, upload-gallery-image-btn) that trigger file picker, upload to backend, and update form state. I fixed a bug in require_store_admin that was causing 500 errors instead of 401 when no auth provided.",
+  "tests_executed": {
+    "backend": [
+      "test_01_upload_requires_auth - PASS: Returns 401 without auth",
+      "test_02_upload_png_success - PASS: PNG upload works",
+      "test_03_upload_jpg_success - PASS: JPG upload works",
+      "test_04_upload_webp_success - PASS: WebP upload works",
+      "test_05_upload_gif_success - PASS: GIF upload works",
+      "test_06_reject_non_image_file - PASS: .txt file rejected with 400",
+      "test_07_reject_pdf_file - PASS: .pdf file rejected with 400",
+      "test_08_uploaded_file_accessible - PASS: File served at /api/uploads/",
+      "test_09_existing_uploaded_file_accessible - PASS: Previous test file accessible",
+      "test_10_upload_returns_correct_url_format - PASS: URL is /api/uploads/{uuid}.{ext}",
+      "test_11_create_product_with_gallery_still_works - PASS: Gallery regression passed",
+      "test_12_get_products_returns_gallery - PASS: Gallery field in product list"
+    ],
+    "frontend": [
+      "Admin login and navigation - PASS",
+      "Upload main image button visible - PASS (data-testid: upload-main-image-btn)",
+      "Upload gallery image button visible - PASS (data-testid: upload-gallery-image-btn)",
+      "Main image upload via file picker - PASS: URL updated to /api/uploads/{uuid}.png",
+      "Main image preview shows after upload - PASS",
+      "Gallery upload via file picker - PASS: Thumbnail appears",
+      "Gallery URL input and Add button - PASS: Manual URL entry works",
+      "Gallery remove button - PASS: Shows on hover",
+      "Product save with uploaded images - PASS: Product created with image URLs",
+      "Product list shows photo count - PASS: Shows '2 photos' badge"
+    ]
+  },
+  "bug_fixed": {
+    "location": "/app/backend/server.py line 4007-4018",
+    "issue": "require_store_admin function did not check for None credentials, causing AttributeError and 500 response",
+    "fix": "Added null check for credentials and proper JWT exception handling (ExpiredSignatureError, InvalidTokenError)"
+  }
+}
