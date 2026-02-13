@@ -4099,7 +4099,7 @@ async def get_latest_apk():
 # ============================================================
 # STRIPE CHECKOUT ENDPOINTS
 # ============================================================
-from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+import stripe
 from fastapi import Request
 
 NC_TAX_RATE = 0.075
@@ -4143,29 +4143,60 @@ async def store_checkout(data: dict, request: Request, credentials: HTTPAuthoriz
     shipping = SHIPPING_RATES[shipping_method]
     grand_total = round(subtotal + tax + shipping, 2)
 
-    # Create Stripe checkout session
+    # Create Stripe checkout session using official SDK
     stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    host_url = str(request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    stripe.api_key = stripe_key
 
     success_url = f"{origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = f"{origin_url}/cart"
 
     order_id = str(uuid.uuid4())
-    checkout_req = CheckoutSessionRequest(
-        amount=grand_total,
-        currency="usd",
+    
+    # Build line items for Stripe
+    line_items = []
+    for item in order_items:
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": item["name"]},
+                "unit_amount": int(item["price"] * 100),  # Stripe uses cents
+            },
+            "quantity": item["qty"],
+        })
+    # Add tax as line item
+    if tax > 0:
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": "NC Sales Tax (7.5%)"},
+                "unit_amount": int(tax * 100),
+            },
+            "quantity": 1,
+        })
+    # Add shipping as line item
+    line_items.append({
+        "price_data": {
+            "currency": "usd",
+            "product_data": {"name": f"Shipping ({shipping_method.title()})"},
+            "unit_amount": int(shipping * 100),
+        },
+        "quantity": 1,
+    })
+
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=line_items,
+        mode="payment",
         success_url=success_url,
         cancel_url=cancel_url,
+        customer_email=user_email,
         metadata={"order_id": order_id, "user_id": user_id, "email": user_email}
     )
-    session = await stripe_checkout.create_checkout_session(checkout_req)
 
     # Store payment transaction
     transaction = {
         "id": order_id,
-        "session_id": session.session_id,
+        "session_id": session.id,
         "user_id": user_id,
         "email": user_email,
         "items": order_items,
@@ -4180,33 +4211,35 @@ async def store_checkout(data: dict, request: Request, credentials: HTTPAuthoriz
     }
     await store_db.payment_transactions.insert_one(transaction)
 
-    return {"url": session.url, "session_id": session.session_id, "order_id": order_id}
+    return {"url": session.url, "session_id": session.id, "order_id": order_id}
 
 @api_router.get("/store/checkout/status/{session_id}")
 async def store_checkout_status(session_id: str, request: Request):
     stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    host_url = str(request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    stripe.api_key = stripe_key
 
     try:
-        status = await stripe_checkout.get_checkout_status(session_id)
+        session = stripe.checkout.Session.retrieve(session_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # Map Stripe status to our status
+    payment_status = session.payment_status  # "paid", "unpaid", "no_payment_required"
+    status = "complete" if payment_status == "paid" else "pending"
+
     # Update transaction in DB (only once per status change)
     txn = await store_db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-    if txn and txn.get("payment_status") != status.payment_status:
+    if txn and txn.get("payment_status") != payment_status:
         await store_db.payment_transactions.update_one(
             {"session_id": session_id},
-            {"$set": {"payment_status": status.payment_status, "status": status.status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {"payment_status": payment_status, "status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
         )
 
     return {
-        "status": status.status,
-        "payment_status": status.payment_status,
-        "amount_total": status.amount_total,
-        "currency": status.currency,
+        "status": status,
+        "payment_status": payment_status,
+        "amount_total": session.amount_total / 100 if session.amount_total else 0,
+        "currency": session.currency,
         "order_id": txn["id"] if txn else None
     }
 
@@ -4215,16 +4248,29 @@ async def stripe_webhook(request: Request):
     body = await request.body()
     sig = request.headers.get("Stripe-Signature", "")
     stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    host_url = str(request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    stripe.api_key = stripe_key
+    
     try:
-        event = await stripe_checkout.handle_webhook(body, sig)
-        if event.payment_status == "paid" and event.session_id:
-            await store_db.payment_transactions.update_one(
-                {"session_id": event.session_id, "payment_status": {"$ne": "paid"}},
-                {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}}
-            )
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(body, sig, webhook_secret)
+        else:
+            # Without webhook secret, just parse the JSON
+            import json
+            event = json.loads(body)
+        
+        # Handle checkout.session.completed event
+        event_type = event.get("type") if isinstance(event, dict) else event.type
+        if event_type == "checkout.session.completed":
+            session_data = event.get("data", {}).get("object", {}) if isinstance(event, dict) else event.data.object
+            session_id = session_data.get("id") if isinstance(session_data, dict) else session_data.id
+            payment_status = session_data.get("payment_status") if isinstance(session_data, dict) else session_data.payment_status
+            
+            if payment_status == "paid" and session_id:
+                await store_db.payment_transactions.update_one(
+                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+                    {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
