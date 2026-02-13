@@ -26,6 +26,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/docs/play-store" element={<PlayStoreListing />} />
         </Routes>
       </main>
