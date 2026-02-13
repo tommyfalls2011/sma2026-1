@@ -42,10 +42,6 @@ export default function Cart() {
     }
   }
 
-  const tax = total * NC_TAX_RATE
-  const shipping = count > 0 ? SHIPPING_RATES.standard : 0
-  const grandTotal = total + tax + shipping
-
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
