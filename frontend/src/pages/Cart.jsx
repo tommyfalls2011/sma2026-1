@@ -98,7 +98,7 @@ export default function Cart() {
             <Link to="/login" className="block text-center w-full font-display uppercase tracking-wider text-sm bg-brand-500 text-dark-950 px-8 py-4 rounded-sm hover:bg-brand-400 transition-colors font-semibold">
               Sign In to Checkout
             </Link>
-          )}}
+          )}
         </div>
       </div>
     </div>
