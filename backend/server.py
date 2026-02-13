@@ -4137,7 +4137,10 @@ async def store_checkout(data: dict, request: Request, credentials: HTTPAuthoriz
         order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
 
     tax = round(subtotal * NC_TAX_RATE, 2)
-    shipping = SHIPPING_STANDARD if len(order_items) > 0 else 0.0
+    shipping_method = data.get("shipping", "standard")
+    if shipping_method not in SHIPPING_RATES:
+        shipping_method = "standard"
+    shipping = SHIPPING_RATES[shipping_method]
     grand_total = round(subtotal + tax + shipping, 2)
 
     # Create Stripe checkout session
