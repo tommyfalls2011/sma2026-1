@@ -1385,6 +1385,44 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Track gain breakdown
     gain_breakdown = {"standard_gain": round(standard_gain, 2), "boom_adj": boom_adj}
     
+    # === ELEMENT SPACING GAIN ADJUSTMENT ===
+    # Reflector-to-driven spacing directly affects mutual coupling and forward gain.
+    # Optimal for max gain is ~0.20λ; tighter spacing trades gain for F/B, wider does the reverse.
+    # Director distribution also affects directivity.
+    spacing_gain_adj = 0.0
+    driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    director_elems = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
+    
+    if driven_elem and reflector_elem and n >= 3:
+        refl_driven_spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
+        refl_driven_lambda = refl_driven_spacing_m / wavelength if wavelength > 0 else 0.18
+        
+        # Gain correction curve: peak gain near 0.20λ, falls off for tighter/wider
+        # Based on NEC simulation trends for standard Yagi designs
+        optimal_lambda = 0.20
+        if refl_driven_lambda < optimal_lambda:
+            # Tighter: lose ~2.5 dB per 0.1λ below optimal (strong mutual coupling)
+            spacing_gain_adj = -2.5 * (optimal_lambda - refl_driven_lambda) / 0.1
+        else:
+            # Wider: lose ~1.5 dB per 0.1λ above optimal (diminishing coupling benefit)
+            spacing_gain_adj = -1.5 * (refl_driven_lambda - optimal_lambda) / 0.1
+        
+        # Director spacing distribution: first director position affects directivity
+        if len(director_elems) >= 1:
+            dir1_spacing_m = abs(convert_element_to_meters(director_elems[0].position - driven_elem.position, "inches"))
+            dir1_lambda = dir1_spacing_m / wavelength if wavelength > 0 else 0.15
+            # Optimal first director at ~0.12-0.15λ from driven
+            optimal_dir1 = 0.13
+            dir1_deviation = abs(dir1_lambda - optimal_dir1)
+            if dir1_deviation > 0.05:
+                spacing_gain_adj -= 0.3 * (dir1_deviation - 0.05) / 0.05
+        
+        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
+    
+    gain_dbi += spacing_gain_adj
+    gain_breakdown["spacing_adj"] = spacing_gain_adj
+    
     # Without reflector, gain is reduced by ~1.5-2 dB
     reflector_adj = 0
     if not has_reflector:
