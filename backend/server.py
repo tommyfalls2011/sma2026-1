@@ -2135,8 +2135,17 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
     
     if use_reflector:
-        # Reflector-to-driven: ~15% of total boom (closer than directors)
-        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
+        # Reflector-to-driven spacing: wavelength-based (standard Yagi design)
+        # Typical: 0.15λ to 0.20λ, with 0.18λ being a good compromise
+        if n == 2:
+            refl_driven_gap = round(target_boom, 1)
+        else:
+            ideal_refl_gap = wavelength_in * 0.18  # ~0.18λ
+            num_dirs = n - 2
+            # Each director needs at least 0.12λ spacing
+            min_director_room = num_dirs * wavelength_in * 0.12
+            max_refl_gap = target_boom - min_director_room
+            refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
         
         elements.append({
             "element_type": "reflector",
@@ -2259,8 +2268,12 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven at 15% of boom, directors equally spaced after
-                    refl_driven_gap = round(target_boom * 0.15, 1)
+                    # With directors: driven at ~0.18λ from reflector, cap to ensure director room
+                    ideal_refl_gap = wavelength_in * 0.18
+                    num_dirs = len(dir_indices)
+                    min_director_room = num_dirs * wavelength_in * 0.12
+                    max_refl_gap = target_boom - min_director_room
+                    refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
