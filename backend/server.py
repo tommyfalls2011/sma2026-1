@@ -1553,30 +1553,26 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     fs_ratio = round(min(fs_ratio, 30), 1)
     
     # === BEAMWIDTH (Physics-based) ===
-    # Two methods, use the most appropriate for the boom/wavelength ratio:
-    # 1. Aperture: HPBW_H = 51 * λ / D (works well when boom >= ~0.5λ)
-    # 2. Gain-based: total solid angle = 32400 / G_linear (always valid)
-    # Use free-space gain (base_gain_dbi) for beamwidth — ground gain inflates G_linear
+    # Core formula: BW_H * BW_V = 32400 / G_linear (total beam solid angle)
+    # H/V split depends on antenna aspect ratio (boom vs element length)
+    # Longer boom = narrower H beamwidth; wider spacing/higher gain = narrower overall
+    # Use free-space gain (base_gain_dbi) — ground gain doesn't change the beam shape
     boom_length_m = boom_length_in * 0.0254
     g_free_linear = 10 ** (base_gain_dbi / 10) if base_gain_dbi > 0 else 1
-    bw_gain_total = math.sqrt(32400.0 / g_free_linear) if g_free_linear > 1 else 90
     
-    if boom_length_m > 0 and wavelength > 0:
-        bw_aperture = 51.0 * wavelength / boom_length_m
-        # When boom is short relative to λ, aperture formula overestimates
-        # Use gain-based when aperture gives unreasonable result
-        if bw_aperture > bw_gain_total * 1.5:
-            beamwidth_h = bw_gain_total * 1.2  # H-plane ~1.2x geometric mean
-        else:
-            beamwidth_h = bw_aperture
-    else:
-        beamwidth_h = bw_gain_total * 1.2
+    # Aspect ratio: boom_length / avg_element_length
+    # Longer boom relative to elements = more H-plane narrowing
+    avg_el_len_m = sum(e.length for e in input_data.elements) / n * 0.0254 if n > 0 else wavelength * 0.48
+    aspect = boom_length_m / avg_el_len_m if avg_el_len_m > 0 else 1.5
+    aspect = max(0.5, min(aspect, 5.0))  # reasonable range
     
-    # V beamwidth from total beam solid angle: BW_V = 32400 / (G_linear * BW_H)
-    if beamwidth_h > 0 and g_free_linear > 1:
-        beamwidth_v = 32400.0 / (g_free_linear * beamwidth_h)
+    if g_free_linear > 1:
+        # BW_H = sqrt(32400 / (G * aspect)), BW_V = sqrt(32400 * aspect / G)
+        beamwidth_h = math.sqrt(32400.0 / (g_free_linear * aspect))
+        beamwidth_v = math.sqrt(32400.0 * aspect / g_free_linear)
     else:
-        beamwidth_v = 78.0  # Half-wave dipole default
+        beamwidth_h = 90.0
+        beamwidth_v = 90.0
     
     beamwidth_h = round(max(min(beamwidth_h, 120), 15), 1)
     beamwidth_v = round(max(min(beamwidth_v, 120), 25), 1)
