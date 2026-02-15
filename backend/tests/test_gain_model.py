@@ -14,7 +14,7 @@ import requests
 import os
 import math
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://antenna-design-lab.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://physics-engine-v2.preview.emergentagent.com').rstrip('/')
 
 # Standard element dimensions for 27.185 MHz (from review request)
 STANDARD_ELEMENTS = {

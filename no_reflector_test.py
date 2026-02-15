@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://antenna-design-lab.preview.emergentagent.com/api"
+BACKEND_URL = "https://physics-engine-v2.preview.emergentagent.com/api"
 
 def test_calculate_no_reflector():
     """Test 1: Calculate with 3 elements WITHOUT reflector"""
