@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://physics-engine-v2.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://pdf-download-feature.preview.emergentagent.com').rstrip('/')
 
 # Test user credentials
 TEST_USER_EMAIL = f"TEST_refactor_{uuid.uuid4().hex[:8]}@example.com"

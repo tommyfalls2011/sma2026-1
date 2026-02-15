@@ -13,7 +13,7 @@ import requests
 import os
 
 # Base URL from environment - CRITICAL: DO NOT add default
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://physics-engine-v2.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://pdf-download-feature.preview.emergentagent.com')
 
 # Admin credentials
 ADMIN_EMAIL = "fallstommy@gmail.com"
