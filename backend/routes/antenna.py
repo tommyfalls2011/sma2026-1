@@ -1,6 +1,7 @@
 """Antenna calculation, auto-tune, and optimization routes."""
 import math
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
+from fastapi.responses import Response
 
 from config import BAND_DEFINITIONS, db
 from models import (
@@ -14,6 +15,7 @@ from services.physics import (
     calculate_stacking_gain, calculate_stacked_beamwidth,
     convert_height_to_meters,
 )
+from services.pdf_service import generate_spec_sheet_pdf
 
 router = APIRouter()
 
