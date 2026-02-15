@@ -26,25 +26,7 @@ export default function AntennaCalculator() {
   const router = useRouter();
   const { user, token, loading: authLoading, getMaxElements, isFeatureAvailable, tiers } = useAuth();
   
-  const [inputs, setInputs] = useState<AntennaInput>({
-    num_elements: 2,
-    elements: [
-      { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
-      { element_type: 'driven', length: '204', diameter: '0.5', position: '48' },
-    ],
-    height_from_ground: '54', height_unit: 'ft', boom_diameter: '1.5', boom_unit: 'inches', band: '11m_cb', frequency_mhz: '27.185',
-    stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
-    taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '36', start_diameter: '0.625', end_diameter: '0.5' }, { length: '36', start_diameter: '0.5', end_diameter: '0.375' }] },
-    corona_balls: { enabled: false, diameter: '1.0' },
-    ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
-    use_reflector: true,
-    antenna_orientation: 'horizontal',  // horizontal (flat), vertical, angle45, or dual
-    dual_active: false,  // When dual: both H+V beams transmit simultaneously
-    dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',  // Which beam is selected in dual mode
-    feed_type: 'gamma',  // direct, gamma, hairpin
-    boom_grounded: true,  // legacy compat
-    boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',  // bonded, insulated, nonconductive
-  });
+  const [inputs, setInputs] = useState<AntennaInput>(DEFAULT_INPUTS as AntennaInput);
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
   const [optimizingHeight, setOptimizingHeight] = useState(false);
