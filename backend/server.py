@@ -586,6 +586,8 @@ class AutoTuneRequest(BaseModel):
     spacing_level: float = Field(default=1.0)  # Spacing multiplier
     close_driven: bool = Field(default=False)  # Tighter reflector-to-driven spacing (~0.12λ vs 0.18λ)
     close_dir1: bool = Field(default=False)  # Tighter first-director-to-driven spacing
+    far_driven: bool = Field(default=False)  # Wider reflector-to-driven spacing (~0.22λ vs 0.18λ)
+    far_dir1: bool = Field(default=False)  # Wider first-director-to-driven spacing
     antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
     dual_active: bool = Field(default=False)  # Both H+V beams active simultaneously
     feed_type: str = Field(default="direct")  # direct, gamma, hairpin
