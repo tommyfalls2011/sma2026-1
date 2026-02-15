@@ -750,6 +750,8 @@ export default function AntennaCalculator() {
           locked_positions: lockedPositions,
           spacing_mode: spacingMode,
           spacing_level: parseFloat(spacingLevel) || 1.0,
+          close_driven: closeDriven,
+          close_dir1: closeDir1,
         }),
       });
       if (response.ok) {
