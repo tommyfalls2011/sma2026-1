@@ -2299,6 +2299,38 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         base_gain -= 1.5  # Less gain without reflector
     if request.taper and request.taper.enabled:
         base_gain += 0.3 * request.taper.num_tapers
+    
+    # === SPACING OVERRIDE GAIN/F/B CORRECTIONS ===
+    # Element spacing significantly affects Yagi performance:
+    # - Tighter reflector-driven spacing: reduces gain, improves F/B (stronger coupling)
+    # - Wider reflector-driven spacing: increases gain, reduces F/B (weaker coupling)
+    # - Director spacing similarly affects directivity pattern
+    spacing_gain_adj = 0.0
+    spacing_fb_adj = 0.0
+    
+    if use_reflector and n >= 3:
+        # Reflector-to-driven spacing effect on gain and F/B
+        if hasattr(request, 'close_driven') and request.close_driven:
+            # 0.12λ: tight coupling, more power reflected back, less forward gain
+            spacing_gain_adj -= 0.5
+            spacing_fb_adj += 3.0
+        elif hasattr(request, 'far_driven') and request.far_driven:
+            # 0.22λ: looser coupling, more forward gain, weaker back rejection
+            spacing_gain_adj += 0.3
+            spacing_fb_adj -= 2.0
+        
+        # First director spacing effect
+        if hasattr(request, 'close_dir1') and request.close_dir1:
+            # Tight first director: stronger mutual coupling, slight gain loss
+            spacing_gain_adj -= 0.3
+            spacing_fb_adj += 1.5
+        elif hasattr(request, 'far_dir1') and request.far_dir1:
+            # Wide first director: better directivity, slight gain boost
+            spacing_gain_adj += 0.2
+            spacing_fb_adj -= 1.0
+    
+    base_gain += spacing_gain_adj
+    
     height_m = convert_height_to_meters(request.height_from_ground, request.height_unit)
     predicted_gain = round(base_gain + calculate_ground_gain(height_m / wavelength_m, "horizontal") - compression_penalty, 1)
     
@@ -2307,6 +2339,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         predicted_fb = {2: 14, 3: 20, 4: 24, 5: 26}.get(n, 14)
     else:
         predicted_fb = 20 + 3 * math.log2(max(n - 2, 1))
+    
+    predicted_fb += spacing_fb_adj
     
     if not use_reflector:
         predicted_fb -= 8  # Worse F/B without reflector
