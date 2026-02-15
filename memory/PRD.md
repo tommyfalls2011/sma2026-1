@@ -7,7 +7,7 @@ The app has a React Native/Expo frontend (serving web + mobile) and a FastAPI + 
 
 ## Architecture (Post-Refactoring - Feb 2026)
 
-### Backend (~3172 lines across 10 files)
+### Backend (~3400 lines across 11 files)
 ```
 backend/
   server.py              (51 lines) - Slim entry: app, CORS, routers, startup/shutdown
@@ -17,17 +17,18 @@ backend/
   services/
     physics.py           (1398 lines) - Core antenna physics engine
     email_service.py     (38 lines)  - Email helpers via Resend
+    pdf_service.py       (~350 lines) - PDF spec sheet generation via ReportLab
   routes/
-    antenna.py           (243 lines) - Calculate, auto-tune, optimize endpoints
+    antenna.py           (260 lines) - Calculate, auto-tune, optimize, PDF export endpoints
     user.py              (273 lines) - Auth, subscription, saved designs
     public.py            (166 lines) - Bands, status, tutorial, designer-info, changelog
     admin.py             (459 lines) - Admin pricing, users, designs, discounts, notifications
 ```
 
-### Frontend (~3288 lines across 11 files)
+### Frontend (~3350 lines across 11 files)
 ```
 frontend/app/
-  index.tsx              (2769 lines) - Main AntennaCalculator screen
+  index.tsx              (~2830 lines) - Main AntennaCalculator screen
   types.ts               (9 lines)   - TypeScript interfaces
   constants.ts           (59 lines)  - Bands, URLs, tier colors, defaults
   styles.ts              (202 lines) - Shared StyleSheet
@@ -55,7 +56,8 @@ frontend/app/
 - Subscription tiers (trial, bronze, silver, gold)
 - Save/load antenna designs
 - Admin panel (pricing, users, designs, discounts, notifications)
-- CSV export of height optimizer data
+- CSV export of height optimizer data + full antenna results
+- **PDF export of antenna spec sheet** (Feb 2026)
 - App update checker + QR code
 
 ## Key API Endpoints
@@ -63,6 +65,7 @@ frontend/app/
 - `POST /api/auto-tune` - Optimize element dimensions
 - `POST /api/optimize-height` - Find best mounting height
 - `POST /api/optimize-stacking` - Find best stacking spacing
+- `POST /api/spec-sheet/pdf` - Generate PDF spec sheet
 - `POST /api/auth/register` + `POST /api/auth/login` - Auth
 - `GET /api/bands` - Band definitions
 - `GET /api/subscription/tiers` - Pricing tiers
@@ -70,9 +73,10 @@ frontend/app/
 
 ## Completed Tasks
 - [x] Physics engine overhaul (gain, F/B, beamwidth based on actual positions)
-- [x] Backend refactoring: server.py 4115 → 51 lines (modular)
-- [x] Frontend refactoring: index.tsx 3301 → 2769 lines (components extracted)
+- [x] Backend refactoring: server.py 4115 -> 51 lines (modular)
+- [x] Frontend refactoring: index.tsx 3301 -> components extracted
 - [x] All 16 API endpoints tested and passing
+- [x] PDF export feature: backend ReportLab service + frontend PDF button (Feb 2026)
 
 ## Backlog
 - [ ] P1: Improve .easignore to reduce APK build size
