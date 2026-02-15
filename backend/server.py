@@ -1,5 +1,7 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -9,7 +11,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import math
 import random
 import hashlib
@@ -41,6 +43,40 @@ ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'fallstommy@gmail.com')
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'onboarding@resend.dev')
 resend.api_key = RESEND_API_KEY
+
+# --- Email Helper ---
+async def send_email(to: str, subject: str, html: str):
+    """Send an email via Resend. Returns True on success."""
+    if not RESEND_API_KEY:
+        return False
+    try:
+        await asyncio.to_thread(resend.Emails.send, {
+            "from": SENDER_EMAIL,
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        })
+        return True
+    except Exception as e:
+        print(f"Email send error: {e}")
+        return False
+
+def email_wrapper(title: str, body_html: str) -> str:
+    """Wrap email content in a styled template."""
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1a1a1a;color:#e0e0e0;padding:30px;border-radius:12px;">
+        <div style="text-align:center;margin-bottom:20px;">
+            <h1 style="color:#4CAF50;margin:0;">SMA Antenna Calc</h1>
+            <p style="color:#888;font-size:14px;">{title}</p>
+        </div>
+        {body_html}
+        <div style="border-top:1px solid #333;margin-top:30px;padding-top:15px;text-align:center;font-size:12px;color:#666;">
+            <p>SMA Antenna Analyzer &copy; 2026</p>
+        </div>
+    </div>
+    """
+
+
 
 # Default Subscription Tiers Configuration (can be overridden from DB)
 DEFAULT_SUBSCRIPTION_TIERS = {
@@ -342,16 +378,15 @@ class StatusCheckCreate(BaseModel):
 
 
 BAND_DEFINITIONS = {
-    "11m_cb": {"name": "11m CB Band", "center": 27.185, "start": 26.965, "end": 27.405, "channel_spacing_khz": 10},
-    "10m": {"name": "10m Ham Band", "center": 28.5, "start": 28.0, "end": 29.7, "channel_spacing_khz": 10},
-    "12m": {"name": "12m Ham Band", "center": 24.94, "start": 24.89, "end": 24.99, "channel_spacing_khz": 5},
-    "15m": {"name": "15m Ham Band", "center": 21.225, "start": 21.0, "end": 21.45, "channel_spacing_khz": 5},
-    "17m": {"name": "17m Ham Band", "center": 18.118, "start": 18.068, "end": 18.168, "channel_spacing_khz": 5},
-    "20m": {"name": "20m Ham Band", "center": 14.175, "start": 14.0, "end": 14.35, "channel_spacing_khz": 5},
-    "40m": {"name": "40m Ham Band", "center": 7.15, "start": 7.0, "end": 7.3, "channel_spacing_khz": 5},
-    "6m": {"name": "6m Ham Band", "center": 51.0, "start": 50.0, "end": 54.0, "channel_spacing_khz": 20},
-    "2m": {"name": "2m Ham Band", "center": 146.0, "start": 144.0, "end": 148.0, "channel_spacing_khz": 20},
-    "70cm": {"name": "70cm Ham Band", "center": 435.0, "start": 420.0, "end": 450.0, "channel_spacing_khz": 25},
+    "17m": {"name": "17m", "center": 18.118, "start": 18.068, "end": 18.168, "channel_spacing_khz": 5},
+    "15m": {"name": "15m", "center": 21.225, "start": 21.0, "end": 21.45, "channel_spacing_khz": 5},
+    "12m": {"name": "12m", "center": 24.94, "start": 24.89, "end": 24.99, "channel_spacing_khz": 5},
+    "11m_cb": {"name": "11m CB", "center": 27.185, "start": 26.965, "end": 27.405, "channel_spacing_khz": 10},
+    "10m": {"name": "10m", "center": 28.5, "start": 28.0, "end": 29.7, "channel_spacing_khz": 10},
+    "6m": {"name": "6m", "center": 51.0, "start": 50.0, "end": 54.0, "channel_spacing_khz": 20},
+    "2m": {"name": "2m", "center": 146.0, "start": 144.0, "end": 148.0, "channel_spacing_khz": 20},
+    "1.25m": {"name": "1.25m", "center": 223.5, "start": 222.0, "end": 225.0, "channel_spacing_khz": 25},
+    "70cm": {"name": "70cm", "center": 435.0, "start": 420.0, "end": 450.0, "channel_spacing_khz": 25},
 }
 
 # === FREE-SPACE GAIN MODEL (dBi) ===
@@ -523,11 +558,14 @@ class AntennaInput(BaseModel):
     frequency_mhz: Optional[float] = Field(default=None)
     antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
     dual_active: bool = Field(default=False)  # Both H+V beams active simultaneously
+    dual_selected_beam: str = Field(default="horizontal")  # Which beam selected in dual mode: horizontal or vertical
     feed_type: str = Field(default="direct")  # direct, gamma, hairpin
     stacking: Optional[StackingConfig] = Field(default=None)
     taper: Optional[TaperConfig] = Field(default=None)
     corona_balls: Optional[CoronaBallConfig] = Field(default=None)
     ground_radials: Optional[GroundRadialConfig] = Field(default=None)
+    boom_grounded: bool = Field(default=True)  # Legacy: True = bonded, False = nonconductive
+    boom_mount: Optional[str] = Field(default=None)  # "bonded" | "insulated" | "nonconductive" (overrides boom_grounded)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
@@ -606,6 +644,7 @@ class AntennaOutput(BaseModel):
     matching_info: Optional[dict] = None
     dual_polarity_info: Optional[dict] = None
     wind_load: Optional[dict] = None
+    boom_correction_info: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
@@ -639,6 +678,129 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     if unit == "ft": return value * 0.3048
     elif unit == "inches": return value * 0.0254
     return value
+
+
+def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavelength: float, boom_grounded: bool, boom_mount: str = "bonded") -> dict:
+    """Calculate boom correction using G3SEK empirical formula.
+    
+    Three mount configurations:
+    - "bonded": Elements electrically bonded to metal boom (welded/bolted through).
+      Boom adds capacitance -> elements appear electrically longer -> must shorten.
+      Full DL6WU correction applies (100%).
+    - "insulated": Elements mounted on metal boom with insulating sleeves/standoffs.
+      Boom still influences elements via proximity coupling but effect is reduced.
+      Partial correction applies (~55% of full).
+    - "nonconductive": Non-conductive boom (PVC, wood, fiberglass).
+      Elements behave as free-space radiators. No correction needed.
+    """
+    mount = boom_mount
+    if mount not in ("bonded", "insulated", "nonconductive"):
+        mount = "bonded" if boom_grounded else "nonconductive"
+    
+    mount_multipliers = {"bonded": 1.0, "insulated": 0.55, "nonconductive": 0.0}
+    k = mount_multipliers.get(mount, 1.0)
+    
+    mount_labels = {
+        "bonded": "Bonded to Metal Boom",
+        "insulated": "Insulated on Metal Boom",
+        "nonconductive": "Non-Conductive Boom"
+    }
+    
+    if k == 0 or boom_dia_m <= 0 or avg_element_dia_m <= 0:
+        if mount == "nonconductive":
+            notes = [
+                "Elements match theoretical free-space dimensions",
+                "More stable SWR across the band",
+                "Higher achievable F/B ratio",
+                "Non-conductive boom (PVC/wood/fiberglass) — no element coupling",
+                "Add separate ground path for static/lightning protection"
+            ]
+            desc = "Non-conductive boom — elements at free-space length, no correction needed. Cleanest, most predictable pattern."
+        else:
+            notes = [
+                "Elements match theoretical free-space dimensions",
+                "More stable SWR across the band",
+                "Higher achievable F/B ratio",
+                "Insulating sleeves reduce boom influence at each mount point",
+                "Metal boom still provides partial static discharge path"
+            ]
+            desc = "Insulated mount on metal boom — elements near free-space length. Pattern is cleaner and more predictable."
+        return {
+            "enabled": False,
+            "boom_mount": mount,
+            "boom_grounded": mount == "bonded",
+            "swr_factor": 1.0,
+            "gain_adj_db": 0.0,
+            "fb_adj_db": 0.0,
+            "impedance_shift_ohm": 0.0,
+            "bandwidth_mult": 1.0,
+            "correction_per_side_in": 0.0,
+            "correction_total_in": 0.0,
+            "corrected_elements": [],
+            "description": desc,
+            "practical_notes": notes
+        }
+    
+    bd = boom_dia_m / wavelength
+    c_frac = 12.5975 * bd - 114.5 * bd * bd
+    c_frac = max(0, min(c_frac, 0.5))
+    c_frac *= k
+    
+    boom_dia_in = boom_dia_m * 39.3701
+    correction_per_side_in = c_frac * boom_dia_in
+    
+    dia_ratio = min(boom_dia_m / avg_element_dia_m, 5.0)
+    correction_magnitude = min(c_frac * dia_ratio, 1.0)
+    
+    swr_penalty = min(1.0 + 0.04 * correction_magnitude, 1.10)
+    gain_adj = max(-0.15 * correction_magnitude, -0.3)
+    fb_adj = max(-0.8 * correction_magnitude, -1.5)
+    impedance_shift = max(-5.0 * correction_magnitude, -10.0)
+    bandwidth_mult = max(1.0 - 0.03 * correction_magnitude, 0.92)
+    
+    label = mount_labels.get(mount, mount)
+    total_corr = 2 * correction_per_side_in
+    if correction_per_side_in < 0.05:
+        desc = f"{label} — minimal correction at this frequency."
+    elif correction_per_side_in < 0.2:
+        desc = f"{label}: shorten each element by ~{total_corr:.2f}\" total ({correction_per_side_in:.2f}\"/side)."
+    else:
+        desc = f"{label}: shorten each element by ~{total_corr:.2f}\" total ({correction_per_side_in:.2f}\"/side). Precise correction critical."
+    
+    if mount == "bonded":
+        notes = [
+            f"Boom adds capacitance — elements appear {total_corr:.2f}\" electrically longer",
+            f"Shorten each element by {total_corr:.2f}\" total to restore resonance",
+            "Mechanically strongest — elements welded/bolted directly through boom",
+            "Excellent static and lightning protection (DC ground path)",
+            "SWR more sensitive to boom diameter — verify with analyzer after build"
+        ]
+    else:
+        notes = [
+            f"Proximity coupling: elements appear {total_corr:.2f}\" electrically longer (reduced vs bonded)",
+            f"Shorten each element by {total_corr:.2f}\" total to restore resonance",
+            "Insulating sleeves reduce boom influence but don't eliminate it",
+            "Metal boom still provides partial static discharge",
+            "Easier to match theoretical designs than fully bonded mount"
+        ]
+    
+    return {
+        "enabled": True,
+        "boom_mount": mount,
+        "boom_grounded": mount == "bonded",
+        "swr_factor": round(swr_penalty, 4),
+        "gain_adj_db": round(gain_adj, 2),
+        "fb_adj_db": round(fb_adj, 2),
+        "impedance_shift_ohm": round(impedance_shift, 1),
+        "bandwidth_mult": round(bandwidth_mult, 4),
+        "correction_per_side_in": round(correction_per_side_in, 3),
+        "correction_total_in": round(2 * correction_per_side_in, 3),
+        "boom_to_element_ratio": round(dia_ratio, 2),
+        "correction_multiplier": k,
+        "corrected_elements": [],
+        "description": desc,
+        "practical_notes": notes
+    }
 
 
 def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: float, taper_enabled: bool = False, height_wavelengths: float = 1.0) -> float:
@@ -764,6 +926,14 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
             "matched_swr": round(matched_swr, 3),
             "bandwidth_effect": "Slightly narrower (-5%)",
             "bandwidth_mult": 0.95,
+            "technical_notes": {
+                "mechanism": "Series LC network \u2014 gamma rod provides inductance (L), series capacitor provides capacitance (C). Movable shorting strap adjusts the impedance transformation ratio.",
+                "asymmetry": "The gamma rod increases conductor diameter on one side of the driven element, creating a slight physical asymmetry that can skew the radiation pattern a few degrees toward the match side.",
+                "pattern_impact": "Minor beam skew, typically only a few degrees \u2014 generally negligible for most operations.",
+                "advantage": "Feeds balanced Yagi antennas with unbalanced coax without needing a separate balun. Simple, effective, widely used on CB and amateur antennas.",
+                "tuning": "Adjust the shorting strap position and series capacitor value for lowest SWR. Proper tuning minimizes pattern distortion.",
+                "mitigation": "Ensure the match is properly tuned \u2014 correct capacitor and shorting strap positions reduce the beam skew to negligible levels.",
+            },
         }
         return round(max(1.0, matched_swr), 3), info
     
@@ -784,6 +954,17 @@ def apply_matching_network(swr: float, feed_type: str) -> tuple:
             "matched_swr": round(matched_swr, 3),
             "bandwidth_effect": "Broadband (minimal effect)",
             "bandwidth_mult": 1.0,
+            "technical_notes": {
+                "mechanism": "A short length of transmission line (hairpin or beta match) is connected across the feedpoint terminals. The shorted stub acts as an inductor to cancel the capacitive reactance of the slightly shortened driven element, transforming the low feedpoint impedance (typically 15\u201325\u03a9) up to 50\u03a9.",
+                "asymmetry": "Symmetrical design \u2014 no beam skew. The hairpin is balanced across both sides of the driven element, preserving radiation pattern symmetry.",
+                "pattern_stabilization": "Stabilizes the pattern by ensuring proper impedance match. Without matching, high SWR causes RF current on the coax shield (feedline radiation) which severely distorts the pattern, skews lobes, and reduces F/B ratio.",
+                "balance": "Balanced matching system \u2014 when used with a 1:1 current balun, it preserves symmetry of radiation lobes and prevents common-mode currents.",
+                "pattern_impact": "Physically small relative to wavelength, positioned at the center (neutral) point of the driven element \u2014 its own radiation is negligible, creates no new lobes or nulls.",
+                "advantage": "Simple construction, broadband performance, no capacitor needed. Maintains balanced feed. The driven element is slightly shortened to create the necessary capacitive reactance for the match.",
+                "tuning": "Adjust the length and spacing of the hairpin conductors. Longer hairpin = more inductance. Typical hairpin is 2\u20134 inches of wire or rod. Element shortening ensures operation at designed resonant frequency for best gain and pattern.",
+                "tradeoff": "Requires a split driven element (gap at center). Slightly less precise impedance match than gamma at a single frequency, but better bandwidth.",
+                "balun_note": "IMPORTANT: Always use a current choke balun alongside the hairpin to prevent the coax from becoming part of the radiating structure.",
+            },
         }
         return round(max(1.0, matched_swr), 3), info
     
@@ -1066,19 +1247,40 @@ def calculate_stacked_beamwidth(base_beamwidth: float, num_antennas: int, spacin
 
 
 def generate_stacked_pattern(base_pattern: List[dict], num_antennas: int, spacing_wavelengths: float, orientation: str) -> List[dict]:
+    """Generate stacked array radiation pattern using proper array factor multiplication.
+    
+    For a uniform linear array of N elements with spacing d:
+    AF = sin(N*psi/2) / (N*sin(psi/2))  where psi = 2*pi*d*cos(theta)/lambda
+    
+    For vertical stacking, the array axis is along elevation (theta from zenith).
+    For horizontal stacking, the array axis is along azimuth.
+    """
     stacked_pattern = []
     for point in base_pattern:
         angle = point["angle"]
         base_mag = point["magnitude"]
         theta_rad = math.radians(angle)
+        
         if orientation == "vertical":
-            array_factor = 1.0
-            if 60 < angle < 120 or 240 < angle < 300:
-                array_factor = 0.7 + 0.3 * abs(math.sin(num_antennas * math.pi * spacing_wavelengths * math.sin(theta_rad)))
+            # Vertical stack: array broadside is horizontal (0°/180°)
+            # Elements stacked along elevation axis
+            # psi depends on elevation angle component
+            psi = 2 * math.pi * spacing_wavelengths * math.sin(theta_rad)
         else:
+            # Horizontal stack: array broadside is forward (0°)
             psi = 2 * math.pi * spacing_wavelengths * math.cos(theta_rad)
-            array_factor = 1.0 if abs(math.sin(psi / 2)) < 0.001 else abs(math.sin(num_antennas * psi / 2) / (num_antennas * math.sin(psi / 2)))
-        stacked_pattern.append({"angle": angle, "magnitude": round(max(base_mag * array_factor, 1), 1)})
+        
+        # Array factor for N-element uniform array
+        half_psi = psi / 2
+        if abs(math.sin(half_psi)) < 0.001:
+            array_factor = 1.0  # Main lobe (L'Hopital's rule)
+        else:
+            array_factor = abs(math.sin(num_antennas * half_psi) / (num_antennas * math.sin(half_psi)))
+        
+        stacked_mag = max(base_mag * array_factor, 1.0)
+        stacked_pattern.append({"angle": angle, "magnitude": round(stacked_mag, 1)})
+    
+    # Normalize to 100%
     max_mag = max(p["magnitude"] for p in stacked_pattern)
     if max_mag > 0:
         for p in stacked_pattern:
@@ -1106,6 +1308,25 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     avg_element_dia = sum(convert_element_to_meters(e.diameter, "inches") for e in input_data.elements) / len(input_data.elements)
     
+    # === BOOM CORRECTION (DL6WU/G3SEK) ===
+    boom_correction = calculate_boom_correction(boom_dia_m, avg_element_dia, wavelength, input_data.boom_grounded, input_data.boom_mount or ("bonded" if input_data.boom_grounded else "nonconductive"))
+    
+    # Populate corrected cut list for each element
+    if boom_correction.get("enabled") and boom_correction.get("correction_total_in", 0) > 0:
+        correction_total = boom_correction["correction_total_in"]
+        corrected_elements = []
+        for el in input_data.elements:
+            original_len = el.length
+            corrected_len = round(original_len - correction_total, 3)
+            corrected_elements.append({
+                "type": el.element_type,
+                "original_length": original_len,
+                "corrected_length": corrected_len,
+                "correction": round(correction_total, 3),
+                "unit": "in"
+            })
+        boom_correction["corrected_elements"] = corrected_elements
+    
     # Check if antenna has a reflector
     has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
     
@@ -1122,6 +1343,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     if is_dual:
         dual_info = calculate_dual_polarity_gain(n, 0)  # n is per-pol, total = n*2
+        dual_info["selected_beam"] = input_data.dual_selected_beam
         if dual_active:
             dual_info["both_active"] = True
             # Both beams transmitting: coherent power combining adds ~3dB
@@ -1130,6 +1352,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else:
             dual_info["both_active"] = False
             dual_info["combined_gain_bonus_db"] = 0
+            dual_info["description"] = f"{n}H + {n}V = {n*2} total ({input_data.dual_selected_beam.upper()} selected)"
 
     
     # Calculate boom length from element positions
@@ -1218,6 +1441,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_dbi += boom_bonus
     gain_breakdown["boom_bonus"] = round(boom_bonus, 2)
     
+    # Boom grounded correction: detuned elements reduce gain
+    if boom_correction["enabled"]:
+        boom_grounded_adj = boom_correction["gain_adj_db"]
+        gain_dbi += boom_grounded_adj
+        gain_breakdown["boom_grounded_adj"] = round(boom_grounded_adj, 2)
+    
     gain_dbi = round(min(gain_dbi, 45.0), 2)
     
     # Apply dual_active combined gain bonus (+3dB when both H+V transmit simultaneously)
@@ -1246,6 +1475,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if feed_type != "direct":
         swr = round(matched_swr, 3)
     
+    # Apply boom grounded SWR correction (detuned parasitics worsen match)
+    if boom_correction["enabled"]:
+        swr = round(swr * boom_correction["swr_factor"], 3)
+        swr = round(max(1.0, min(swr, 5.0)), 2)
+    
     # === F/B and F/S RATIOS ===
     if n == 2: fb_ratio, fs_ratio = 14, 8
     elif n == 3: fb_ratio, fs_ratio = 20, 12
@@ -1266,6 +1500,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     
     fb_ratio += taper_effects["fb_bonus"]
     fs_ratio += taper_effects["fs_bonus"]
+    
+    # Boom grounded correction: detuned parasitics reduce F/B
+    if boom_correction["enabled"]:
+        fb_ratio += boom_correction["fb_adj_db"]
+        fs_ratio += boom_correction["fb_adj_db"] * 0.5  # F/S affected less
+    
     fb_ratio = round(min(fb_ratio, 65), 1)
     fs_ratio = round(min(fs_ratio, 30), 1)
     
@@ -1291,6 +1531,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     elif avg_element_dia > 0.004: bandwidth_percent *= 1.1
     
     bandwidth_mhz = round(center_freq * bandwidth_percent / 100, 3)
+    
+    # Apply boom grounded bandwidth narrowing (grounded boom = more SWR-sensitive)
+    if boom_correction["enabled"]:
+        bandwidth_mhz = round(bandwidth_mhz * boom_correction["bandwidth_mult"], 3)
     
     # Apply matching network bandwidth effect
     if feed_type != "direct":
@@ -1724,10 +1968,44 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         
         # Vertical stacking specific notes
         if stacking.orientation == "vertical" and not is_quad:
+            one_wl_ft = round(wavelength / 0.3048, 1)
+            spacing_vs_wl = spacing_wavelengths
+            alignment_status = "Optimal collinear" if 0.8 <= spacing_vs_wl <= 1.2 else ("Acceptable" if 0.5 <= spacing_vs_wl <= 2.0 else "Sub-optimal")
             stacking_info["vertical_notes"] = {
-                "effect": "Narrows vertical beamwidth, focuses energy toward horizon — increases gain without narrowing horizontal coverage",
+                "alignment": "COLLINEAR — antennas must be on the same vertical axis, element-to-element, not staggered or offset",
+                "effect": "Narrows vertical beamwidth like a venetian blind, focusing power toward the horizon — increases gain without narrowing horizontal coverage",
+                "one_wavelength_ft": f"{one_wl_ft} ft (1λ at {center_freq} MHz)",
+                "alignment_status": alignment_status,
                 "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
-                "coupling_warning": "Below 0.25 lambda spacing causes severe mutual coupling and detuning" if spacing_wavelengths < 0.25 else "",
+                "far_field": {
+                    "elevation": "Compresses toward horizon — squashed donut pattern, thinner but reaches further",
+                    "azimuth": "Remains omnidirectional (360°) — antennas centered on same axis, no left/right interference",
+                    "summary": "Vertical collinear stack: Maximum distance in ALL directions"
+                },
+                "stagger_warning": "DO NOT offset horizontally — creates clover-leaf pattern with directional nulls, dead zones, and tower shadowing distortion",
+                "stagger_effects": {
+                    "nulls": "Horizontal offset causes phased array effect — signal strong in some directions, severely weak in others",
+                    "gain_loss": "Loses the vertical compression that provides ~3dB horizon gain, energy wasted in unneeded directions",
+                    "detuning": "Close side-by-side placement causes mutual coupling — antennas act as parasitic elements, raising SWR",
+                    "phasing": "Horizontal offset means signals arrive at different times — may cancel instead of combine"
+                },
+                "coupling_warning": "Below 0.25λ spacing causes severe mutual coupling — antennas detune each other, SWR rises, potential transmitter damage" if spacing_wavelengths < 0.25 else "",
+                "feed_line_note": "Feed lines MUST be identical length and type — mismatched cables tilt the main lobe up into space or down into ground",
+                "best_practice": f"Ideal spacing: ~1λ ({one_wl_ft} ft center-to-center) for maximum gain with minimal interference",
+            }
+        
+        # Horizontal stacking specific notes
+        if stacking.orientation == "horizontal" and not is_quad:
+            stacking_info["horizontal_notes"] = {
+                "effect": "Narrows horizontal beamwidth — pattern becomes directional with focused lobes",
+                "far_field": {
+                    "elevation": "Stays wide — no vertical compression, does not improve horizon gain",
+                    "azimuth": "Becomes directional with lobes and nulls — NOT omnidirectional",
+                    "summary": "Horizontal stack: Intentional coverage in specific directions only"
+                },
+                "tradeoff": "Horizontal stacking sacrifices omnidirectional coverage for directional gain — creates dead zones at 90° to the stacking axis",
+                "feed_line_note": "Feed lines MUST be identical length and type to maintain in-phase operation",
+                "isolation": f"~{round(isolation_db)}dB isolation at current spacing",
             }
         
         # Quad-specific notes
@@ -1827,6 +2105,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         matching_info=matching_info,
         dual_polarity_info=dual_info,
         wind_load=wind_load_info,
+        boom_correction_info=boom_correction if boom_correction.get("enabled") else boom_correction,
     )
 
 
@@ -1856,20 +2135,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
     
     if use_reflector:
-        # Reflector-to-driven spacing: wavelength-based (standard Yagi design)
-        # Typical: 0.15λ to 0.20λ, with 0.18λ being a good compromise
-        if n == 2:
-            # 2-element (reflector+driven only): use full boom
-            refl_driven_gap = round(target_boom, 1)
-        else:
-            # Calculate ideal gap and ensure directors have enough room
-            ideal_refl_gap = wavelength_in * 0.18  # ~0.18λ
-            num_dirs = n - 2
-            # Each director needs at least 0.12λ spacing from previous element
-            min_director_room = num_dirs * wavelength_in * 0.12
-            # Max gap: leave enough room for directors
-            max_refl_gap = target_boom - min_director_room
-            refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
+        # Reflector-to-driven: ~15% of total boom (closer than directors)
+        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
         
         elements.append({
             "element_type": "reflector",
@@ -1992,12 +2259,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven at ~0.18λ from reflector, cap to ensure director room
-                    ideal_refl_gap = wavelength_in * 0.18
-                    num_dirs = len(dir_indices)
-                    min_director_room = num_dirs * wavelength_in * 0.12
-                    max_refl_gap = target_boom - min_director_room
-                    refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
+                    # With directors: driven at 15% of boom, directors equally spaced after
+                    refl_driven_gap = round(target_boom * 0.15, 1)
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
@@ -2066,6 +2329,54 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
 async def root():
     return {"message": "Antenna Calculator API"}
 
+# === UPDATE CHECK ENDPOINT (no CDN caching) ===
+@api_router.get("/app-update")
+async def get_app_update():
+    """Returns the latest app update info from DB, with hardcoded fallback."""
+    update_col = db["app_update"]
+    doc = await update_col.find_one({}, {"_id": 0})
+    if doc:
+        return doc
+    return {
+        "version": "3.2.5",
+        "buildDate": "2026-03-01T00:00:00",
+        "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer, Update System, 3-Way Boom Mount Selector, Corrected Cut List",
+        "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk",
+        "forceUpdate": False
+    }
+
+@api_router.put("/app-update")
+async def update_app_update(data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Admin-only: Update the app update info stored in DB."""
+    user = await require_admin(credentials)
+    update_col = db["app_update"]
+    update_data = {
+        "version": data.get("version", ""),
+        "buildDate": data.get("buildDate", ""),
+        "releaseNotes": data.get("releaseNotes", ""),
+        "apkUrl": data.get("apkUrl", ""),
+        "forceUpdate": data.get("forceUpdate", False)
+    }
+    await update_col.delete_many({})
+    await update_col.insert_one(update_data)
+    # Return a clean copy without _id (insert_one mutates the dict)
+    return {"status": "ok", "data": {k: v for k, v in update_data.items() if k != "_id"}}
+
+@api_router.post("/app-update")
+async def set_app_update(data: dict):
+    """Legacy: same as PUT but without auth for backward compat."""
+    update_col = db["app_update"]
+    await update_col.delete_many({})
+    doc = {
+        "version": data.get("version", ""),
+        "buildDate": data.get("buildDate", ""),
+        "releaseNotes": data.get("releaseNotes", ""),
+        "apkUrl": data.get("apkUrl", ""),
+        "forceUpdate": data.get("forceUpdate", False)
+    }
+    await update_col.insert_one(doc)
+    return {"status": "ok"}
+
 @api_router.get("/bands")
 async def get_bands():
     return BAND_DEFINITIONS
@@ -2081,6 +2392,152 @@ async def calculate_antenna(input_data: AntennaInput):
 async def auto_tune(request: AutoTuneRequest):
     """Auto-tune antenna elements for optimal performance."""
     return auto_tune_antenna(request)
+
+
+
+class StackingOptimizeRequest(BaseModel):
+    num_elements: int = Field(..., ge=2, le=20)
+    elements: List[ElementDimension]
+    height_from_ground: float = Field(..., gt=0)
+    height_unit: str = Field(default="ft")
+    boom_diameter: float = Field(..., gt=0)
+    boom_unit: str = Field(default="inches")
+    band: str = Field(default="11m_cb")
+    frequency_mhz: Optional[float] = Field(default=None)
+    antenna_orientation: str = Field(default="horizontal")
+    dual_active: bool = Field(default=False)
+    dual_selected_beam: str = Field(default="horizontal")
+    feed_type: str = Field(default="gamma")
+    stacking_orientation: str = Field(default="vertical")  # vertical, horizontal
+    stacking_layout: str = Field(default="line")  # line or quad
+    num_antennas: int = Field(default=2, ge=2, le=8)
+    min_spacing_ft: int = Field(default=15)
+    max_spacing_ft: int = Field(default=40)
+    taper: Optional[TaperConfig] = Field(default=None)
+    corona_balls: Optional[CoronaBallConfig] = Field(default=None)
+    ground_radials: Optional[GroundRadialConfig] = Field(default=None)
+
+class StackingOptimizeResult(BaseModel):
+    best_spacing_ft: float
+    best_gain_dbi: float
+    best_gain_increase: float
+    best_beamwidth_h: float
+    best_beamwidth_v: float
+    best_h_spacing_ft: Optional[float] = None
+    all_results: List[dict]
+
+@api_router.post("/optimize-stacking", response_model=StackingOptimizeResult)
+async def optimize_stacking(request: StackingOptimizeRequest):
+    """Sweep center-to-center spacing from min to max and find the spacing that yields best stacked gain."""
+    band_info = BAND_DEFINITIONS.get(request.band, BAND_DEFINITIONS["11m_cb"])
+    center_freq = request.frequency_mhz if request.frequency_mhz else band_info["center"]
+    wavelength = 299792458 / (center_freq * 1e6)
+    
+    # First, calculate the base antenna gain (unstacked)
+    base_input = AntennaInput(
+        num_elements=request.num_elements,
+        elements=request.elements,
+        height_from_ground=request.height_from_ground,
+        height_unit=request.height_unit,
+        boom_diameter=request.boom_diameter,
+        boom_unit=request.boom_unit,
+        band=request.band,
+        frequency_mhz=request.frequency_mhz,
+        antenna_orientation=request.antenna_orientation,
+        dual_active=request.dual_active,
+        dual_selected_beam=request.dual_selected_beam,
+        feed_type=request.feed_type,
+        stacking=None,
+        taper=request.taper,
+        corona_balls=request.corona_balls,
+        ground_radials=request.ground_radials,
+    )
+    base_result = calculate_antenna_parameters(base_input)
+    base_gain = base_result.gain_dbi
+    base_bw_h = base_result.beamwidth_h
+    base_bw_v = base_result.beamwidth_v
+    
+    best_score = -999
+    best_spacing = request.min_spacing_ft
+    best_gain = base_gain
+    best_increase = 0
+    best_bw_h = base_bw_h
+    best_bw_v = base_bw_v
+    best_h_spacing = None
+    all_results = []
+    
+    is_quad = request.stacking_layout == "quad"
+    
+    for spacing_ft in range(request.min_spacing_ft, request.max_spacing_ft + 1):
+        spacing_m = spacing_ft * 0.3048
+        spacing_wl = spacing_m / wavelength
+        
+        if is_quad:
+            # For quad: test V spacing, use same for H spacing
+            v_gain, v_inc = calculate_stacking_gain(base_gain, 2, spacing_wl, "vertical")
+            h_gain, h_inc = calculate_stacking_gain(v_gain, 2, spacing_wl, "horizontal")
+            total_gain = h_gain
+            total_increase = round(total_gain - base_gain, 2)
+            new_bw_v = calculate_stacked_beamwidth(base_bw_v, 2, spacing_wl)
+            new_bw_h = calculate_stacked_beamwidth(base_bw_h, 2, spacing_wl)
+        else:
+            total_gain, total_increase = calculate_stacking_gain(base_gain, request.num_antennas, spacing_wl, request.stacking_orientation)
+            if request.stacking_orientation == "vertical":
+                new_bw_v = calculate_stacked_beamwidth(base_bw_v, request.num_antennas, spacing_wl)
+                new_bw_h = base_bw_h
+            else:
+                new_bw_h = calculate_stacked_beamwidth(base_bw_h, request.num_antennas, spacing_wl)
+                new_bw_v = base_bw_v
+        
+        # Score: prioritize gain, bonus for ~1λ collinear spacing (especially vertical)
+        score = total_gain
+        if spacing_wl < 0.5:
+            score -= 3  # heavy penalty for too-close — mutual coupling detuning
+        elif spacing_wl > 2.0:
+            score -= 0.5  # mild penalty for diminishing returns
+        
+        # Bonus for ~1λ spacing — optimal collinear alignment for vertical stacking
+        if request.stacking_orientation == "vertical" or is_quad:
+            wl_distance = abs(spacing_wl - 1.0)
+            if wl_distance < 0.2:
+                score += 0.5  # strong bonus near 1λ
+            elif wl_distance < 0.4:
+                score += 0.2  # mild bonus near 1λ
+        
+        spacing_status = "Too close" if spacing_wl < 0.25 else ("Mutual coupling risk" if spacing_wl < 0.5 else ("Good" if spacing_wl < 0.8 else ("Optimal (≈1λ)" if spacing_wl < 1.2 else ("Good" if spacing_wl < 2.0 else "Wide"))))
+        
+        result_entry = {
+            "spacing_ft": spacing_ft,
+            "spacing_wl": round(spacing_wl, 3),
+            "stacked_gain_dbi": round(total_gain, 2),
+            "gain_increase": round(total_increase, 2),
+            "beamwidth_h": round(new_bw_h, 1),
+            "beamwidth_v": round(new_bw_v, 1),
+            "spacing_status": spacing_status,
+            "score": round(score, 2),
+        }
+        all_results.append(result_entry)
+        
+        if score > best_score:
+            best_score = score
+            best_spacing = spacing_ft
+            best_gain = round(total_gain, 2)
+            best_increase = round(total_increase, 2)
+            best_bw_h = round(new_bw_h, 1)
+            best_bw_v = round(new_bw_v, 1)
+            if is_quad:
+                best_h_spacing = spacing_ft
+    
+    return StackingOptimizeResult(
+        best_spacing_ft=best_spacing,
+        best_gain_dbi=best_gain,
+        best_gain_increase=best_increase,
+        best_beamwidth_h=best_bw_h,
+        best_beamwidth_v=best_bw_v,
+        best_h_spacing_ft=best_h_spacing,
+        all_results=all_results,
+    )
+
 
 
 class HeightOptimizeRequest(BaseModel):
@@ -2428,6 +2885,22 @@ async def register_user(user_data: UserCreate):
     await db.users.insert_one(user)
     token = create_token(user["id"], user["email"])
     
+    # Send welcome email
+    welcome_html = email_wrapper("Welcome!", f"""
+        <h2 style="color:#fff;">Welcome to SMA Antenna Calc, {user_data.name}!</h2>
+        <p style="color:#ccc;line-height:1.6;">Your account has been created. You have a <strong style="color:#FF9800;">free trial</strong> to explore the app.</p>
+        <p style="color:#ccc;line-height:1.6;">Features include:</p>
+        <ul style="color:#aaa;line-height:1.8;">
+            <li>Advanced Yagi antenna modeling</li>
+            <li>Gain, SWR, F/B ratio calculations</li>
+            <li>Stacking configurations (Line &amp; 2x2 Quad)</li>
+            <li>Wind load analysis</li>
+            <li>Height optimizer</li>
+        </ul>
+        <p style="color:#ccc;">Enjoy the app and 73!</p>
+    """)
+    await send_email(user["email"], "Welcome to SMA Antenna Calc!", welcome_html)
+    
     return {
         "token": token,
         "user": {
@@ -2470,6 +2943,111 @@ async def login_user(credentials: UserLogin):
             "status_message": status_msg
         }
     }
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(req: ForgotPasswordRequest):
+    """Send password reset email with a 1-hour token."""
+    user = await db.users.find_one({"email": req.email.lower()})
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "If that email exists, a reset link has been sent."}
+    
+    reset_token = str(uuid.uuid4())
+    await db.password_resets.insert_one({
+        "user_id": user["id"],
+        "email": user["email"],
+        "token": reset_token,
+        "created_at": datetime.utcnow(),
+        "expires_at": datetime.utcnow() + timedelta(hours=1),
+        "used": False,
+    })
+    
+    reset_html = email_wrapper("Password Reset", f"""
+        <h2 style="color:#fff;">Password Reset Requested</h2>
+        <p style="color:#ccc;line-height:1.6;">We received a request to reset your password. Use this code in the app:</p>
+        <div style="text-align:center;margin:20px 0;">
+            <div style="display:inline-block;background:#4CAF50;color:#000;font-size:24px;font-weight:bold;padding:15px 30px;border-radius:8px;letter-spacing:4px;">{reset_token[:8].upper()}</div>
+        </div>
+        <p style="color:#aaa;font-size:12px;">This code expires in 1 hour. If you didn't request this, ignore this email.</p>
+    """)
+    await send_email(user["email"], "SMA Antenna Calc - Password Reset", reset_html)
+    
+    return {"message": "If that email exists, a reset link has been sent."}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(req: ResetPasswordRequest):
+    """Reset password using a token from email."""
+    # Look up token (match first 8 chars uppercase)
+    resets = await db.password_resets.find({"used": False}).to_list(100)
+    reset_entry = None
+    for r in resets:
+        if r["token"][:8].upper() == req.token.strip().upper():
+            reset_entry = r
+            break
+    
+    if not reset_entry:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset code")
+    
+    if datetime.utcnow() > reset_entry["expires_at"]:
+        raise HTTPException(status_code=400, detail="Reset code has expired")
+    
+    # Update password
+    new_hash = hash_password(req.new_password)
+    await db.users.update_one({"id": reset_entry["user_id"]}, {"$set": {"password": new_hash}})
+    await db.password_resets.update_one({"_id": reset_entry["_id"]}, {"$set": {"used": True}})
+    
+    # Send confirmation email
+    confirm_html = email_wrapper("Password Changed", f"""
+        <h2 style="color:#fff;">Password Updated</h2>
+        <p style="color:#ccc;line-height:1.6;">Your password has been successfully changed. If you didn't do this, contact support immediately.</p>
+    """)
+    await send_email(reset_entry["email"], "SMA Antenna Calc - Password Changed", confirm_html)
+    
+    return {"message": "Password has been reset successfully"}
+
+@api_router.post("/auth/send-receipt")
+async def send_subscription_receipt(user: dict = Depends(require_user)):
+    """Send subscription receipt to user's email."""
+    tier = user.get("subscription_tier", "trial")
+    expires = user.get("subscription_expires")
+    expires_str = expires.strftime("%B %d, %Y") if expires else "N/A"
+    
+    receipt_html = email_wrapper("Subscription Receipt", f"""
+        <h2 style="color:#fff;">Subscription Confirmation</h2>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Account</td>
+                <td style="padding:10px;color:#fff;">{user['email']}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Plan</td>
+                <td style="padding:10px;color:#4CAF50;font-weight:bold;">{tier.upper()}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:10px;color:#888;">Valid Until</td>
+                <td style="padding:10px;color:#fff;">{expires_str}</td>
+            </tr>
+            <tr>
+                <td style="padding:10px;color:#888;">Status</td>
+                <td style="padding:10px;color:#4CAF50;">Active</td>
+            </tr>
+        </table>
+        <p style="color:#aaa;font-size:12px;">Thank you for supporting SMA Antenna Calc!</p>
+    """)
+    
+    sent = await send_email(user["email"], "SMA Antenna Calc - Subscription Receipt", receipt_html)
+    if sent:
+        return {"message": "Receipt sent to your email"}
+    raise HTTPException(status_code=500, detail="Failed to send receipt email")
+
+
 
 @api_router.get("/auth/me")
 async def get_current_user_info(user: dict = Depends(require_user)):
@@ -3327,7 +3905,620 @@ async def get_user_emails(admin: dict = Depends(require_admin)):
     return {"users": users}
 
 
+
+# --- Changelog API ---
+@api_router.get("/changelog")
+async def get_changelog():
+    changes = await db.changelog.find({}, {"_id": 0}).sort("order", 1).to_list(1000)
+    return {"changes": changes}
+
+@api_router.delete("/admin/changelog/{change_id}")
+async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_admin)):
+    result = await db.changelog.delete_one({"id": change_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"message": "Deleted"}
+
+
+@api_router.get("/download/store-site")
+async def download_store_site():
+    return FileResponse("/app/backend/sma-store-site.zip", filename="sma-store-site.zip", media_type="application/zip")
+
+@api_router.get("/download/feature-graphic")
+async def download_feature_graphic():
+    return FileResponse("/app/backend/feature-graphic-1024x500.png", filename="feature-graphic-1024x500.png", media_type="image/png")
+
+@api_router.get("/download/screenshot/{num}")
+async def download_screenshot(num: int):
+    return FileResponse(f"/app/backend/screenshot_{num}.png", filename=f"screenshot_{num}.png", media_type="image/png")
+
+@api_router.get("/download/app-icon")
+async def download_app_icon():
+    return FileResponse("/app/backend/app-icon-512.png", filename="app-icon-512.png", media_type="image/png")
+
+@api_router.get("/download/feature-graphic-jpg")
+async def download_feature_graphic_jpg():
+    return FileResponse("/app/backend/feature-graphic.jpg", filename="feature-graphic.jpg", media_type="image/jpeg")
+
+
+
+
+
+
+# ============================================================
+# STORE API ENDPOINTS
+# ============================================================
+import uuid
+
+import motor.motor_asyncio as motor_async
+_store_client = motor_async.AsyncIOMotorClient(os.environ.get("STORE_MONGO_URL"))
+store_db = _store_client["sma_store"]
+
+@api_router.post("/store/register")
+async def store_register(data: dict):
+    email = data.get("email", "").strip().lower()
+    name = data.get("name", "").strip()
+    password = data.get("password", "")
+    if not email or not name or not password:
+        raise HTTPException(status_code=400, detail="All fields required")
+    if await store_db.store_members.find_one({"email": email}):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    member_id = str(uuid.uuid4())
+    member = {
+        "id": member_id, "name": name, "email": email,
+        "password_hash": hash_password(password),
+        "is_admin": email == "fallstommy@gmail.com",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.store_members.insert_one(member)
+    token = create_token(member_id, email)
+    return {"token": token, "user": {"id": member_id, "name": name, "email": email, "is_admin": member.get("is_admin", False)}}
+
+@api_router.post("/store/login")
+async def store_login(data: dict):
+    email = data.get("email", "").strip().lower()
+    password = data.get("password", "")
+    member = await store_db.store_members.find_one({"email": email}, {"_id": 0})
+    if not member or not verify_password(password, member["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_token(member["id"], email)
+    return {"token": token, "user": {"id": member["id"], "name": member["name"], "email": email, "is_admin": member.get("is_admin", False)}}
+
+@api_router.get("/store/me")
+async def store_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Not found")
+    return member
+
+@api_router.get("/store/products")
+async def store_products():
+    products = await store_db.store_products.find({}, {"_id": 0}).to_list(100)
+    return products
+
+@api_router.get("/store/products/{product_id}")
+async def store_product(product_id: str):
+    product = await store_db.store_products.find_one({"id": product_id}, {"_id": 0})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+async def require_store_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not member or not member.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin required")
+    return member
+
+@api_router.post("/store/admin/products")
+async def store_create_product(data: dict, admin: dict = Depends(require_store_admin)):
+    product = {
+        "id": str(uuid.uuid4()), "name": data.get("name", ""), "price": data.get("price", 0),
+        "short_desc": data.get("short_desc", ""), "description": data.get("description", ""),
+        "image_url": data.get("image_url", ""), "gallery": data.get("gallery", []),
+        "in_stock": data.get("in_stock", True),
+        "specs": data.get("specs", []), "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.store_products.insert_one(product)
+    return {k: v for k, v in product.items() if k != "_id"}
+
+@api_router.put("/store/admin/products/{product_id}")
+async def store_update_product(product_id: str, data: dict, admin: dict = Depends(require_store_admin)):
+    update = {k: v for k, v in data.items() if k not in ["id", "_id"]}
+    result = await store_db.store_products.update_one({"id": product_id}, {"$set": update})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"status": "ok"}
+
+@api_router.delete("/store/admin/products/{product_id}")
+async def store_delete_product(product_id: str, admin: dict = Depends(require_store_admin)):
+    result = await store_db.store_products.delete_one({"id": product_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return {"status": "ok"}
+
+@api_router.get("/store/admin/members")
+async def store_list_members(admin: dict = Depends(require_store_admin)):
+    members = await store_db.store_members.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
+    return members
+
+@api_router.delete("/store/admin/members/{member_id}")
+async def store_admin_delete_member(member_id: str, admin: dict = Depends(require_store_admin)):
+    member = await store_db.store_members.find_one({"id": member_id}, {"_id": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    if member.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Cannot delete admin account")
+    await store_db.store_members.delete_one({"id": member_id})
+    return {"status": "ok", "message": f"Member {member['email']} deleted"}
+
+@api_router.delete("/store/account")
+async def store_delete_own_account(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not member:
+        raise HTTPException(status_code=404, detail="Account not found")
+    if member.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin accounts cannot be self-deleted")
+    await store_db.store_members.delete_one({"id": payload["user_id"]})
+    return {"status": "ok", "message": "Account deleted"}
+
+# APK Version Check - compares GitHub releases with stored version
+import httpx
+
+GITHUB_REPO = "tommyfalls2011/sma2026-1"
+
+@api_router.get("/store/latest-apk")
+async def get_latest_apk():
+    """Check GitHub for latest APK release and compare with stored version."""
+    stored = await store_db.store_settings.find_one({"key": "apk_version"}, {"_id": 0})
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest")
+            if resp.status_code != 200:
+                if stored:
+                    return stored.get("value", {})
+                return {"error": "No release found"}
+            gh = resp.json()
+            tag = gh.get("tag_name", "")
+            assets = gh.get("assets", [])
+            apk_asset = next((a for a in assets if a["name"].endswith(".apk")), None)
+            if not apk_asset:
+                if stored:
+                    return stored.get("value", {})
+                return {"error": "No APK in latest release"}
+            github_info = {
+                "version": tag,
+                "download_url": apk_asset["browser_download_url"],
+                "filename": apk_asset["name"],
+                "size_mb": round(apk_asset["size"] / (1024 * 1024), 1),
+                "published_at": gh.get("published_at", ""),
+                "release_name": gh.get("name", tag),
+            }
+            stored_version = stored.get("value", {}).get("version") if stored else None
+            if stored_version != tag:
+                await store_db.store_settings.update_one(
+                    {"key": "apk_version"},
+                    {"$set": {"key": "apk_version", "value": github_info}},
+                    upsert=True
+                )
+                github_info["updated"] = True
+            return github_info
+    except Exception:
+        if stored:
+            return stored.get("value", {})
+        return {"error": "Could not check GitHub"}
+
+# ============================================================
+# STRIPE CHECKOUT ENDPOINTS
+# ============================================================
+import stripe
+from fastapi import Request
+
+NC_TAX_RATE = 0.075
+SHIPPING_STANDARD = 15.00
+SHIPPING_RATES = {"standard": 15.00, "priority": 25.00, "express": 45.00}
+
+@api_router.post("/store/checkout")
+async def store_checkout(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = payload["user_id"]
+    user_email = payload.get("email", "")
+
+    cart_items = data.get("items", [])
+    origin_url = data.get("origin_url", "")
+    if not cart_items or not origin_url:
+        raise HTTPException(status_code=400, detail="Cart items and origin_url required")
+
+    # Look up actual prices from DB (never trust frontend prices)
+    subtotal = 0.0
+    order_items = []
+    for ci in cart_items:
+        product = await store_db.store_products.find_one({"id": ci["id"]}, {"_id": 0})
+        if not product:
+            raise HTTPException(status_code=400, detail=f"Product {ci['id']} not found")
+        if not product.get("in_stock"):
+            raise HTTPException(status_code=400, detail=f"{product['name']} is sold out")
+        qty = max(1, int(ci.get("qty", 1)))
+        item_total = float(product["price"]) * qty
+        subtotal += item_total
+        order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
+
+    tax = round(subtotal * NC_TAX_RATE, 2)
+    shipping_method = data.get("shipping", "standard")
+    if shipping_method not in SHIPPING_RATES:
+        shipping_method = "standard"
+    shipping = SHIPPING_RATES[shipping_method]
+    grand_total = round(subtotal + tax + shipping, 2)
+
+    # Create Stripe checkout session using official SDK
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    stripe.api_key = stripe_key
+
+    success_url = f"{origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin_url}/cart"
+
+    order_id = str(uuid.uuid4())
+    
+    # Build line items for Stripe
+    line_items = []
+    for item in order_items:
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": item["name"]},
+                "unit_amount": int(item["price"] * 100),  # Stripe uses cents
+            },
+            "quantity": item["qty"],
+        })
+    # Add tax as line item
+    if tax > 0:
+        line_items.append({
+            "price_data": {
+                "currency": "usd",
+                "product_data": {"name": "NC Sales Tax (7.5%)"},
+                "unit_amount": int(tax * 100),
+            },
+            "quantity": 1,
+        })
+    # Add shipping as line item
+    line_items.append({
+        "price_data": {
+            "currency": "usd",
+            "product_data": {"name": f"Shipping ({shipping_method.title()})"},
+            "unit_amount": int(shipping * 100),
+        },
+        "quantity": 1,
+    })
+
+    session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=line_items,
+        mode="payment",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        customer_email=user_email,
+        metadata={"order_id": order_id, "user_id": user_id, "email": user_email}
+    )
+
+    # Store payment transaction
+    transaction = {
+        "id": order_id,
+        "session_id": session.id,
+        "user_id": user_id,
+        "email": user_email,
+        "items": order_items,
+        "subtotal": subtotal,
+        "tax": tax,
+        "shipping": shipping,
+        "shipping_method": shipping_method,
+        "total": grand_total,
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.payment_transactions.insert_one(transaction)
+
+    return {"url": session.url, "session_id": session.id, "order_id": order_id}
+
+@api_router.get("/store/checkout/status/{session_id}")
+async def store_checkout_status(session_id: str, request: Request):
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    stripe.api_key = stripe_key
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Map Stripe status to our status
+    payment_status = session.payment_status  # "paid", "unpaid", "no_payment_required"
+    status = "complete" if payment_status == "paid" else "pending"
+
+    # Update transaction in DB (only once per status change)
+    txn = await store_db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if txn and txn.get("payment_status") != payment_status:
+        await store_db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"payment_status": payment_status, "status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+
+    return {
+        "status": status,
+        "payment_status": payment_status,
+        "amount_total": session.amount_total / 100 if session.amount_total else 0,
+        "currency": session.currency,
+        "order_id": txn["id"] if txn else None
+    }
+
+@app.post("/api/webhook/stripe")
+async def stripe_webhook(request: Request):
+    body = await request.body()
+    sig = request.headers.get("Stripe-Signature", "")
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+    stripe.api_key = stripe_key
+    
+    try:
+        if webhook_secret:
+            event = stripe.Webhook.construct_event(body, sig, webhook_secret)
+        else:
+            # Without webhook secret, just parse the JSON
+            import json
+            event = json.loads(body)
+        
+        # Handle checkout.session.completed event
+        event_type = event.get("type") if isinstance(event, dict) else event.type
+        if event_type == "checkout.session.completed":
+            session_data = event.get("data", {}).get("object", {}) if isinstance(event, dict) else event.data.object
+            session_id = session_data.get("id") if isinstance(session_data, dict) else session_data.id
+            payment_status = session_data.get("payment_status") if isinstance(session_data, dict) else session_data.payment_status
+            
+            if payment_status == "paid" and session_id:
+                await store_db.payment_transactions.update_one(
+                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
+                    {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}}
+                )
+        return {"status": "ok"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+@api_router.get("/store/orders")
+async def store_user_orders(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    orders = await store_db.payment_transactions.find(
+        {"user_id": payload["user_id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return orders
+
+@api_router.get("/store/admin/orders")
+async def store_admin_orders(admin: dict = Depends(require_store_admin)):
+    orders = await store_db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return orders
+
+@api_router.put("/store/admin/orders/{order_id}/status")
+async def store_admin_update_order_status(order_id: str, data: dict, admin: dict = Depends(require_store_admin)):
+    new_status = data.get("status")
+    if new_status not in ["initiated", "processing", "shipped", "delivered", "cancelled"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    result = await store_db.payment_transactions.update_one(
+        {"id": order_id},
+        {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found")
+    return {"status": "ok"}
+
+@api_router.post("/store/checkout/manual")
+async def store_checkout_manual(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = payload["user_id"]
+    user_email = payload.get("email", "")
+
+    cart_items = data.get("items", [])
+    payment_method = data.get("payment_method", "")
+    if payment_method not in ("paypal", "cashapp"):
+        raise HTTPException(status_code=400, detail="Invalid payment method")
+    if not cart_items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    subtotal = 0.0
+    order_items = []
+    for ci in cart_items:
+        product = await store_db.store_products.find_one({"id": ci["id"]}, {"_id": 0})
+        if not product:
+            raise HTTPException(status_code=400, detail=f"Product {ci['id']} not found")
+        if not product.get("in_stock"):
+            raise HTTPException(status_code=400, detail=f"{product['name']} is sold out")
+        qty = max(1, int(ci.get("qty", 1)))
+        item_total = float(product["price"]) * qty
+        subtotal += item_total
+        order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
+
+    tax = round(subtotal * NC_TAX_RATE, 2)
+    shipping_method = data.get("shipping", "standard")
+    if shipping_method not in SHIPPING_RATES:
+        shipping_method = "standard"
+    shipping = SHIPPING_RATES[shipping_method]
+    grand_total = round(subtotal + tax + shipping, 2)
+
+    order_id = str(uuid.uuid4())
+    transaction = {
+        "id": order_id,
+        "user_id": user_id,
+        "email": user_email,
+        "items": order_items,
+        "subtotal": subtotal,
+        "tax": tax,
+        "shipping": shipping,
+        "shipping_method": shipping_method,
+        "total": grand_total,
+        "payment_method": payment_method,
+        "payment_status": "awaiting_payment",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await store_db.payment_transactions.insert_one(transaction)
+
+    payment_info = {}
+    if payment_method == "paypal":
+        payment_info = {"email": PAYMENT_CONFIG["paypal"]["email"]}
+    elif payment_method == "cashapp":
+        payment_info = {"tag": PAYMENT_CONFIG["cashapp"]["tag"]}
+
+    # Send email notification to admin about new manual order
+    admin_email = os.environ.get("ADMIN_EMAIL", "")
+    if admin_email:
+        method_label = "PayPal" if payment_method == "paypal" else "CashApp"
+        items_html = "".join(
+            f'<tr><td style="padding:8px;border-bottom:1px solid #333;color:#ccc;">{item["name"]} x{item["qty"]}</td>'
+            f'<td style="padding:8px;border-bottom:1px solid #333;color:#ccc;text-align:right;">${(item["price"]*item["qty"]):.2f}</td></tr>'
+            for item in order_items
+        )
+        order_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1a1a1a;color:#e0e0e0;padding:30px;border-radius:12px;">
+            <h1 style="color:#f5a623;margin:0 0 20px;">New {method_label} Order!</h1>
+            <p style="color:#aaa;">A customer placed an order and needs to send payment via <strong style="color:#f5a623;">{method_label}</strong>.</p>
+            <div style="background:#252525;border-radius:8px;padding:20px;margin:20px 0;">
+                <p style="margin:0 0 8px;color:#888;">Order ID</p>
+                <p style="margin:0 0 16px;font-family:monospace;color:#fff;">{order_id[:8]}</p>
+                <p style="margin:0 0 8px;color:#888;">Customer</p>
+                <p style="margin:0 0 16px;color:#fff;">{user_email}</p>
+                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
+                    {items_html}
+                </table>
+                <p style="margin:10px 0 4px;color:#888;font-size:13px;">Tax: ${tax:.2f} | Shipping: ${shipping:.2f} ({shipping_method})</p>
+                <p style="margin:10px 0 0;color:#f5a623;font-size:24px;font-weight:bold;">Total: ${grand_total:.2f}</p>
+            </div>
+            <p style="color:#aaa;">Once you receive the {method_label} payment, log into your <a href="https://sma-antenna.org/admin" style="color:#f5a623;">admin dashboard</a> and click <strong>Confirm Payment</strong> on this order.</p>
+            <div style="border-top:1px solid #333;margin-top:30px;padding-top:15px;text-align:center;font-size:12px;color:#666;">Swing Master Amps</div>
+        </div>
+        """
+        asyncio.create_task(send_email(admin_email, f"New {method_label} Order - ${grand_total:.2f}", order_html))
+
+    return {
+        "order_id": order_id,
+        "total": grand_total,
+        "payment_method": payment_method,
+        "payment_info": payment_info
+    }
+
+@api_router.put("/store/admin/orders/{order_id}/confirm-payment")
+async def store_admin_confirm_payment(order_id: str, admin: dict = Depends(require_store_admin)):
+    result = await store_db.payment_transactions.update_one(
+        {"id": order_id, "payment_status": {"$in": ["awaiting_payment", "pending"]}},
+        {"$set": {"payment_status": "paid", "status": "processing", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Order not found or already paid")
+    return {"status": "ok"}
+
+@api_router.get("/store/checkout/manual/{order_id}")
+async def store_manual_order_status(order_id: str):
+    txn = await store_db.payment_transactions.find_one({"id": order_id}, {"_id": 0})
+    if not txn:
+        raise HTTPException(status_code=404, detail="Order not found")
+    payment_info = {}
+    pm = txn.get("payment_method", "")
+    if pm == "paypal":
+        payment_info = {"email": PAYMENT_CONFIG["paypal"]["email"]}
+    elif pm == "cashapp":
+        payment_info = {"tag": PAYMENT_CONFIG["cashapp"]["tag"]}
+    return {
+        "order_id": txn["id"],
+        "total": txn["total"],
+        "payment_method": pm,
+        "payment_status": txn["payment_status"],
+        "payment_info": payment_info,
+        "items": txn.get("items", []),
+        "tax": txn.get("tax", 0),
+        "shipping": txn.get("shipping", 0),
+        "shipping_method": txn.get("shipping_method", "standard")
+    }
+
+
+
+# Seed default products on startup
+async def seed_store_products():
+    count = await store_db.store_products.count_documents({})
+    if count == 0:
+        defaults = [
+            {"id": str(uuid.uuid4()), "name": "2-Pill Amplifier", "price": 450, "short_desc": "Compact 2-transistor amp for everyday use", "description": "Our entry-level 2-pill amplifier delivers solid power in a compact package. Perfect for operators who want reliable amplification without breaking the bank. Hand-built and tested in North Carolina.", "image_url": "https://images.unsplash.com/photo-1673023239309-ae54f5ef3b04?w=600", "in_stock": True, "specs": ["2 transistor pills", "Hand-built in NC", "Compact design", "Tested before shipping"], "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "name": "4-Pill Amplifier", "price": 650, "short_desc": "Mid-range 4-transistor powerhouse", "description": "The 4-pill is our most popular model. More power, more headroom. Built with quality components for operators who demand performance on the airwaves.", "image_url": "https://images.unsplash.com/photo-1672689933227-2ce1249c46a9?w=600", "in_stock": True, "specs": ["4 transistor pills", "Increased power output", "Quality components", "Hand-tested", "Heavy-duty build"], "created_at": datetime.now(timezone.utc).isoformat()},
+            {"id": str(uuid.uuid4()), "name": "6-Pill Amplifier", "price": 1050, "short_desc": "Premium 6-transistor beast for maximum power", "description": "Our flagship 6-pill amplifier is the ultimate in HF amplification. Maximum power, maximum range. Built for serious operators who accept nothing less than the best.", "image_url": "https://images.unsplash.com/photo-1727036195443-d2ba0ad73311?w=600", "in_stock": True, "specs": ["6 transistor pills", "Maximum power output", "Premium components", "Professional grade", "Hand-built and tested", "Heavy-duty enclosure"], "created_at": datetime.now(timezone.utc).isoformat()},
+        ]
+        await store_db.store_products.insert_many(defaults)
+
+
+
+
+# Image Upload endpoint
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+@api_router.post("/store/admin/upload")
+async def store_upload_image(file: UploadFile = File(...), admin: dict = Depends(require_store_admin)):
+    ext = Path(file.filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail=f"File type {ext} not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}")
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail="File too large. Max 10 MB.")
+    filename = f"{uuid.uuid4().hex}{ext}"
+    filepath = UPLOAD_DIR / filename
+    with open(filepath, "wb") as f:
+        f.write(contents)
+    return {"url": f"/api/uploads/{filename}", "filename": filename}
+
+
+# Download website build endpoint
+@api_router.get("/download-build")
+async def download_build():
+    """Download the latest website build zip"""
+    zip_path = UPLOAD_DIR / "sma-website-build.zip"
+    if not zip_path.exists():
+        raise HTTPException(status_code=404, detail="Build not found")
+    return FileResponse(
+        path=str(zip_path),
+        filename="sma-website-build.zip",
+        media_type="application/zip"
+    )
+
+
 app.include_router(api_router)
+
+# Mount uploads directory for serving uploaded images
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -3348,3 +4539,4 @@ async def shutdown_db_client():
 @app.on_event("startup")
 async def startup_load_settings():
     await load_settings_from_db()
+    await seed_store_products()

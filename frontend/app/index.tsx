@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions, Switch, Alert, Modal, FlatList, AppState } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions, Switch, Alert, Modal, FlatList, AppState, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G, Ellipse } from 'react-native-svg';
@@ -8,9 +8,14 @@ import { useAuth } from './context/AuthContext';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import appJson from '../app.json';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
+const APP_VERSION = appJson.expo.version;
+const APP_BUILD_DATE = '2026-02-10T12:00:00';
+const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
 const TIER_COLORS: Record<string, string> = {
   trial: '#888',
@@ -21,23 +26,24 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const BANDS = [
-  { id: '11m_cb', name: '11m CB Band', center: 27.185 },
-  { id: '10m', name: '10m Ham', center: 28.5 },
-  { id: '12m', name: '12m Ham', center: 24.94 },
-  { id: '15m', name: '15m Ham', center: 21.225 },
-  { id: '17m', name: '17m Ham', center: 18.118 },
-  { id: '20m', name: '20m Ham', center: 14.175 },
-  { id: '6m', name: '6m Ham', center: 51.0 },
-  { id: '2m', name: '2m Ham', center: 146.0 },
+  { id: '17m', name: '17m (18.1 MHz)', center: 18.118 },
+  { id: '15m', name: '15m (21.2 MHz)', center: 21.225 },
+  { id: '12m', name: '12m (24.9 MHz)', center: 24.94 },
+  { id: '11m_cb', name: '11m CB (27.1 MHz)', center: 27.185 },
+  { id: '10m', name: '10m (28.5 MHz)', center: 28.5 },
+  { id: '6m', name: '6m (51 MHz)', center: 51.0 },
+  { id: '2m', name: '2m (146 MHz)', center: 146.0 },
+  { id: '1.25m', name: '1.25m (223 MHz)', center: 223.5 },
+  { id: '70cm', name: '70cm (435 MHz)', center: 435.0 },
 ];
 
 interface ElementDimension { element_type: 'reflector' | 'driven' | 'director'; length: string; diameter: string; position: string; }
 interface TaperSection { length: string; start_diameter: string; end_diameter: string; }
 interface TaperConfig { enabled: boolean; num_tapers: number; center_length: string; sections: TaperSection[]; }
 interface CoronaBallConfig { enabled: boolean; diameter: string; }
-interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; }
+interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; layout: 'line' | 'quad'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; h_spacing: string; h_spacing_unit: 'ft' | 'inches'; }
 interface AntennaInput { num_elements: number; elements: ElementDimension[]; height_from_ground: string; height_unit: 'ft' | 'inches'; boom_diameter: string; boom_unit: 'mm' | 'inches'; band: string; frequency_mhz: string; stacking: StackingConfig; taper: TaperConfig; corona_balls: CoronaBallConfig; use_reflector: boolean; }
-interface AntennaOutput { swr: number; swr_description: string; fb_ratio: number; fs_ratio: number; beamwidth_h: number; beamwidth_v: number; bandwidth: number; gain_dbi: number; gain_description: string; base_gain_dbi?: number; gain_breakdown?: { element_gain: number; reflector_adj: number; taper_bonus: number; corona_adj: number; height_bonus: number; boom_bonus: number; ground_radials_bonus?: number; final_gain: number; ground_type?: string; ground_scale?: number }; multiplication_factor: number; antenna_efficiency: number; far_field_pattern: any[]; swr_curve: any[]; usable_bandwidth_1_5: number; usable_bandwidth_2_0: number; center_frequency: number; band_info: any; stacking_enabled: boolean; stacking_info?: any; stacked_gain_dbi?: number; stacked_pattern?: any[]; taper_info?: any; corona_info?: any; reflection_coefficient?: number; return_loss_db?: number; mismatch_loss_db?: number; reflected_power_100w?: number; reflected_power_1kw?: number; forward_power_100w?: number; forward_power_1kw?: number; impedance_high?: number; impedance_low?: number; takeoff_angle?: number; takeoff_angle_description?: string; height_performance?: string; ground_radials_info?: any; noise_level?: string; noise_description?: string; feed_type?: string; matching_info?: any; dual_polarity_info?: any; }
+interface AntennaOutput { swr: number; swr_description: string; fb_ratio: number; fs_ratio: number; beamwidth_h: number; beamwidth_v: number; bandwidth: number; gain_dbi: number; gain_description: string; base_gain_dbi?: number; gain_breakdown?: { element_gain: number; reflector_adj: number; taper_bonus: number; corona_adj: number; height_bonus: number; boom_bonus: number; boom_grounded_adj?: number; ground_radials_bonus?: number; final_gain: number; ground_type?: string; ground_scale?: number }; multiplication_factor: number; antenna_efficiency: number; far_field_pattern: any[]; swr_curve: any[]; usable_bandwidth_1_5: number; usable_bandwidth_2_0: number; center_frequency: number; band_info: any; stacking_enabled: boolean; stacking_info?: any; stacked_gain_dbi?: number; stacked_pattern?: any[]; taper_info?: any; corona_info?: any; reflection_coefficient?: number; return_loss_db?: number; mismatch_loss_db?: number; reflected_power_100w?: number; reflected_power_1kw?: number; forward_power_100w?: number; forward_power_1kw?: number; impedance_high?: number; impedance_low?: number; takeoff_angle?: number; takeoff_angle_description?: string; height_performance?: string; ground_radials_info?: any; noise_level?: string; noise_description?: string; feed_type?: string; matching_info?: any; dual_polarity_info?: any; boom_correction_info?: any; }
 interface HeightOptResult { optimal_height: number; optimal_swr: number; optimal_gain: number; optimal_fb_ratio: number; heights_tested: { height: number; swr: number; gain: number; fb_ratio: number }[]; }
 
 const ResultCard = ({ title, value, description, icon, color }: any) => (
@@ -323,7 +329,10 @@ export default function AntennaCalculator() {
     use_reflector: true,
     antenna_orientation: 'horizontal',  // horizontal (flat), vertical, angle45, or dual
     dual_active: false,  // When dual: both H+V beams transmit simultaneously
+    dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',  // Which beam is selected in dual mode
     feed_type: 'gamma',  // direct, gamma, hairpin
+    boom_grounded: true,  // legacy compat
+    boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',  // bonded, insulated, nonconductive
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
@@ -395,6 +404,85 @@ export default function AntennaCalculator() {
   const [showSpecSheet, setShowSpecSheet] = useState(false);
   const [designerInfoContent, setDesignerInfoContent] = useState('');
   const [gainMode, setGainMode] = useState<'realworld' | 'freespace'>('realworld');
+  const [optimizingStacking, setOptimizingStacking] = useState(false);
+
+  // Update checker state
+  const [updateAvailable, setUpdateAvailable] = useState<{version: string; apkUrl: string; notes: string; forceUpdate: boolean; buildDate?: string} | null>(null);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
+  const [updateDebug, setUpdateDebug] = useState('');
+
+  // Check for updates on launch — tries own backend first, falls back to Gist
+  useEffect(() => {
+    const compareVersions = (local: string, remote: string): boolean => {
+      // Returns true if remote > local (e.g. "3.3.0" > "3.2.5")
+      const lParts = local.split('.').map(Number);
+      const rParts = remote.split('.').map(Number);
+      for (let i = 0; i < 3; i++) {
+        const l = lParts[i] || 0;
+        const r = rParts[i] || 0;
+        if (r > l) return true;
+        if (r < l) return false;
+      }
+      return false; // equal
+    };
+
+    const checkForUpdates = async () => {
+      let debugLog = '';
+      const logD = (msg: string) => { debugLog += msg + '\n'; };
+      
+      logD(`Installed: v${APP_VERSION}`);
+      
+      // Source 1: Own backend (no CDN caching)
+      let data: any = null;
+      try {
+        logD(`Trying backend: ${BACKEND_URL}/api/app-update`);
+        const res = await fetch(`${BACKEND_URL}/api/app-update?t=${Date.now()}`);
+        logD(`Backend response: ${res.status}`);
+        if (res.ok) {
+          data = await res.json();
+          logD(`Backend: v${data.version}`);
+        }
+      } catch (e: any) {
+        logD(`Backend failed: ${e.message}`);
+      }
+      
+      // Source 2: Gist fallback
+      if (!data || !data.version) {
+        try {
+          logD(`Trying Gist...`);
+          const res = await fetch(UPDATE_CHECK_URL + '?t=' + Date.now());
+          logD(`Gist response: ${res.status}`);
+          if (res.ok) {
+            data = await res.json();
+            logD(`Gist: v${data.version}`);
+          }
+        } catch (e: any) {
+          logD(`Gist failed: ${e.message}`);
+        }
+      }
+      
+      if (data && data.version && data.apkUrl) {
+        const isNewer = compareVersions(APP_VERSION, data.version);
+        logD(`Compare: v${APP_VERSION} vs v${data.version} → ${isNewer ? 'UPDATE AVAILABLE' : 'up to date'}`);
+        
+        if (isNewer) {
+          logD('Showing update banner');
+          setUpdateAvailable({
+            version: data.version,
+            apkUrl: data.apkUrl,
+            notes: data.releaseNotes || '',
+            forceUpdate: data.forceUpdate || false,
+            buildDate: data.buildDate,
+          });
+        }
+      } else {
+        logD('No valid update data from either source');
+      }
+      
+      setUpdateDebug(debugLog);
+    };
+    checkForUpdates();
+  }, []);
 
   // Load tutorial content and preference, then show if user is logged in
   useEffect(() => {
@@ -471,12 +559,14 @@ export default function AntennaCalculator() {
       height_from_ground: '54', height_unit: 'ft',
       boom_diameter: '1.5', boom_unit: 'inches',
       band: currentBand, frequency_mhz: currentFreq,
-      stacking: { enabled: false, orientation: 'vertical', num_antennas: 2, spacing: '20', spacing_unit: 'ft' },
+      stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
       taper: { enabled: false, num_tapers: 2, center_length: '36', sections: [{ length: '36', start_diameter: '0.625', end_diameter: '0.5' }, { length: '36', start_diameter: '0.5', end_diameter: '0.375' }] },
       corona_balls: { enabled: false, diameter: '1.0' },
       ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
       use_reflector: true,
       antenna_orientation: 'horizontal',
+      dual_active: false,
+      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
     }));
     
     // Clear results
@@ -546,15 +636,16 @@ export default function AntennaCalculator() {
           num_elements: inputs.num_elements,
           elements: elementsForApi,
           height_from_ground: parseFloat(inputs.height_from_ground) || 0, height_unit: inputs.height_unit,
-          boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit,
+          boom_diameter: parseFloat(inputs.boom_diameter) || 0, boom_unit: inputs.boom_unit, boom_grounded: inputs.boom_mount === 'bonded', boom_mount: inputs.boom_mount,
           band: inputs.band, frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
-          stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0 } : null,
+          stacking: inputs.stacking.enabled ? { ...inputs.stacking, spacing: parseFloat(inputs.stacking.spacing) || 0, h_spacing: inputs.stacking.layout === 'quad' ? (parseFloat(inputs.stacking.h_spacing) || 0) : null } : null,
           taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
           corona_balls: inputs.corona_balls.enabled ? { ...inputs.corona_balls, diameter: parseFloat(inputs.corona_balls.diameter) || 1.0 } : null,
           ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
           antenna_orientation: inputs.antenna_orientation,
           feed_type: inputs.feed_type,
           dual_active: inputs.dual_active,
+          dual_selected_beam: inputs.antenna_orientation === 'dual' ? inputs.dual_selected_beam : undefined,
         }),
       });
       if (response.ok) setResults(await response.json());
@@ -569,6 +660,61 @@ export default function AntennaCalculator() {
   }, [inputs]);
 
   useEffect(() => { calculateAntenna(); }, []);
+
+  // Auto-recalculate on any input change (debounced)
+  const autoCalcTimer = useRef<any>(null);
+  useEffect(() => {
+    if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current);
+    autoCalcTimer.current = setTimeout(() => calculateAntenna(), 300);
+    return () => { if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current); };
+  }, [JSON.stringify(inputs)]);
+
+  const optimizeStacking = async () => {
+    setOptimizingStacking(true);
+    try {
+      const elementsForApi = elementUnit === 'meters' 
+        ? inputs.elements.map(e => ({ element_type: e.element_type, length: parseFloat(e.length) * 39.3701, diameter: parseFloat(e.diameter) * 39.3701, position: parseFloat(e.position) * 39.3701 }))
+        : inputs.elements.map(e => ({ element_type: e.element_type, length: parseFloat(e.length) || 0, diameter: parseFloat(e.diameter) || 0, position: parseFloat(e.position) || 0 }));
+      const response = await fetch(`${BACKEND_URL}/api/optimize-stacking`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          num_elements: inputs.num_elements,
+          elements: elementsForApi,
+          height_from_ground: parseFloat(inputs.height_from_ground) || 0,
+          height_unit: inputs.height_unit,
+          boom_diameter: parseFloat(inputs.boom_diameter) || 0,
+          boom_unit: inputs.boom_unit,
+          band: inputs.band,
+          frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+          antenna_orientation: inputs.antenna_orientation,
+          dual_active: inputs.dual_active,
+          dual_selected_beam: inputs.dual_selected_beam,
+          feed_type: inputs.feed_type,
+          stacking_orientation: inputs.stacking.orientation,
+          stacking_layout: inputs.stacking.layout,
+          num_antennas: inputs.stacking.layout === 'quad' ? 4 : inputs.stacking.num_antennas,
+          min_spacing_ft: 15,
+          max_spacing_ft: 40,
+          taper: inputs.taper.enabled ? { ...inputs.taper, sections: inputs.taper.sections.map(s => ({ length: parseFloat(s.length) || 0, start_diameter: parseFloat(s.start_diameter) || 0, end_diameter: parseFloat(s.end_diameter) || 0 })) } : null,
+          corona_balls: inputs.corona_balls.enabled ? { ...inputs.corona_balls, diameter: parseFloat(inputs.corona_balls.diameter) || 1.0 } : null,
+          ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setInputs(p => ({
+          ...p,
+          stacking: {
+            ...p.stacking,
+            spacing: data.best_spacing_ft.toString(),
+            spacing_unit: 'ft',
+            ...(p.stacking.layout === 'quad' ? { h_spacing: (data.best_h_spacing_ft || data.best_spacing_ft).toString(), h_spacing_unit: 'ft' } : {}),
+          }
+        }));
+      }
+    } catch (err) { console.error(err); }
+    setOptimizingStacking(false);
+  };
 
   const autoTune = async () => {
     setTuning(true);
@@ -964,6 +1110,9 @@ export default function AntennaCalculator() {
       csv += `    Corona Adjustment:, ${results.gain_breakdown.corona_adj || 0} dB\n`;
       csv += `    Height/Ground Bonus:, +${results.gain_breakdown.height_bonus || 0} dB\n`;
       csv += `    Boom Length Bonus:, +${results.gain_breakdown.boom_bonus || 0} dB\n`;
+      if (results.gain_breakdown.boom_grounded_adj) {
+        csv += `    Boom Grounded Adj:, ${results.gain_breakdown.boom_grounded_adj} dB\n`;
+      }
       if (results.gain_breakdown.ground_type) {
         csv += `    Ground Type:, ${results.gain_breakdown.ground_type} (scale: ${results.gain_breakdown.ground_scale || '-'})\n`;
       }
@@ -1014,11 +1163,26 @@ export default function AntennaCalculator() {
     // --- STACKING ---
     if (results.stacking_enabled && results.stacking_info) {
         csv += 'STACKING CONFIGURATION\n';
+        csv += `  Layout:, ${results.stacking_info.layout === 'quad' ? '2x2 Quad (H-Frame)' : `${results.stacking_info.num_antennas}x Line (${results.stacking_info.orientation})`}\n`;
         csv += `  Antennas Stacked:, ${results.stacking_info.num_antennas}\n`;
       csv += `  Spacing:, ${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}λ)\n`;
+      if (results.stacking_info.quad_notes) {
+        csv += `  H Spacing:, ${results.stacking_info.quad_notes.h_spacing}\n`;
+      }
       csv += `  Stacking Gain Increase:, +${results.stacking_info.gain_increase_db} dB\n`;
       csv += `  Stacked Gain:, ${results.stacked_gain_dbi} dBi\n`;
       csv += `  Stacked Beamwidth H/V:, ${results.stacking_info.new_beamwidth_h}° / ${results.stacking_info.new_beamwidth_v}°\n`;
+      csv += `  Spacing Status:, ${results.stacking_info.spacing_status || '-'}\n`;
+      csv += `  Isolation:, ~${results.stacking_info.isolation_db}dB\n`;
+      if (results.stacking_info.quad_notes) {
+        csv += '\n  2x2 QUAD NOTES\n';
+        csv += `  Layout:, ${results.stacking_info.quad_notes.layout}\n`;
+        csv += `  Effect:, ${results.stacking_info.quad_notes.effect}\n`;
+        csv += `  V Spacing:, ${results.stacking_info.quad_notes.v_spacing}\n`;
+        csv += `  H Spacing:, ${results.stacking_info.quad_notes.h_spacing}\n`;
+        csv += `  H-Frame Note:, ${results.stacking_info.quad_notes.h_frame_note}\n`;
+        csv += `  Identical Note:, ${results.stacking_info.quad_notes.identical_note}\n`;
+      }
       if (results.stacking_info.power_splitter) {
         csv += '\n  POWER SPLITTER\n';
         csv += `  Type:, ${results.stacking_info.power_splitter.type}\n`;
@@ -1089,6 +1253,37 @@ export default function AntennaCalculator() {
         const r = results.wind_load.wind_ratings?.[mph];
         if (r) csv += `  ${mph}, ${r.force_lbs}, ${r.torque_ft_lbs}\n`;
       });
+      csv += '\n';
+    }
+    
+    // --- BOOM CORRECTION ---
+    if (results.boom_correction_info) {
+      csv += 'BOOM CORRECTION (G3SEK/DL6WU)\n';
+      const mt = results.boom_correction_info.boom_mount;
+      csv += `  Mount Type:, ${mt === 'bonded' ? 'Bonded (Elements to Metal Boom)' : mt === 'insulated' ? 'Insulated on Metal Boom' : 'Non-Conductive Boom'}\n`;
+      if (results.boom_correction_info.enabled) {
+        csv += `  Correction Level:, ${(results.boom_correction_info.correction_multiplier * 100).toFixed(0)}% of full DL6WU\n`;
+        csv += `  Boom/Element Ratio:, ${results.boom_correction_info.boom_to_element_ratio}:1\n`;
+        csv += `  Shorten Each Element:, ${results.boom_correction_info.correction_total_in}" total\n`;
+        csv += `  Per Side:, ${results.boom_correction_info.correction_per_side_in}"\n`;
+        csv += `  Gain Effect:, ${results.boom_correction_info.gain_adj_db} dB\n`;
+        csv += `  F/B Effect:, ${results.boom_correction_info.fb_adj_db} dB\n`;
+        csv += `  Impedance Shift:, ${results.boom_correction_info.impedance_shift_ohm} ohm\n`;
+      }
+      csv += `  Note:, ${results.boom_correction_info.description}\n`;
+      if (results.boom_correction_info.corrected_elements?.length > 0) {
+        csv += '\n  CORRECTED CUT LIST\n';
+        csv += '  Element, Original, Corrected, Correction\n';
+        results.boom_correction_info.corrected_elements.forEach((el: any) => {
+          csv += `  ${el.type}, ${el.original_length}", ${el.corrected_length}", -${el.correction}"\n`;
+        });
+      }
+      if (results.boom_correction_info.practical_notes) {
+        csv += '\n  PRACTICAL NOTES\n';
+        results.boom_correction_info.practical_notes.forEach((note: string) => {
+          csv += `  -, ${note}\n`;
+        });
+      }
       csv += '\n';
     }
     
@@ -1188,7 +1383,10 @@ export default function AntennaCalculator() {
           <View style={styles.userHeader}>
             <TouchableOpacity style={styles.userHeaderLeft} onPress={() => user ? router.push('/subscription') : router.push('/login')}>
               <Ionicons name="radio-outline" size={24} color="#4CAF50" />
-              <Text style={styles.headerTitle}>SMA Antenna Calc</Text>
+              <View>
+                <Text style={styles.headerTitle}>SMA Antenna Calculator</Text>
+                <Text style={{ fontSize: 9, color: '#ccc' }}>v{APP_VERSION} | Built: {new Date(APP_BUILD_DATE).toLocaleDateString()}</Text>
+              </View>
             </TouchableOpacity>
             
             {user ? (
@@ -1205,6 +1403,42 @@ export default function AntennaCalculator() {
             )}
           </View>
           
+          {/* Update Available Banner */}
+          {updateAvailable && !updateDismissed && (
+            <View style={{ marginHorizontal: 12, marginBottom: 8, backgroundColor: '#1a3a1a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#4CAF50' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <Ionicons name="arrow-up-circle" size={16} color="#4CAF50" />
+                    <Text style={{ color: '#4CAF50', fontWeight: '700', fontSize: 12 }}>Update Available v{updateAvailable.version}</Text>
+                  </View>
+                  {updateAvailable.notes ? <Text style={{ color: '#ddd', fontSize: 10, marginBottom: 6 }}>{updateAvailable.notes}</Text> : null}
+                  <TouchableOpacity onPress={() => Linking.openURL(updateAvailable.apkUrl)} style={{ backgroundColor: '#4CAF50', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' }}>
+                    <Text style={{ color: '#000', fontWeight: '700', fontSize: 11 }}>Download APK</Text>
+                  </TouchableOpacity>
+                </View>
+                {!updateAvailable.forceUpdate && (
+                  <TouchableOpacity onPress={() => setUpdateDismissed(true)} style={{ padding: 4 }}>
+                    <Ionicons name="close" size={18} color="#666" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Text style={{ color: '#bbb', fontSize: 9, marginTop: 4 }}>Installed: {new Date(APP_BUILD_DATE).toLocaleString()}{updateAvailable.buildDate ? ` | New: ${new Date(updateAvailable.buildDate).toLocaleString()}` : ''}</Text>
+            </View>
+          )}
+          
+          {/* Update Debug Panel — tap version number to toggle */}
+          {updateDebug ? (
+            <TouchableOpacity onPress={() => setUpdateDebug(prev => prev.startsWith('HIDDEN:') ? prev.replace('HIDDEN:', '') : 'HIDDEN:' + prev)}>
+              {!updateDebug.startsWith('HIDDEN:') && (
+                <View style={{ marginHorizontal: 12, marginBottom: 6, backgroundColor: '#1a1a2a', borderRadius: 6, padding: 8, borderWidth: 1, borderColor: '#333' }}>
+                  <Text style={{ fontSize: 8, fontWeight: '700', color: '#666', marginBottom: 2 }}>UPDATE CHECK LOG (tap to hide)</Text>
+                  <Text style={{ fontSize: 8, color: '#888', fontFamily: 'monospace' }}>{updateDebug}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          ) : null}
+
           {/* Action Buttons Row */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 12, paddingBottom: 8, flexWrap: 'wrap' }}>
             {user && (
@@ -1239,6 +1473,24 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1, zIndex: 2000 }}><Dropdown label="Band" value={inputs.band} options={BANDS.map(b => ({ value: b.id, label: b.name }))} onChange={handleBandChange} /></View>
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Freq (MHz)</Text><TextInput style={styles.input} value={inputs.frequency_mhz} onChangeText={v => setInputs(p => ({ ...p, frequency_mhz: v }))} keyboardType="decimal-pad" /></View>
             </View>
+            {inputs.band === '11m_cb' && (
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                {[
+                  { label: 'Ch6 Super Bowl', freq: '27.025' },
+                  { label: 'Ch11 Trax', freq: '27.085' },
+                  { label: 'Ch19 Truckers', freq: '27.185' },
+                  { label: 'Ch28 High Rollers', freq: '27.285' },
+                ].map(ch => {
+                  const isActive = inputs.frequency_mhz === ch.freq;
+                  return (
+                    <TouchableOpacity key={ch.freq} onPress={() => setInputs(p => ({ ...p, frequency_mhz: ch.freq }))}
+                      style={{ flex: 1, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#FF9800' : '#333', backgroundColor: isActive ? 'rgba(255,152,0,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 8, fontWeight: '700', color: isActive ? '#FF9800' : '#888' }}>{ch.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
             
             {/* Antenna Orientation */}
             <View style={styles.orientationSection}>
@@ -1274,15 +1526,37 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
               {inputs.antenna_orientation === 'dual' && (
-                <TouchableOpacity 
-                  onPress={() => setInputs(p => ({ ...p, dual_active: !p.dual_active }))}
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: inputs.dual_active ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_active ? '#FF9800' : '#333' }}
-                >
-                  <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_active ? '#FF9800' : '#555', backgroundColor: inputs.dual_active ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
-                    {inputs.dual_active && <Ionicons name="checkmark" size={14} color="#000" />}
+                <View style={{ marginTop: 6 }}>
+                  <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                    <TouchableOpacity 
+                      onPress={() => { if (!inputs.dual_active) setInputs(p => ({ ...p, dual_selected_beam: 'horizontal' })); }}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: inputs.dual_selected_beam === 'horizontal' ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#333', opacity: inputs.dual_active ? 0.4 : 1 }}
+                    >
+                      <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#555', backgroundColor: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
+                        {inputs.dual_selected_beam === 'horizontal' && <Ionicons name="checkmark" size={14} color="#000" />}
+                      </View>
+                      <Text style={{ fontSize: 11, color: inputs.dual_selected_beam === 'horizontal' ? '#FF9800' : '#888' }}>Horizontal</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      onPress={() => { if (!inputs.dual_active) setInputs(p => ({ ...p, dual_selected_beam: 'vertical' })); }}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, paddingVertical: 8, paddingHorizontal: 10, backgroundColor: inputs.dual_selected_beam === 'vertical' ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#333', opacity: inputs.dual_active ? 0.4 : 1 }}
+                    >
+                      <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#555', backgroundColor: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
+                        {inputs.dual_selected_beam === 'vertical' && <Ionicons name="checkmark" size={14} color="#000" />}
+                      </View>
+                      <Text style={{ fontSize: 11, color: inputs.dual_selected_beam === 'vertical' ? '#FF9800' : '#888' }}>Vertical</Text>
+                    </TouchableOpacity>
                   </View>
-                  <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
-                </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => setInputs(p => ({ ...p, dual_active: !p.dual_active }))}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 8, backgroundColor: inputs.dual_active ? 'rgba(255,152,0,0.15)' : '#1a1a1a', borderRadius: 6, borderWidth: 1, borderColor: inputs.dual_active ? '#FF9800' : '#333' }}
+                  >
+                    <View style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: inputs.dual_active ? '#FF9800' : '#555', backgroundColor: inputs.dual_active ? '#FF9800' : 'transparent', justifyContent: 'center', alignItems: 'center' }}>
+                      {inputs.dual_active && <Ionicons name="checkmark" size={14} color="#000" />}
+                    </View>
+                    <Text style={{ fontSize: 11, color: inputs.dual_active ? '#FF9800' : '#888' }}>Both H+V active simultaneously</Text>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
 
@@ -1353,6 +1627,46 @@ export default function AntennaCalculator() {
             </View>
           </View>
 
+          {/* Visual Element Viewer - Top Down */}
+          <View style={{ backgroundColor: '#111', borderRadius: 8, padding: 8, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
+            <Text style={{ fontSize: 12, color: '#fff', marginBottom: 4, fontWeight: '600' }}>TOP VIEW (looking down on boom)</Text>
+            <Svg width={screenWidth - 40} height={80}>
+              {(() => {
+                const w = screenWidth - 40;
+                const pad = 20;
+                const elements = inputs.elements;
+                const positions = elements.map(e => parseFloat(e.position) || 0);
+                const lengths = elements.map(e => parseFloat(e.length) || 0);
+                const maxPos = Math.max(...positions, 1);
+                const maxLen = Math.max(...lengths, 1);
+                const scale = (w - pad * 2) / maxPos;
+                const yCenter = 40;
+                const boomY = yCenter;
+                const nodes: any[] = [];
+                // Boom line
+                const boomStart = pad;
+                const boomEnd = pad + maxPos * scale;
+                nodes.push(<Line key="boom" x1={boomStart} y1={boomY} x2={boomEnd} y2={boomY} stroke="#444" strokeWidth={3} />);
+                // Elements
+                elements.forEach((el, i) => {
+                  const x = pad + positions[i] * scale;
+                  const halfLen = (lengths[i] / maxLen) * 30;
+                  const color = el.element_type === 'reflector' ? '#f44336' : el.element_type === 'driven' ? '#4CAF50' : '#2196F3';
+                  nodes.push(<Line key={`el-${i}`} x1={x} y1={yCenter - halfLen} x2={x} y2={yCenter + halfLen} stroke={color} strokeWidth={2.5} strokeLinecap="round" />);
+                  nodes.push(<SvgText key={`lbl-${i}`} x={x} y={12} fill={color} fontSize={10} textAnchor="middle" fontWeight="bold">{el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`}</SvgText>);
+                  // Spacing label between elements
+                  if (i > 0) {
+                    const prevX = pad + positions[i - 1] * scale;
+                    const midX = (prevX + x) / 2;
+                    const spacing = (positions[i] - positions[i - 1]).toFixed(1);
+                    nodes.push(<SvgText key={`sp-${i}`} x={midX} y={74} fill="#aaa" fontSize={9} textAnchor="middle">{spacing}"</SvgText>);
+                  }
+                });
+                return nodes;
+              })()}
+            </Svg>
+          </View>
+
           {/* Physical Setup */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}><Ionicons name="construct-outline" size={14} color="#4CAF50" /> Setup</Text>
@@ -1361,6 +1675,24 @@ export default function AntennaCalculator() {
               <View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, height_unit: 'ft' }))}><Text style={[styles.unitBtnText, inputs.height_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.height_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, height_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.height_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View>
               <View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Boom Ø</Text><TextInput style={styles.input} value={inputs.boom_diameter} onChangeText={v => setInputs(p => ({ ...p, boom_diameter: v }))} keyboardType="decimal-pad" /></View>
               <View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'mm' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'mm' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'mm' && styles.unitBtnTextActive]}>mm</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.boom_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, boom_unit: 'inches' }))}><Text style={[styles.unitBtnText, inputs.boom_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View>
+            </View>
+            {/* Element Mount Type - 3 options */}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+              {([
+                { key: 'bonded', label: 'Bonded', icon: 'flash', color: '#FF9800', desc: 'Welded/bolted to metal boom' },
+                { key: 'insulated', label: 'Insulated', icon: 'shield-half', color: '#2196F3', desc: 'Sleeves on metal boom' },
+                { key: 'nonconductive', label: 'Non-Cond', icon: 'leaf', color: '#4CAF50', desc: 'PVC/wood/fiberglass boom' },
+              ] as const).map(opt => {
+                const active = inputs.boom_mount === opt.key;
+                return (
+                  <TouchableOpacity key={opt.key} onPress={() => setInputs(p => ({ ...p, boom_mount: opt.key as any, boom_grounded: opt.key === 'bonded' }))}
+                    style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 7, borderRadius: 6, borderWidth: 1, borderColor: active ? opt.color : '#333', backgroundColor: active ? `${opt.color}22` : '#1a1a1a' }}>
+                    <Ionicons name={opt.icon as any} size={14} color={active ? opt.color : '#555'} />
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: active ? opt.color : '#888' }}>{opt.label}</Text>
+                    <Text style={{ fontSize: 7, color: active ? opt.color + 'AA' : '#555' }}>{opt.desc}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
             {/* Optimize Height Button */}
             <TouchableOpacity style={styles.optimizeHeightBtn} onPress={optimizeHeight} disabled={optimizingHeight}>
@@ -1629,16 +1961,80 @@ export default function AntennaCalculator() {
             {inputs.stacking.enabled && (
               <><View style={styles.orientationToggle}><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'vertical' } }))}><Ionicons name="swap-vertical" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnTextActive]}>V</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'horizontal' } }))}><Ionicons name="swap-horizontal" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnTextActive]}>H</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'quad' && styles.orientBtnActive, inputs.stacking.layout === 'quad' && { borderColor: '#E91E63' }]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'quad', num_antennas: 4 } }))}><Ionicons name="grid" size={16} color={inputs.stacking.layout === 'quad' ? '#E91E63' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'quad' && { color: '#E91E63', fontWeight: '700' }]}>2x2</Text></TouchableOpacity></View>
               {inputs.stacking.layout !== 'quad' && (
+                <View>
                 <View style={[styles.rowSpaced, { zIndex: 1500 }]}><View style={{ flex: 1, zIndex: 1500 }}><Dropdown value={inputs.stacking.num_antennas.toString()} options={[2,3,4].map(n => ({ value: n.toString(), label: `${n}x` }))} onChange={(v: string) => setInputs(p => ({ ...p, stacking: { ...p.stacking, num_antennas: parseInt(v) } }))} /></View><View style={{ flex: 1, marginLeft: 8 }}><Text style={styles.inputLabel}>Spacing (center-to-center)</Text><TextInput style={styles.input} value={inputs.stacking.spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                  {[{ label: '½λ', mult: 0.5 }, { label: '¾λ', mult: 0.75 }, { label: '1λ', mult: 1.0 }].map(opt => {
+                    const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
+                    const wlFt = (984 / freqMhz) * opt.mult;
+                    const wlFtStr = wlFt.toFixed(1);
+                    const step = (984 / freqMhz) * 0.25;
+                    const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
+                    const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
+                    return (
+                      <View key={opt.label} style={{ flex: 1, alignItems: 'center' }}>
+                        <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft' } }))}
+                          style={{ width: '100%', paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#9C27B0' : '#333', backgroundColor: isActive ? 'rgba(156,39,176,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 11, fontWeight: '700', color: isActive ? '#CE93D8' : '#888' }}>{opt.label}</Text>
+                          <Text style={{ fontSize: 8, color: isActive ? '#CE93D8' : '#666', marginTop: 1 }}>{wlFtStr} ft</Text>
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.05).toFixed(1), spacing_unit: 'ft' } }))}
+                            style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                            <Ionicons name="arrow-back" size={12} color="#9C27B0" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.05).toFixed(1), spacing_unit: 'ft' } }))}
+                            style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                            <Ionicons name="arrow-forward" size={12} color="#9C27B0" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+                </View>
               )}
               {inputs.stacking.layout === 'quad' && (
                 <View>
+                  <Text style={{ fontSize: 10, color: '#E91E63', marginBottom: 6, fontWeight: '600' }}>Wavelength Spacing:</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                    {[{ label: '½λ', mult: 0.5 }, { label: '¾λ', mult: 0.75 }, { label: '1λ', mult: 1.0 }].map(opt => {
+                      const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
+                      const wlFt = (984 / freqMhz) * opt.mult;
+                      const wlFtStr = wlFt.toFixed(1);
+                      const step = (984 / freqMhz) * 0.25;
+                      const currentSpacing = parseFloat(inputs.stacking.spacing) || 0;
+                      const isActive = Math.abs(currentSpacing - wlFt) < 0.5;
+                      return (
+                        <View key={opt.label} style={{ flex: 1, alignItems: 'center' }}>
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: wlFtStr, spacing_unit: 'ft', h_spacing: wlFtStr, h_spacing_unit: 'ft' } }))}
+                            style={{ width: '100%', paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: isActive ? '#E91E63' : '#333', backgroundColor: isActive ? 'rgba(233,30,99,0.15)' : '#1a1a1a', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: isActive ? '#E91E63' : '#888' }}>{opt.label}</Text>
+                            <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
+                          </TouchableOpacity>
+                          <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
+                            <TouchableOpacity onPress={() => setInputs(p => { const v = Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.05).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
+                              style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                              <Ionicons name="arrow-back" size={12} color="#E91E63" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setInputs(p => { const v = ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.05).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
+                              style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
+                              <Ionicons name="arrow-forward" size={12} color="#E91E63" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
                   <View style={[styles.rowSpaced, { marginBottom: 6 }]}><View style={{ flex: 1 }}><Text style={styles.inputLabel}>V Spacing (up/down)</Text><TextInput style={styles.input} value={inputs.stacking.spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
                   <View style={[styles.rowSpaced]}><View style={{ flex: 1 }}><Text style={styles.inputLabel}>H Spacing (side-by-side)</Text><TextInput style={styles.input} value={inputs.stacking.h_spacing} onChangeText={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing: v } }))} keyboardType="decimal-pad" /></View><View style={styles.unitToggle}><TouchableOpacity style={[styles.unitBtn, inputs.stacking.h_spacing_unit === 'ft' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing_unit: 'ft' } }))}><Text style={[styles.unitBtnText, inputs.stacking.h_spacing_unit === 'ft' && styles.unitBtnTextActive]}>ft</Text></TouchableOpacity><TouchableOpacity style={[styles.unitBtn, inputs.stacking.h_spacing_unit === 'inches' && styles.unitBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, h_spacing_unit: 'inches' } }))}><Text style={[styles.unitBtnText, inputs.stacking.h_spacing_unit === 'inches' && styles.unitBtnTextActive]}>in</Text></TouchableOpacity></View></View>
                   <Text style={{ fontSize: 9, color: '#E91E63', marginTop: 4 }}>2x2 Quad: 4 identical antennas in H-frame (2V x 2H). Narrows both beamwidths.</Text>
                 </View>
               )}
-              <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Boom center to boom center. Min recommended: 0.5λ of lowest frequency.</Text></>            )}
+              <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Boom center to boom center. Min recommended: 0.5λ of lowest frequency.</Text>
+              {inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && (
+                <Text style={{ fontSize: 9, color: '#4CAF50', marginTop: 4, fontStyle: 'italic' }}>Collinear: Keep antennas on same vertical axis, element-to-element. Do NOT stagger or offset.</Text>
+              )}</>            )}
           </View>
 
           {/* Results */}
@@ -1649,9 +2045,10 @@ export default function AntennaCalculator() {
               {/* Bonuses */}
               {results.taper_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-merge" size={12} color="#E91E63" /> Taper: +{results.taper_info.gain_bonus}dB, +{results.taper_info.bandwidth_improvement} BW</Text></View>}
               {results.corona_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="ellipse" size={12} color="#00BCD4" /> Corona: {results.corona_info.corona_reduction}% reduction</Text></View>}
-              {results.stacking_enabled && results.stacking_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="layers" size={12} color="#9C27B0" /> Stacked: +{results.stacking_info.gain_increase_db}dB ({results.gain_dbi}→{results.stacked_gain_dbi})</Text></View>}
+              {results.stacking_enabled && results.stacking_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="layers" size={12} color="#9C27B0" /> {results.stacking_info.layout === 'quad' ? '2x2 Quad' : 'Stacked'}: +{results.stacking_info.gain_increase_db}dB ({results.gain_dbi}→{results.stacked_gain_dbi})</Text></View>}
               {results.ground_radials_info && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-network" size={12} color="#8BC34A" /> Ground Radials ({results.ground_radials_info.ground_type}): +{results.ground_radials_info.estimated_improvements.efficiency_bonus_percent}% eff</Text></View>}
               {results.matching_info && results.feed_type !== 'direct' && <View style={styles.bonusCard}><Text style={styles.bonusText}><Ionicons name="git-merge" size={12} color="#2196F3" /> {results.matching_info.type}: SWR {results.matching_info.original_swr}→{results.matching_info.matched_swr} {results.matching_info.bandwidth_effect}</Text></View>}
+              {results.boom_correction_info?.enabled && <View style={[styles.bonusCard, { borderLeftWidth: 2, borderLeftColor: '#FF9800' }]}><Text style={styles.bonusText}><Ionicons name="flash" size={12} color="#FF9800" /> {results.boom_correction_info.boom_mount === 'bonded' ? 'Bonded' : 'Insulated'}: {results.boom_correction_info.gain_adj_db}dB gain, {results.boom_correction_info.fb_adj_db}dB F/B | Shorten elements by {results.boom_correction_info.correction_total_in}" each</Text></View>}
               {results.dual_polarity_info && <View style={[styles.bonusCard, { borderLeftWidth: 2, borderLeftColor: '#FF9800' }]}><Text style={styles.bonusText}><Ionicons name="swap-horizontal" size={12} color="#FF9800" /> Dual Pol: {results.dual_polarity_info.description} | +{results.dual_polarity_info.coupling_bonus_db}dB coupling | +{results.dual_polarity_info.fb_bonus_db}dB F/B</Text></View>}
               
               <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
@@ -2182,7 +2579,7 @@ export default function AntennaCalculator() {
 
       {/* Spec Sheet Modal */}
       <Modal visible={showSpecSheet} transparent animationType="slide" onRequestClose={() => setShowSpecSheet(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: Constants.statusBarHeight || 0 }}>
           <View style={{ flex: 1, maxWidth: 500, alignSelf: 'center', width: '100%' }}>
             {/* Header Bar */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
@@ -2257,6 +2654,7 @@ export default function AntennaCalculator() {
                 <SpecRow label="Elements" value={inputs.antenna_orientation === 'dual' ? `${inputs.num_elements} per pol (${inputs.num_elements * 2} total)` : `${inputs.num_elements}`} />
                 <SpecRow label="Height" value={`${inputs.height_from_ground} ${inputs.height_unit}`} />
                 <SpecRow label="Boom" value={`${inputs.boom_diameter} ${inputs.boom_unit} OD`} />
+                <SpecRow label="Boom Mount" value={inputs.boom_mount === 'bonded' ? 'Bonded (Elements to Boom)' : inputs.boom_mount === 'insulated' ? 'Insulated (Sleeves)' : 'Non-Conductive Boom'} accent={inputs.boom_mount === 'bonded' ? '#FF9800' : inputs.boom_mount === 'insulated' ? '#2196F3' : '#4CAF50'} />
                 <SpecRow label="Gain Mode" value={gainMode === 'realworld' ? 'Real World' : 'Free Space'} />
               </SpecSection>
 
@@ -2315,6 +2713,20 @@ export default function AntennaCalculator() {
                     <SpecRow label="  Before Match" value={`${results.matching_info.original_swr}:1`} small />
                     <SpecRow label="  After Match" value={`${results.matching_info.matched_swr}:1`} accent="#4CAF50" small />
                     <SpecRow label="  Bandwidth Effect" value={results.matching_info.bandwidth_effect} small />
+                    {results.matching_info.technical_notes && (
+                      <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#333' }}>
+                        <Text style={{ fontSize: 9, fontWeight: '700', color: '#555', marginBottom: 3 }}>HOW IT WORKS</Text>
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.mechanism}</Text>
+                        {results.matching_info.technical_notes.asymmetry && <Text style={{ fontSize: 9, color: '#FF9800', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.asymmetry}</Text>}
+                        {results.matching_info.technical_notes.pattern_stabilization && <Text style={{ fontSize: 9, color: '#4CAF50', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.pattern_stabilization}</Text>}
+                        {results.matching_info.technical_notes.balance && <Text style={{ fontSize: 9, color: '#2196F3', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.balance}</Text>}
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.pattern_impact}</Text>
+                        <Text style={{ fontSize: 9, color: '#4CAF50', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.advantage}</Text>
+                        <Text style={{ fontSize: 9, color: '#aaa', lineHeight: 14, marginBottom: 3 }}>{results.matching_info.technical_notes.tuning}</Text>
+                        <Text style={{ fontSize: 9, color: '#888', fontStyle: 'italic', lineHeight: 14 }}>{results.matching_info.technical_notes.mitigation || results.matching_info.technical_notes.tradeoff}</Text>
+                        {results.matching_info.technical_notes.balun_note && <Text style={{ fontSize: 9, color: '#f44336', fontWeight: '700', lineHeight: 14, marginTop: 3 }}>{results.matching_info.technical_notes.balun_note}</Text>}
+                      </View>
+                    )}
                   </View>
                 )}
                 <SpecRow label="Impedance Range" value={`${results.impedance_low || '-'} - ${results.impedance_high || '-'} \u03a9`} />
@@ -2362,7 +2774,7 @@ export default function AntennaCalculator() {
               {/* Section: Stacking (conditional) */}
               {results.stacking_enabled && results.stacking_info && (
                 <SpecSection title="Stacking" icon="layers-outline" color="#E91E63">
-                  <SpecRow label="Antennas" value={`${results.stacking_info.num_antennas} stacked ${results.stacking_info.orientation}`} />
+                  <SpecRow label="Antennas" value={results.stacking_info.layout === 'quad' ? `${results.stacking_info.num_antennas} in 2x2 Quad (H-Frame)` : `${results.stacking_info.num_antennas} stacked ${results.stacking_info.orientation}`} />
                   <SpecRow label="Spacing" value={`${results.stacking_info.spacing} ${results.stacking_info.spacing_unit} (${results.stacking_info.spacing_wavelengths?.toFixed(2) || '-'}\u03bb)`} />
                   <SpecRow label="Spacing Status" value={results.stacking_info.spacing_status || '-'} accent={results.stacking_info.spacing_status === 'Optimal' ? '#4CAF50' : results.stacking_info.spacing_status === 'Good' ? '#FF9800' : '#f44336'} />
                   <SpecRow label="Isolation" value={`~${results.stacking_info.isolation_db}dB`} />
@@ -2371,11 +2783,50 @@ export default function AntennaCalculator() {
                   <SpecRow label="Optimal Spacing" value={`${results.stacking_info.optimal_spacing_ft}'`} />
                   <SpecRow label="Min Spacing" value={`${results.stacking_info.min_spacing_ft}'`} />
                   {results.stacking_info.vertical_notes && (
-                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>VERTICAL STACKING</Text>
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8, borderLeftWidth: 2, borderLeftColor: '#4CAF50' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#4CAF50', marginBottom: 4 }}>COLLINEAR VERTICAL STACKING</Text>
+                      <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: '600', marginBottom: 4 }}>{results.stacking_info.vertical_notes.alignment}</Text>
                       <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.vertical_notes.effect}</Text>
+                      <SpecRow label="  1λ Spacing" value={results.stacking_info.vertical_notes.one_wavelength_ft} small />
+                      <SpecRow label="  Alignment" value={results.stacking_info.vertical_notes.alignment_status} small />
                       <SpecRow label="  Isolation" value={results.stacking_info.vertical_notes.isolation} small />
-                      {results.stacking_info.vertical_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.vertical_notes.coupling_warning}</Text> : null}
+                      {results.stacking_info.vertical_notes.far_field && (
+                        <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#333' }}>
+                          <Text style={{ fontSize: 9, fontWeight: '700', color: '#666', marginBottom: 2 }}>FAR-FIELD PATTERN</Text>
+                          <SpecRow label="  Elevation" value={results.stacking_info.vertical_notes.far_field.elevation} small />
+                          <SpecRow label="  Azimuth" value={results.stacking_info.vertical_notes.far_field.azimuth} small />
+                          <Text style={{ fontSize: 9, color: '#4CAF50', marginTop: 2, fontWeight: '600' }}>{results.stacking_info.vertical_notes.far_field.summary}</Text>
+                        </View>
+                      )}
+                      <Text style={{ fontSize: 9, color: '#FF9800', marginTop: 4 }}>{results.stacking_info.vertical_notes.best_practice}</Text>
+                      <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.vertical_notes.stagger_warning}</Text>
+                      {results.stacking_info.vertical_notes.stagger_effects && (
+                        <View style={{ marginTop: 2, paddingLeft: 6 }}>
+                          <Text style={{ fontSize: 8, color: '#f44336' }}>- {results.stacking_info.vertical_notes.stagger_effects.nulls}</Text>
+                          <Text style={{ fontSize: 8, color: '#f44336' }}>- {results.stacking_info.vertical_notes.stagger_effects.gain_loss}</Text>
+                          <Text style={{ fontSize: 8, color: '#f44336' }}>- {results.stacking_info.vertical_notes.stagger_effects.detuning}</Text>
+                          <Text style={{ fontSize: 8, color: '#f44336' }}>- {results.stacking_info.vertical_notes.stagger_effects.phasing}</Text>
+                        </View>
+                      )}
+                      <Text style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>{results.stacking_info.vertical_notes.feed_line_note}</Text>
+                      {results.stacking_info.vertical_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', fontWeight: '700', marginTop: 2 }}>{results.stacking_info.vertical_notes.coupling_warning}</Text> : null}
+                    </View>
+                  )}
+                  {results.stacking_info.horizontal_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8, borderLeftWidth: 2, borderLeftColor: '#2196F3' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#2196F3', marginBottom: 4 }}>HORIZONTAL STACKING</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.horizontal_notes.effect}</Text>
+                      {results.stacking_info.horizontal_notes.far_field && (
+                        <View style={{ marginTop: 4, paddingTop: 4, borderTopWidth: 1, borderTopColor: '#333' }}>
+                          <Text style={{ fontSize: 9, fontWeight: '700', color: '#666', marginBottom: 2 }}>FAR-FIELD PATTERN</Text>
+                          <SpecRow label="  Elevation" value={results.stacking_info.horizontal_notes.far_field.elevation} small />
+                          <SpecRow label="  Azimuth" value={results.stacking_info.horizontal_notes.far_field.azimuth} small />
+                          <Text style={{ fontSize: 9, color: '#2196F3', marginTop: 2, fontWeight: '600' }}>{results.stacking_info.horizontal_notes.far_field.summary}</Text>
+                        </View>
+                      )}
+                      <Text style={{ fontSize: 9, color: '#FF9800', marginTop: 4 }}>{results.stacking_info.horizontal_notes.tradeoff}</Text>
+                      <SpecRow label="  Isolation" value={results.stacking_info.horizontal_notes.isolation} small />
+                      <Text style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>{results.stacking_info.horizontal_notes.feed_line_note}</Text>
                     </View>
                   )}
                   {results.stacking_info.dual_stacking && (
@@ -2385,6 +2836,20 @@ export default function AntennaCalculator() {
                       <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.dual_stacking.cross_pol}</Text>
                       {results.stacking_info.dual_stacking.mimo_note ? <Text style={{ fontSize: 10, color: '#2196F3', marginBottom: 2 }}>{results.stacking_info.dual_stacking.mimo_note}</Text> : null}
                       <Text style={{ fontSize: 9, color: '#777', marginTop: 2 }}>{results.stacking_info.dual_stacking.wind_load}</Text>
+                    </View>
+                  )}
+                  {results.stacking_info.quad_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8, borderLeftWidth: 2, borderLeftColor: '#E91E63' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#E91E63', marginBottom: 4 }}>2x2 QUAD STACK</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.quad_notes.layout}</Text>
+                      <Text style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>{results.stacking_info.quad_notes.effect}</Text>
+                      <SpecRow label="  V Spacing" value={results.stacking_info.quad_notes.v_spacing} small />
+                      <SpecRow label="  H Spacing" value={results.stacking_info.quad_notes.h_spacing} small />
+                      <Text style={{ fontSize: 10, color: '#aaa', marginTop: 2 }}>{results.stacking_info.quad_notes.h_frame_note}</Text>
+                      <SpecRow label="  Isolation" value={results.stacking_info.quad_notes.isolation} small />
+                      {results.stacking_info.quad_notes.coupling_warning ? <Text style={{ fontSize: 9, color: '#f44336', marginTop: 2 }}>{results.stacking_info.quad_notes.coupling_warning}</Text> : null}
+                      <Text style={{ fontSize: 9, color: '#E91E63', marginTop: 4, fontStyle: 'italic' }}>{results.stacking_info.quad_notes.identical_note}</Text>
+                      <Text style={{ fontSize: 9, color: '#777', marginTop: 2 }}>{results.stacking_info.quad_notes.phasing_note}</Text>
                     </View>
                   )}
                   {results.stacking_info.phasing && (
@@ -2463,6 +2928,56 @@ export default function AntennaCalculator() {
                 </SpecSection>
               )}
 
+              {/* Section: Boom Correction */}
+              {results.boom_correction_info && (
+                <SpecSection title={`Boom: ${results.boom_correction_info.boom_mount === 'bonded' ? 'Bonded' : results.boom_correction_info.boom_mount === 'insulated' ? 'Insulated' : 'Non-Conductive'}`} icon={results.boom_correction_info.boom_mount === 'bonded' ? 'flash' : results.boom_correction_info.boom_mount === 'nonconductive' ? 'leaf' : 'shield-half'} color={results.boom_correction_info.boom_mount === 'bonded' ? '#FF9800' : results.boom_correction_info.boom_mount === 'insulated' ? '#2196F3' : '#4CAF50'}>
+                  <SpecRow label="Mount Type" value={results.boom_correction_info.boom_mount === 'bonded' ? 'Elements Bonded to Metal Boom' : results.boom_correction_info.boom_mount === 'insulated' ? 'Insulated on Metal Boom' : 'Non-Conductive Boom'} accent={results.boom_correction_info.boom_mount === 'bonded' ? '#FF9800' : results.boom_correction_info.boom_mount === 'insulated' ? '#2196F3' : '#4CAF50'} />
+                  {results.boom_correction_info.enabled && (
+                    <>
+                      <SpecRow label="Correction" value={`${(results.boom_correction_info.correction_multiplier * 100).toFixed(0)}% of full DL6WU`} />
+                      <SpecRow label="Boom/Element Ratio" value={`${results.boom_correction_info.boom_to_element_ratio}:1`} />
+                      <SpecRow label="Shorten Each Element" value={`${results.boom_correction_info.correction_total_in}" total`} accent="#FF9800" />
+                      <SpecRow label="Per Side" value={`${results.boom_correction_info.correction_per_side_in}"`} small />
+                      <SpecRow label="Gain Effect" value={`${results.boom_correction_info.gain_adj_db} dB`} />
+                      <SpecRow label="F/B Effect" value={`${results.boom_correction_info.fb_adj_db} dB`} />
+                      <SpecRow label="Impedance Shift" value={`${results.boom_correction_info.impedance_shift_ohm} ohm`} />
+                    </>
+                  )}
+                  <Text style={{ fontSize: 9, color: '#888', marginTop: 4, fontStyle: 'italic' }}>{results.boom_correction_info.description}</Text>
+                  {/* CORRECTED CUT LIST */}
+                  {results.boom_correction_info.corrected_elements && results.boom_correction_info.corrected_elements.length > 0 && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1a2a1a', borderRadius: 6, padding: 8, borderWidth: 1, borderColor: '#4CAF5044' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#4CAF50', marginBottom: 6 }}>CORRECTED CUT LIST</Text>
+                      <View style={{ flexDirection: 'row', marginBottom: 4 }}>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#666' }}>ELEMENT</Text>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#666', textAlign: 'center' }}>ORIGINAL</Text>
+                        <Text style={{ flex: 0.3, fontSize: 8, color: '#666', textAlign: 'center' }}></Text>
+                        <Text style={{ flex: 1, fontSize: 8, fontWeight: '700', color: '#4CAF50', textAlign: 'center' }}>CUT TO</Text>
+                      </View>
+                      {results.boom_correction_info.corrected_elements.map((el: any, i: number) => (
+                        <View key={i} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 3, borderTopWidth: i > 0 ? 1 : 0, borderTopColor: '#333' }}>
+                          <Text style={{ flex: 1, fontSize: 9, fontWeight: '600', color: el.type === 'reflector' ? '#f44336' : el.type === 'driven' ? '#4CAF50' : '#2196F3' }}>
+                            {el.type === 'reflector' ? 'Reflector' : el.type === 'driven' ? 'Driven' : `Director ${i - (results.boom_correction_info.corrected_elements[0]?.type === 'reflector' ? 2 : 1) + 1}`}
+                          </Text>
+                          <Text style={{ flex: 1, fontSize: 10, color: '#999', textAlign: 'center' }}>{el.original_length}"</Text>
+                          <Text style={{ flex: 0.3, fontSize: 10, color: '#FF9800', textAlign: 'center' }}>{'\u2192'}</Text>
+                          <Text style={{ flex: 1, fontSize: 10, fontWeight: '700', color: '#4CAF50', textAlign: 'center' }}>{el.corrected_length}"</Text>
+                        </View>
+                      ))}
+                      <Text style={{ fontSize: 7, color: '#666', marginTop: 4, fontStyle: 'italic' }}>Lengths shortened by {results.boom_correction_info.correction_total_in}" to compensate for boom capacitance</Text>
+                    </View>
+                  )}
+                  {results.boom_correction_info.practical_notes && (
+                    <View style={{ marginTop: 6, backgroundColor: '#1e1e1e', borderRadius: 6, padding: 8 }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>PRACTICAL NOTES</Text>
+                      {results.boom_correction_info.practical_notes.map((note: string, i: number) => (
+                        <Text key={i} style={{ fontSize: 9, color: '#aaa', marginBottom: 2 }}>{'\u2022'} {note}</Text>
+                      ))}
+                    </View>
+                  )}
+                </SpecSection>
+              )}
+
               {/* Section: Wind Load */}
               {results.wind_load && (
                 <SpecSection title="Wind Load & Mechanical" icon="thunderstorm-outline" color="#FF5722">
@@ -2513,7 +3028,7 @@ export default function AntennaCalculator() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212' }, flex: { flex: 1 }, scrollView: { flex: 1 }, scrollContent: { padding: 10, paddingBottom: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10, paddingVertical: 6, gap: 8 }, headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
   userHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8, paddingHorizontal: 4, marginBottom: 8 },
   userHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   userBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1a1a1a', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 16, gap: 6 },
