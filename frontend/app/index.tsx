@@ -995,6 +995,77 @@ export default function AntennaCalculator() {
     downloadCSV(csv, filename);
   };
 
+  // Export spec sheet as PDF
+  const exportPDF = async () => {
+    if (!results) {
+      Alert.alert('No Data', 'Calculate antenna first');
+      return;
+    }
+    try {
+      const timestamp = getTimestamp();
+      const userEmail = user?.email || 'guest';
+      const filename = sanitizeFilename(`antenna_spec_${timestamp}_${userEmail.replace('@', '_at_')}`) + '.pdf';
+
+      const response = await fetch(`${BACKEND_URL}/api/spec-sheet/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputs: inputs,
+          results: results,
+          user_email: userEmail,
+          gain_mode: gainMode,
+        }),
+      });
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      if (Platform.OS === 'web') {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+        Alert.alert('Exported', `PDF saved as ${filename}`);
+      } else {
+        const base64 = await response.blob().then(b =>
+          new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+            reader.readAsDataURL(b);
+          })
+        );
+        const fileUri = FileSystem.cacheDirectory + filename;
+        await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+
+        try {
+          const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+          if (permissions.granted) {
+            const newFile = await FileSystem.StorageAccessFramework.createFileAsync(
+              permissions.directoryUri, filename, 'application/pdf'
+            );
+            await FileSystem.writeAsStringAsync(newFile, base64, { encoding: FileSystem.EncodingType.Base64 });
+            Alert.alert('Exported!', `PDF saved to your chosen folder as:\n${filename}`);
+            return;
+          }
+        } catch (safError) {
+          console.log('SAF not available, falling back to share sheet');
+        }
+
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(fileUri, { mimeType: 'application/pdf', dialogTitle: `Save ${filename}` });
+        } else {
+          Alert.alert('File Saved', `PDF saved to app cache:\n${filename}`);
+        }
+      }
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      Alert.alert('Export Error', `Failed to generate PDF: ${error?.message || 'Unknown error'}`);
+    }
+  };
+
   // Download CSV (works on web and mobile)
   const downloadCSV = async (csvContent: string, filename: string) => {
     if (Platform.OS === 'web') {
