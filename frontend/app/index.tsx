@@ -1645,41 +1645,45 @@ export default function AntennaCalculator() {
           {/* Visual Element Viewer - Top Down */}
           <View style={{ backgroundColor: '#111', borderRadius: 8, padding: 8, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
             <Text style={{ fontSize: 12, color: '#fff', marginBottom: 4, fontWeight: '600' }}>TOP VIEW (looking down on boom)</Text>
-            <Svg width={screenWidth - 40} height={80}>
-              {(() => {
-                const w = screenWidth - 40;
+            {(() => {
+              try {
+                const svgW = Math.max(screenWidth - 40, 100);
                 const pad = 20;
-                const elements = inputs.elements;
-                const positions = elements.map(e => parseFloat(e.position) || 0);
-                const lengths = elements.map(e => parseFloat(e.length) || 0);
+                const elems = inputs.elements;
+                const positions = elems.map((e: any) => parseFloat(e.position) || 0);
+                const lengths = elems.map((e: any) => parseFloat(e.length) || 0);
                 const maxPos = Math.max(...positions, 1);
                 const maxLen = Math.max(...lengths, 1);
-                const scale = (w - pad * 2) / maxPos;
+                const drawW = svgW - pad * 2;
+                const scale = drawW / maxPos;
                 const yCenter = 40;
-                const boomY = yCenter;
-                const nodes: any[] = [];
-                // Boom line
-                const boomStart = pad;
                 const boomEnd = pad + maxPos * scale;
-                nodes.push(<Line key="boom" x1={boomStart} y1={boomY} x2={boomEnd} y2={boomY} stroke="#444" strokeWidth={3} />);
-                // Elements
-                elements.forEach((el, i) => {
-                  const x = pad + positions[i] * scale;
-                  const halfLen = (lengths[i] / maxLen) * 30;
-                  const color = el.element_type === 'reflector' ? '#f44336' : el.element_type === 'driven' ? '#4CAF50' : '#2196F3';
-                  nodes.push(<Line key={`el-${i}`} x1={x} y1={yCenter - halfLen} x2={x} y2={yCenter + halfLen} stroke={color} strokeWidth={2.5} strokeLinecap="round" />);
-                  nodes.push(<SvgText key={`lbl-${i}`} x={x} y={12} fill={color} fontSize={10} textAnchor="middle" fontWeight="bold">{el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`}</SvgText>);
-                  // Spacing label between elements
-                  if (i > 0) {
-                    const prevX = pad + positions[i - 1] * scale;
-                    const midX = (prevX + x) / 2;
-                    const spacing = (positions[i] - positions[i - 1]).toFixed(1);
-                    nodes.push(<SvgText key={`sp-${i}`} x={midX} y={74} fill="#aaa" fontSize={9} textAnchor="middle">{spacing}"</SvgText>);
-                  }
-                });
-                return nodes;
-              })()}
-            </Svg>
+                return (
+                  <Svg width={svgW} height={80} viewBox={`0 0 ${svgW} 80`}>
+                    <Line x1={pad} y1={yCenter} x2={boomEnd} y2={yCenter} stroke="#444" strokeWidth={3} />
+                    {elems.map((el: any, i: number) => {
+                      const x = pad + positions[i] * scale;
+                      const halfLen = (lengths[i] / maxLen) * 30;
+                      const color = el.element_type === 'reflector' ? '#f44336' : el.element_type === 'driven' ? '#4CAF50' : '#2196F3';
+                      const label = el.element_type === 'reflector' ? 'R' : el.element_type === 'driven' ? 'DE' : `D${i - (inputs.use_reflector ? 1 : 0)}`;
+                      return (
+                        <G key={`elem-${i}`}>
+                          <Line x1={x} y1={yCenter - halfLen} x2={x} y2={yCenter + halfLen} stroke={color} strokeWidth={2.5} strokeLinecap="round" />
+                          <SvgText x={x} y={12} fill={color} fontSize={10} textAnchor="middle" fontWeight="bold">{label}</SvgText>
+                          {i > 0 && (
+                            <SvgText x={(pad + positions[i - 1] * scale + x) / 2} y={74} fill="#aaa" fontSize={9} textAnchor="middle">
+                              {(positions[i] - positions[i - 1]).toFixed(1)}"
+                            </SvgText>
+                          )}
+                        </G>
+                      );
+                    })}
+                  </Svg>
+                );
+              } catch (e) {
+                return <Text style={{ color: '#f44', fontSize: 10 }}>Element viewer error</Text>;
+              }
+            })()}
           </View>
 
           {/* Physical Setup */}
