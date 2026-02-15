@@ -2281,8 +2281,12 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven at 15% of boom, directors equally spaced after
-                    refl_driven_gap = round(target_boom * 0.15, 1)
+                    # With directors: driven at ~0.18λ from reflector, cap to ensure director room
+                    ideal_refl_gap = wavelength_in * 0.18
+                    num_dirs = len(dir_indices)
+                    min_director_room = num_dirs * wavelength_in * 0.12
+                    max_refl_gap = target_boom - min_director_room
+                    refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
