@@ -2216,13 +2216,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         if num_directors > 0:
             for i in range(num_directors):
                 # Weight: first director at ~0.8x avg spacing, last at ~1.2x avg spacing
-                # close_dir1 toggle: brings first director closer (0.5x weight instead of 0.8x)
+                # close_dir1: first director closer (0.5x), far_dir1: first director further (1.4x)
                 if i == 0 and request.close_dir1:
                     weight = 0.5
+                elif i == 0 and request.far_dir1:
+                    weight = 1.4
                 else:
                     weight = 0.8 + (0.4 * i / max(num_directors - 1, 1))
                 total_weight = sum(
-                    (0.5 if j == 0 and request.close_dir1 else 0.8 + (0.4 * j / max(num_directors - 1, 1)))
+                    (0.5 if j == 0 and request.close_dir1 else (1.4 if j == 0 and request.far_dir1 else 0.8 + (0.4 * j / max(num_directors - 1, 1))))
                     for j in range(num_directors)
                 )
                 director_spacing = round(remaining_boom * weight / total_weight, 1)
