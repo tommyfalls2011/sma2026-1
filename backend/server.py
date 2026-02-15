@@ -1552,16 +1552,30 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     fb_ratio = round(min(fb_ratio, 65), 1)
     fs_ratio = round(min(fs_ratio, 30), 1)
     
-    # === BEAMWIDTH ===
-    if n == 2: beamwidth_h, beamwidth_v = 62, 68
-    elif n == 3: beamwidth_h, beamwidth_v = 52, 58
-    elif n == 4: beamwidth_h, beamwidth_v = 45, 50
-    elif n == 5: beamwidth_h, beamwidth_v = 40, 45
+    # === BEAMWIDTH (Physics-based) ===
+    # Horizontal beamwidth from aperture formula: HPBW = 51 * λ / D
+    # where D = boom length (horizontal aperture), λ = wavelength
+    # Both in same units (meters)
+    boom_length_m = boom_length_in * 0.0254
+    if boom_length_m > 0 and wavelength > 0:
+        beamwidth_h = 51.0 * wavelength / boom_length_m
     else:
-        beamwidth_h = 52 / (1 + 0.10 * (n - 3))
-        beamwidth_v = 58 / (1 + 0.08 * (n - 3))
-    beamwidth_h = round(max(beamwidth_h, 20), 1)
-    beamwidth_v = round(max(beamwidth_v, 25), 1)
+        beamwidth_h = 60.0
+    
+    # Vertical beamwidth: for horizontal Yagi, vertical aperture is element length (~λ/2)
+    # HPBW_V = 51 * λ / L_element. Since elements are ~0.45-0.5λ, this gives ~102-113°
+    # But the array of elements narrows it somewhat. Use gain-based cross-check:
+    # Total beam solid angle ≈ 32400 / G_linear, split between H and V planes
+    gain_linear = 10 ** (gain_dbi / 10) if gain_dbi > 0 else 1
+    total_beam_area = 32400.0 / gain_linear if gain_linear > 1 else 3600
+    # V beamwidth = total_beam_area / H beamwidth
+    if beamwidth_h > 0:
+        beamwidth_v = total_beam_area / beamwidth_h
+    else:
+        beamwidth_v = 70.0
+    
+    beamwidth_h = round(max(min(beamwidth_h, 120), 15), 1)
+    beamwidth_v = round(max(min(beamwidth_v, 120), 20), 1)
     
     # === BANDWIDTH ===
     if n <= 3: bandwidth_percent = 6
