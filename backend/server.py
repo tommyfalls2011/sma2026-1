@@ -2336,13 +2336,25 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven spacing based on toggles
-                    refl_gap_lambda = 0.12 if request.close_driven else (0.22 if request.far_driven else 0.18)
-                    ideal_refl_gap = wavelength_in * refl_gap_lambda
-                    num_dirs = len(dir_indices)
-                    min_director_room = num_dirs * wavelength_in * 0.12
-                    max_refl_gap = target_boom - min_director_room
-                    refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
+                    # Driven position: use boom-proportional fractions so close/normal/far
+                    # ALWAYS produce different element distributions, even on short booms.
+                    # Also cap at wavelength-based ideal (for long booms where boom >> wavelength).
+                    if request.close_driven:
+                        boom_frac = 0.12  # 12% of boom
+                        wave_frac = 0.12  # 0.12λ
+                    elif request.far_driven:
+                        boom_frac = 0.28  # 28% of boom
+                        wave_frac = 0.22  # 0.22λ
+                    else:
+                        boom_frac = 0.20  # 20% of boom
+                        wave_frac = 0.18  # 0.18λ
+                    
+                    boom_based = target_boom * boom_frac
+                    wave_based = wavelength_in * wave_frac
+                    # Use the smaller of boom-proportional and wavelength-based
+                    refl_driven_gap = round(min(wave_based, boom_based), 1)
+                    # Ensure at minimum 8% of boom
+                    refl_driven_gap = max(refl_driven_gap, round(target_boom * 0.08, 1))
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
