@@ -1856,8 +1856,17 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
     
     if use_reflector:
-        # Reflector-to-driven: ~15% of total boom (closer than directors)
-        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
+        # Reflector-to-driven spacing: ~0.15λ to 0.20λ (wavelength-based, not boom-based)
+        # Standard Yagi design: reflector-driven gap is 0.15-0.20λ
+        # For 2-element (reflector+driven only), use full boom
+        if n == 2:
+            refl_driven_gap = round(target_boom, 1)
+        else:
+            # Use 0.18λ as default reflector-driven spacing (good compromise)
+            # But cap at 30% of boom to leave room for directors on short booms
+            ideal_refl_gap = round(wavelength_in * 0.18, 1)
+            max_refl_gap = round(target_boom * 0.30, 1)
+            refl_driven_gap = round(min(ideal_refl_gap, max_refl_gap), 1)
         
         elements.append({
             "element_type": "reflector",
