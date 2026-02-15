@@ -2213,9 +2213,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         if num_directors > 0:
             for i in range(num_directors):
                 # Weight: first director at ~0.8x avg spacing, last at ~1.2x avg spacing
-                # This mimics real Yagi designs where initial directors are closer
-                weight = 0.8 + (0.4 * i / max(num_directors - 1, 1))
-                total_weight = sum(0.8 + (0.4 * j / max(num_directors - 1, 1)) for j in range(num_directors))
+                # close_dir1 toggle: brings first director closer (0.5x weight instead of 0.8x)
+                if i == 0 and request.close_dir1:
+                    weight = 0.5
+                else:
+                    weight = 0.8 + (0.4 * i / max(num_directors - 1, 1))
+                total_weight = sum(
+                    (0.5 if j == 0 and request.close_dir1 else 0.8 + (0.4 * j / max(num_directors - 1, 1)))
+                    for j in range(num_directors)
+                )
                 director_spacing = round(remaining_boom * weight / total_weight, 1)
                 current_position += director_spacing
                 
