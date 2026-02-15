@@ -2399,12 +2399,16 @@ export default function AntennaCalculator() {
                 <Ionicons name="reader-outline" size={20} color="#00BCD4" />
                 <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Antenna Spec Sheet</Text>
               </View>
-              <View style={{ flexDirection: 'row', gap: 12 }}>
-                <TouchableOpacity onPress={() => { exportAllData(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity data-testid="export-pdf-btn" onPress={() => { exportPDF(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f44336', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
+                  <Ionicons name="document-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>PDF</Text>
+                </TouchableOpacity>
+                <TouchableOpacity data-testid="export-csv-btn" onPress={() => { exportAllData(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
                   <Ionicons name="download-outline" size={14} color="#fff" />
                   <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>CSV</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowSpecSheet(false)}>
+                <TouchableOpacity data-testid="close-spec-sheet-btn" onPress={() => setShowSpecSheet(false)}>
                   <Ionicons name="close-circle" size={28} color="#888" />
                 </TouchableOpacity>
               </View>
