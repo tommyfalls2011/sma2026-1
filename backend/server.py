@@ -2319,34 +2319,59 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     if request.taper and request.taper.enabled:
         base_gain += 0.3 * request.taper.num_tapers
     
-    # === SPACING OVERRIDE GAIN/F/B CORRECTIONS ===
-    # Element spacing significantly affects Yagi performance:
-    # - Tighter reflector-driven spacing: reduces gain, improves F/B (stronger coupling)
-    # - Wider reflector-driven spacing: increases gain, reduces F/B (weaker coupling)
-    # - Director spacing similarly affects directivity pattern
+    # === POSITION-BASED SPACING GAIN/F/B CORRECTIONS ===
+    # Use ACTUAL final element positions (after boom lock/spacing lock adjustments)
+    # to compute gain and F/B corrections based on real spacing in wavelengths.
     spacing_gain_adj = 0.0
     spacing_fb_adj = 0.0
     
-    if use_reflector and n >= 3:
-        # Reflector-to-driven spacing effect on gain and F/B
-        if hasattr(request, 'close_driven') and request.close_driven:
-            # 0.12λ: tight coupling, more power reflected back, less forward gain
-            spacing_gain_adj -= 0.5
-            spacing_fb_adj += 3.0
-        elif hasattr(request, 'far_driven') and request.far_driven:
-            # 0.22λ: looser coupling, more forward gain, weaker back rejection
-            spacing_gain_adj += 0.3
-            spacing_fb_adj -= 2.0
+    refl_elem = next((e for e in elements if e["element_type"] == "reflector"), None)
+    driven_elem_final = next((e for e in elements if e["element_type"] == "driven"), None)
+    dir_elems = sorted([e for e in elements if e["element_type"] == "director"], key=lambda e: e["position"])
+    
+    if refl_elem and driven_elem_final and n >= 3:
+        # Actual reflector-to-driven spacing in wavelengths
+        refl_driven_in = abs(driven_elem_final["position"] - refl_elem["position"])
+        refl_driven_lambda = (refl_driven_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.18
         
-        # First director spacing effect
-        if hasattr(request, 'close_dir1') and request.close_dir1:
-            # Tight first director: stronger mutual coupling, slight gain loss
-            spacing_gain_adj -= 0.3
-            spacing_fb_adj += 1.5
-        elif hasattr(request, 'far_dir1') and request.far_dir1:
-            # Wide first director: better directivity, slight gain boost
-            spacing_gain_adj += 0.2
-            spacing_fb_adj -= 1.0
+        # Gain correction: peak near 0.20λ, penalize deviations
+        optimal_gain_lambda = 0.20
+        if refl_driven_lambda < optimal_gain_lambda:
+            # Tighter: ~2.5 dB loss per 0.1λ below optimal (strong mutual coupling reduces forward gain)
+            spacing_gain_adj -= 2.5 * (optimal_gain_lambda - refl_driven_lambda) / 0.1
+        else:
+            # Wider: ~1.5 dB loss per 0.1λ above optimal (diminishing coupling benefit)
+            spacing_gain_adj -= 1.5 * (refl_driven_lambda - optimal_gain_lambda) / 0.1
+        
+        # F/B correction: tighter spacing = better F/B (peaks near 0.15λ)
+        optimal_fb_lambda = 0.15
+        if refl_driven_lambda <= optimal_fb_lambda:
+            spacing_fb_adj = 2.0 - 5.0 * (optimal_fb_lambda - refl_driven_lambda) / 0.1
+        elif refl_driven_lambda <= 0.20:
+            spacing_fb_adj = 2.0 - 4.0 * (refl_driven_lambda - optimal_fb_lambda) / 0.05
+        else:
+            spacing_fb_adj = -3.0 * (refl_driven_lambda - 0.20) / 0.1
+        
+        # First director spacing correction
+        if len(dir_elems) >= 1:
+            dir1_in = abs(dir_elems[0]["position"] - driven_elem_final["position"])
+            dir1_lambda = (dir1_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.13
+            optimal_dir1 = 0.13
+            dir1_dev = abs(dir1_lambda - optimal_dir1)
+            if dir1_dev > 0.05:
+                spacing_gain_adj -= 0.3 * (dir1_dev - 0.05) / 0.05
+                spacing_fb_adj += 0.5 if dir1_lambda < optimal_dir1 else -0.5
+        
+        # Clamp corrections to reasonable range
+        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
+        spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
+        
+        # Notify user if boom lock prevented spacing overrides from taking effect
+        if request.boom_lock_enabled and request.max_boom_length:
+            requested_lambda = 0.12 if request.close_driven else (0.22 if request.far_driven else 0.18)
+            actual_vs_requested = abs(refl_driven_lambda - requested_lambda)
+            if actual_vs_requested > 0.02 and (request.close_driven or request.far_driven):
+                notes.append(f"Note: Boom restraint limits driven spacing to {round(refl_driven_lambda, 3)}λ (requested {requested_lambda}λ). Use a longer boom for full effect.")
     
     base_gain += spacing_gain_adj
     
