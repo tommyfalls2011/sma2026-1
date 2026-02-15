@@ -2320,7 +2320,7 @@ export default function AntennaCalculator() {
 
       {/* Spec Sheet Modal */}
       <Modal visible={showSpecSheet} transparent animationType="slide" onRequestClose={() => setShowSpecSheet(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: Constants.statusBarHeight || 0 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', paddingTop: 0 }}>
           <View style={{ flex: 1, maxWidth: 500, alignSelf: 'center', width: '100%' }}>
             {/* Header Bar */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#333' }}>
