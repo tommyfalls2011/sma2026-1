@@ -1894,24 +1894,52 @@ export default function AntennaCalculator() {
               </View>
             )}
 
-          {/* Close Spacing Overrides */}
+          {/* Close/Far Spacing Overrides */}
           <View style={{ marginTop: 4, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10 }}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: '#aaa', marginBottom: 6 }}>
               <Ionicons name="git-compare-outline" size={11} color="#FF5722" /> Spacing Overrides (Auto-Tune)
             </Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: '#ccc', fontWeight: '600' }}>Close Driven to Reflector</Text>
-                <Text style={{ fontSize: 9, color: '#666' }}>0.12λ instead of 0.18λ</Text>
-              </View>
-              <Switch value={closeDriven} onValueChange={setCloseDriven} trackColor={{ false: '#333', true: '#FF5722' }} thumbColor="#fff" />
+            <Text style={{ fontSize: 10, color: '#555', marginBottom: 8 }}>Driven Element (Reflector-to-Driven gap)</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: closeDriven ? '#FF5722' : '#252525', marginRight: 4, alignItems: 'center' }}
+                onPress={() => { setCloseDriven(!closeDriven); if (!closeDriven) setFarDriven(false); }}
+              >
+                <Text style={{ fontSize: 10, color: closeDriven ? '#fff' : '#888', fontWeight: '600' }}>Close (0.12λ)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: !closeDriven && !farDriven ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
+                onPress={() => { setCloseDriven(false); setFarDriven(false); }}
+              >
+                <Text style={{ fontSize: 10, color: !closeDriven && !farDriven ? '#fff' : '#888', fontWeight: '600' }}>Normal (0.18λ)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: farDriven ? '#2196F3' : '#252525', marginLeft: 4, alignItems: 'center' }}
+                onPress={() => { setFarDriven(!farDriven); if (!farDriven) setCloseDriven(false); }}
+              >
+                <Text style={{ fontSize: 10, color: farDriven ? '#fff' : '#888', fontWeight: '600' }}>Far (0.22λ)</Text>
+              </TouchableOpacity>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 11, color: '#ccc', fontWeight: '600' }}>Close Dir1 to Driven</Text>
-                <Text style={{ fontSize: 9, color: '#666' }}>First director tighter spacing</Text>
-              </View>
-              <Switch value={closeDir1} onValueChange={setCloseDir1} trackColor={{ false: '#333', true: '#FF5722' }} thumbColor="#fff" />
+            <Text style={{ fontSize: 10, color: '#555', marginBottom: 8 }}>Director 1 (Driven-to-Dir1 gap)</Text>
+            <View style={{ flexDirection: 'row' }}>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: closeDir1 ? '#FF5722' : '#252525', marginRight: 4, alignItems: 'center' }}
+                onPress={() => { setCloseDir1(!closeDir1); if (!closeDir1) setFarDir1(false); }}
+              >
+                <Text style={{ fontSize: 10, color: closeDir1 ? '#fff' : '#888', fontWeight: '600' }}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: !closeDir1 && !farDir1 ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
+                onPress={() => { setCloseDir1(false); setFarDir1(false); }}
+              >
+                <Text style={{ fontSize: 10, color: !closeDir1 && !farDir1 ? '#fff' : '#888', fontWeight: '600' }}>Normal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, padding: 6, borderRadius: 6, backgroundColor: farDir1 ? '#2196F3' : '#252525', marginLeft: 4, alignItems: 'center' }}
+                onPress={() => { setFarDir1(!farDir1); if (!farDir1) setCloseDir1(false); }}
+              >
+                <Text style={{ fontSize: 10, color: farDir1 ? '#fff' : '#888', fontWeight: '600' }}>Far</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
