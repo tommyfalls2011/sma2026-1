@@ -1553,29 +1553,33 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     fs_ratio = round(min(fs_ratio, 30), 1)
     
     # === BEAMWIDTH (Physics-based) ===
-    # Horizontal beamwidth from aperture formula: HPBW = 51 * λ / D
-    # where D = boom length (horizontal aperture), λ = wavelength
-    # Both in same units (meters)
+    # Two methods, use the most appropriate for the boom/wavelength ratio:
+    # 1. Aperture: HPBW_H = 51 * λ / D (works well when boom >= ~0.5λ)
+    # 2. Gain-based: total solid angle = 32400 / G_linear (always valid)
+    # Use free-space gain (base_gain_dbi) for beamwidth — ground gain inflates G_linear
     boom_length_m = boom_length_in * 0.0254
-    if boom_length_m > 0 and wavelength > 0:
-        beamwidth_h = 51.0 * wavelength / boom_length_m
-    else:
-        beamwidth_h = 60.0
+    g_free_linear = 10 ** (base_gain_dbi / 10) if base_gain_dbi > 0 else 1
+    bw_gain_total = math.sqrt(32400.0 / g_free_linear) if g_free_linear > 1 else 90
     
-    # Vertical beamwidth: for horizontal Yagi, vertical aperture is element length (~λ/2)
-    # HPBW_V = 51 * λ / L_element. Since elements are ~0.45-0.5λ, this gives ~102-113°
-    # But the array of elements narrows it somewhat. Use gain-based cross-check:
-    # Total beam solid angle ≈ 32400 / G_linear, split between H and V planes
-    gain_linear = 10 ** (gain_dbi / 10) if gain_dbi > 0 else 1
-    total_beam_area = 32400.0 / gain_linear if gain_linear > 1 else 3600
-    # V beamwidth = total_beam_area / H beamwidth
-    if beamwidth_h > 0:
-        beamwidth_v = total_beam_area / beamwidth_h
+    if boom_length_m > 0 and wavelength > 0:
+        bw_aperture = 51.0 * wavelength / boom_length_m
+        # When boom is short relative to λ, aperture formula overestimates
+        # Use gain-based when aperture gives unreasonable result
+        if bw_aperture > bw_gain_total * 1.5:
+            beamwidth_h = bw_gain_total * 1.2  # H-plane ~1.2x geometric mean
+        else:
+            beamwidth_h = bw_aperture
     else:
-        beamwidth_v = 70.0
+        beamwidth_h = bw_gain_total * 1.2
+    
+    # V beamwidth from total beam solid angle: BW_V = 32400 / (G_linear * BW_H)
+    if beamwidth_h > 0 and g_free_linear > 1:
+        beamwidth_v = 32400.0 / (g_free_linear * beamwidth_h)
+    else:
+        beamwidth_v = 78.0  # Half-wave dipole default
     
     beamwidth_h = round(max(min(beamwidth_h, 120), 15), 1)
-    beamwidth_v = round(max(min(beamwidth_v, 120), 20), 1)
+    beamwidth_v = round(max(min(beamwidth_v, 120), 25), 1)
     
     # === BANDWIDTH ===
     if n <= 3: bandwidth_percent = 6
