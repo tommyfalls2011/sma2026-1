@@ -2411,8 +2411,9 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         base_gain += 0.3 * request.taper.num_tapers
     
     # === POSITION-BASED SPACING GAIN/F/B CORRECTIONS ===
-    # Use ACTUAL final element positions (after boom lock/spacing lock adjustments)
-    # to compute gain and F/B corrections based on real spacing in wavelengths.
+    # Use ACTUAL final element positions to compute gain/F/B corrections.
+    # When boom is short relative to wavelength (boom lock scenario), use boom-fraction
+    # so that close/normal/far ALWAYS show meaningful gain differences.
     spacing_gain_adj = 0.0
     spacing_fb_adj = 0.0
     
@@ -2421,48 +2422,34 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     dir_elems = sorted([e for e in elements if e["element_type"] == "director"], key=lambda e: e["position"])
     
     if refl_elem and driven_elem_final and n >= 3:
-        # Actual reflector-to-driven spacing in wavelengths
         refl_driven_in = abs(driven_elem_final["position"] - refl_elem["position"])
-        refl_driven_lambda = (refl_driven_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.18
         
-        # Gain correction: peak near 0.20λ, penalize deviations
-        optimal_gain_lambda = 0.20
-        if refl_driven_lambda < optimal_gain_lambda:
-            # Tighter: ~2.5 dB loss per 0.1λ below optimal (strong mutual coupling reduces forward gain)
-            spacing_gain_adj -= 2.5 * (optimal_gain_lambda - refl_driven_lambda) / 0.1
-        else:
-            # Wider: ~1.5 dB loss per 0.1λ above optimal (diminishing coupling benefit)
-            spacing_gain_adj -= 1.5 * (refl_driven_lambda - optimal_gain_lambda) / 0.1
+        # Use boom-fraction approach: what % of the boom is the reflector-driven gap?
+        # This ensures corrections always differentiate close/normal/far on any boom length.
+        driven_frac = refl_driven_in / final_boom if final_boom > 0 else 0.20
         
-        # F/B correction: tighter spacing = better F/B (peaks near 0.15λ)
-        optimal_fb_lambda = 0.15
-        if refl_driven_lambda <= optimal_fb_lambda:
-            spacing_fb_adj = 2.0 - 5.0 * (optimal_fb_lambda - refl_driven_lambda) / 0.1
-        elif refl_driven_lambda <= 0.20:
-            spacing_fb_adj = 2.0 - 4.0 * (refl_driven_lambda - optimal_fb_lambda) / 0.05
-        else:
-            spacing_fb_adj = -3.0 * (refl_driven_lambda - 0.20) / 0.1
+        # Gain: wider driven gap (more boom for reflector-driven) = more forward gain
+        # Baseline at 0.20 boom fraction (normal). ~5 dB sensitivity per 0.10 fraction change.
+        spacing_gain_adj = 5.0 * (driven_frac - 0.20)
         
-        # First director spacing correction
-        if len(dir_elems) >= 1:
-            dir1_in = abs(dir_elems[0]["position"] - driven_elem_final["position"])
-            dir1_lambda = (dir1_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.13
-            optimal_dir1 = 0.13
-            dir1_dev = abs(dir1_lambda - optimal_dir1)
-            if dir1_dev > 0.05:
-                spacing_gain_adj -= 0.3 * (dir1_dev - 0.05) / 0.05
-                spacing_fb_adj += 0.5 if dir1_lambda < optimal_dir1 else -0.5
+        # F/B: tighter driven gap = better F/B (stronger reflector coupling)
+        # Baseline at 0.15 boom fraction. Tighter = better F/B.
+        spacing_fb_adj = -6.0 * (driven_frac - 0.15)
         
-        # Clamp corrections to reasonable range
-        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
-        spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
+        # First director distribution correction
+        if len(dir_elems) >= 2:
+            dir1_gap = abs(dir_elems[0]["position"] - driven_elem_final["position"])
+            remaining_for_dirs = final_boom - refl_driven_in
+            dir1_frac = dir1_gap / remaining_for_dirs if remaining_for_dirs > 0 else 0.33
+            avg_frac = 1.0 / len(dir_elems)  # equal spacing baseline
+            # Tighter first director = slight gain loss, wider = slight gain boost
+            dir1_adj = 3.0 * (dir1_frac - avg_frac)
+            spacing_gain_adj += max(-0.4, min(0.3, dir1_adj))
+            spacing_fb_adj -= max(-0.5, min(0.5, dir1_adj))
         
-        # Notify user if boom lock prevented spacing overrides from taking effect
-        if request.boom_lock_enabled and request.max_boom_length:
-            requested_lambda = 0.12 if request.close_driven else (0.22 if request.far_driven else 0.18)
-            actual_vs_requested = abs(refl_driven_lambda - requested_lambda)
-            if actual_vs_requested > 0.02 and (request.close_driven or request.far_driven):
-                notes.append(f"Note: Boom restraint limits driven spacing to {round(refl_driven_lambda, 3)}λ (requested {requested_lambda}λ). Use a longer boom for full effect.")
+        # Clamp to physically reasonable range
+        spacing_gain_adj = round(max(-1.2, min(0.8, spacing_gain_adj)), 2)
+        spacing_fb_adj = round(max(-4.0, min(4.0, spacing_fb_adj)), 1)
     
     base_gain += spacing_gain_adj
     
