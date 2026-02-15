@@ -66,19 +66,6 @@ export default function AntennaCalculator() {
   const [farDriven, setFarDriven] = useState(false);
   const [farDir1, setFarDir1] = useState(false);
   
-  const SPACING_OPTIONS = {
-    tight: [
-      { value: '0.6', label: 'Very Tight (60%)' },
-      { value: '0.75', label: 'Tight (75%)' },
-      { value: '0.85', label: 'Mod Tight (85%)' },
-    ],
-    long: [
-      { value: '1.15', label: 'Mod Long (115%)' },
-      { value: '1.3', label: 'Long (130%)' },
-      { value: '1.5', label: 'Very Long (150%)' },
-    ],
-  };
-
   const applySpacing = (factor: string) => {
     const f = parseFloat(factor);
     const oldF = parseFloat(spacingLevel) || 1;
