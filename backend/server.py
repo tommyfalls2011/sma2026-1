@@ -1386,39 +1386,31 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     gain_breakdown = {"standard_gain": round(standard_gain, 2), "boom_adj": boom_adj}
     
     # === ELEMENT SPACING GAIN ADJUSTMENT ===
-    # Reflector-to-driven spacing directly affects mutual coupling and forward gain.
-    # Optimal for max gain is ~0.20λ; tighter spacing trades gain for F/B, wider does the reverse.
-    # Director distribution also affects directivity.
+    # Use boom-fraction approach for consistent behavior on any boom length.
+    # Wider driven-reflector gap = more forward gain, less F/B.
     spacing_gain_adj = 0.0
     driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
     reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
     director_elems = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
     
     if driven_elem and reflector_elem and n >= 3:
-        refl_driven_spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
-        refl_driven_lambda = refl_driven_spacing_m / wavelength if wavelength > 0 else 0.18
+        refl_driven_in = abs(driven_elem.position - reflector_elem.position)
+        # Boom fraction: what portion of the boom is reflector-to-driven gap?
+        driven_frac = refl_driven_in / boom_length_in if boom_length_in > 0 else 0.20
         
-        # Gain correction curve: peak gain near 0.20λ, falls off for tighter/wider
-        # Based on NEC simulation trends for standard Yagi designs
-        optimal_lambda = 0.20
-        if refl_driven_lambda < optimal_lambda:
-            # Tighter: lose ~2.5 dB per 0.1λ below optimal (strong mutual coupling)
-            spacing_gain_adj = -2.5 * (optimal_lambda - refl_driven_lambda) / 0.1
-        else:
-            # Wider: lose ~1.5 dB per 0.1λ above optimal (diminishing coupling benefit)
-            spacing_gain_adj = -1.5 * (refl_driven_lambda - optimal_lambda) / 0.1
+        # Gain correction: wider driven = more gain. Baseline at 0.20 boom fraction.
+        spacing_gain_adj = 5.0 * (driven_frac - 0.20)
         
-        # Director spacing distribution: first director position affects directivity
-        if len(director_elems) >= 1:
-            dir1_spacing_m = abs(convert_element_to_meters(director_elems[0].position - driven_elem.position, "inches"))
-            dir1_lambda = dir1_spacing_m / wavelength if wavelength > 0 else 0.15
-            # Optimal first director at ~0.12-0.15λ from driven
-            optimal_dir1 = 0.13
-            dir1_deviation = abs(dir1_lambda - optimal_dir1)
-            if dir1_deviation > 0.05:
-                spacing_gain_adj -= 0.3 * (dir1_deviation - 0.05) / 0.05
+        # First director distribution correction
+        if len(director_elems) >= 2:
+            dir1_gap = abs(director_elems[0].position - driven_elem.position)
+            remaining = boom_length_in - refl_driven_in
+            dir1_frac = dir1_gap / remaining if remaining > 0 else 0.33
+            avg_frac = 1.0 / len(director_elems)
+            dir1_adj = 3.0 * (dir1_frac - avg_frac)
+            spacing_gain_adj += max(-0.4, min(0.3, dir1_adj))
         
-        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
+        spacing_gain_adj = round(max(-1.2, min(0.8, spacing_gain_adj)), 2)
     
     gain_dbi += spacing_gain_adj
     gain_breakdown["spacing_adj"] = spacing_gain_adj
