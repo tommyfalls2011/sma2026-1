@@ -352,6 +352,8 @@ export default function AntennaCalculator() {
   const [spacingLevel, setSpacingLevel] = useState('1.0');
   const [closeDriven, setCloseDriven] = useState(false);
   const [closeDir1, setCloseDir1] = useState(false);
+  const [farDriven, setFarDriven] = useState(false);
+  const [farDir1, setFarDir1] = useState(false);
   
   const SPACING_OPTIONS = {
     tight: [
