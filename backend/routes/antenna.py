@@ -243,3 +243,18 @@ async def optimize_height(request: HeightOptimizeRequest):
         optimal_gain=round(best_gain, 2), optimal_fb_ratio=round(best_fb, 1),
         heights_tested=heights_tested
     )
+
+
+@router.post("/spec-sheet/pdf")
+async def generate_pdf(payload: dict = Body(...)):
+    """Generate a PDF spec sheet from provided inputs and results."""
+    inputs = payload.get("inputs", {})
+    results = payload.get("results", {})
+    user_email = payload.get("user_email", "guest")
+    gain_mode = payload.get("gain_mode", "realworld")
+    pdf_bytes = generate_spec_sheet_pdf(inputs, results, user_email, gain_mode)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=antenna_spec_sheet.pdf"},
+    )
