@@ -1522,21 +1522,13 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         fs_ratio = 12 + 2.5 * math.log2(n - 2)
     
     # Element spacing affects F/B: tighter reflector-driven = better F/B, wider = worse
+    # Uses boom-fraction approach consistent with gain correction
     if driven_elem and reflector_elem and has_reflector and n >= 3:
-        refl_driven_spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
-        refl_driven_lambda = refl_driven_spacing_m / wavelength if wavelength > 0 else 0.18
-        # F/B peaks near 0.15λ spacing, drops for wider spacing
-        optimal_fb_lambda = 0.15
-        if refl_driven_lambda < optimal_fb_lambda:
-            # Very tight: diminishing returns, slight degradation
-            spacing_fb_adj = 2.0 - 5.0 * (optimal_fb_lambda - refl_driven_lambda) / 0.1
-        elif refl_driven_lambda <= 0.20:
-            # 0.15-0.20λ: good F/B range, slight decrease
-            spacing_fb_adj = 2.0 - 4.0 * (refl_driven_lambda - optimal_fb_lambda) / 0.05
-        else:
-            # >0.20λ: F/B drops more rapidly
-            spacing_fb_adj = -3.0 * (refl_driven_lambda - 0.20) / 0.1
-        spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
+        refl_driven_in = abs(driven_elem.position - reflector_elem.position)
+        driven_frac = refl_driven_in / boom_length_in if boom_length_in > 0 else 0.20
+        # F/B correction: tighter driven = better F/B. Baseline at 0.15 fraction.
+        spacing_fb_adj = -6.0 * (driven_frac - 0.15)
+        spacing_fb_adj = round(max(-4.0, min(4.0, spacing_fb_adj)), 1)
         fb_ratio += spacing_fb_adj
         fs_ratio += spacing_fb_adj * 0.5
     
