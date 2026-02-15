@@ -1,7 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -11,7 +9,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import math
 import random
 import hashlib
@@ -378,6 +376,14 @@ class StatusCheckCreate(BaseModel):
 
 
 BAND_DEFINITIONS = {
+    "2200m": {"name": "2200m", "center": 0.1368, "start": 0.1357, "end": 0.1378, "channel_spacing_khz": 0.1},
+    "630m": {"name": "630m", "center": 0.4755, "start": 0.472, "end": 0.479, "channel_spacing_khz": 0.5},
+    "160m": {"name": "160m", "center": 1.9, "start": 1.8, "end": 2.0, "channel_spacing_khz": 3},
+    "80m": {"name": "80m", "center": 3.75, "start": 3.5, "end": 4.0, "channel_spacing_khz": 3},
+    "60m": {"name": "60m", "center": 5.3305, "start": 5.3305, "end": 5.4035, "channel_spacing_khz": 3},
+    "40m": {"name": "40m", "center": 7.15, "start": 7.0, "end": 7.3, "channel_spacing_khz": 5},
+    "30m": {"name": "30m", "center": 10.125, "start": 10.1, "end": 10.15, "channel_spacing_khz": 1},
+    "20m": {"name": "20m", "center": 14.175, "start": 14.0, "end": 14.35, "channel_spacing_khz": 5},
     "17m": {"name": "17m", "center": 18.118, "start": 18.068, "end": 18.168, "channel_spacing_khz": 5},
     "15m": {"name": "15m", "center": 21.225, "start": 21.0, "end": 21.45, "channel_spacing_khz": 5},
     "12m": {"name": "12m", "center": 24.94, "start": 24.89, "end": 24.99, "channel_spacing_khz": 5},
@@ -387,6 +393,13 @@ BAND_DEFINITIONS = {
     "2m": {"name": "2m", "center": 146.0, "start": 144.0, "end": 148.0, "channel_spacing_khz": 20},
     "1.25m": {"name": "1.25m", "center": 223.5, "start": 222.0, "end": 225.0, "channel_spacing_khz": 25},
     "70cm": {"name": "70cm", "center": 435.0, "start": 420.0, "end": 450.0, "channel_spacing_khz": 25},
+    "33cm": {"name": "33cm", "center": 915.0, "start": 902.0, "end": 928.0, "channel_spacing_khz": 50},
+    "23cm": {"name": "23cm", "center": 1270.0, "start": 1240.0, "end": 1300.0, "channel_spacing_khz": 100},
+    "13cm": {"name": "13cm (2.3 GHz)", "center": 2350.0, "start": 2300.0, "end": 2450.0, "channel_spacing_khz": 100},
+    "9cm": {"name": "9cm (3.4 GHz)", "center": 3400.0, "start": 3300.0, "end": 3500.0, "channel_spacing_khz": 100},
+    "5cm": {"name": "5cm (5.6 GHz)", "center": 5650.0, "start": 5650.0, "end": 5925.0, "channel_spacing_khz": 200},
+    "3cm": {"name": "3cm (10 GHz)", "center": 10250.0, "start": 10000.0, "end": 10500.0, "channel_spacing_khz": 500},
+    "1.2cm": {"name": "1.2cm (24 GHz)", "center": 24100.0, "start": 24000.0, "end": 24250.0, "channel_spacing_khz": 500},
 }
 
 # === FREE-SPACE GAIN MODEL (dBi) ===
@@ -2135,17 +2148,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
     
     if use_reflector:
-        # Reflector-to-driven spacing: wavelength-based (standard Yagi design)
-        # Typical: 0.15λ to 0.20λ, with 0.18λ being a good compromise
-        if n == 2:
-            refl_driven_gap = round(target_boom, 1)
-        else:
-            ideal_refl_gap = wavelength_in * 0.18  # ~0.18λ
-            num_dirs = n - 2
-            # Each director needs at least 0.12λ spacing
-            min_director_room = num_dirs * wavelength_in * 0.12
-            max_refl_gap = target_boom - min_director_room
-            refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
+        # Reflector-to-driven: ~15% of total boom (closer than directors)
+        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
         
         elements.append({
             "element_type": "reflector",
@@ -2268,12 +2272,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven at ~0.18λ from reflector, cap to ensure director room
-                    ideal_refl_gap = wavelength_in * 0.18
-                    num_dirs = len(dir_indices)
-                    min_director_room = num_dirs * wavelength_in * 0.12
-                    max_refl_gap = target_boom - min_director_room
-                    refl_driven_gap = round(min(ideal_refl_gap, max(max_refl_gap, target_boom * 0.15)), 1)
+                    # With directors: driven at 15% of boom, directors equally spaced after
+                    refl_driven_gap = round(target_boom * 0.15, 1)
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
@@ -3933,605 +3933,8 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
     return {"message": "Deleted"}
 
 
-@api_router.get("/download/store-site")
-async def download_store_site():
-    return FileResponse("/app/backend/sma-store-site.zip", filename="sma-store-site.zip", media_type="application/zip")
-
-@api_router.get("/download/feature-graphic")
-async def download_feature_graphic():
-    return FileResponse("/app/backend/feature-graphic-1024x500.png", filename="feature-graphic-1024x500.png", media_type="image/png")
-
-@api_router.get("/download/screenshot/{num}")
-async def download_screenshot(num: int):
-    return FileResponse(f"/app/backend/screenshot_{num}.png", filename=f"screenshot_{num}.png", media_type="image/png")
-
-@api_router.get("/download/app-icon")
-async def download_app_icon():
-    return FileResponse("/app/backend/app-icon-512.png", filename="app-icon-512.png", media_type="image/png")
-
-@api_router.get("/download/feature-graphic-jpg")
-async def download_feature_graphic_jpg():
-    return FileResponse("/app/backend/feature-graphic.jpg", filename="feature-graphic.jpg", media_type="image/jpeg")
-
-
-
-
-
-
-# ============================================================
-# STORE API ENDPOINTS
-# ============================================================
-import uuid
-
-import motor.motor_asyncio as motor_async
-_store_client = motor_async.AsyncIOMotorClient(os.environ.get("STORE_MONGO_URL"))
-store_db = _store_client["sma_store"]
-
-@api_router.post("/store/register")
-async def store_register(data: dict):
-    email = data.get("email", "").strip().lower()
-    name = data.get("name", "").strip()
-    password = data.get("password", "")
-    if not email or not name or not password:
-        raise HTTPException(status_code=400, detail="All fields required")
-    if await store_db.store_members.find_one({"email": email}):
-        raise HTTPException(status_code=400, detail="Email already registered")
-    member_id = str(uuid.uuid4())
-    member = {
-        "id": member_id, "name": name, "email": email,
-        "password_hash": hash_password(password),
-        "is_admin": email == "fallstommy@gmail.com",
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await store_db.store_members.insert_one(member)
-    token = create_token(member_id, email)
-    return {"token": token, "user": {"id": member_id, "name": name, "email": email, "is_admin": member.get("is_admin", False)}}
-
-@api_router.post("/store/login")
-async def store_login(data: dict):
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
-    member = await store_db.store_members.find_one({"email": email}, {"_id": 0})
-    if not member or not verify_password(password, member["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_token(member["id"], email)
-    return {"token": token, "user": {"id": member["id"], "name": member["name"], "email": email, "is_admin": member.get("is_admin", False)}}
-
-@api_router.get("/store/me")
-async def store_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0, "password_hash": 0})
-    if not member:
-        raise HTTPException(status_code=404, detail="Not found")
-    return member
-
-@api_router.get("/store/products")
-async def store_products():
-    products = await store_db.store_products.find({}, {"_id": 0}).to_list(100)
-    return products
-
-@api_router.get("/store/products/{product_id}")
-async def store_product(product_id: str):
-    product = await store_db.store_products.find_one({"id": product_id}, {"_id": 0})
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return product
-
-async def require_store_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
-    if not member or not member.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin required")
-    return member
-
-@api_router.post("/store/admin/products")
-async def store_create_product(data: dict, admin: dict = Depends(require_store_admin)):
-    product = {
-        "id": str(uuid.uuid4()), "name": data.get("name", ""), "price": data.get("price", 0),
-        "short_desc": data.get("short_desc", ""), "description": data.get("description", ""),
-        "image_url": data.get("image_url", ""), "gallery": data.get("gallery", []),
-        "in_stock": data.get("in_stock", True),
-        "specs": data.get("specs", []), "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await store_db.store_products.insert_one(product)
-    return {k: v for k, v in product.items() if k != "_id"}
-
-@api_router.put("/store/admin/products/{product_id}")
-async def store_update_product(product_id: str, data: dict, admin: dict = Depends(require_store_admin)):
-    update = {k: v for k, v in data.items() if k not in ["id", "_id"]}
-    result = await store_db.store_products.update_one({"id": product_id}, {"$set": update})
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return {"status": "ok"}
-
-@api_router.delete("/store/admin/products/{product_id}")
-async def store_delete_product(product_id: str, admin: dict = Depends(require_store_admin)):
-    result = await store_db.store_products.delete_one({"id": product_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Product not found")
-    return {"status": "ok"}
-
-@api_router.get("/store/admin/members")
-async def store_list_members(admin: dict = Depends(require_store_admin)):
-    members = await store_db.store_members.find({}, {"_id": 0, "password_hash": 0}).to_list(1000)
-    return members
-
-@api_router.delete("/store/admin/members/{member_id}")
-async def store_admin_delete_member(member_id: str, admin: dict = Depends(require_store_admin)):
-    member = await store_db.store_members.find_one({"id": member_id}, {"_id": 0})
-    if not member:
-        raise HTTPException(status_code=404, detail="Member not found")
-    if member.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Cannot delete admin account")
-    await store_db.store_members.delete_one({"id": member_id})
-    return {"status": "ok", "message": f"Member {member['email']} deleted"}
-
-@api_router.delete("/store/account")
-async def store_delete_own_account(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    member = await store_db.store_members.find_one({"id": payload["user_id"]}, {"_id": 0})
-    if not member:
-        raise HTTPException(status_code=404, detail="Account not found")
-    if member.get("is_admin"):
-        raise HTTPException(status_code=403, detail="Admin accounts cannot be self-deleted")
-    await store_db.store_members.delete_one({"id": payload["user_id"]})
-    return {"status": "ok", "message": "Account deleted"}
-
-# APK Version Check - compares GitHub releases with stored version
-import httpx
-
-GITHUB_REPO = "tommyfalls2011/sma2026-1"
-
-@api_router.get("/store/latest-apk")
-async def get_latest_apk():
-    """Check GitHub for latest APK release and compare with stored version."""
-    stored = await store_db.store_settings.find_one({"key": "apk_version"}, {"_id": 0})
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest")
-            if resp.status_code != 200:
-                if stored:
-                    return stored.get("value", {})
-                return {"error": "No release found"}
-            gh = resp.json()
-            tag = gh.get("tag_name", "")
-            assets = gh.get("assets", [])
-            apk_asset = next((a for a in assets if a["name"].endswith(".apk")), None)
-            if not apk_asset:
-                if stored:
-                    return stored.get("value", {})
-                return {"error": "No APK in latest release"}
-            github_info = {
-                "version": tag,
-                "download_url": apk_asset["browser_download_url"],
-                "filename": apk_asset["name"],
-                "size_mb": round(apk_asset["size"] / (1024 * 1024), 1),
-                "published_at": gh.get("published_at", ""),
-                "release_name": gh.get("name", tag),
-            }
-            stored_version = stored.get("value", {}).get("version") if stored else None
-            if stored_version != tag:
-                await store_db.store_settings.update_one(
-                    {"key": "apk_version"},
-                    {"$set": {"key": "apk_version", "value": github_info}},
-                    upsert=True
-                )
-                github_info["updated"] = True
-            return github_info
-    except Exception:
-        if stored:
-            return stored.get("value", {})
-        return {"error": "Could not check GitHub"}
-
-# ============================================================
-# STRIPE CHECKOUT ENDPOINTS
-# ============================================================
-import stripe
-from fastapi import Request
-
-NC_TAX_RATE = 0.075
-SHIPPING_STANDARD = 15.00
-SHIPPING_RATES = {"standard": 15.00, "priority": 25.00, "express": 45.00}
-
-@api_router.post("/store/checkout")
-async def store_checkout(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    user_id = payload["user_id"]
-    user_email = payload.get("email", "")
-
-    cart_items = data.get("items", [])
-    origin_url = data.get("origin_url", "")
-    if not cart_items or not origin_url:
-        raise HTTPException(status_code=400, detail="Cart items and origin_url required")
-
-    # Look up actual prices from DB (never trust frontend prices)
-    subtotal = 0.0
-    order_items = []
-    for ci in cart_items:
-        product = await store_db.store_products.find_one({"id": ci["id"]}, {"_id": 0})
-        if not product:
-            raise HTTPException(status_code=400, detail=f"Product {ci['id']} not found")
-        if not product.get("in_stock"):
-            raise HTTPException(status_code=400, detail=f"{product['name']} is sold out")
-        qty = max(1, int(ci.get("qty", 1)))
-        item_total = float(product["price"]) * qty
-        subtotal += item_total
-        order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
-
-    tax = round(subtotal * NC_TAX_RATE, 2)
-    shipping_method = data.get("shipping", "standard")
-    if shipping_method not in SHIPPING_RATES:
-        shipping_method = "standard"
-    shipping = SHIPPING_RATES[shipping_method]
-    grand_total = round(subtotal + tax + shipping, 2)
-
-    # Create Stripe checkout session using official SDK
-    stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    stripe.api_key = stripe_key
-
-    success_url = f"{origin_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{origin_url}/cart"
-
-    order_id = str(uuid.uuid4())
-    
-    # Build line items for Stripe
-    line_items = []
-    for item in order_items:
-        line_items.append({
-            "price_data": {
-                "currency": "usd",
-                "product_data": {"name": item["name"]},
-                "unit_amount": int(item["price"] * 100),  # Stripe uses cents
-            },
-            "quantity": item["qty"],
-        })
-    # Add tax as line item
-    if tax > 0:
-        line_items.append({
-            "price_data": {
-                "currency": "usd",
-                "product_data": {"name": "NC Sales Tax (7.5%)"},
-                "unit_amount": int(tax * 100),
-            },
-            "quantity": 1,
-        })
-    # Add shipping as line item
-    line_items.append({
-        "price_data": {
-            "currency": "usd",
-            "product_data": {"name": f"Shipping ({shipping_method.title()})"},
-            "unit_amount": int(shipping * 100),
-        },
-        "quantity": 1,
-    })
-
-    session = stripe.checkout.Session.create(
-        payment_method_types=["card"],
-        line_items=line_items,
-        mode="payment",
-        success_url=success_url,
-        cancel_url=cancel_url,
-        customer_email=user_email,
-        metadata={"order_id": order_id, "user_id": user_id, "email": user_email}
-    )
-
-    # Store payment transaction
-    transaction = {
-        "id": order_id,
-        "session_id": session.id,
-        "user_id": user_id,
-        "email": user_email,
-        "items": order_items,
-        "subtotal": subtotal,
-        "tax": tax,
-        "shipping": shipping,
-        "shipping_method": shipping_method,
-        "total": grand_total,
-        "payment_status": "pending",
-        "status": "initiated",
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await store_db.payment_transactions.insert_one(transaction)
-
-    return {"url": session.url, "session_id": session.id, "order_id": order_id}
-
-@api_router.get("/store/checkout/status/{session_id}")
-async def store_checkout_status(session_id: str, request: Request):
-    stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    stripe.api_key = stripe_key
-
-    try:
-        session = stripe.checkout.Session.retrieve(session_id)
-    except Exception:
-        raise HTTPException(status_code=404, detail="Session not found")
-
-    # Map Stripe status to our status
-    payment_status = session.payment_status  # "paid", "unpaid", "no_payment_required"
-    status = "complete" if payment_status == "paid" else "pending"
-
-    # Update transaction in DB (only once per status change)
-    txn = await store_db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
-    if txn and txn.get("payment_status") != payment_status:
-        await store_db.payment_transactions.update_one(
-            {"session_id": session_id},
-            {"$set": {"payment_status": payment_status, "status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
-        )
-
-    return {
-        "status": status,
-        "payment_status": payment_status,
-        "amount_total": session.amount_total / 100 if session.amount_total else 0,
-        "currency": session.currency,
-        "order_id": txn["id"] if txn else None
-    }
-
-@app.post("/api/webhook/stripe")
-async def stripe_webhook(request: Request):
-    body = await request.body()
-    sig = request.headers.get("Stripe-Signature", "")
-    stripe_key = os.environ.get("STRIPE_API_KEY", "")
-    webhook_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-    stripe.api_key = stripe_key
-    
-    try:
-        if webhook_secret:
-            event = stripe.Webhook.construct_event(body, sig, webhook_secret)
-        else:
-            # Without webhook secret, just parse the JSON
-            import json
-            event = json.loads(body)
-        
-        # Handle checkout.session.completed event
-        event_type = event.get("type") if isinstance(event, dict) else event.type
-        if event_type == "checkout.session.completed":
-            session_data = event.get("data", {}).get("object", {}) if isinstance(event, dict) else event.data.object
-            session_id = session_data.get("id") if isinstance(session_data, dict) else session_data.id
-            payment_status = session_data.get("payment_status") if isinstance(session_data, dict) else session_data.payment_status
-            
-            if payment_status == "paid" and session_id:
-                await store_db.payment_transactions.update_one(
-                    {"session_id": session_id, "payment_status": {"$ne": "paid"}},
-                    {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}}
-                )
-        return {"status": "ok"}
-    except Exception as e:
-        return {"status": "error", "detail": str(e)}
-
-@api_router.get("/store/orders")
-async def store_user_orders(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    orders = await store_db.payment_transactions.find(
-        {"user_id": payload["user_id"]}, {"_id": 0}
-    ).sort("created_at", -1).to_list(100)
-    return orders
-
-@api_router.get("/store/admin/orders")
-async def store_admin_orders(admin: dict = Depends(require_store_admin)):
-    orders = await store_db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
-    return orders
-
-@api_router.put("/store/admin/orders/{order_id}/status")
-async def store_admin_update_order_status(order_id: str, data: dict, admin: dict = Depends(require_store_admin)):
-    new_status = data.get("status")
-    if new_status not in ["initiated", "processing", "shipped", "delivered", "cancelled"]:
-        raise HTTPException(status_code=400, detail="Invalid status")
-    result = await store_db.payment_transactions.update_one(
-        {"id": order_id},
-        {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Order not found")
-    return {"status": "ok"}
-
-@api_router.post("/store/checkout/manual")
-async def store_checkout_manual(data: dict, request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    user_id = payload["user_id"]
-    user_email = payload.get("email", "")
-
-    cart_items = data.get("items", [])
-    payment_method = data.get("payment_method", "")
-    if payment_method not in ("paypal", "cashapp"):
-        raise HTTPException(status_code=400, detail="Invalid payment method")
-    if not cart_items:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-
-    subtotal = 0.0
-    order_items = []
-    for ci in cart_items:
-        product = await store_db.store_products.find_one({"id": ci["id"]}, {"_id": 0})
-        if not product:
-            raise HTTPException(status_code=400, detail=f"Product {ci['id']} not found")
-        if not product.get("in_stock"):
-            raise HTTPException(status_code=400, detail=f"{product['name']} is sold out")
-        qty = max(1, int(ci.get("qty", 1)))
-        item_total = float(product["price"]) * qty
-        subtotal += item_total
-        order_items.append({"id": product["id"], "name": product["name"], "price": float(product["price"]), "qty": qty})
-
-    tax = round(subtotal * NC_TAX_RATE, 2)
-    shipping_method = data.get("shipping", "standard")
-    if shipping_method not in SHIPPING_RATES:
-        shipping_method = "standard"
-    shipping = SHIPPING_RATES[shipping_method]
-    grand_total = round(subtotal + tax + shipping, 2)
-
-    order_id = str(uuid.uuid4())
-    transaction = {
-        "id": order_id,
-        "user_id": user_id,
-        "email": user_email,
-        "items": order_items,
-        "subtotal": subtotal,
-        "tax": tax,
-        "shipping": shipping,
-        "shipping_method": shipping_method,
-        "total": grand_total,
-        "payment_method": payment_method,
-        "payment_status": "awaiting_payment",
-        "status": "initiated",
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await store_db.payment_transactions.insert_one(transaction)
-
-    payment_info = {}
-    if payment_method == "paypal":
-        payment_info = {"email": PAYMENT_CONFIG["paypal"]["email"]}
-    elif payment_method == "cashapp":
-        payment_info = {"tag": PAYMENT_CONFIG["cashapp"]["tag"]}
-
-    # Send email notification to admin about new manual order
-    admin_email = os.environ.get("ADMIN_EMAIL", "")
-    if admin_email:
-        method_label = "PayPal" if payment_method == "paypal" else "CashApp"
-        items_html = "".join(
-            f'<tr><td style="padding:8px;border-bottom:1px solid #333;color:#ccc;">{item["name"]} x{item["qty"]}</td>'
-            f'<td style="padding:8px;border-bottom:1px solid #333;color:#ccc;text-align:right;">${(item["price"]*item["qty"]):.2f}</td></tr>'
-            for item in order_items
-        )
-        order_html = f"""
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1a1a1a;color:#e0e0e0;padding:30px;border-radius:12px;">
-            <h1 style="color:#f5a623;margin:0 0 20px;">New {method_label} Order!</h1>
-            <p style="color:#aaa;">A customer placed an order and needs to send payment via <strong style="color:#f5a623;">{method_label}</strong>.</p>
-            <div style="background:#252525;border-radius:8px;padding:20px;margin:20px 0;">
-                <p style="margin:0 0 8px;color:#888;">Order ID</p>
-                <p style="margin:0 0 16px;font-family:monospace;color:#fff;">{order_id[:8]}</p>
-                <p style="margin:0 0 8px;color:#888;">Customer</p>
-                <p style="margin:0 0 16px;color:#fff;">{user_email}</p>
-                <table style="width:100%;border-collapse:collapse;margin:10px 0;">
-                    {items_html}
-                </table>
-                <p style="margin:10px 0 4px;color:#888;font-size:13px;">Tax: ${tax:.2f} | Shipping: ${shipping:.2f} ({shipping_method})</p>
-                <p style="margin:10px 0 0;color:#f5a623;font-size:24px;font-weight:bold;">Total: ${grand_total:.2f}</p>
-            </div>
-            <p style="color:#aaa;">Once you receive the {method_label} payment, log into your <a href="https://sma-antenna.org/admin" style="color:#f5a623;">admin dashboard</a> and click <strong>Confirm Payment</strong> on this order.</p>
-            <div style="border-top:1px solid #333;margin-top:30px;padding-top:15px;text-align:center;font-size:12px;color:#666;">Swing Master Amps</div>
-        </div>
-        """
-        asyncio.create_task(send_email(admin_email, f"New {method_label} Order - ${grand_total:.2f}", order_html))
-
-    return {
-        "order_id": order_id,
-        "total": grand_total,
-        "payment_method": payment_method,
-        "payment_info": payment_info
-    }
-
-@api_router.put("/store/admin/orders/{order_id}/confirm-payment")
-async def store_admin_confirm_payment(order_id: str, admin: dict = Depends(require_store_admin)):
-    result = await store_db.payment_transactions.update_one(
-        {"id": order_id, "payment_status": {"$in": ["awaiting_payment", "pending"]}},
-        {"$set": {"payment_status": "paid", "status": "processing", "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Order not found or already paid")
-    return {"status": "ok"}
-
-@api_router.get("/store/checkout/manual/{order_id}")
-async def store_manual_order_status(order_id: str):
-    txn = await store_db.payment_transactions.find_one({"id": order_id}, {"_id": 0})
-    if not txn:
-        raise HTTPException(status_code=404, detail="Order not found")
-    payment_info = {}
-    pm = txn.get("payment_method", "")
-    if pm == "paypal":
-        payment_info = {"email": PAYMENT_CONFIG["paypal"]["email"]}
-    elif pm == "cashapp":
-        payment_info = {"tag": PAYMENT_CONFIG["cashapp"]["tag"]}
-    return {
-        "order_id": txn["id"],
-        "total": txn["total"],
-        "payment_method": pm,
-        "payment_status": txn["payment_status"],
-        "payment_info": payment_info,
-        "items": txn.get("items", []),
-        "tax": txn.get("tax", 0),
-        "shipping": txn.get("shipping", 0),
-        "shipping_method": txn.get("shipping_method", "standard")
-    }
-
-
-
-# Seed default products on startup
-async def seed_store_products():
-    count = await store_db.store_products.count_documents({})
-    if count == 0:
-        defaults = [
-            {"id": str(uuid.uuid4()), "name": "2-Pill Amplifier", "price": 450, "short_desc": "Compact 2-transistor amp for everyday use", "description": "Our entry-level 2-pill amplifier delivers solid power in a compact package. Perfect for operators who want reliable amplification without breaking the bank. Hand-built and tested in North Carolina.", "image_url": "https://images.unsplash.com/photo-1673023239309-ae54f5ef3b04?w=600", "in_stock": True, "specs": ["2 transistor pills", "Hand-built in NC", "Compact design", "Tested before shipping"], "created_at": datetime.now(timezone.utc).isoformat()},
-            {"id": str(uuid.uuid4()), "name": "4-Pill Amplifier", "price": 650, "short_desc": "Mid-range 4-transistor powerhouse", "description": "The 4-pill is our most popular model. More power, more headroom. Built with quality components for operators who demand performance on the airwaves.", "image_url": "https://images.unsplash.com/photo-1672689933227-2ce1249c46a9?w=600", "in_stock": True, "specs": ["4 transistor pills", "Increased power output", "Quality components", "Hand-tested", "Heavy-duty build"], "created_at": datetime.now(timezone.utc).isoformat()},
-            {"id": str(uuid.uuid4()), "name": "6-Pill Amplifier", "price": 1050, "short_desc": "Premium 6-transistor beast for maximum power", "description": "Our flagship 6-pill amplifier is the ultimate in HF amplification. Maximum power, maximum range. Built for serious operators who accept nothing less than the best.", "image_url": "https://images.unsplash.com/photo-1727036195443-d2ba0ad73311?w=600", "in_stock": True, "specs": ["6 transistor pills", "Maximum power output", "Premium components", "Professional grade", "Hand-built and tested", "Heavy-duty enclosure"], "created_at": datetime.now(timezone.utc).isoformat()},
-        ]
-        await store_db.store_products.insert_many(defaults)
-
-
-
-
-# Image Upload endpoint
-UPLOAD_DIR = ROOT_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
-MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-
-@api_router.post("/store/admin/upload")
-async def store_upload_image(file: UploadFile = File(...), admin: dict = Depends(require_store_admin)):
-    ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"File type {ext} not allowed. Use: {', '.join(ALLOWED_EXTENSIONS)}")
-    contents = await file.read()
-    if len(contents) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail="File too large. Max 10 MB.")
-    filename = f"{uuid.uuid4().hex}{ext}"
-    filepath = UPLOAD_DIR / filename
-    with open(filepath, "wb") as f:
-        f.write(contents)
-    return {"url": f"/api/uploads/{filename}", "filename": filename}
-
-
-# Download website build endpoint
-@api_router.get("/download-build")
-async def download_build():
-    """Download the latest website build zip"""
-    zip_path = UPLOAD_DIR / "sma-website-build.zip"
-    if not zip_path.exists():
-        raise HTTPException(status_code=404, detail="Build not found")
-    return FileResponse(
-        path=str(zip_path),
-        filename="sma-website-build.zip",
-        media_type="application/zip"
-    )
-
 
 app.include_router(api_router)
-
-# Mount uploads directory for serving uploaded images
-app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -4552,4 +3955,3 @@ async def shutdown_db_client():
 @app.on_event("startup")
 async def startup_load_settings():
     await load_settings_from_db()
-    await seed_store_products()

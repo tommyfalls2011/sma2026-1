@@ -26,6 +26,14 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const BANDS = [
+  { id: '2200m', name: '2200m (135 kHz)', center: 0.1368 },
+  { id: '630m', name: '630m (475 kHz)', center: 0.4755 },
+  { id: '160m', name: '160m (1.9 MHz)', center: 1.9 },
+  { id: '80m', name: '80m (3.75 MHz)', center: 3.75 },
+  { id: '60m', name: '60m (5.3 MHz)', center: 5.3305 },
+  { id: '40m', name: '40m (7.15 MHz)', center: 7.15 },
+  { id: '30m', name: '30m (10.1 MHz)', center: 10.125 },
+  { id: '20m', name: '20m (14.1 MHz)', center: 14.175 },
   { id: '17m', name: '17m (18.1 MHz)', center: 18.118 },
   { id: '15m', name: '15m (21.2 MHz)', center: 21.225 },
   { id: '12m', name: '12m (24.9 MHz)', center: 24.94 },
@@ -35,6 +43,13 @@ const BANDS = [
   { id: '2m', name: '2m (146 MHz)', center: 146.0 },
   { id: '1.25m', name: '1.25m (223 MHz)', center: 223.5 },
   { id: '70cm', name: '70cm (435 MHz)', center: 435.0 },
+  { id: '33cm', name: '33cm (915 MHz)', center: 915.0 },
+  { id: '23cm', name: '23cm (1270 MHz)', center: 1270.0 },
+  { id: '13cm', name: '13cm (2.3 GHz)', center: 2350.0 },
+  { id: '9cm', name: '9cm (3.4 GHz)', center: 3400.0 },
+  { id: '5cm', name: '5cm (5.6 GHz)', center: 5650.0 },
+  { id: '3cm', name: '3cm (10 GHz)', center: 10250.0 },
+  { id: '1.2cm', name: '1.2cm (24 GHz)', center: 24100.0 },
 ];
 
 interface ElementDimension { element_type: 'reflector' | 'driven' | 'director'; length: string; diameter: string; position: string; }
@@ -1979,11 +1994,11 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 8, color: isActive ? '#CE93D8' : '#666', marginTop: 1 }}>{wlFtStr} ft</Text>
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
-                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.05).toFixed(1), spacing_unit: 'ft' } }))}
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.25).toFixed(1), spacing_unit: 'ft' } }))}
                             style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                             <Ionicons name="arrow-back" size={12} color="#9C27B0" />
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.05).toFixed(1), spacing_unit: 'ft' } }))}
+                          <TouchableOpacity onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, spacing: ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.25).toFixed(1), spacing_unit: 'ft' } }))}
                             style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                             <Ionicons name="arrow-forward" size={12} color="#9C27B0" />
                           </TouchableOpacity>
@@ -2013,11 +2028,11 @@ export default function AntennaCalculator() {
                             <Text style={{ fontSize: 9, color: isActive ? '#E91E63' : '#666', marginTop: 2 }}>{wlFtStr} ft</Text>
                           </TouchableOpacity>
                           <View style={{ flexDirection: 'row', marginTop: 3, gap: 8 }}>
-                            <TouchableOpacity onPress={() => setInputs(p => { const v = Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.05).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
+                            <TouchableOpacity onPress={() => setInputs(p => { const v = Math.max(1, (parseFloat(p.stacking.spacing) || 0) - wlFt * 0.25).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
                               style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                               <Ionicons name="arrow-back" size={12} color="#E91E63" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setInputs(p => { const v = ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.05).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
+                            <TouchableOpacity onPress={() => setInputs(p => { const v = ((parseFloat(p.stacking.spacing) || 0) + wlFt * 0.25).toFixed(1); return { ...p, stacking: { ...p.stacking, spacing: v, spacing_unit: 'ft', h_spacing: v, h_spacing_unit: 'ft' } }; })}
                               style={{ paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, backgroundColor: '#1a1a1a' }}>
                               <Ionicons name="arrow-forward" size={12} color="#E91E63" />
                             </TouchableOpacity>
