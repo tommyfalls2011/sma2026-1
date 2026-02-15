@@ -350,6 +350,8 @@ export default function AntennaCalculator() {
   // Element Spacing Mode
   const [spacingMode, setSpacingMode] = useState<'normal' | 'tight' | 'long'>('normal');
   const [spacingLevel, setSpacingLevel] = useState('1.0');
+  const [closeDriven, setCloseDriven] = useState(false);
+  const [closeDir1, setCloseDir1] = useState(false);
   
   const SPACING_OPTIONS = {
     tight: [
