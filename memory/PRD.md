@@ -13,7 +13,8 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 ## What's Been Implemented
 - **Critical Autotune Bug Fix**: Corrected spacing logic from boom-length-% to wavelength-based (0.18l default)
 - **Spacing Override Feature**: Close (0.12l), Normal (0.18l), Far (0.22l) for driven element; similar for first director
-- **Spacing-Dependent Gain/F/B**: Both `/api/auto-tune` and `/api/calculate` now properly adjust gain and F/B ratio based on element spacing distribution
+- **Position-Based Gain/F/B Corrections**: Both `/api/auto-tune` and `/api/calculate` now adjust gain and F/B ratio based on ACTUAL final element positions (reflector-driven spacing in wavelengths, director spacing distribution)
+- **Boom Lock Awareness**: When boom lock constrains positions identically, the gain correctly stays the same; a note is added explaining the boom is too short for the requested spacing
 - **Band Filtering**: Only 17m to 70cm bands available
 - **TOP VIEW SVG**: Rendering bug fixed
 - **App version**: v4.0.5 (versionCode 5)
@@ -23,6 +24,7 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 - `frontend/app/index.tsx`: ~3300+ lines monolithic React Native screen
 - MongoDB Atlas for persistence
 - Resend for email notifications
+- Production backend: Railway (`helpful-adaptation-production.up.railway.app`)
 
 ## Key API Endpoints
 - `POST /api/calculate`: Full antenna parameter calculation (gain, SWR, F/B, beamwidth, etc.)
@@ -32,7 +34,7 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 ## Prioritized Backlog
 
 ### P0 (Critical)
-- User verification of spacing override feature and gain changes
+- User must sync updated `server.py` to Railway backend for spacing fixes to take effect on APK
 
 ### P1 (Important)
 - Improve `.easignore` file for APK build size optimization
@@ -42,4 +44,7 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 - Refactor `index.tsx` into reusable components (TopView, SpacingControls, ElementInputs)
 
 ## Bug Fixes This Session (Feb 2026)
-- **Spacing overrides not affecting gain**: `auto_tune_antenna()` predicted gain was a flat lookup by element count, ignoring spacing. Fixed by adding spacing correction factors. Also improved `calculate_antenna_parameters()` to apply a direct gain adjustment based on reflector-driven and director spacing relative to optimal wavelength fractions.
+- **Spacing overrides not affecting gain** (both auto-tune and calculate):
+  - Root cause: `auto_tune_antenna()` used flat element-count lookup; `calculate_antenna_parameters()` had spacing_efficiency but only in percentage, not dBi
+  - Fix: Position-based gain/F/B correction using actual final element positions in wavelengths, applied in both endpoints
+  - Added boom lock note when spacing overrides are constrained by short boom
