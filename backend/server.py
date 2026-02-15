@@ -2389,6 +2389,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     # Use the calibrated free-space gain lookup (same model as /api/calculate)
     base_gain = get_free_space_gain(n)
     
+    # Boom length adjustment: shorter boom = less gain, longer = more gain
+    # Compare actual boom to the standard boom for this element count and frequency
+    standard_boom_in = get_standard_boom_in(n, wavelength_in)
+    if final_boom > 0 and standard_boom_in > 0:
+        boom_ratio = final_boom / standard_boom_in
+        if boom_ratio > 0 and boom_ratio != 1.0:
+            boom_adj = round(2.5 * math.log2(boom_ratio), 2)
+            base_gain += boom_adj
+    
     if not use_reflector:
         base_gain -= 1.5  # Less gain without reflector
     if request.taper and request.taper.enabled:
