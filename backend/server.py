@@ -2274,8 +2274,8 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                 elements[refl_idx]["position"] = 0
                 
                 if len(dir_indices) > 0:
-                    # With directors: driven at ~0.18λ from reflector, cap to ensure director room
-                    ideal_refl_gap = wavelength_in * 0.18
+                    # With directors: driven at ~0.18λ (or 0.12λ if close_driven) from reflector
+                    ideal_refl_gap = wavelength_in * (0.12 if request.close_driven else 0.18)
                     num_dirs = len(dir_indices)
                     min_director_room = num_dirs * wavelength_in * 0.12
                     max_refl_gap = target_boom - min_director_room
@@ -2283,8 +2283,18 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
+                    # close_dir1: first director gets 60% of average spacing
                     for j, idx in enumerate(dir_indices):
-                        elements[idx]["position"] = round(refl_driven_gap + dir_spacing * (j + 1), 1)
+                        if j == 0 and request.close_dir1 and len(dir_indices) > 1:
+                            close_spacing = round(dir_spacing * 0.6, 1)
+                            elements[idx]["position"] = round(refl_driven_gap + close_spacing, 1)
+                        elif j > 0 and request.close_dir1 and len(dir_indices) > 1:
+                            # Redistribute remaining space to other directors
+                            saved = dir_spacing * 0.4
+                            extra = saved / (len(dir_indices) - 1)
+                            elements[idx]["position"] = round(refl_driven_gap + dir_spacing * 0.6 + (dir_spacing + extra) * j, 1)
+                        else:
+                            elements[idx]["position"] = round(refl_driven_gap + dir_spacing * (j + 1), 1)
                 else:
                     # No directors (2-element): driven uses full boom length
                     elements[driven_idx]["position"] = round(target_boom, 1)
