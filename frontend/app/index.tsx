@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions, Switch, Alert, Modal, FlatList, AppState, Linking } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions, Switch, Alert, Modal, FlatList, AppState, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G, Ellipse } from 'react-native-svg';
@@ -8,43 +8,19 @@ import { useAuth } from './context/AuthContext';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
-import appJson from '../app.json';
 
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
+import { BACKEND_URL, APP_VERSION, APP_BUILD_DATE, UPDATE_CHECK_URL, TIER_COLORS, BANDS, SPACING_OPTIONS, DEFAULT_INPUTS } from './constants';
+import { AntennaInput, AntennaOutput, HeightOptResult } from './types';
+import { styles } from './styles';
+import { ResultCard } from './components/ResultCard';
+import { SwrMeter } from './components/SwrMeter';
+import { PolarPattern } from './components/PolarPattern';
+import { ElevationPattern } from './components/ElevationPattern';
+import { Dropdown } from './components/Dropdown';
+import { ElementInput } from './components/ElementInput';
+import { SpecSection, SpecRow } from './components/SpecSheet';
+
 const { width: screenWidth } = Dimensions.get('window');
-const APP_VERSION = appJson.expo.version;
-const APP_BUILD_DATE = '2026-02-10T12:00:00';
-const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
-
-const TIER_COLORS: Record<string, string> = {
-  trial: '#888',
-  bronze: '#CD7F32',
-  silver: '#C0C0C0',
-  gold: '#FFD700',
-  admin: '#9C27B0'
-};
-
-const BANDS = [
-  { id: '17m', name: '17m (18.1 MHz)', center: 18.118 },
-  { id: '15m', name: '15m (21.2 MHz)', center: 21.225 },
-  { id: '12m', name: '12m (24.9 MHz)', center: 24.94 },
-  { id: '11m_cb', name: '11m CB (27.1 MHz)', center: 27.185 },
-  { id: '10m', name: '10m (28.5 MHz)', center: 28.5 },
-  { id: '6m', name: '6m (51 MHz)', center: 51.0 },
-  { id: '2m', name: '2m (146 MHz)', center: 146.0 },
-  { id: '1.25m', name: '1.25m (223 MHz)', center: 223.5 },
-  { id: '70cm', name: '70cm (435 MHz)', center: 435.0 },
-];
-
-interface ElementDimension { element_type: 'reflector' | 'driven' | 'director'; length: string; diameter: string; position: string; }
-interface TaperSection { length: string; start_diameter: string; end_diameter: string; }
-interface TaperConfig { enabled: boolean; num_tapers: number; center_length: string; sections: TaperSection[]; }
-interface CoronaBallConfig { enabled: boolean; diameter: string; }
-interface StackingConfig { enabled: boolean; orientation: 'vertical' | 'horizontal'; layout: 'line' | 'quad'; num_antennas: number; spacing: string; spacing_unit: 'ft' | 'inches'; h_spacing: string; h_spacing_unit: 'ft' | 'inches'; }
-interface AntennaInput { num_elements: number; elements: ElementDimension[]; height_from_ground: string; height_unit: 'ft' | 'inches'; boom_diameter: string; boom_unit: 'mm' | 'inches'; band: string; frequency_mhz: string; stacking: StackingConfig; taper: TaperConfig; corona_balls: CoronaBallConfig; use_reflector: boolean; }
-interface AntennaOutput { swr: number; swr_description: string; fb_ratio: number; fs_ratio: number; beamwidth_h: number; beamwidth_v: number; bandwidth: number; gain_dbi: number; gain_description: string; base_gain_dbi?: number; gain_breakdown?: { element_gain: number; reflector_adj: number; taper_bonus: number; corona_adj: number; height_bonus: number; boom_bonus: number; boom_grounded_adj?: number; ground_radials_bonus?: number; final_gain: number; ground_type?: string; ground_scale?: number }; multiplication_factor: number; antenna_efficiency: number; far_field_pattern: any[]; swr_curve: any[]; usable_bandwidth_1_5: number; usable_bandwidth_2_0: number; center_frequency: number; band_info: any; stacking_enabled: boolean; stacking_info?: any; stacked_gain_dbi?: number; stacked_pattern?: any[]; taper_info?: any; corona_info?: any; reflection_coefficient?: number; return_loss_db?: number; mismatch_loss_db?: number; reflected_power_100w?: number; reflected_power_1kw?: number; forward_power_100w?: number; forward_power_1kw?: number; impedance_high?: number; impedance_low?: number; takeoff_angle?: number; takeoff_angle_description?: string; height_performance?: string; ground_radials_info?: any; noise_level?: string; noise_description?: string; feed_type?: string; matching_info?: any; dual_polarity_info?: any; boom_correction_info?: any; }
-interface HeightOptResult { optimal_height: number; optimal_swr: number; optimal_gain: number; optimal_fb_ratio: number; heights_tested: { height: number; swr: number; gain: number; fb_ratio: number }[]; }
 
 const ResultCard = ({ title, value, description, icon, color }: any) => (
   <View style={[styles.resultCard, { borderLeftColor: color }]}>
