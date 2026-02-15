@@ -1890,6 +1890,27 @@ export default function AntennaCalculator() {
               </View>
             )}
 
+          {/* Close Spacing Overrides */}
+          <View style={{ marginTop: 4, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: '#aaa', marginBottom: 6 }}>
+              <Ionicons name="git-compare-outline" size={11} color="#FF5722" /> Spacing Overrides (Auto-Tune)
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: '#ccc', fontWeight: '600' }}>Close Driven to Reflector</Text>
+                <Text style={{ fontSize: 9, color: '#666' }}>0.12λ instead of 0.18λ</Text>
+              </View>
+              <Switch value={closeDriven} onValueChange={setCloseDriven} trackColor={{ false: '#333', true: '#FF5722' }} thumbColor="#fff" />
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 11, color: '#ccc', fontWeight: '600' }}>Close Dir1 to Driven</Text>
+                <Text style={{ fontSize: 9, color: '#666' }}>First director tighter spacing</Text>
+              </View>
+              <Switch value={closeDir1} onValueChange={setCloseDir1} trackColor={{ false: '#333', true: '#FF5722' }} thumbColor="#fff" />
+            </View>
+          </View>
+
           </View>
 
           {/* Taper */}
