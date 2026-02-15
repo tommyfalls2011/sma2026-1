@@ -2289,16 +2289,22 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                     elements[driven_idx]["position"] = refl_driven_gap
                     remaining = target_boom - refl_driven_gap
                     dir_spacing = round(remaining / len(dir_indices), 1)
-                    # close_dir1: first director gets 60% of average spacing
+                    # close_dir1/far_dir1: adjust first director spacing
                     for j, idx in enumerate(dir_indices):
                         if j == 0 and request.close_dir1 and len(dir_indices) > 1:
                             close_spacing = round(dir_spacing * 0.6, 1)
                             elements[idx]["position"] = round(refl_driven_gap + close_spacing, 1)
                         elif j > 0 and request.close_dir1 and len(dir_indices) > 1:
-                            # Redistribute remaining space to other directors
                             saved = dir_spacing * 0.4
                             extra = saved / (len(dir_indices) - 1)
                             elements[idx]["position"] = round(refl_driven_gap + dir_spacing * 0.6 + (dir_spacing + extra) * j, 1)
+                        elif j == 0 and request.far_dir1 and len(dir_indices) > 1:
+                            far_spacing = round(dir_spacing * 1.4, 1)
+                            elements[idx]["position"] = round(refl_driven_gap + far_spacing, 1)
+                        elif j > 0 and request.far_dir1 and len(dir_indices) > 1:
+                            saved = dir_spacing * 0.4
+                            less = saved / (len(dir_indices) - 1)
+                            elements[idx]["position"] = round(refl_driven_gap + dir_spacing * 1.4 + (dir_spacing - less) * j, 1)
                         else:
                             elements[idx]["position"] = round(refl_driven_gap + dir_spacing * (j + 1), 1)
                 else:
