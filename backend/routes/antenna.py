@@ -156,8 +156,6 @@ async def optimize_height(request: HeightOptimizeRequest):
             stacking=None, taper=None, corona_balls=None,
             ground_radials=request.ground_radials
         )
-        result = calculate_antenna(calc_input)
-        # calculate_antenna is an async endpoint that stores in DB; we need the sync version
         result = calculate_antenna_parameters(calc_input)
         swr = result.swr
         gain = result.gain_dbi
