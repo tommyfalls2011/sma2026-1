@@ -673,7 +673,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         elif spacing_deviation > 0.2: spacing_efficiency = 0.95
         elif spacing_deviation > 0.1: spacing_efficiency = 0.97
     taper_efficiency = 1.02 if taper_enabled else 1.0
-    antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * boom_efficiency * spacing_efficiency * taper_efficiency)
+    # Feed type efficiency: gamma rod has resistive loss, hairpin is very low loss
+    feed_efficiency = 0.97 if feed_type == "gamma" else (0.995 if feed_type == "hairpin" else 1.0)
+    antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * boom_efficiency * spacing_efficiency * taper_efficiency * feed_efficiency)
     antenna_efficiency = round(min(antenna_efficiency * 100, 200.0), 1)
 
     # Reflected power
