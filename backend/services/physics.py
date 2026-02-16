@@ -607,7 +607,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
 
     # Element-based resonant frequency: driven element length determines natural resonance
-    # f_resonant = c / (2 * L_driven). Mutual coupling (spacing-dependent) shifts it further.
+    # Mutual coupling from ALL neighboring elements LOWERS resonant freq (mutual capacitance)
+    # Closer spacing = more capacitive loading = lower freq. Wider = less loading = higher freq.
     driven_for_freq = next((e for e in input_data.elements if e.element_type == "driven"), None)
     reflector_for_freq = next((e for e in input_data.elements if e.element_type == "reflector"), None)
     directors_for_freq = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
@@ -619,21 +620,21 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             # Longer driven = lower freq, shorter = higher freq
             length_ratio = driven_len_m / ideal_half_wave
             element_resonant_freq = round(center_freq / length_ratio, 3)
-            # Reflector coupling: closer = stronger pull-down on resonant freq
-            # Exponential decay: strong coupling at close spacing, weaker at far
+            # Reflector mutual capacitance: closer = stronger pull-down
             if has_reflector_for_z and reflector_for_freq:
                 refl_spacing_m = abs(convert_element_to_meters(driven_for_freq.position - reflector_for_freq.position, "inches"))
                 refl_spacing_wl = refl_spacing_m / wavelength if wavelength > 0 else 0.2
-                # At 0.1λ: ~4.3%, 0.15λ: ~3.5%, 0.2λ: ~3%, 0.3λ: ~2%
+                # Exponential: at 0.1λ ~4.3%, 0.15λ ~3.5%, 0.2λ ~3%, 0.3λ ~2%
                 refl_coupling = 0.067 * math.exp(-4.0 * max(refl_spacing_wl, 0.02))
                 element_resonant_freq *= (1.0 - refl_coupling)
-            # Director coupling: each director pulls resonance up slightly
+            # Director mutual capacitance: closer = also pulls resonance DOWN
+            # Same principle — mutual capacitance increases with proximity
             for i, d in enumerate(directors_for_freq):
                 dir_spacing_m = abs(convert_element_to_meters(d.position - driven_for_freq.position, "inches"))
                 dir_spacing_wl = dir_spacing_m / wavelength if wavelength > 0 else 0.15
-                # Weaker than reflector, decays with distance and element index
+                # Weaker than reflector (shorter elements = less coupling surface)
                 dir_coupling = 0.015 * math.exp(-5.0 * max(dir_spacing_wl, 0.02)) * (0.7 ** i)
-                element_resonant_freq *= (1.0 + dir_coupling)
+                element_resonant_freq *= (1.0 - dir_coupling)
             element_resonant_freq = round(element_resonant_freq, 3)
 
     matched_swr, matching_info = apply_matching_network(
