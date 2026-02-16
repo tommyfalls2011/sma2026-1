@@ -1,7 +1,7 @@
 {
-  "version": "4.0.0",
-  "buildDate": "2026-02-10T12:00:00",
-  "releaseNotes": "v4.0.0 - Added 3-Way Boom Mount Selector, Corrected Cut List, Visual Element Viewer, Update System Fix, Admin Update Panel",
+  "version": "4.1.5",
+  "buildDate": "2026-02-22T00:00:00Z",
+  "releaseNotes": "v4.1.5 - Realistic Gamma/Hairpin feed physics, interactive match sliders, real-time SWR tuning, resonant frequency display, auto-scaling performance bars, updated gain curve",
   "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk",
   "forceUpdate": false
 }

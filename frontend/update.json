@@ -1,7 +1,7 @@
 {
-  "version": "3.0.1",
-  "buildDate": "2026-02-09T17:00:00Z",
-  "releaseNotes": "Added 2x2 Quad Stacking, Wavelength Spacing Presets, Auto-Recalculate, Collinear Stacking Guidance, Far-Field Pattern Analysis, Wind Load Calculations, Changelog Viewer, Update System",
+  "version": "4.1.5",
+  "buildDate": "2026-02-22T00:00:00Z",
+  "releaseNotes": "v4.1.5 - Realistic Gamma/Hairpin feed physics, interactive match sliders, real-time SWR tuning, resonant frequency display, auto-scaling performance bars, updated gain curve",
   "apkUrl": "https://expo.dev/artifacts/eas/j8YHGVQHWcN7mRhAAEyuA8.apk",
   "forceUpdate": false
 }
