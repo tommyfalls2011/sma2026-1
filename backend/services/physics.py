@@ -1150,6 +1150,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         wind_load=wind_load_info,
         boom_correction_info=boom_correction if boom_correction.get("enabled") else boom_correction,
         resonant_freq_mhz=curve_resonant_freq,
+        elevation_pattern=elevation_pattern,
     )
 
 

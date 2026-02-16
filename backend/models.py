@@ -220,6 +220,7 @@ class AntennaOutput(BaseModel):
     wind_load: Optional[dict] = None
     boom_correction_info: Optional[dict] = None
     resonant_freq_mhz: Optional[float] = None
+    elevation_pattern: Optional[list] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
