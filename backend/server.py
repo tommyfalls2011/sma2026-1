@@ -589,6 +589,12 @@ class AutoTuneRequest(BaseModel):
     antenna_orientation: str = Field(default="horizontal")  # horizontal, vertical, angle45, dual
     dual_active: bool = Field(default=False)  # Both H+V beams active simultaneously
     feed_type: str = Field(default="direct")  # direct, gamma, hairpin
+    # Spacing override flags (Close/Normal/Far)
+    close_driven: bool = Field(default=False)  # 0.12λ reflector-driven spacing
+    far_driven: bool = Field(default=False)    # 0.22λ reflector-driven spacing
+    close_dir1: bool = Field(default=False)    # Tight first director spacing
+    far_dir1: bool = Field(default=False)      # Wide first director spacing
+    element_diameter: Optional[float] = Field(default=0.5)  # Element diameter in inches
 
 class AntennaOutput(BaseModel):
     swr: float
