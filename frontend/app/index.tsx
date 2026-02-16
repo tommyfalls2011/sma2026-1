@@ -1674,7 +1674,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.feed_type === 'gamma' && styles.orientationBtnActive]} 
-                  onPress={() => setInputs(p => ({ ...p, feed_type: 'gamma' }))}
+                  onPress={() => switchFeedType('gamma')}
                 >
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'gamma' && styles.orientationBtnTextActive]}>Gamma</Text>
                 </TouchableOpacity>
