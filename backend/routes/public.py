@@ -28,7 +28,7 @@ async def get_app_update():
     doc = await update_col.find_one({}, {"_id": 0})
     if doc:
         return doc
-    return {"version": "3.2.5", "buildDate": "2026-03-01T00:00:00", "releaseNotes": "Latest features", "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk", "forceUpdate": False}
+    return {"version": "4.1.5", "buildDate": "2026-02-22T00:00:00", "releaseNotes": "v4.1.5 - Realistic Gamma/Hairpin feed physics, interactive match sliders, real-time SWR tuning, resonant frequency display, auto-scaling performance bars", "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk", "forceUpdate": False}
 
 
 @router.put("/app-update")
