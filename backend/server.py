@@ -2433,6 +2433,14 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     else:
         predicted_fb = 20 + 3 * math.log2(max(n - 2, 1))
     
+    # Boom length F/B adjustment: longer boom = better pattern control = better F/B
+    # ~1.5 dB F/B per boom doubling relative to standard
+    if final_boom > 0 and standard_boom_in > 0:
+        boom_ratio = final_boom / standard_boom_in
+        if boom_ratio > 0 and boom_ratio != 1.0:
+            fb_boom_adj = round(1.5 * math.log2(boom_ratio), 1)
+            predicted_fb += fb_boom_adj
+    
     predicted_fb += spacing_fb_adj
     
     if not use_reflector:
