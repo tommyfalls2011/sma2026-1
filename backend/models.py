@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 import uuid
 
@@ -160,10 +160,10 @@ class AutoTuneRequest(BaseModel):
     antenna_orientation: str = Field(default="horizontal")
     dual_active: bool = Field(default=False)
     feed_type: str = Field(default="direct")
-    close_driven: bool = Field(default=False)
-    far_driven: bool = Field(default=False)
-    close_dir1: bool = Field(default=False)
-    far_dir1: bool = Field(default=False)
+    close_driven: Union[str, bool] = Field(default=False)
+    far_driven: Union[str, bool] = Field(default=False)
+    close_dir1: Union[str, bool] = Field(default=False)
+    far_dir1: Union[str, bool] = Field(default=False)
     element_diameter: Optional[float] = Field(default=0.5)
 
 class AntennaOutput(BaseModel):
