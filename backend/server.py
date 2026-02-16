@@ -2172,8 +2172,24 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
     
     if use_reflector:
-        # Reflector-to-driven: ~15% of total boom (closer than directors)
-        refl_driven_gap = round(target_boom * 0.15, 1) if n > 2 else round(target_boom, 1)
+        # === WAVELENGTH-BASED REFLECTOR-DRIVEN SPACING ===
+        # Close: 0.12λ, Normal: 0.18λ, Far: 0.22λ
+        if getattr(request, 'close_driven', False):
+            refl_driven_lambda = 0.12
+        elif getattr(request, 'far_driven', False):
+            refl_driven_lambda = 0.22
+        else:
+            refl_driven_lambda = 0.18  # Normal default
+        
+        refl_driven_gap = round(refl_driven_lambda * wavelength_in, 1)
+        
+        # If boom lock is enabled, constrain to available boom
+        if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
+            max_boom = request.max_boom_length
+            # Reserve space for directors (at least 60% of boom)
+            max_driven_pos = max_boom * 0.4
+            if refl_driven_gap > max_driven_pos:
+                refl_driven_gap = round(max_driven_pos, 1)
         
         elements.append({
             "element_type": "reflector",
@@ -2189,7 +2205,7 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
             "diameter": 0.5,
             "position": refl_driven_gap
         })
-        notes.append(f"Driven: {driven_length}\" at {refl_driven_gap}\" from reflector")
+        notes.append(f"Driven: {driven_length}\" at {refl_driven_gap}\" from reflector ({refl_driven_lambda}λ)")
         
         num_directors = n - 2
         remaining_boom = target_boom - refl_driven_gap
