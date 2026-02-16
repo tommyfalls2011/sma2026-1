@@ -233,11 +233,16 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 xl_required = math.sqrt(max(feedpoint_r, 12.0) * (50.0 - feedpoint_r))
             else:
                 xl_required = 10.0
-            effective_ratio = bar_pos / 0.5
-            reactance_deviation = abs(effective_ratio - 1.0)
-            z0_penalty = abs(hairpin_z0 - xl_required * 2.5) / (xl_required * 2.5) if xl_required > 0 else 0
-            boom_gap_penalty = max(0, (0.5 - boom_gap) * 0.15) if boom_gap < 0.5 else 0
-            tuning_factor = 1.0 + min(0.30, reactance_deviation * 0.3 + z0_penalty * 0.15 + boom_gap_penalty)
+            # Bar position: 0.5 = ideal, deviation increases SWR
+            bar_deviation = abs(bar_pos - 0.5) / 0.5  # 0 at center, 1 at extremes
+            bar_penalty = bar_deviation * 0.20
+            # Z0: optimal range is 100-300 for typical hairpin; penalize extremes
+            optimal_z0 = max(80.0, xl_required * 4.0)
+            z0_deviation = abs(hairpin_z0 - optimal_z0) / optimal_z0
+            z0_penalty = min(0.15, z0_deviation * 0.12)
+            # Boom gap: closer than 0.5" adds parasitic coupling
+            boom_gap_penalty = max(0, (0.5 - boom_gap) * 0.20) if boom_gap < 0.5 else 0
+            tuning_factor = 1.0 + min(0.35, bar_penalty + z0_penalty + boom_gap_penalty)
         matched_swr *= tuning_factor
         info = {"type": "Hairpin Match", "description": "Shorted stub adds inductance to cancel capacitive reactance at feedpoint", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Broadband (minimal effect)", "bandwidth_mult": 1.0, "technical_notes": {"mechanism": "Shorted transmission line stub", "asymmetry": "Symmetrical design \u2014 no beam skew", "advantage": "Simple construction, broadband", "tuning": "Adjust hairpin length and spacing", "tradeoff": "Requires split driven element", "balun_note": "Use current choke balun alongside"}}
         return round(max(1.0, matched_swr), 3), info
