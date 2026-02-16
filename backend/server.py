@@ -1489,6 +1489,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         fb_ratio = 20 + 3.0 * math.log2(n - 2)
         fs_ratio = 12 + 2.5 * math.log2(n - 2)
     
+    # Get driven and reflector elements for spacing calculations
+    driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    
     # Element spacing affects F/B: tighter reflector-driven = better F/B, wider = worse
     if driven_elem and reflector_elem and has_reflector and n >= 3:
         refl_driven_spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
