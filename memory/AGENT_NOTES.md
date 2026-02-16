@@ -1,5 +1,11 @@
 # CRITICAL SETUP NOTES FOR FUTURE AGENTS
 
+## User's Local Development Setup
+- User develops on a **VM on their PC**
+- Local repo path: **~/sma2026-1**
+- GitHub repo: https://github.com/tommyfalls2011/sma2026-1
+- User builds APKs via EAS on their VM
+
 ## Service Configuration
 This app has TWO frontend projects in `/app/frontend/`:
 1. **Expo/React Native antenna calculator app** (in `app/` directory) — THIS IS THE MAIN APP
@@ -79,6 +85,13 @@ The backend handles these in `services/physics.py` (lines ~895, ~1043).
 ## Credentials
 - **Admin**: fallstommy@gmail.com / admin123
 - **Backend URL**: https://physics-backend.preview.emergentagent.com
+
+## Latest Session Updates (Feb 16, 2026)
+1. **Backend refactored** from monolithic 4517-line `server.py` → modular architecture (backup at `server_monolithic_backup.py`). All 24/24 API tests passed.
+2. **Spacing override buttons added** to `index.tsx`: Driven Element (Close 0.12λ / Normal 0.18λ / Far 0.22λ) + 1st Director (Close / Normal / Far). State vars: `closeDriven`, `farDriven`, `closeDir1`, `farDir1`.
+3. **Physics engine fixed** in `services/physics.py`: Both `/api/auto-tune` and `/api/calculate` now properly adjust gain, F/B, SWR based on driven AND director spacing (director spacing was completely missing, driven gain adjustment was missing from calculate).
+4. **App version updated** to v4.1.2 (versionCode 7) in `app.json` and `/api/app-update` endpoint.
+5. **Preview set to Expo antenna app** (not the Vite website). User is done with the website for now.
 
 ## Common Gotchas
 1. **Don't switch expo to frontend (Vite)** unless user specifically asks for the website
