@@ -357,6 +357,10 @@ export default function AntennaCalculator() {
   const [closeDir1, setCloseDir1] = useState(false);
   const [farDir1, setFarDir1] = useState(false);
   
+  // Fine-tune nudge for element positions (±12.5% = 25% total range)
+  const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -5 to +5 steps
+  const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // -5 to +5 steps
+  
   const SPACING_OPTIONS = {
     tight: [
       { value: '0.6', label: 'Very Tight (60%)' },
