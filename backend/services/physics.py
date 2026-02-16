@@ -607,8 +607,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
 
     # Element-based resonant frequency: driven element length determines natural resonance
-    # f_resonant = c / (2 * L_driven). Parasitic coupling shifts it further.
+    # f_resonant = c / (2 * L_driven). Mutual coupling (spacing-dependent) shifts it further.
     driven_for_freq = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    reflector_for_freq = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    directors_for_freq = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
     element_resonant_freq = center_freq  # default to operating freq
     if driven_for_freq:
         driven_len_m = convert_element_to_meters(driven_for_freq.length, "inches")
@@ -617,12 +619,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             # Longer driven = lower freq, shorter = higher freq
             length_ratio = driven_len_m / ideal_half_wave
             element_resonant_freq = round(center_freq / length_ratio, 3)
-            # Mutual coupling in Yagi system shifts system resonance significantly:
-            # Reflector pulls resonant freq down ~3% (strong coupling)
-            if has_reflector_for_z:
-                element_resonant_freq *= 0.97
-            # Directors also pull system resonance down ~0.6% each
-            element_resonant_freq *= (1.0 - num_directors * 0.006)
+            # Reflector coupling: closer = stronger pull-down on resonant freq
+            # At optimal 0.2λ spacing, ~3% pull. Closer = more, farther = less.
+            if has_reflector_for_z and reflector_for_freq:
+                refl_spacing_m = abs(convert_element_to_meters(driven_for_freq.position - reflector_for_freq.position, "inches"))
+                refl_spacing_wl = refl_spacing_m / wavelength if wavelength > 0 else 0.2
+                # Coupling strength inversely proportional to spacing
+                # At 0.15λ: ~4% pull, at 0.2λ: ~3%, at 0.3λ: ~1.5%, at 0.4λ: ~0.8%
+                refl_coupling = min(0.06, 0.015 / max(refl_spacing_wl, 0.05))
+                element_resonant_freq *= (1.0 - refl_coupling)
+            # Director coupling: closer directors have stronger effect
+            # Directors pull resonance up slightly (they're shorter than driven)
+            for i, d in enumerate(directors_for_freq):
+                dir_spacing_m = abs(convert_element_to_meters(d.position - driven_for_freq.position, "inches"))
+                dir_spacing_wl = dir_spacing_m / wavelength if wavelength > 0 else 0.15
+                # Coupling weakens with distance from driven; each director has less effect
+                dir_coupling = min(0.008, 0.003 / max(dir_spacing_wl, 0.05)) * (0.7 ** i)
+                element_resonant_freq *= (1.0 + dir_coupling)
             element_resonant_freq = round(element_resonant_freq, 3)
 
     matched_swr, matching_info = apply_matching_network(
