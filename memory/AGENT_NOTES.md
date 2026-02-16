@@ -78,7 +78,7 @@ The backend handles these in `services/physics.py` (lines ~895, ~1043).
 
 ## Credentials
 - **Admin**: fallstommy@gmail.com / admin123
-- **Backend URL**: https://physics-backend.preview.emergentagent.com
+- **Backend URL**: https://rf-designer-1.preview.emergentagent.com
 
 ## Common Gotchas
 1. **Don't switch expo to frontend (Vite)** unless user specifically asks for the website
