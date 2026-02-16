@@ -770,7 +770,7 @@ export default function AntennaCalculator() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => calculateAntenna(), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [inputs, gammaRodDia, gammaRodSpacing, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
+  }, [inputs, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaElementGap, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
 
   useEffect(() => { calculateAntenna(); }, []);
 
