@@ -2239,7 +2239,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
                   <Text style={{ fontSize: 11, color: spacingNudgeCount === 0 ? '#666' : '#9C27B0', fontWeight: '700' }}>
-                    {spacingNudgeCount === 0 ? '0%' : `${(spacingNudgeCount * 2.5) > 0 ? '+' : ''}${(spacingNudgeCount * 2.5).toFixed(1)}%`}
+                    {spacingNudgeCount === 0 ? '0%' : `${(spacingNudgeCount * 0.5) > 0 ? '+' : ''}${(spacingNudgeCount * 0.5).toFixed(1)}%`}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -2303,7 +2303,7 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                   <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
                     <Text style={{ fontSize: 11, color: drivenNudgeCount === 0 ? '#666' : '#4CAF50', fontWeight: '700' }}>
-                      {drivenNudgeCount === 0 ? '0%' : `${(drivenNudgeCount * 2.5) > 0 ? '+' : ''}${(drivenNudgeCount * 2.5).toFixed(1)}%`}
+                      {drivenNudgeCount === 0 ? '0%' : `${(drivenNudgeCount * 0.5) > 0 ? '+' : ''}${(drivenNudgeCount * 0.5).toFixed(1)}%`}
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -2369,7 +2369,7 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                   <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
                     <Text style={{ fontSize: 11, color: dir1NudgeCount === 0 ? '#666' : '#2196F3', fontWeight: '700' }}>
-                      {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 2.5) > 0 ? '+' : ''}${(dir1NudgeCount * 2.5).toFixed(1)}%`}
+                      {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 0.5) > 0 ? '+' : ''}${(dir1NudgeCount * 0.5).toFixed(1)}%`}
                     </Text>
                   </View>
                   <TouchableOpacity
