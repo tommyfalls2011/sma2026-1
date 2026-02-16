@@ -534,6 +534,49 @@ export default function AntennaCalculator() {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [designName, setDesignName] = useState('');
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
+
+  // Return Loss Tune — sweep spacings to find best match
+  const runReturnLossTune = async () => {
+    setRlTuning(true);
+    setRlResult(null);
+    try {
+      const body = {
+        num_elements: inputs.elements.length,
+        band: inputs.band, frequency_mhz: inputs.frequency_mhz,
+        feed_type: inputs.feed_type, antenna_orientation: inputs.antenna_orientation,
+        height_from_ground: inputs.height_from_ground, height_unit: inputs.height_unit,
+        boom_diameter: inputs.boom_diameter, boom_unit: inputs.boom_unit,
+        boom_grounded: inputs.boom_grounded, boom_mount: inputs.boom_mount,
+        gamma_bar_pos: gammaBarPos, gamma_element_gap: gammaElementGap,
+        elements: inputs.elements.map((e: any) => ({
+          element_type: e.element_type, length: parseFloat(e.length),
+          diameter: parseFloat(e.diameter), position: parseFloat(e.position)
+        })),
+      };
+      const res = await fetch(`${API_URL}/api/optimize-return-loss`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      setRlResult(data);
+    } catch (err) {
+      console.error('RL tune error:', err);
+    }
+    setRlTuning(false);
+  };
+
+  const applyRlResult = () => {
+    if (!rlResult?.best_elements) return;
+    const newElements = rlResult.best_elements.map((e: any) => ({
+      element_type: e.element_type,
+      length: String(e.length),
+      diameter: String(e.diameter),
+      position: String(e.position),
+    }));
+    setInputs((p: any) => ({ ...p, elements: newElements }));
+    setRlResult(null);
+    setDrivenNudgeCount(0);
+    setDir1NudgeCount(0);
+    setSpacingNudgeCount(0);
+  };
+
   const [savingDesign, setSavingDesign] = useState(false);
   const [loadingDesigns, setLoadingDesigns] = useState(false);
   const [deletingDesignId, setDeletingDesignId] = useState<string | null>(null);
