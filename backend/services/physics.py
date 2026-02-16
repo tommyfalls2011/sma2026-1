@@ -1008,6 +1008,38 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 if 60 < angle < 120 or 240 < angle < 300: magnitude *= side_attenuation
         far_field_pattern.append({"angle": angle, "magnitude": round(max(magnitude, 1), 1)})
 
+    # Elevation pattern — full vertical plane showing all lobes, front AND back
+    # Ground reflection creates multiple lobes: E(θ) = sin(2π·h·sin(θ)/λ)
+    height_m = convert_height_to_meters(input_data.height_from_ground, input_data.height_unit)
+    height_wl = height_m / wavelength if wavelength > 0 else 1.0
+    elevation_pattern = []
+    for angle in range(0, 361, 2):  # 0°=right(horizon), 90°=up, 180°=left(back horizon), 270°=down
+        theta = math.radians(angle)
+        if angle <= 180:
+            # Front hemisphere: 0°=horizon, 90°=zenith, 180°=back horizon
+            elev = angle  # elevation from front horizon
+            if elev <= 90:
+                # Front upper: main beam side
+                elev_rad = math.radians(elev)
+                # Ground reflection factor creates lobes
+                ground_factor = abs(math.sin(2 * math.pi * height_wl * math.sin(elev_rad))) if height_wl > 0 else 1.0
+                # Element pattern: Yagi forward gain tapers off at high elevations
+                element_factor = max(0.05, math.cos(elev_rad * 0.7) ** 1.5)
+                magnitude = ground_factor * element_factor * 100
+            else:
+                # Back upper: behind antenna, above horizon
+                back_elev = 180 - elev  # angle above back horizon
+                back_elev_rad = math.radians(back_elev)
+                ground_factor = abs(math.sin(2 * math.pi * height_wl * math.sin(back_elev_rad))) if height_wl > 0 else 1.0
+                # Back attenuation from F/B ratio
+                back_atten = 10 ** (-fb_ratio / 20)
+                element_factor = max(0.05, math.cos(back_elev_rad * 0.7) ** 1.5) * back_atten
+                magnitude = ground_factor * element_factor * 100
+        else:
+            # Below ground plane (mirror/null) — show as minimal
+            magnitude = 1.0
+        elevation_pattern.append({"angle": angle, "magnitude": round(max(magnitude, 1), 1)})
+
     # Stacking
     stacking_enabled = False
     stacking_info = None
