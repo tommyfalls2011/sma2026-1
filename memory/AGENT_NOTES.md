@@ -47,7 +47,17 @@
 - `hairpinRodDia`, `hairpinRodSpacing` — hairpin panel editable inputs
 - `hairpinBarPos` (0.2-0.9 ratio), `hairpinBoomGap` (0.25-3.0 inches) — hairpin sliders
 - `gammaRodDia`, `gammaRodSpacing` — gamma panel editable inputs
+- `gammaBarPos` (0.2-0.9) — shorting bar position along element (autotransformer tap, sets R)
+- `gammaRodInsertion` (0.1-0.9) — rod insertion into tube (series capacitor, cancels reactance)
 - `originalDrivenLength` — tracks pre-shortening length for feed type restore
+
+## Gamma Match Component Reference
+- **Gamma Rod** (inner): Connected to coax center conductor, slides inside tube
+- **Gamma Tube** (outer): Mounted parallel to main element, outer plate of capacitor
+- **Teflon Insulator** (PTFE): Between rod & tube, 60kV/mm dielectric rating
+- **Rod + Tube + Teflon = variable series capacitor**: Sliding rod in/out changes capacitance, tunes out inductance
+- **Shorting Bar**: Al/Cu strap bridging tube to element, acts as autotransformer tap, sets impedance step-up
+- **Grounding**: Coax shield connects directly to boom/element center (RF voltage null point)
 
 ## Key Functions Added
 - `nudgeElement('driven'|'dir1', direction)` — nudges single element position by 2.5%
