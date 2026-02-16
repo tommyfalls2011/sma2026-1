@@ -3137,6 +3137,7 @@ export default function AntennaCalculator() {
                     <Text style={{ fontSize: 10, fontWeight: '700', color: '#666', marginBottom: 4 }}>{results.matching_info.type?.toUpperCase()}</Text>
                     <SpecRow label="  Before Match" value={`${results.matching_info.original_swr}:1`} small />
                     <SpecRow label="  After Match" value={`${results.matching_info.matched_swr}:1`} accent="#4CAF50" small />
+                    {results.matching_info.tuning_quality != null && <SpecRow label="  Tuning Quality" value={`${Math.round(results.matching_info.tuning_quality * 100)}%`} accent={results.matching_info.tuning_quality >= 0.9 ? '#4CAF50' : results.matching_info.tuning_quality >= 0.7 ? '#FF9800' : '#f44336'} small />}
                     <SpecRow label="  Bandwidth Effect" value={results.matching_info.bandwidth_effect} small />
                     {results.matching_info.technical_notes && (
                       <View style={{ marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#333' }}>
