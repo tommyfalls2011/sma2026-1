@@ -1003,6 +1003,12 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     elements = []
     notes = []
     driven_length = round(wavelength_in * 0.473, 1)
+    # Apply feed type shortening to driven element
+    feed_type = getattr(request, 'feed_type', 'direct')
+    if feed_type == 'gamma':
+        driven_length = round(driven_length * 0.97, 1)  # 3% shorter for gamma
+    elif feed_type == 'hairpin':
+        driven_length = round(driven_length * 0.96, 1)  # 4% shorter for hairpin
     use_reflector = getattr(request, 'use_reflector', True)
     scale_factor = wavelength_in / REF_WAVELENGTH_11M_IN
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
