@@ -534,10 +534,21 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     driven_elem = next((e for e in input_data.elements if e.element_type == "driven"), None)
     reflector_elem = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    dir_elems = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
 
+    spacing_gain_adj = 0.0
     if driven_elem and reflector_elem and has_reflector and n >= 3:
         refl_driven_spacing_m = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches"))
         refl_driven_lambda = refl_driven_spacing_m / wavelength if wavelength > 0 else 0.18
+
+        # Gain adjustment from driven-reflector spacing
+        optimal_gain_lambda = 0.20
+        if refl_driven_lambda < optimal_gain_lambda:
+            spacing_gain_adj -= 2.5 * (optimal_gain_lambda - refl_driven_lambda) / 0.1
+        else:
+            spacing_gain_adj -= 1.5 * (refl_driven_lambda - optimal_gain_lambda) / 0.1
+
+        # F/B adjustment from driven-reflector spacing
         optimal_fb_lambda = 0.15
         if refl_driven_lambda < optimal_fb_lambda:
             spacing_fb_adj = 2.0 - 5.0 * (optimal_fb_lambda - refl_driven_lambda) / 0.1
@@ -546,8 +557,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else:
             spacing_fb_adj = -3.0 * (refl_driven_lambda - 0.20) / 0.1
         spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
+
+        # Director 1 spacing adjustments
+        if len(dir_elems) >= 1 and driven_elem:
+            dir1_spacing_m = abs(convert_element_to_meters(dir_elems[0].position - driven_elem.position, "inches"))
+            dir1_lambda = dir1_spacing_m / wavelength if wavelength > 0 else 0.13
+            optimal_dir1 = 0.13
+            dir1_dev = abs(dir1_lambda - optimal_dir1)
+            if dir1_dev > 0.02:
+                spacing_gain_adj -= 0.5 * dir1_dev / 0.05
+                spacing_fb_adj += (1.0 if dir1_lambda < optimal_dir1 else -1.0) * dir1_dev / 0.05
+
+        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
+        spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
         fb_ratio += spacing_fb_adj
         fs_ratio += spacing_fb_adj * 0.5
+        gain_dbi += spacing_gain_adj
+        gain_dbi = round(gain_dbi, 2)
 
     if is_dual and dual_info:
         fb_ratio += dual_info["fb_bonus_db"]
