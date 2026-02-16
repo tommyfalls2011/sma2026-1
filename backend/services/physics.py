@@ -933,14 +933,37 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         notes.append("Spacing Lock: Positions preserved, only lengths optimized")
     else:
         if num_directors > 0:
+            # Determine first director spacing override
+            if getattr(request, 'close_dir1', False):
+                dir1_lambda = 0.10
+            elif getattr(request, 'far_dir1', False):
+                dir1_lambda = 0.18
+            else:
+                dir1_lambda = 0.13  # default
+
             for i in range(num_directors):
-                weight = 0.8 + (0.4 * i / max(num_directors - 1, 1))
-                total_weight = sum(0.8 + (0.4 * j / max(num_directors - 1, 1)) for j in range(num_directors))
-                director_spacing = round(remaining_boom * weight / total_weight, 1)
-                current_position += director_spacing
-                director_length = round(driven_length * (0.95 - i * 0.02), 1)
-                elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
-                notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\"")
+                if i == 0:
+                    # First director uses the override spacing
+                    director_spacing = round(dir1_lambda * wavelength_in, 1)
+                    if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
+                        max_dir1 = (request.max_boom_length - current_position) * 0.5
+                        if director_spacing > max_dir1:
+                            director_spacing = round(max_dir1, 1)
+                    current_position += director_spacing
+                    director_length = round(driven_length * (0.95 - i * 0.02), 1)
+                    elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
+                    dir1_label = f"({dir1_lambda}\u03bb)" if (getattr(request, 'close_dir1', False) or getattr(request, 'far_dir1', False)) else ""
+                    notes.append(f"Director 1: {director_length}\" at {round(current_position, 1)}\" {dir1_label}")
+                else:
+                    remaining_after_dir1 = target_boom - current_position
+                    remaining_dirs = num_directors - 1
+                    weight = 0.8 + (0.4 * (i - 1) / max(remaining_dirs - 1, 1)) if remaining_dirs > 1 else 1.0
+                    total_weight = sum(0.8 + (0.4 * j / max(remaining_dirs - 1, 1)) if remaining_dirs > 1 else 1.0 for j in range(remaining_dirs))
+                    director_spacing = round(remaining_after_dir1 * weight / total_weight, 1)
+                    current_position += director_spacing
+                    director_length = round(driven_length * (0.95 - i * 0.02), 1)
+                    elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
+                    notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\"")
 
     notes.append(f"")
     notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
