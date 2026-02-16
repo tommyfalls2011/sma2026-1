@@ -26,6 +26,10 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - Update system with version checking
 - Expo Web preview environment configured
 - v4.1.5 version applied across all config files and database
+- **SWR curve shifts with resonant frequency** — SWR dip moves based on gamma/hairpin match tuning, centered on operating freq
+- **Resonant frequency marker** on SWR chart (orange "RES" line)
+- **Realistic element resonant frequency** — mutual coupling factors (reflector -3%, directors -0.6% each)
+- **Reduced gamma bar shift factor** — 1.5 MHz range (was 3.0) for more realistic tuning
 
 ## Pending Tasks
 ### P1
@@ -45,6 +49,7 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - `frontend/app.json` — Expo config (version 4.1.5, versionCode 8)
 - `frontend/update.json` — Update system config
 - `backend/routes/public.py` — Public API including app-update endpoint
+- `backend/models.py` — Pydantic models (AntennaOutput includes resonant_freq_mhz)
 
 ## Test Credentials
 - Store Admin: `fallstommy@gmail.com` / `admin123`
