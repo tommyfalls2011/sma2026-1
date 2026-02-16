@@ -620,21 +620,20 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             length_ratio = driven_len_m / ideal_half_wave
             element_resonant_freq = round(center_freq / length_ratio, 3)
             # Reflector coupling: closer = stronger pull-down on resonant freq
-            # At optimal 0.2λ spacing, ~3% pull. Closer = more, farther = less.
+            # Exponential decay: strong coupling at close spacing, weaker at far
             if has_reflector_for_z and reflector_for_freq:
                 refl_spacing_m = abs(convert_element_to_meters(driven_for_freq.position - reflector_for_freq.position, "inches"))
                 refl_spacing_wl = refl_spacing_m / wavelength if wavelength > 0 else 0.2
-                # Coupling strength inversely proportional to spacing
-                # At 0.15λ: ~4% pull, at 0.2λ: ~3%, at 0.3λ: ~1.5%, at 0.4λ: ~0.8%
-                refl_coupling = min(0.06, 0.015 / max(refl_spacing_wl, 0.05))
+                # At 0.1λ: ~4.3%, 0.15λ: ~3.5%, 0.2λ: ~3%, 0.3λ: ~2%
+                import math
+                refl_coupling = 0.067 * math.exp(-4.0 * max(refl_spacing_wl, 0.02))
                 element_resonant_freq *= (1.0 - refl_coupling)
-            # Director coupling: closer directors have stronger effect
-            # Directors pull resonance up slightly (they're shorter than driven)
+            # Director coupling: each director pulls resonance up slightly
             for i, d in enumerate(directors_for_freq):
                 dir_spacing_m = abs(convert_element_to_meters(d.position - driven_for_freq.position, "inches"))
                 dir_spacing_wl = dir_spacing_m / wavelength if wavelength > 0 else 0.15
-                # Coupling weakens with distance from driven; each director has less effect
-                dir_coupling = min(0.008, 0.003 / max(dir_spacing_wl, 0.05)) * (0.7 ** i)
+                # Weaker than reflector, decays with distance and element index
+                dir_coupling = 0.015 * math.exp(-5.0 * max(dir_spacing_wl, 0.02)) * (0.7 ** i)
                 element_resonant_freq *= (1.0 + dir_coupling)
             element_resonant_freq = round(element_resonant_freq, 3)
 
