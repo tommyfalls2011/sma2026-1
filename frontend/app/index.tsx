@@ -780,7 +780,7 @@ export default function AntennaCalculator() {
     if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current);
     autoCalcTimer.current = setTimeout(() => calculateAntenna(), 300);
     return () => { if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current); };
-  }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, gammaBarPos, gammaElementGap, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
+  }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
 
   const optimizeStacking = async () => {
     setOptimizingStacking(true);
