@@ -817,6 +817,9 @@ export default function AntennaCalculator() {
         }
         
         setInputs(prev => ({ ...prev, elements: newElements }));
+        // Reset nudge counts after auto-tune provides new positions
+        setDrivenNudgeCount(0);
+        setDir1NudgeCount(0);
         
         // Backend already applies spacing_mode/spacing_level if sent
         // When boom lock is active, reset spacing state cleanly
