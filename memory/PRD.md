@@ -5,30 +5,34 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 
 ## What's Been Implemented
 
-### Earlier Sessions
-- Nudge arrows for Element Spacing, Driven Element, 1st Director spacing
-- Feed type physics: Gamma, Hairpin, Direct with distinct effects on gain/F/B/SWR/bandwidth
-- Auto-shortening of driven element: 3% (gamma), 4% (hairpin)
-- Interactive Gamma & Hairpin design panels with editable rod dia/spacing
-- Director spacing physics fix, Ground radials fix
-
 ### Current Session (Feb 2026)
-- **Real-time matching network tuning**: All design panel adjustments affect SWR in real time
-- **Gamma match redesigned** with real-world component model:
-  - **Shorting Bar Position** slider: autotransformer tap along element, sets R to 50 ohm
-  - **Rod Insertion (Capacitance)** slider: rod in/out of tube, variable series cap, cancels reactance
-  - Components section: Rod (inner, coax center) + Tube (outer) + Teflon (PTFE, 60kV/mm)
-  - Backend physics: bar optimal = sqrt(50/R_feed)*0.35, rod insertion optimal at 50%
-- **Hairpin sliders**: Shorting Bar Position + Rods-to-Boom Gap (also updated to Pressable)
-- **Pressable fix**: Replaced TouchableOpacity with Pressable for slider buttons — fixes web click handling in Expo Web
-- **Hairpin Z0**: optimal range updated to 200-600 ohms per HF Yagi standards
-- **Tuning Quality %** shown in matching info section and bonus card
-- **Expo Web mode**: Preview now runs Expo web on port 3000 (not Vite)
+- **Real-time matching network tuning**: Gamma/Hairpin design panel adjustments affect SWR in real time
+- **Gamma match with real-world physics**:
+  - Shorting Bar Position slider → shifts resonant frequency (bar out = lower freq, bar in = higher)
+  - Rod Insertion slider → changes Q-factor/bandwidth (more insertion = higher Q = narrower BW)
+  - Off-resonance SWR penalty when freq shift exceeds bandwidth
+  - Components section: Rod/Tube/Teflon/Shorting Bar descriptions
+- **Element-based resonant frequency**: Driven element length + parasitic coupling now compute natural resonant freq
+  - Longer driven = lower resonant freq, shorter = higher
+  - Reflector pulls freq down ~0.5%, each director pushes up ~0.3%
+  - Returned as `element_resonant_freq_mhz` in matching_info
+- **Hairpin sliders**: Shorting Bar Position + Rods-to-Boom Gap with Pressable buttons
+- **Hairpin Z0**: optimal range 200-600 ohms
+- **Performance Metrics**: Gain=15dB, F/B=18dB, F/S=8dB, Eff=100% base scales, auto-grow 15%
+- **Gain model updated**: 3-element bumped from 8.2 to 9.0 dBi (1st director ~3dB gain)
+- **Expo Web mode**: Preview runs Expo web on port 3000
+- **Pressable fix**: Replaced TouchableOpacity with Pressable for web click handling
 
 ## Key Architecture
-- Backend: `/app/backend/services/physics.py`, `/app/backend/routes/antenna.py`, `/app/backend/models.py`
+- Backend: `/app/backend/services/physics.py`, `/app/backend/config.py`, `/app/backend/models.py`
 - Frontend: `/app/frontend/app/index.tsx`
 - Frontend supervisor: `npx expo start --web --port 3000 --non-interactive`
+
+## API Response Fields (matching_info for gamma)
+- `resonant_freq_mhz`: gamma bar-shifted resonant frequency
+- `element_resonant_freq_mhz`: element-length-based natural resonant frequency
+- `q_factor`: from rod insertion depth
+- `gamma_bandwidth_mhz`: BW = operating_freq / Q
 
 ## Prioritized Backlog
 ### P2
@@ -41,5 +45,5 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 ## Notes
 - User VM path: ~/sma2026-1
 - User is removing the Vite website themselves
-- Expo Web requires `Pressable` (not `TouchableOpacity`) for reliable click handling
+- Expo Web requires Pressable (not TouchableOpacity) for reliable click handling
 - Metro CI mode: restart frontend after code changes
