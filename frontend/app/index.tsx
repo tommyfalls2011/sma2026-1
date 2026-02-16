@@ -1790,23 +1790,23 @@ export default function AntennaCalculator() {
 
                       <View style={{ marginBottom: 4 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <Text style={{ fontSize: 10, color: '#888' }}>Rod-to-Element Gap</Text>
-                          <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{gammaElementGap.toFixed(2)}"</Text>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Rod Insertion (Capacitance)</Text>
+                          <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{(gammaRodInsertion * 100).toFixed(0)}%</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <TouchableOpacity onPress={() => setGammaElementGap(Math.max(0.25, gammaElementGap - 0.25))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
+                          <TouchableOpacity onPress={() => setGammaRodInsertion(Math.max(0.1, gammaRodInsertion - 0.05))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
                             <Ionicons name="remove" size={16} color="#2196F3" />
                           </TouchableOpacity>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
-                            <View style={{ width: `${((gammaElementGap - 0.25) / 2.75) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
+                            <View style={{ width: `${((gammaRodInsertion - 0.1) / 0.8) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
                           </View>
-                          <TouchableOpacity onPress={() => setGammaElementGap(Math.min(3.0, gammaElementGap + 0.25))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
+                          <TouchableOpacity onPress={() => setGammaRodInsertion(Math.min(0.9, gammaRodInsertion + 0.05))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
                             <Ionicons name="add" size={16} color="#2196F3" />
                           </TouchableOpacity>
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
-                          <Text style={{ fontSize: 9, color: '#555' }}>Closer to element</Text>
-                          <Text style={{ fontSize: 9, color: '#555' }}>Farther from element</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Less capacitance</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>More capacitance</Text>
                         </View>
                       </View>
                     </>);
