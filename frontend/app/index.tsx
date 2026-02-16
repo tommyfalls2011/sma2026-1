@@ -1711,31 +1711,44 @@ export default function AntennaCalculator() {
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
 
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: '#888' }}>Rod Diameter</Text>
-                      <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600' }}>{results.matching_info.gamma_design.gamma_rod_diameter_in}" (1/3 elem)</Text>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Dia (in)</Text>
+                      <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={gammaRodDia || String(results.matching_info.gamma_design.gamma_rod_diameter_in)} onChangeText={setGammaRodDia} keyboardType="decimal-pad" placeholder={String(results.matching_info.gamma_design.gamma_rod_diameter_in)} placeholderTextColor="#555" />
                     </View>
-                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 10, color: '#888' }}>Rod Spacing</Text>
-                      <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600' }}>{results.matching_info.gamma_design.gamma_rod_spacing_in}" c-to-c</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Spacing (in)</Text>
+                      <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={gammaRodSpacing || String(results.matching_info.gamma_design.gamma_rod_spacing_in)} onChangeText={setGammaRodSpacing} keyboardType="decimal-pad" placeholder={String(results.matching_info.gamma_design.gamma_rod_spacing_in)} placeholderTextColor="#555" />
                     </View>
                   </View>
 
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: '#888' }}>Gamma Rod Length</Text>
-                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.gamma_rod_length_in}"</Text>
-                    </View>
-                    <View style={{ flex: 1, alignItems: 'center' }}>
-                      <Text style={{ fontSize: 10, color: '#888' }}>Series Cap</Text>
-                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.capacitance_pf} pF</Text>
-                    </View>
-                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
-                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.shorting_bar_position_in}"</Text>
-                    </View>
-                  </View>
+                  {(() => {
+                    const gd = results.matching_info.gamma_design;
+                    const rodDia = parseFloat(gammaRodDia) || gd.gamma_rod_diameter_in;
+                    const rodSpace = parseFloat(gammaRodSpacing) || gd.gamma_rod_spacing_in;
+                    const elemDia = gd.element_diameter_in;
+                    // Recalculate based on user inputs
+                    const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
+                    const rodLen = gd.wavelength_inches * 0.045 * (rodDia / gd.gamma_rod_diameter_in);
+                    const capPf = 7.0 * (gd.wavelength_inches / 39.3701) * (gd.gamma_rod_diameter_in / rodDia);
+                    const barPos = rodLen * 0.6;
+                    return (<>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Gamma Rod Length</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{rodLen.toFixed(2)}"</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Series Cap</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{capPf.toFixed(1)} pF</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{barPos.toFixed(2)}"</Text>
+                        </View>
+                      </View>
+                    </>);
+                  })()}
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
                   <Text style={{ fontSize: 10, color: '#FF9800' }}>Driven element auto-shortened 3% for gamma match</Text>
