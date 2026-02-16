@@ -543,15 +543,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     swr = round(max(1.0, min(swr, 5.0)), 2)
 
     feed_type = input_data.feed_type
-    matched_swr, matching_info = apply_matching_network(swr, feed_type)
-    if feed_type != "direct":
-        swr = round(matched_swr, 3)
 
     # Feedpoint impedance estimate for Yagi (mutual coupling reduces it)
     num_directors = len([e for e in input_data.elements if e.element_type == "director"])
-    has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
+    has_reflector_for_z = any(e.element_type == "reflector" for e in input_data.elements)
     yagi_feedpoint_r = 73.0  # half-wave dipole baseline
-    if has_reflector:
+    if has_reflector_for_z:
         yagi_feedpoint_r *= 0.55  # reflector coupling reduces ~45%
     if num_directors >= 1:
         yagi_feedpoint_r *= 0.70  # 1st director reduces ~30%
@@ -562,6 +559,18 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if num_directors >= 4:
         yagi_feedpoint_r *= 0.95
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
+
+    matched_swr, matching_info = apply_matching_network(
+        swr, feed_type, feedpoint_r=yagi_feedpoint_r,
+        gamma_rod_dia=input_data.gamma_rod_dia,
+        gamma_rod_spacing=input_data.gamma_rod_spacing,
+        hairpin_rod_dia=input_data.hairpin_rod_dia,
+        hairpin_rod_spacing=input_data.hairpin_rod_spacing,
+        hairpin_bar_pos=input_data.hairpin_bar_pos,
+        hairpin_boom_gap=input_data.hairpin_boom_gap,
+    )
+    if feed_type != "direct":
+        swr = round(matched_swr, 3)
 
     # Hairpin design calculations
     if feed_type == "hairpin" and yagi_feedpoint_r < 50.0:
