@@ -625,7 +625,6 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 refl_spacing_m = abs(convert_element_to_meters(driven_for_freq.position - reflector_for_freq.position, "inches"))
                 refl_spacing_wl = refl_spacing_m / wavelength if wavelength > 0 else 0.2
                 # At 0.1λ: ~4.3%, 0.15λ: ~3.5%, 0.2λ: ~3%, 0.3λ: ~2%
-                import math
                 refl_coupling = 0.067 * math.exp(-4.0 * max(refl_spacing_wl, 0.02))
                 element_resonant_freq *= (1.0 - refl_coupling)
             # Director coupling: each director pulls resonance up slightly
