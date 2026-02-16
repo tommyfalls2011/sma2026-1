@@ -443,10 +443,10 @@ export default function AntennaCalculator() {
     }));
   };
 
-  // Nudge element position by 2.5% per click, ±12.5% max (25% total)
+  // Nudge element position by 2.5% per click, ±25% max (50% total)
   const nudgeElement = (type: 'driven' | 'dir1', direction: number) => {
     const STEP = 2.5;
-    const MAX = 12.5;
+    const MAX = 25;
     const currentCount = type === 'driven' ? drivenNudgeCount : dir1NudgeCount;
     const newCount = currentCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
@@ -466,10 +466,10 @@ export default function AntennaCalculator() {
     });
   };
 
-  // Nudge ALL element spacing by 2.5% per click, ±12.5% max (25% total)
+  // Nudge ALL element spacing by 2.5% per click, ±25% max (50% total)
   const nudgeSpacing = (direction: number) => {
     const STEP = 2.5;
-    const MAX = 12.5;
+    const MAX = 25;
     const newCount = spacingNudgeCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
     setSpacingNudgeCount(newCount);
