@@ -23,7 +23,7 @@ import requests
 import os
 import math
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://element-nudge-demo.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://swr-sim.preview.emergentagent.com').rstrip('/')
 
 # === USER-SPECIFIED REAL-WORLD GAINS AT 36ft (1λ) ===
 # Tolerance: ±0.5 dBi

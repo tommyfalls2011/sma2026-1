@@ -17,7 +17,7 @@ import os
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL'))
 if not BASE_URL:
-    BASE_URL = "https://element-nudge-demo.preview.emergentagent.com"
+    BASE_URL = "https://swr-sim.preview.emergentagent.com"
 
 
 class TestQuadStackCalculation:
