@@ -604,6 +604,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         yagi_feedpoint_r *= 0.95
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
 
+    # Element-based resonant frequency: driven element length determines natural resonance
+    # f_resonant = c / (2 * L_driven). Parasitic coupling shifts it further.
+    driven_for_freq = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    element_resonant_freq = center_freq  # default to operating freq
+    if driven_for_freq:
+        driven_len_m = convert_element_to_meters(driven_for_freq.length, "inches")
+        ideal_half_wave = wavelength / 2
+        if driven_len_m > 0 and ideal_half_wave > 0:
+            # Longer driven = lower freq, shorter = higher freq
+            length_ratio = driven_len_m / ideal_half_wave
+            element_resonant_freq = round(center_freq / length_ratio, 3)
+            # Reflector pulls resonant freq down ~0.5%, directors push it up ~0.3% each
+            if has_reflector_for_z:
+                element_resonant_freq *= 0.995
+            element_resonant_freq *= (1.0 + num_directors * 0.003)
+            element_resonant_freq = round(element_resonant_freq, 3)
+
     matched_swr, matching_info = apply_matching_network(
         swr, feed_type, feedpoint_r=yagi_feedpoint_r,
         gamma_rod_dia=input_data.gamma_rod_dia,
