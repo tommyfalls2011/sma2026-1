@@ -2758,7 +2758,7 @@ export default function AntennaCalculator() {
                         <View style={styles.perfItem}>
                           <Text style={styles.perfLabel}>Gain ({gainMode === 'freespace' ? 'FS' : 'RW'})</Text>
                           <View style={styles.perfBar}>
-                            <View style={[styles.perfBarFill, { width: `${Math.min(gainVal / dbScale * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
+                            <View style={[styles.perfBarFill, { width: `${Math.min(gainVal / gainScale * 100, 100)}%`, backgroundColor: gainMode === 'freespace' ? '#64B5F6' : '#4CAF50' }]} />
                           </View>
                           <Text style={styles.perfValue}>{gainVal} dBi</Text>
                         </View>
