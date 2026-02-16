@@ -1814,7 +1814,7 @@ export default function AntennaCalculator() {
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
                   <Text style={{ fontSize: 10, color: '#FF9800' }}>Driven element auto-shortened 3% for gamma match</Text>
-                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Adjust shorting bar for resistance, slide inner rod for capacitance. Element grounded to boom.</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Slide shorting bar for resistance (50 ohm target), adjust rod insertion to cancel reactance. Element grounded to boom.</Text>
                 </View>
               )}
 
