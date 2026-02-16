@@ -776,7 +776,7 @@ export default function AntennaCalculator() {
     if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current);
     autoCalcTimer.current = setTimeout(() => calculateAntenna(), 300);
     return () => { if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current); };
-  }, [JSON.stringify(inputs)]);
+  }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
 
   const optimizeStacking = async () => {
     setOptimizingStacking(true);
