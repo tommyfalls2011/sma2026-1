@@ -2748,11 +2748,15 @@ export default function AntennaCalculator() {
                     const fbVal = results.fb_ratio;
                     const fsVal = results.fs_ratio;
                     const effVal = results.antenna_efficiency;
-                    // Each metric auto-scales to value + 15% headroom
-                    const gainScale = Math.max(gainVal * 1.15, 1);
-                    const fbScale = Math.max(fbVal * 1.15, 1);
-                    const fsScale = Math.max(fsVal * 1.15, 1);
-                    const effScale = Math.max(effVal * 1.15, 1);
+                    // Each metric has a base max, auto-grows by 15% if value gets close
+                    let gainScale = 15;
+                    while (gainVal / gainScale > 0.85) { gainScale *= 1.15; }
+                    let fbScale = 18;
+                    while (fbVal / fbScale > 0.85) { fbScale *= 1.15; }
+                    let fsScale = 8;
+                    while (fsVal / fsScale > 0.85) { fsScale *= 1.15; }
+                    // Efficiency: always 15% bigger than the value
+                    const effScale = Math.max(100, effVal * 1.15);
                     return (
                       <>
                         <View style={styles.perfItem}>
