@@ -1783,8 +1783,8 @@ export default function AntennaCalculator() {
                           </TouchableOpacity>
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
-                          <Text style={{ fontSize: 9, color: '#555' }}>Less coupling</Text>
-                          <Text style={{ fontSize: 9, color: '#555' }}>More coupling</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Lower impedance</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Higher impedance</Text>
                         </View>
                       </View>
 
