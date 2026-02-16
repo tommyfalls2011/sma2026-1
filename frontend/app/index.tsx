@@ -1920,7 +1920,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'long' ? '#FF9800' : '#252525', marginLeft: 4, alignItems: 'center' }}
-                  onPress={() => { if (spacingMode === 'long') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('long'); applySpacing('1.3'); } }}
+                  onPress={() => { if (spacingMode === 'long') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('long'); applySpacing('1.3'); } setSpacingNudgeCount(0); }}
                 >
                   <Ionicons name="expand-outline" size={14} color={spacingMode === 'long' ? '#fff' : '#888'} />
                   <Text style={{ fontSize: 11, color: spacingMode === 'long' ? '#fff' : '#888', marginTop: 2 }}>Long</Text>
