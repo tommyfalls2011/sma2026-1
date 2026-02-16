@@ -515,6 +515,45 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     matched_swr, matching_info = apply_matching_network(swr, feed_type)
     if feed_type != "direct":
         swr = round(matched_swr, 3)
+
+    # Feedpoint impedance estimate for Yagi (mutual coupling reduces it)
+    num_directors = len([e for e in input_data.elements if e.element_type == "director"])
+    has_reflector = any(e.element_type == "reflector" for e in input_data.elements)
+    yagi_feedpoint_r = 73.0  # half-wave dipole baseline
+    if has_reflector:
+        yagi_feedpoint_r *= 0.55  # reflector coupling reduces ~45%
+    if num_directors >= 1:
+        yagi_feedpoint_r *= 0.70  # 1st director reduces ~30%
+    if num_directors >= 2:
+        yagi_feedpoint_r *= 0.85
+    if num_directors >= 3:
+        yagi_feedpoint_r *= 0.90
+    if num_directors >= 4:
+        yagi_feedpoint_r *= 0.95
+    yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
+
+    # Hairpin design calculations
+    if feed_type == "hairpin" and yagi_feedpoint_r < 50.0:
+        xl_required = round(math.sqrt(yagi_feedpoint_r * (50.0 - yagi_feedpoint_r)), 2)
+        default_rod_dia = 0.25  # inches
+        default_rod_spacing = 1.0  # inches
+        z0_hairpin = round(276.0 * math.log10(2.0 * default_rod_spacing / default_rod_dia), 1)
+        length_deg = round(math.degrees(math.atan(xl_required / z0_hairpin)), 1) if z0_hairpin > 0 else 0
+        wavelength_in = wavelength * 39.3701
+        length_in = round((length_deg / 360.0) * wavelength_in, 2)
+        matching_info["hairpin_design"] = {
+            "feedpoint_impedance_ohms": yagi_feedpoint_r,
+            "target_impedance_ohms": 50.0,
+            "required_reactance_ohms": xl_required,
+            "default_rod_diameter_in": default_rod_dia,
+            "default_rod_spacing_in": default_rod_spacing,
+            "z0_ohms": z0_hairpin,
+            "length_degrees": length_deg,
+            "length_inches": length_in,
+            "element_shortening_pct": 4.0,
+            "wavelength_inches": round(wavelength_in, 2),
+        }
+
     if boom_correction["enabled"]:
         swr = round(swr * boom_correction["swr_factor"], 3)
         swr = round(max(1.0, min(swr, 5.0)), 2)
