@@ -1933,6 +1933,29 @@ export default function AntennaCalculator() {
                   onChange={(v: string) => applySpacing(v)} 
                 />
               )}
+              <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <TouchableOpacity
+                  onPress={() => nudgeSpacing(-1)}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount <= -5 ? '#333' : '#9C27B0', opacity: spacingNudgeCount <= -5 ? 0.4 : 1 }}
+                  disabled={spacingNudgeCount <= -5}
+                >
+                  <Ionicons name="chevron-back" size={18} color="#9C27B0" />
+                  <Text style={{ fontSize: 12, color: '#9C27B0', fontWeight: '700', marginLeft: 2 }}>Tighter</Text>
+                </TouchableOpacity>
+                <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 11, color: spacingNudgeCount === 0 ? '#666' : '#9C27B0', fontWeight: '700' }}>
+                    {spacingNudgeCount === 0 ? '0%' : `${(spacingNudgeCount * 2.5) > 0 ? '+' : ''}${(spacingNudgeCount * 2.5).toFixed(1)}%`}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => nudgeSpacing(1)}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount >= 5 ? '#333' : '#9C27B0', opacity: spacingNudgeCount >= 5 ? 0.4 : 1 }}
+                  disabled={spacingNudgeCount >= 5}
+                >
+                  <Text style={{ fontSize: 12, color: '#9C27B0', fontWeight: '700', marginRight: 2 }}>Wider</Text>
+                  <Ionicons name="chevron-forward" size={18} color="#9C27B0" />
+                </TouchableOpacity>
+              </View>
 
               {/* Spacing Overrides for Driven Element */}
               <View style={{ marginTop: 10 }}>
