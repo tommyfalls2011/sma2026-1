@@ -365,6 +365,42 @@ export default function AntennaCalculator() {
   // Hairpin design adjustments
   const [hairpinRodDia, setHairpinRodDia] = useState('0.25');
   const [hairpinRodSpacing, setHairpinRodSpacing] = useState('1.0');
+  const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
+
+  // Apply feed type shortening to driven element
+  const switchFeedType = (newType: string) => {
+    setInputs(prev => {
+      const e = [...prev.elements];
+      const drivenIdx = e.findIndex(el => el.element_type === 'driven');
+      if (drivenIdx >= 0) {
+        const currentLen = parseFloat(e[drivenIdx].length) || 0;
+        const oldType = prev.feed_type;
+        // Restore to original first
+        let baseLen = currentLen;
+        if (oldType === 'gamma' && originalDrivenLength) baseLen = parseFloat(originalDrivenLength);
+        else if (oldType === 'hairpin' && originalDrivenLength) baseLen = parseFloat(originalDrivenLength);
+        else baseLen = currentLen;
+        // Save original if first time switching from direct
+        if (oldType === 'direct' || !originalDrivenLength) {
+          setOriginalDrivenLength(e[drivenIdx].length);
+          baseLen = currentLen;
+        }
+        // Apply new shortening
+        if (newType === 'gamma') {
+          e[drivenIdx] = { ...e[drivenIdx], length: (baseLen * 0.97).toFixed(3) };
+        } else if (newType === 'hairpin') {
+          e[drivenIdx] = { ...e[drivenIdx], length: (baseLen * 0.96).toFixed(3) };
+        } else {
+          // Direct — restore original
+          if (originalDrivenLength) {
+            e[drivenIdx] = { ...e[drivenIdx], length: originalDrivenLength };
+            setOriginalDrivenLength(null);
+          }
+        }
+      }
+      return { ...prev, feed_type: newType, elements: e };
+    });
+  };
   
   const SPACING_OPTIONS = {
     tight: [
