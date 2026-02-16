@@ -365,6 +365,8 @@ export default function AntennaCalculator() {
   // Hairpin design adjustments
   const [hairpinRodDia, setHairpinRodDia] = useState('0.25');
   const [hairpinRodSpacing, setHairpinRodSpacing] = useState('1.0');
+  const [hairpinBarPos, setHairpinBarPos] = useState(0.5); // 0-1 ratio along hairpin length
+  const [hairpinBoomGap, setHairpinBoomGap] = useState(1.0); // inches from rods to boom
   // Gamma design adjustments
   const [gammaRodDia, setGammaRodDia] = useState('');
   const [gammaRodSpacing, setGammaRodSpacing] = useState('');
