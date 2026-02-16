@@ -586,6 +586,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         swr, feed_type, feedpoint_r=yagi_feedpoint_r,
         gamma_rod_dia=input_data.gamma_rod_dia,
         gamma_rod_spacing=input_data.gamma_rod_spacing,
+        gamma_bar_pos=input_data.gamma_bar_pos,
+        gamma_element_gap=input_data.gamma_element_gap,
         hairpin_rod_dia=input_data.hairpin_rod_dia,
         hairpin_rod_spacing=input_data.hairpin_rod_spacing,
         hairpin_bar_pos=input_data.hairpin_bar_pos,
