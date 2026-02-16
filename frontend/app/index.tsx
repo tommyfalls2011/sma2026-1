@@ -55,8 +55,8 @@ const ResultCard = ({ title, value, description, icon, color }: any) => (
 );
 
 const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, channelSpacing }: any) => {
-  const width = Math.min(screenWidth - 32, 380); const height = 180;
-  const padding = { top: 18, right: 12, bottom: 42, left: 36 };
+  const width = Math.min(screenWidth - 32, 380); const height = 195;
+  const padding = { top: 18, right: 12, bottom: 52, left: 36 };
   const chartWidth = width - padding.left - padding.right; const chartHeight = height - padding.top - padding.bottom;
   if (!data?.length) return null;
   const minFreq = Math.min(...data.map((d: any) => d.frequency)); const maxFreq = Math.max(...data.map((d: any) => d.frequency)); const freqRange = maxFreq - minFreq;
