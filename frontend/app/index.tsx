@@ -370,6 +370,8 @@ export default function AntennaCalculator() {
   // Gamma design adjustments
   const [gammaRodDia, setGammaRodDia] = useState('');
   const [gammaRodSpacing, setGammaRodSpacing] = useState('');
+  const [gammaBarPos, setGammaBarPos] = useState(0.5); // 0.2-0.9 ratio along gamma rod
+  const [gammaElementGap, setGammaElementGap] = useState(1.0); // inches from rod to element
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
