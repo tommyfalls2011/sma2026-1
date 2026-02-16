@@ -205,31 +205,30 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         elif swr <= 2.0: matched_swr = 1.05 + (swr - 1.2) * 0.06
         elif swr <= 3.0: matched_swr = 1.10 + (swr - 2.0) * 0.10
         else: matched_swr = 1.20 + (swr - 3.0) * 0.15
-        # Gamma rod tuning: Z0 of gamma section affects impedance match quality
+        # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
         bar_pos = gamma_bar_pos if gamma_bar_pos is not None else 0.5
-        elem_gap = gamma_element_gap if gamma_element_gap is not None else 1.0
+        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.5
         tuning_factor = 1.0
+        # Shorting bar: acts as autotransformer tap on the driven element
+        # Optimal position depends on feedpoint R: needs sqrt(50/R_feed) ratio
+        optimal_bar = min(0.9, max(0.2, math.sqrt(50.0 / max(feedpoint_r, 12.0)) * 0.35))
+        bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
+        bar_penalty = min(0.20, bar_deviation * 0.25)
+        # Rod insertion: slides rod into tube to form variable series capacitor
+        # 0.5 = optimal cancellation of gamma section inductance
+        # Too little (0.0) = residual inductance, too much (1.0) = excess capacitance
+        insertion_deviation = abs(rod_insertion - 0.5) / 0.5
+        insertion_penalty = min(0.15, insertion_deviation * 0.20)
+        # Z0 of gamma section from rod dimensions
+        z0_penalty = 0
         if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
             gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
-            # Gamma section Z0 sweet spot: 200-350 ohms for typical Yagi feedpoints
             optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
-            # Rod:spacing ratio affects coupling — optimal is ~1:8 to 1:12
-            spacing_ratio = rod_spacing / rod_dia if rod_dia > 0 else 8.0
-            ratio_penalty = abs(spacing_ratio - 8.0) / 8.0 * 0.10
-            # Shorting bar position: 0.5 = optimal, extremes = worse match
-            bar_deviation = abs(bar_pos - 0.5) / 0.5
-            bar_penalty = bar_deviation * 0.18
-            # Element gap: closer than 0.5" causes parasitic coupling
-            gap_penalty = max(0, (0.5 - elem_gap) * 0.20) if elem_gap < 0.5 else 0
-            tuning_factor = 1.0 + min(0.30, z0_deviation * 0.15 + ratio_penalty + bar_penalty + gap_penalty)
-        else:
-            # Even without rod params, bar position and gap still matter
-            bar_deviation = abs(bar_pos - 0.5) / 0.5
-            gap_penalty = max(0, (0.5 - elem_gap) * 0.20) if elem_gap < 0.5 else 0
-            tuning_factor = 1.0 + min(0.20, bar_deviation * 0.15 + gap_penalty)
+            z0_penalty = min(0.10, z0_deviation * 0.12)
+        tuning_factor = 1.0 + min(0.35, bar_penalty + insertion_penalty + z0_penalty)
         matched_swr *= tuning_factor
         info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Slightly narrower (-5%)", "bandwidth_mult": 0.95, "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Adjust shorting strap and capacitor", "mitigation": "Proper tuning minimizes beam skew"}}
         return round(max(1.0, matched_swr), 3), info
