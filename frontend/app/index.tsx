@@ -553,7 +553,7 @@ export default function AntennaCalculator() {
           diameter: parseFloat(e.diameter), position: parseFloat(e.position)
         })),
       };
-      const res = await fetch(`${API_URL}/api/optimize-return-loss`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const res = await fetch(`${BACKEND_URL}/api/optimize-return-loss`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       setRlResult(data);
     } catch (err) {
