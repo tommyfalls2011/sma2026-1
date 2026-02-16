@@ -108,112 +108,150 @@ const PolarPattern = ({ data, stackedData, isStacked }: any) => {
   );
 };
 
-// Elevation/Side View Pattern - shows take-off angle lobe for beam antenna
-const ElevationPattern = ({ takeoffAngle, gain, orientation }: { takeoffAngle: number, gain: number, orientation?: string }) => {
-  const width = Math.min(screenWidth - 48, 300);
-  const height = 160;
-  const groundY = height - 25;
+// Elevation/Side View Pattern — polar plot showing ALL lobes, front and back (F/B)
+const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRatio }: { takeoffAngle: number, gain: number, orientation?: string, elevationData?: any[], fbRatio?: number }) => {
+  const width = Math.min(screenWidth - 48, 340);
+  const height = 200;
+  const groundY = height - 22;
   const centerX = width / 2;
-  const centerY = groundY - 50;
-  
-  // Calculate main lobe dimensions based on gain
-  const mainLobeLength = Math.min(width * 0.35, 80 + gain * 3);
-  const mainLobeWidth = Math.max(15, 40 - gain);  // Narrower for higher gain
-  
-  // Calculate back lobe size (smaller for better F/B)
-  const backLobeSize = Math.max(15, 45 - gain);
-  
-  // Take-off angle determines vertical direction of main lobe
-  const angleRad = takeoffAngle * Math.PI / 180;
-  
-  // Adjust pattern based on antenna orientation
-  const orientationAngle = orientation === 'vertical' ? 90 : orientation === 'angle45' ? 45 : 0;
-  const effectiveAngle = angleRad;
-  
-  // Main lobe end points
-  const mainLobeEndX = centerX + Math.cos(effectiveAngle) * mainLobeLength;
-  const mainLobeEndY = centerY - Math.sin(effectiveAngle) * mainLobeLength;
-  
-  // Create main lobe path (teardrop shape pointing at take-off angle)
-  const mainLobePath = `
-    M ${centerX} ${centerY}
-    Q ${centerX + mainLobeLength * 0.3} ${centerY - mainLobeWidth},
-      ${mainLobeEndX} ${mainLobeEndY}
-    Q ${centerX + mainLobeLength * 0.3} ${centerY + mainLobeWidth * 0.5},
-      ${centerX} ${centerY}
-  `;
-  
-  // Back lobe (opposite direction, smaller)
-  const backLobeEndX = centerX - backLobeSize;
-  
+  const centerY = groundY;
+  const maxRadius = groundY - 12;
+
+  // Build polar path from elevation data
+  const buildPolarPath = () => {
+    if (!elevationData || elevationData.length === 0) return '';
+    const maxMag = Math.max(...elevationData.map((p: any) => p.magnitude), 1);
+    let path = '';
+    // Only render 0-180° (above ground plane)
+    const points = elevationData.filter((p: any) => p.angle <= 180);
+    points.forEach((pt: any, i: number) => {
+      const angleDeg = pt.angle; // 0°=right horizon, 90°=up, 180°=left horizon
+      const angleRad = Math.PI - (angleDeg * Math.PI / 180); // flip so 0° is right
+      const r = (pt.magnitude / maxMag) * maxRadius;
+      const x = centerX + Math.cos(angleRad) * r;
+      const y = centerY - Math.sin(angleRad) * r;
+      path += i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`;
+    });
+    path += ' Z';
+    return path;
+  };
+
+  // Build separate front and back paths for coloring
+  const buildFrontPath = () => {
+    if (!elevationData || elevationData.length === 0) return '';
+    const maxMag = Math.max(...elevationData.map((p: any) => p.magnitude), 1);
+    let path = `M ${centerX} ${centerY}`;
+    const front = elevationData.filter((p: any) => p.angle <= 90);
+    front.forEach((pt: any) => {
+      const angleRad = Math.PI - (pt.angle * Math.PI / 180);
+      const r = (pt.magnitude / maxMag) * maxRadius;
+      path += ` L ${centerX + Math.cos(angleRad) * r} ${centerY - Math.sin(angleRad) * r}`;
+    });
+    path += ` L ${centerX} ${centerY - 1} Z`;
+    return path;
+  };
+
+  const buildBackPath = () => {
+    if (!elevationData || elevationData.length === 0) return '';
+    const maxMag = Math.max(...elevationData.map((p: any) => p.magnitude), 1);
+    let path = `M ${centerX} ${centerY - 1}`;
+    const back = elevationData.filter((p: any) => p.angle >= 90 && p.angle <= 180);
+    back.forEach((pt: any) => {
+      const angleRad = Math.PI - (pt.angle * Math.PI / 180);
+      const r = (pt.magnitude / maxMag) * maxRadius;
+      path += ` L ${centerX + Math.cos(angleRad) * r} ${centerY - Math.sin(angleRad) * r}`;
+    });
+    path += ` L ${centerX} ${centerY} Z`;
+    return path;
+  };
+
+  // Angle reference arcs
+  const refAngles = [15, 30, 45, 60, 75];
+
   return (
     <View style={styles.elevationContainer}>
       <Text style={styles.elevationTitle}>
         <Ionicons name="radio-outline" size={12} color="#FF5722" /> Side View (Elevation Pattern)
       </Text>
       <Svg width={width} height={height}>
-        {/* Sky background */}
+        {/* Sky */}
         <Rect x={0} y={0} width={width} height={groundY} fill="#0d1520" />
-        
         {/* Ground */}
-        <Rect x={0} y={groundY} width={width} height={25} fill="#1a2f15" />
+        <Rect x={0} y={groundY} width={width} height={22} fill="#1a2f15" />
         <Line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#3d6b2a" strokeWidth="2" />
-        
-        {/* Elevation angle reference lines */}
-        {[10, 20, 30, 45, 60].map(angle => {
+
+        {/* Radius grid circles */}
+        {[0.25, 0.5, 0.75, 1.0].map(frac => (
+          <Path key={frac} d={`M ${centerX - maxRadius * frac} ${centerY} A ${maxRadius * frac} ${maxRadius * frac} 0 0 1 ${centerX + maxRadius * frac} ${centerY}`} fill="none" stroke="#1a2a3a" strokeWidth="0.5" />
+        ))}
+
+        {/* Angle reference lines */}
+        {refAngles.map(angle => {
           const rad = angle * Math.PI / 180;
-          const lineLen = width * 0.4;
-          const endX = centerX + Math.cos(rad) * lineLen;
-          const endY = centerY - Math.sin(rad) * lineLen;
+          // Front side
+          const fEndX = centerX + Math.cos(rad) * maxRadius;
+          const fEndY = centerY - Math.sin(rad) * maxRadius;
+          // Back side
+          const bEndX = centerX - Math.cos(rad) * maxRadius;
+          const bEndY = centerY - Math.sin(rad) * maxRadius;
           return (
             <G key={angle}>
-              <Line x1={centerX} y1={centerY} x2={endX} y2={endY} stroke="#2a3d4a" strokeWidth="0.5" strokeDasharray="4,4" />
-              <SvgText x={endX + 3} y={endY} fill="#4a6070" fontSize="8">{angle}°</SvgText>
+              <Line x1={centerX} y1={centerY} x2={fEndX} y2={fEndY} stroke="#1a2a3a" strokeWidth="0.5" strokeDasharray="3,5" />
+              <Line x1={centerX} y1={centerY} x2={bEndX} y2={bEndY} stroke="#1a2028" strokeWidth="0.5" strokeDasharray="3,5" />
+              <SvgText x={fEndX + 2} y={fEndY + 3} fill="#3a5a6a" fontSize="7">{angle}°</SvgText>
             </G>
           );
         })}
-        
-        {/* Horizontal reference (0°) */}
-        <Line x1={centerX - 20} y1={centerY} x2={width - 20} y2={centerY} stroke="#2a3d4a" strokeWidth="0.5" strokeDasharray="4,4" />
-        
-        {/* Main radiation lobe */}
-        <Path d={mainLobePath} fill="rgba(76,175,80,0.5)" stroke="#4CAF50" strokeWidth="2" />
-        
-        {/* Back lobe */}
-        <Ellipse cx={centerX - backLobeSize/2} cy={centerY} rx={backLobeSize/2} ry={backLobeSize/3} fill="rgba(255,152,0,0.4)" stroke="#FF9800" strokeWidth="1.5" />
-        
-        {/* Antenna boom (horizontal beam representation) */}
-        <Line x1={centerX - 25} y1={centerY} x2={centerX + 25} y2={centerY} stroke="#888" strokeWidth="3" />
-        
-        {/* Mast */}
-        <Line x1={centerX} y1={centerY} x2={centerX} y2={groundY} stroke="#666" strokeWidth="2" />
-        
-        {/* Direction arrow for main lobe */}
-        <Line x1={centerX} y1={centerY} x2={mainLobeEndX * 0.85 + centerX * 0.15} y2={mainLobeEndY * 0.85 + centerY * 0.15} stroke="#FF5722" strokeWidth="2" />
-        <Circle cx={mainLobeEndX * 0.85 + centerX * 0.15} cy={mainLobeEndY * 0.85 + centerY * 0.15} r={4} fill="#FF5722" />
-        
+
+        {/* Horizon line */}
+        <Line x1={10} y1={centerY} x2={width - 10} y2={centerY} stroke="#2a3d4a" strokeWidth="0.8" strokeDasharray="4,4" />
+
+        {/* Front lobe fill (green) */}
+        {elevationData && <Path d={buildFrontPath()} fill="rgba(76,175,80,0.35)" stroke="none" />}
+        {/* Back lobe fill (orange) */}
+        {elevationData && <Path d={buildBackPath()} fill="rgba(255,152,0,0.3)" stroke="none" />}
+        {/* Outline */}
+        {elevationData && <Path d={buildPolarPath()} fill="none" stroke="#4CAF50" strokeWidth="1.5" />}
+
+        {/* Takeoff angle indicator */}
+        {takeoffAngle > 0 && (() => {
+          const rad = takeoffAngle * Math.PI / 180;
+          const tipX = centerX + Math.cos(rad) * (maxRadius + 5);
+          const tipY = centerY - Math.sin(rad) * (maxRadius + 5);
+          return (
+            <G>
+              <Line x1={centerX} y1={centerY} x2={tipX} y2={tipY} stroke="#FF5722" strokeWidth="1.5" strokeDasharray="4,3" />
+              <Circle cx={tipX} cy={tipY} r={3} fill="#FF5722" />
+              <SvgText x={tipX + 5} y={tipY + 3} fill="#FF5722" fontSize="9" fontWeight="bold">{takeoffAngle}°</SvgText>
+            </G>
+          );
+        })()}
+
+        {/* Antenna icon at center */}
+        <Line x1={centerX - 18} y1={centerY} x2={centerX + 18} y2={centerY} stroke="#888" strokeWidth="2.5" />
+
         {/* Labels */}
-        <SvgText x={centerX + 45} y={20} fill="#4CAF50" fontSize="10" fontWeight="bold">Main Beam</SvgText>
-        <SvgText x={10} y={centerY + 4} fill="#FF9800" fontSize="9">Back Lobe</SvgText>
-        <SvgText x={centerX + 5} y={groundY - 5} fill="#FF5722" fontSize="10" fontWeight="bold">{takeoffAngle}° take-off</SvgText>
-        
-        {/* DX indicator */}
-        <SvgText x={width - 35} y={centerY + 4} fill="#2196F3" fontSize="8" fontWeight="bold">DX →</SvgText>
-        <SvgText x={centerX - 10} y={15} fill="#9C27B0" fontSize="8">NVIS ↑</SvgText>
+        <SvgText x={width - 30} y={centerY - 5} fill="#4CAF50" fontSize="8" fontWeight="bold">FWD →</SvgText>
+        <SvgText x={5} y={centerY - 5} fill="#FF9800" fontSize="8" fontWeight="bold">← BACK</SvgText>
+        <SvgText x={centerX - 10} y={12} fill="#9C27B0" fontSize="8">NVIS ↑</SvgText>
       </Svg>
       <View style={styles.elevationLegend}>
         <View style={styles.elevationLegendRow}>
           <View style={[styles.elevationLegendDot, { backgroundColor: '#4CAF50' }]} />
           <Text style={styles.elevationLegendText}>
-            {takeoffAngle < 10 ? 'Elite: Extremely low angle, massive DX' : 
-             takeoffAngle < 15 ? 'Deep DX: Reaching other continents' : 
-             takeoffAngle < 18 ? 'DX Sweet Spot: Maximum ground gain' : 
-             takeoffAngle < 28 ? 'Regional/Mid-Range skip' : 
-             takeoffAngle < 35 ? 'Minimum: Moderate skip' : 
-             takeoffAngle < 50 ? 'Medium: Regional/DX mix' : 
+            {takeoffAngle < 10 ? 'Elite: Extremely low angle, massive DX' :
+             takeoffAngle < 15 ? 'Deep DX: Reaching other continents' :
+             takeoffAngle < 18 ? 'DX Sweet Spot: Maximum ground gain' :
+             takeoffAngle < 28 ? 'Regional/Mid-Range skip' :
+             takeoffAngle < 35 ? 'Minimum: Moderate skip' :
+             takeoffAngle < 50 ? 'Medium: Regional/DX mix' :
              takeoffAngle < 70 ? 'Near Vertical: Short distance' :
              'Inefficient: Ground absorption'}
           </Text>
+        </View>
+        <View style={styles.elevationLegendRow}>
+          <View style={[styles.elevationLegendDot, { backgroundColor: '#FF9800' }]} />
+          <Text style={styles.elevationLegendText}>Back lobes (F/B: {fbRatio ?? '-'} dB)</Text>
         </View>
       </View>
     </View>
