@@ -79,7 +79,7 @@ const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, channelS
         {showResonant && <Line x1={xScale(resonantFreq)} y1={padding.top} x2={xScale(resonantFreq)} y2={height - padding.bottom} stroke="#FF9800" strokeWidth="1.5" strokeDasharray="5,3" />}
         {showResonant && <SvgText x={xScale(resonantFreq)} y={padding.top - 3} fill="#FF9800" fontSize="7" textAnchor="middle">RES</SvgText>}
         <Path d={createSwrPath()} fill="none" stroke="#FF5722" strokeWidth="2" />
-        <SvgText x={width / 2} y={height - 3} fill="#2196F3" fontSize="8" textAnchor="middle">{centerFreq.toFixed(3)} MHz{showResonant ? ` | Res: ${resonantFreq.toFixed(3)}` : ''}</SvgText>
+        <SvgText x={width / 2} y={height - 2} fill="#2196F3" fontSize="13" fontWeight="bold" textAnchor="middle">{centerFreq.toFixed(3)} MHz{showResonant ? `  |  Res: ${resonantFreq.toFixed(3)}` : ''}</SvgText>
       </Svg>
       <View style={styles.swrLegend}>
         <View style={styles.legendItem}><View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} /><Text style={styles.legendText}>≤1.5 ({usable15?.toFixed(2)})</Text></View>
