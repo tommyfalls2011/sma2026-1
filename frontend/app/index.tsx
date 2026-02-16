@@ -2557,6 +2557,32 @@ export default function AntennaCalculator() {
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>F/B</Text><Text style={styles.mainResultValue}>{results.fb_ratio}dB</Text></View>
                 <View style={styles.mainResultItem}><Text style={styles.mainResultLabel}>F/S</Text><Text style={styles.mainResultValue}>{results.fs_ratio}dB</Text></View>
               </View>
+
+              {results.matching_info && results.feed_type !== 'direct' && (results.matching_info.resonant_freq_mhz || results.matching_info.element_resonant_freq_mhz) && (
+                <View style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, marginBottom: 6, borderLeftWidth: 3, borderLeftColor: '#FF9800' }}>
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: '#FF9800', marginBottom: 6 }}>Resonant Frequency</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    {results.matching_info.element_resonant_freq_mhz && (
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 9, color: '#888' }}>Element Resonance</Text>
+                        <Text style={{ fontSize: 15, color: '#FF9800', fontWeight: '700' }}>{results.matching_info.element_resonant_freq_mhz} MHz</Text>
+                      </View>
+                    )}
+                    {results.matching_info.resonant_freq_mhz && (
+                      <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 9, color: '#888' }}>{results.feed_type === 'gamma' ? 'Gamma Tuned' : 'Match Tuned'}</Text>
+                        <Text style={{ fontSize: 15, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.resonant_freq_mhz} MHz</Text>
+                      </View>
+                    )}
+                    {results.matching_info.q_factor && (
+                      <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                        <Text style={{ fontSize: 9, color: '#888' }}>Q / BW</Text>
+                        <Text style={{ fontSize: 15, color: '#2196F3', fontWeight: '700' }}>Q{results.matching_info.q_factor} / {results.matching_info.gamma_bandwidth_mhz}MHz</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
               
               {/* Gain Breakdown Card */}
               {results.base_gain_dbi != null && results.gain_breakdown && (
