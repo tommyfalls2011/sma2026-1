@@ -2320,27 +2320,41 @@ export default function AntennaCalculator() {
               {/* Spacing Overrides for First Director */}
               <View style={{ marginTop: 10 }}>
                 <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>1st Director Spacing</Text>
-                <View style={{ flexDirection: 'row' }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                   <TouchableOpacity
-                    style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: closeDir1 ? '#2196F3' : '#252525', marginRight: 4, alignItems: 'center' }}
-                    onPress={() => { setCloseDir1(!closeDir1); if (!closeDir1) setFarDir1(false); setDir1NudgeCount(0); }}
+                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir1 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }}
+                    onPress={() => { setCloseDir1(closeDir1 === 'vclose' ? false : 'vclose'); setFarDir1(false); setDir1NudgeCount(0); }}
                   >
-                    <Ionicons name="arrow-back-outline" size={14} color={closeDir1 ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 11, color: closeDir1 ? '#fff' : '#888', marginTop: 2 }}>Close</Text>
+                    <Ionicons name="arrow-back-outline" size={12} color={closeDir1 === 'vclose' ? '#fff' : '#888'} />
+                    <Text style={{ fontSize: 9, color: closeDir1 === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: (!closeDir1 && !farDir1) ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
+                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir1 === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }}
+                    onPress={() => { setCloseDir1(closeDir1 === 'close' ? false : 'close'); setFarDir1(false); setDir1NudgeCount(0); }}
+                  >
+                    <Ionicons name="arrow-back-outline" size={12} color={closeDir1 === 'close' ? '#fff' : '#888'} />
+                    <Text style={{ fontSize: 9, color: closeDir1 === 'close' ? '#fff' : '#888', marginTop: 1 }}>Close</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDir1 && !farDir1) ? '#4CAF50' : '#252525', alignItems: 'center' }}
                     onPress={() => { setCloseDir1(false); setFarDir1(false); setDir1NudgeCount(0); }}
                   >
-                    <Ionicons name="remove-outline" size={14} color={(!closeDir1 && !farDir1) ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 11, color: (!closeDir1 && !farDir1) ? '#fff' : '#888', marginTop: 2 }}>Normal</Text>
+                    <Ionicons name="remove-outline" size={12} color={(!closeDir1 && !farDir1) ? '#fff' : '#888'} />
+                    <Text style={{ fontSize: 9, color: (!closeDir1 && !farDir1) ? '#fff' : '#888', marginTop: 1 }}>Normal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: farDir1 ? '#FF9800' : '#252525', marginLeft: 4, alignItems: 'center' }}
-                    onPress={() => { setFarDir1(!farDir1); if (!farDir1) setCloseDir1(false); setDir1NudgeCount(0); }}
+                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir1 === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }}
+                    onPress={() => { setFarDir1(farDir1 === 'far' ? false : 'far'); setCloseDir1(false); setDir1NudgeCount(0); }}
                   >
-                    <Ionicons name="arrow-forward-outline" size={14} color={farDir1 ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 11, color: farDir1 ? '#fff' : '#888', marginTop: 2 }}>Far</Text>
+                    <Ionicons name="arrow-forward-outline" size={12} color={farDir1 === 'far' ? '#fff' : '#888'} />
+                    <Text style={{ fontSize: 9, color: farDir1 === 'far' ? '#fff' : '#888', marginTop: 1 }}>Far</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir1 === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }}
+                    onPress={() => { setFarDir1(farDir1 === 'vfar' ? false : 'vfar'); setCloseDir1(false); setDir1NudgeCount(0); }}
+                  >
+                    <Ionicons name="arrow-forward-outline" size={12} color={farDir1 === 'vfar' ? '#fff' : '#888'} />
+                    <Text style={{ fontSize: 9, color: farDir1 === 'vfar' ? '#fff' : '#888', marginTop: 1 }}>V.Far</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
