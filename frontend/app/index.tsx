@@ -2765,7 +2765,7 @@ export default function AntennaCalculator() {
                         <View style={styles.perfItem}>
                           <Text style={styles.perfLabel}>F/B Ratio</Text>
                           <View style={styles.perfBar}>
-                            <View style={[styles.perfBarFill, { width: `${Math.min(fbVal / dbScale * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
+                            <View style={[styles.perfBarFill, { width: `${Math.min(fbVal / fbScale * 100, 100)}%`, backgroundColor: '#2196F3' }]} />
                           </View>
                           <Text style={styles.perfValue}>{fbVal} dB</Text>
                         </View>
