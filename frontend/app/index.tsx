@@ -1649,6 +1649,71 @@ export default function AntennaCalculator() {
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'hairpin' && styles.orientationBtnTextActive]}>Hairpin</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Hairpin Design Panel */}
+              {inputs.feed_type === 'hairpin' && results && results.matching_info?.hairpin_design && (
+                <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#2196F3' }}>
+                  <Text style={{ fontSize: 13, color: '#2196F3', fontWeight: '700', marginBottom: 8 }}>Hairpin Match Design</Text>
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Feedpoint R</Text>
+                      <Text style={{ fontSize: 14, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.hairpin_design.feedpoint_impedance_ohms} ohms</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Target</Text>
+                      <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>50 ohms</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>X_L Required</Text>
+                      <Text style={{ fontSize: 14, color: '#FF9800', fontWeight: '700' }}>{results.matching_info.hairpin_design.required_reactance_ohms} ohms</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
+
+                  <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Dia (in)</Text>
+                      <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={hairpinRodDia} onChangeText={setHairpinRodDia} keyboardType="decimal-pad" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Spacing (in)</Text>
+                      <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={hairpinRodSpacing} onChangeText={setHairpinRodSpacing} keyboardType="decimal-pad" />
+                    </View>
+                  </View>
+
+                  {(() => {
+                    const hp = results.matching_info.hairpin_design;
+                    const d = parseFloat(hairpinRodDia) || 0.25;
+                    const s = parseFloat(hairpinRodSpacing) || 1.0;
+                    const z0 = s > 0 && d > 0 ? 276.0 * Math.log10(2.0 * s / d) : hp.z0_ohms;
+                    const lenDeg = z0 > 0 ? Math.atan(hp.required_reactance_ohms / z0) * (180 / Math.PI) : 0;
+                    const lenIn = (lenDeg / 360.0) * hp.wavelength_inches;
+                    return (
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Z0</Text>
+                          <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>{z0.toFixed(1)} ohms</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Length</Text>
+                          <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>{lenDeg.toFixed(1)} deg</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Hairpin Length</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{lenIn.toFixed(2)}"</Text>
+                        </View>
+                      </View>
+                    );
+                  })()}
+
+                  <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
+                  <Text style={{ fontSize: 10, color: '#FF9800' }}>Shorten driven element ~{results.matching_info.hairpin_design.element_shortening_pct}% from standard length</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Start slightly long, slide shorting bar to tune for lowest SWR at center freq</Text>
+                </View>
+              )}
+
             </View>
           </View>
 
