@@ -199,7 +199,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            gamma_rod_dia: float = None, gamma_rod_spacing: float = None,
                            gamma_bar_pos: float = None, gamma_element_gap: float = None,
                            hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
-                           hairpin_bar_pos: float = None, hairpin_boom_gap: float = None) -> tuple:
+                           hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
+                           operating_freq_mhz: float = 27.185) -> tuple:
     if feed_type == "gamma":
         if swr <= 1.2: matched_swr = 1.02 + (swr - 1.0) * 0.15
         elif swr <= 2.0: matched_swr = 1.05 + (swr - 1.2) * 0.06
