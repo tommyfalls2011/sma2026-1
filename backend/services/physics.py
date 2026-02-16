@@ -633,6 +633,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hairpin_boom_gap=input_data.hairpin_boom_gap,
         operating_freq_mhz=center_freq,
     )
+    # Add element-based resonant freq to matching info
+    if matching_info and feed_type != "direct":
+        matching_info["element_resonant_freq_mhz"] = element_resonant_freq
     if feed_type != "direct":
         swr = round(matched_swr, 3)
 
