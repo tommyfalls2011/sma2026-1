@@ -749,7 +749,7 @@ export default function AntennaCalculator() {
             gamma_rod_dia: parseFloat(gammaRodDia) || undefined,
             gamma_rod_spacing: parseFloat(gammaRodSpacing) || undefined,
             gamma_bar_pos: gammaBarPos,
-            gamma_element_gap: gammaElementGap,
+            gamma_element_gap: gammaRodInsertion,
           } : {}),
           ...(inputs.feed_type === 'hairpin' ? {
             hairpin_rod_dia: parseFloat(hairpinRodDia) || undefined,
