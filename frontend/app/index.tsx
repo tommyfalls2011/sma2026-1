@@ -401,20 +401,17 @@ export default function AntennaCalculator() {
     if (type === 'driven') setDrivenNudgeCount(newCount);
     else setDir1NudgeCount(newCount);
     setInputs(prev => {
+      const firstDirIdx = prev.elements.findIndex(el => el.element_type === 'director');
       const elements = prev.elements.map((e, idx) => {
         if (type === 'driven' && e.element_type === 'driven') {
           const pos = parseFloat(e.position) || 1;
           const step = pos * (STEP / 100);
           return { ...e, position: (pos + direction * step).toFixed(3) };
         }
-        if (type === 'dir1' && e.element_type === 'director') {
-          // Only the 1st director (first one after driven)
-          const dirs = prev.elements.filter(el => el.element_type === 'director');
-          if (dirs.length > 0 && dirs[0] === e) {
-            const pos = parseFloat(e.position) || 1;
-            const step = pos * (STEP / 100);
-            return { ...e, position: (pos + direction * step).toFixed(3) };
-          }
+        if (type === 'dir1' && idx === firstDirIdx) {
+          const pos = parseFloat(e.position) || 1;
+          const step = pos * (STEP / 100);
+          return { ...e, position: (pos + direction * step).toFixed(3) };
         }
         return e;
       });
