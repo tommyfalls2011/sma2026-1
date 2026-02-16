@@ -1195,9 +1195,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     else:
         if num_directors > 0:
             # Determine first director spacing override
-            if getattr(request, 'close_dir1', False):
+            close_d1 = getattr(request, 'close_dir1', False)
+            far_d1 = getattr(request, 'far_dir1', False)
+            if close_d1 == 'vclose':
+                dir1_lambda = 0.06
+            elif close_d1 == 'close' or close_d1 is True:
                 dir1_lambda = 0.10
-            elif getattr(request, 'far_dir1', False):
+            elif far_d1 == 'vfar':
+                dir1_lambda = 0.22
+            elif far_d1 == 'far' or far_d1 is True:
                 dir1_lambda = 0.18
             else:
                 dir1_lambda = 0.13  # default
