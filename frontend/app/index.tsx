@@ -1799,7 +1799,7 @@ export default function AntennaCalculator() {
                   })()}
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
-                  <Text style={{ fontSize: 10, color: '#FF9800' }}>Shorten driven element ~{results.matching_info.hairpin_design.element_shortening_pct}% from standard length</Text>
+                  <Text style={{ fontSize: 10, color: '#FF9800' }}>Driven element auto-shortened 4% for hairpin match</Text>
                   <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Start slightly long, slide shorting bar to tune for lowest SWR at center freq</Text>
                 </View>
               )}
