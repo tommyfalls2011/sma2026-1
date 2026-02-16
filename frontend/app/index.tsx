@@ -361,7 +361,7 @@ export default function AntennaCalculator() {
   const [closeDir1, setCloseDir1] = useState<string | false>(false);
   const [farDir1, setFarDir1] = useState<string | false>(false);
   
-  // Fine-tune nudge for element positions (±25% = 50% total range, 2.5% per step)
+  // Fine-tune nudge for element positions (±10% total range, 0.5% per step)
   const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
   const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // -10 to +10 steps
   const [spacingNudgeCount, setSpacingNudgeCount] = useState(0); // -10 to +10 steps
@@ -443,10 +443,10 @@ export default function AntennaCalculator() {
     }));
   };
 
-  // Nudge element position by 2.5% per click, ±25% max (50% total)
+  // Nudge element position by 0.5% per click, ±10% max
   const nudgeElement = (type: 'driven' | 'dir1', direction: number) => {
-    const STEP = 2.5;
-    const MAX = 25;
+    const STEP = 0.5;
+    const MAX = 10;
     const currentCount = type === 'driven' ? drivenNudgeCount : dir1NudgeCount;
     const newCount = currentCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
@@ -466,10 +466,10 @@ export default function AntennaCalculator() {
     });
   };
 
-  // Nudge ALL element spacing by 2.5% per click, ±25% max (50% total)
+  // Nudge ALL element spacing by 0.5% per click, ±10% max
   const nudgeSpacing = (direction: number) => {
-    const STEP = 2.5;
-    const MAX = 25;
+    const STEP = 0.5;
+    const MAX = 10;
     const newCount = spacingNudgeCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
     setSpacingNudgeCount(newCount);
