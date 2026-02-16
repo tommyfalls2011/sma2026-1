@@ -1814,7 +1814,13 @@ export default function AntennaCalculator() {
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
                   <Text style={{ fontSize: 10, color: '#FF9800' }}>Driven element auto-shortened 3% for gamma match</Text>
-                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Slide shorting bar for resistance (50 ohm target), adjust rod insertion to cancel reactance. Element grounded to boom.</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Slide shorting bar for resistance (50 ohm target), adjust rod insertion to cancel reactance.</Text>
+
+                  <View style={{ height: 1, backgroundColor: '#333', marginVertical: 6 }} />
+                  <Text style={{ fontSize: 10, color: '#888', fontWeight: '600', marginBottom: 4 }}>Components</Text>
+                  <Text style={{ fontSize: 9, color: '#666' }}>Gamma Rod (inner) + Tube (outer) + Teflon (PTFE, 60kV/mm) = variable series capacitor. Rod connects to coax center conductor, slides in/out of tube to set capacitance.</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Shorting Bar: Al/Cu strap bridging tube to element, sets impedance tap point.</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Grounding: Coax shield connects directly to boom/element center (RF voltage null point).</Text>
                 </View>
               )}
 
