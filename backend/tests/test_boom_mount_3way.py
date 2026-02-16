@@ -21,7 +21,7 @@ import os
 # Base URL from environment - MUST NOT have default value per guidelines
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL')
 if not BASE_URL:
-    BASE_URL = 'https://gain-optimizer-1.preview.emergentagent.com'
+    BASE_URL = 'https://element-nudge-demo.preview.emergentagent.com'
 
 
 @pytest.fixture(scope="module")
