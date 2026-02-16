@@ -1747,7 +1747,7 @@ export default function AntennaCalculator() {
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
                     const rodLen = gd.wavelength_inches * 0.045 * (rodDia / gd.gamma_rod_diameter_in);
                     const capPf = 7.0 * (gd.wavelength_inches / 39.3701) * (gd.gamma_rod_diameter_in / rodDia);
-                    const barPos = rodLen * 0.6;
+                    const barPos = rodLen * gammaBarPos;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                         <View style={{ flex: 1 }}>
