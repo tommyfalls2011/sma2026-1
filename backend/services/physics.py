@@ -478,11 +478,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         ground_type = ground_radials.ground_type
         ground_type_scales = {"wet": 1.15, "average": 1.0, "dry": 0.70}
         ground_scale = ground_type_scales.get(ground_type, 1.0)
-        num_r = ground_radials.num_radials
-        if num_r <= 32: radial_boost = num_r / 32.0 * 0.20
-        else: radial_boost = 0.20 + (num_r - 32) / 96.0 * 0.10
-        radial_boost = min(0.30, radial_boost)
-        ground_scale = min(1.45, ground_scale + radial_boost)
+        # Radials improve ground plane quality but do NOT add antenna gain
 
     height_bonus = round(base_ground_gain * ground_scale, 2)
     gain_dbi += height_bonus
