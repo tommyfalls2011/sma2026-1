@@ -1817,43 +1817,45 @@ export default function AntennaCalculator() {
 
                       <View style={{ height: 1, backgroundColor: '#333', marginVertical: 6 }} />
 
-                      <View style={{ marginBottom: 8 }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                      <View style={{ marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position</Text>
                           <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700' }}>{barIn.toFixed(2)}" from open end</Text>
                         </View>
-                        <Slider
-                          minimumValue={0.2}
-                          maximumValue={0.9}
-                          step={0.05}
-                          value={hairpinBarPos}
-                          onValueChange={setHairpinBarPos}
-                          minimumTrackTintColor="#4CAF50"
-                          maximumTrackTintColor="#333"
-                          thumbTintColor="#4CAF50"
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <TouchableOpacity onPress={() => setHairpinBarPos(Math.max(0.2, hairpinBarPos - 0.05))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#4CAF50' }}>
+                            <Ionicons name="remove" size={16} color="#4CAF50" />
+                          </TouchableOpacity>
+                          <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                            <View style={{ width: `${((hairpinBarPos - 0.2) / 0.7) * 100}%`, height: '100%', backgroundColor: '#4CAF50', borderRadius: 4 }} />
+                          </View>
+                          <TouchableOpacity onPress={() => setHairpinBarPos(Math.min(0.9, hairpinBarPos + 0.05))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#4CAF50' }}>
+                            <Ionicons name="add" size={16} color="#4CAF50" />
+                          </TouchableOpacity>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Less inductance</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>More inductance</Text>
                         </View>
                       </View>
 
                       <View style={{ marginBottom: 4 }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Rods to Boom Gap</Text>
                           <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{hairpinBoomGap.toFixed(2)}"</Text>
                         </View>
-                        <Slider
-                          minimumValue={0.25}
-                          maximumValue={3.0}
-                          step={0.25}
-                          value={hairpinBoomGap}
-                          onValueChange={setHairpinBoomGap}
-                          minimumTrackTintColor="#2196F3"
-                          maximumTrackTintColor="#333"
-                          thumbTintColor="#2196F3"
-                        />
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <TouchableOpacity onPress={() => setHairpinBoomGap(Math.max(0.25, hairpinBoomGap - 0.25))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
+                            <Ionicons name="remove" size={16} color="#2196F3" />
+                          </TouchableOpacity>
+                          <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                            <View style={{ width: `${((hairpinBoomGap - 0.25) / 2.75) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
+                          </View>
+                          <TouchableOpacity onPress={() => setHairpinBoomGap(Math.min(3.0, hairpinBoomGap + 0.25))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3' }}>
+                            <Ionicons name="add" size={16} color="#2196F3" />
+                          </TouchableOpacity>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Closer to boom</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>Farther from boom</Text>
                         </View>
