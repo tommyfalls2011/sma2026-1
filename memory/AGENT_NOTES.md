@@ -84,7 +84,7 @@ The backend handles these in `services/physics.py` (lines ~895, ~1043).
 
 ## Credentials
 - **Admin**: fallstommy@gmail.com / admin123
-- **Backend URL**: https://physics-backend.preview.emergentagent.com
+- **Backend URL**: https://gain-optimizer-1.preview.emergentagent.com
 
 ## Latest Session Updates (Feb 16, 2026)
 1. **Backend refactored** from monolithic 4517-line `server.py` → modular architecture (backup at `server_monolithic_backup.py`). All 24/24 API tests passed.
