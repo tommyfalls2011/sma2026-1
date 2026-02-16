@@ -1146,8 +1146,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
 
     if use_reflector:
-        if getattr(request, 'close_driven', False): refl_driven_lambda = 0.12
-        elif getattr(request, 'far_driven', False): refl_driven_lambda = 0.22
+        driven_override = getattr(request, 'close_driven', False) or getattr(request, 'far_driven', False)
+        if driven_override == 'vclose': refl_driven_lambda = 0.08
+        elif driven_override == 'close' or (driven_override is True and getattr(request, 'close_driven', False)): refl_driven_lambda = 0.12
+        elif driven_override == 'far' or (driven_override is True and getattr(request, 'far_driven', False)): refl_driven_lambda = 0.22
+        elif driven_override == 'vfar': refl_driven_lambda = 0.28
+        elif getattr(request, 'close_driven', False) == 'vclose': refl_driven_lambda = 0.08
+        elif getattr(request, 'close_driven', False) == 'close' or getattr(request, 'close_driven', False) is True: refl_driven_lambda = 0.12
+        elif getattr(request, 'far_driven', False) == 'vfar': refl_driven_lambda = 0.28
+        elif getattr(request, 'far_driven', False) == 'far' or getattr(request, 'far_driven', False) is True: refl_driven_lambda = 0.22
         else: refl_driven_lambda = 0.18
         refl_driven_gap = round(refl_driven_lambda * wavelength_in, 1)
         if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
