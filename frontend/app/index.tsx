@@ -361,10 +361,10 @@ export default function AntennaCalculator() {
   const [closeDir1, setCloseDir1] = useState(false);
   const [farDir1, setFarDir1] = useState(false);
   
-  // Fine-tune nudge for element positions (±12.5% = 25% total range)
-  const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -5 to +5 steps
-  const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // -5 to +5 steps
-  const [spacingNudgeCount, setSpacingNudgeCount] = useState(0); // -5 to +5 steps
+  // Fine-tune nudge for element positions (±25% = 50% total range, 2.5% per step)
+  const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
+  const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // -10 to +10 steps
+  const [spacingNudgeCount, setSpacingNudgeCount] = useState(0); // -10 to +10 steps
 
   // Hairpin design adjustments
   const [hairpinRodDia, setHairpinRodDia] = useState('0.25');
