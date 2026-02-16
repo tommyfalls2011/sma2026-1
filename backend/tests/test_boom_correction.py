@@ -17,7 +17,7 @@ import requests
 import os
 
 # Base URL from environment
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://cbamps-store.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rf-designer.preview.emergentagent.com')
 
 
 @pytest.fixture(scope="module")

@@ -17,7 +17,7 @@ import os
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL'))
 if not BASE_URL:
-    BASE_URL = "https://cbamps-store.preview.emergentagent.com"
+    BASE_URL = "https://rf-designer.preview.emergentagent.com"
 
 
 class TestQuadStackCalculation:
