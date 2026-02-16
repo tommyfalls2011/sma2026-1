@@ -762,14 +762,15 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         num_rads = ground_radials.num_radials
         radial_directions = all_directions[:num_rads]
         radial_factor = num_rads / 8.0
-        ground_improvement = {"wet": {"swr_improvement": 0.05, "efficiency_bonus": 0}, "average": {"swr_improvement": 0.03, "efficiency_bonus": 0}, "dry": {"swr_improvement": 0.01, "efficiency_bonus": 0}}
+        ground_improvement = {"wet": {"swr_improvement": 0.05, "efficiency_bonus": 8}, "average": {"swr_improvement": 0.03, "efficiency_bonus": 5}, "dry": {"swr_improvement": 0.01, "efficiency_bonus": 2}}
         base_bonus = ground_improvement.get(ground_type, ground_improvement["average"])
         if radial_factor <= 1.0: scale = radial_factor
         else: scale = 1.0 + (math.log2(radial_factor) * 0.5)
-        g_bonus = {"swr_improvement": round(base_bonus["swr_improvement"] * scale, 3), "efficiency_bonus": 0}
-        ground_radials_info = {"enabled": True, "ground_type": ground_type, "ground_conductivity": ground["conductivity"], "ground_permittivity": ground["permittivity"], "ground_reflection_coeff": ground["reflection"], "radial_length_m": round(quarter_wave_m, 2), "radial_length_ft": round(quarter_wave_ft, 2), "radial_length_in": round(quarter_wave_in, 1), "wire_diameter_in": ground_radials.wire_diameter, "num_radials": ground_radials.num_radials, "radial_directions": radial_directions, "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1), "estimated_improvements": {"swr_improvement": g_bonus["swr_improvement"], "efficiency_bonus_percent": 0}}
+        g_bonus = {"swr_improvement": round(base_bonus["swr_improvement"] * scale, 3), "efficiency_bonus": round(base_bonus["efficiency_bonus"] * scale, 1)}
+        ground_radials_info = {"enabled": True, "ground_type": ground_type, "ground_conductivity": ground["conductivity"], "ground_permittivity": ground["permittivity"], "ground_reflection_coeff": ground["reflection"], "radial_length_m": round(quarter_wave_m, 2), "radial_length_ft": round(quarter_wave_ft, 2), "radial_length_in": round(quarter_wave_in, 1), "wire_diameter_in": ground_radials.wire_diameter, "num_radials": ground_radials.num_radials, "radial_directions": radial_directions, "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1), "estimated_improvements": {"swr_improvement": g_bonus["swr_improvement"], "efficiency_bonus_percent": g_bonus["efficiency_bonus"]}}
         swr = max(1.0, swr - g_bonus["swr_improvement"])
         gain_breakdown["final_gain"] = gain_dbi
+        antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
 
     # SWR curve
     swr_curve = []
