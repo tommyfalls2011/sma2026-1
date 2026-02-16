@@ -1,49 +1,50 @@
-# Antenna Modeling Application - PRD
+# SMA Antenna Analyzer - Product Requirements Document
 
 ## Original Problem Statement
-A full-stack antenna modeling/calculator application (React Native Expo frontend + FastAPI backend + MongoDB) for designing and analyzing Yagi-Uda antennas with e-commerce store.
+Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations. Mobile-first app built with React Native (Expo) + FastAPI backend.
 
-## What's Been Implemented
+## Current Version: 4.1.5 (versionCode 8)
 
-### Current Session (Feb 2026)
-- **Real-time matching network tuning**: Gamma/Hairpin design panel adjustments affect SWR in real time
-- **Gamma match with real-world physics**:
-  - Shorting Bar Position slider → shifts resonant frequency (bar out = lower freq, bar in = higher)
-  - Rod Insertion slider → changes Q-factor/bandwidth (more insertion = higher Q = narrower BW)
-  - Off-resonance SWR penalty when freq shift exceeds bandwidth
-  - Components section: Rod/Tube/Teflon/Shorting Bar descriptions
-- **Element-based resonant frequency**: Driven element length + parasitic coupling now compute natural resonant freq
-  - Longer driven = lower resonant freq, shorter = higher
-  - Reflector pulls freq down ~0.5%, each director pushes up ~0.3%
-  - Returned as `element_resonant_freq_mhz` in matching_info
-- **Hairpin sliders**: Shorting Bar Position + Rods-to-Boom Gap with Pressable buttons
-- **Hairpin Z0**: optimal range 200-600 ohms
-- **Performance Metrics**: Gain=15dB, F/B=18dB, F/S=8dB, Eff=100% base scales, auto-grow 15%
-- **Gain model updated**: 3-element bumped from 8.2 to 9.0 dBi (1st director ~3dB gain)
-- **Expo Web mode**: Preview runs Expo web on port 3000
-- **Pressable fix**: Replaced TouchableOpacity with Pressable for web click handling
+## Architecture
+- **Frontend**: React Native (Expo), Expo Web for preview
+- **Backend**: FastAPI (Python), MongoDB
+- **Physics Engine**: `backend/services/physics.py` — models SWR, gain, F/B ratio, resonant frequency, Q-factor
+- **Deployment**: EAS Build for Android APK, Railway for backend
 
-## Key Architecture
-- Backend: `/app/backend/services/physics.py`, `/app/backend/config.py`, `/app/backend/models.py`
-- Frontend: `/app/frontend/app/index.tsx`
-- Frontend supervisor: `npx expo start --web --port 3000 --non-interactive`
+## Completed Features
+- Antenna calculator with element spacing, dimensions, frequency input
+- Real-time SWR/Frequency tuning (Gamma & Hairpin match panels)
+- Interactive Gamma Match sliders (Shorting Bar, Rod Insertion)
+- Realistic Gamma Match physics model
+- Auto-scaling performance bars
+- Resonant Frequency UI card (element resonance, match-tuned resonance, Q-Factor/Bandwidth)
+- Updated gain curve (+2.8 dB first director jump)
+- 2x2 Quad Stacking, Wavelength Spacing Presets
+- Far-Field Pattern Analysis, Wind Load Calculations
+- 3-Way Boom Mount Selector, Visual Element Viewer
+- Store with Stripe payments, Admin panel
+- Update system with version checking
+- Expo Web preview environment configured
+- v4.1.5 version applied across all config files and database
 
-## API Response Fields (matching_info for gamma)
-- `resonant_freq_mhz`: gamma bar-shifted resonant frequency
-- `element_resonant_freq_mhz`: element-length-based natural resonant frequency
-- `q_factor`: from rod insertion depth
-- `gamma_bandwidth_mhz`: BW = operating_freq / Q
+## Pending Tasks
+### P1
+- Frontend Vite cleanup (remove `index.html`, `vite.config.js`, `src/main.tsx`, etc.)
 
-## Prioritized Backlog
 ### P2
-- PayPal/CashApp payments
-- `.easignore` optimization for smaller APK builds
+- PayPal/CashApp Payments
+- Improve `.easignore` to reduce APK build size
 - Replace deprecated `shadow*` style props with `boxShadow`
-### P3
-- iOS build
 
-## Notes
-- User VM path: ~/sma2026-1
-- User is removing the Vite website themselves
-- Expo Web requires Pressable (not TouchableOpacity) for reliable click handling
-- Metro CI mode: restart frontend after code changes
+### P3
+- Build iOS version
+
+## Key Files
+- `backend/services/physics.py` — All antenna calculation logic
+- `frontend/app/index.tsx` — Main UI and state management
+- `frontend/app.json` — Expo config (version 4.1.5, versionCode 8)
+- `frontend/update.json` — Update system config
+- `backend/routes/public.py` — Public API including app-update endpoint
+
+## Test Credentials
+- Store Admin: `fallstommy@gmail.com` / `admin123`
