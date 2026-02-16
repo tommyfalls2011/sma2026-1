@@ -617,6 +617,19 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if feed_type != "direct":
         bandwidth_mhz = round(bandwidth_mhz * matching_info["bandwidth_mult"], 3)
 
+    # Feed type physics adjustments (gain, F/B, beamwidth)
+    if feed_type == "gamma":
+        # Gamma rod introduces resistive loss and minor asymmetry (beam skew)
+        gain_dbi = round(gain_dbi - 0.15, 2)
+        fb_ratio = round(fb_ratio - 0.8, 1)
+        fs_ratio = round(fs_ratio - 0.4, 1)
+        beamwidth_h = round(beamwidth_h + 0.5, 1)  # slight broadening from asymmetry
+    elif feed_type == "hairpin":
+        # Symmetrical balanced feed — minimal loss, better balance improves F/B slightly
+        gain_dbi = round(gain_dbi - 0.05, 2)
+        fb_ratio = round(fb_ratio + 0.5, 1)
+        bandwidth_mhz = round(bandwidth_mhz * 1.05, 3)  # hairpin is broadband
+
     multiplication_factor = round(10 ** (gain_dbi / 10), 2)
 
     # Efficiency
