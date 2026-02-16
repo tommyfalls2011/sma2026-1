@@ -365,6 +365,9 @@ export default function AntennaCalculator() {
   // Hairpin design adjustments
   const [hairpinRodDia, setHairpinRodDia] = useState('0.25');
   const [hairpinRodSpacing, setHairpinRodSpacing] = useState('1.0');
+  // Gamma design adjustments
+  const [gammaRodDia, setGammaRodDia] = useState('');
+  const [gammaRodSpacing, setGammaRodSpacing] = useState('');
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
