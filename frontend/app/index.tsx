@@ -1768,8 +1768,8 @@ export default function AntennaCalculator() {
 
                       <View style={{ marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Strap Position</Text>
-                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{(gammaBarPos * 100).toFixed(0)}% along rod</Text>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position</Text>
+                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{(gammaBarPos * 100).toFixed(0)}% along element</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                           <TouchableOpacity onPress={() => setGammaBarPos(Math.max(0.2, gammaBarPos - 0.05))} style={{ padding: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800' }}>
