@@ -210,9 +210,16 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         tuning_factor = 1.0
         if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
             gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
-            optimal_z0 = math.sqrt(max(feedpoint_r, 12.0) * 50.0)
+            # Gamma section Z0 sweet spot: 200-350 ohms for typical Yagi feedpoints
+            optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
-            tuning_factor = 1.0 + min(0.25, z0_deviation * 0.4)
+            # Rod dia/element dia ratio affects coupling efficiency
+            driven_e = next((e for e in input_data.elements if e.element_type == "driven"), None) if hasattr(input_data, 'elements') else None
+            el_dia = float(driven_e.diameter) if driven_e else 0.5
+            dia_ratio = rod_dia / el_dia if el_dia > 0 else 0.33
+            # Optimal rod dia is ~1/3 of element: deviation from 0.33 penalizes
+            dia_penalty = abs(dia_ratio - 0.33) * 0.3
+            tuning_factor = 1.0 + min(0.25, z0_deviation * 0.20 + dia_penalty)
         matched_swr *= tuning_factor
         info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Slightly narrower (-5%)", "bandwidth_mult": 0.95, "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Adjust shorting strap and capacitor", "mitigation": "Proper tuning minimizes beam skew"}}
         return round(max(1.0, matched_swr), 3), info
