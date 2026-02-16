@@ -743,13 +743,23 @@ export default function AntennaCalculator() {
           ground_radials: inputs.ground_radials.enabled ? { ...inputs.ground_radials, wire_diameter: parseFloat(inputs.ground_radials.wire_diameter) || 0.5 } : null,
           antenna_orientation: inputs.antenna_orientation,
           feed_type: inputs.feed_type,
+          ...(inputs.feed_type === 'gamma' ? {
+            gamma_rod_dia: parseFloat(gammaRodDia) || undefined,
+            gamma_rod_spacing: parseFloat(gammaRodSpacing) || undefined,
+          } : {}),
+          ...(inputs.feed_type === 'hairpin' ? {
+            hairpin_rod_dia: parseFloat(hairpinRodDia) || undefined,
+            hairpin_rod_spacing: parseFloat(hairpinRodSpacing) || undefined,
+            hairpin_bar_pos: hairpinBarPos,
+            hairpin_boom_gap: hairpinBoomGap,
+          } : {}),
           dual_active: inputs.dual_active,
           dual_selected_beam: inputs.antenna_orientation === 'dual' ? inputs.dual_selected_beam : undefined,
         }),
       });
       if (response.ok) setResults(await response.json());
     } catch (err) { console.error(err); }
-  }, [inputs, elementUnit]);
+  }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
 
   // Debounced auto-calculate on every change
   useEffect(() => {
