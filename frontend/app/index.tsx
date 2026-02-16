@@ -1998,23 +1998,27 @@ export default function AntennaCalculator() {
                     <Text style={{ fontSize: 11, color: farDir1 ? '#fff' : '#888', marginTop: 2 }}>Far</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 4, justifyContent: 'center', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <TouchableOpacity
                     onPress={() => nudgeElement('dir1', -1)}
-                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: dir1NudgeCount <= -5 ? '#333' : '#1a1a1a' }}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount <= -5 ? '#333' : '#2196F3', opacity: dir1NudgeCount <= -5 ? 0.4 : 1 }}
                     disabled={dir1NudgeCount <= -5}
                   >
-                    <Ionicons name="arrow-back" size={14} color={dir1NudgeCount <= -5 ? '#444' : '#2196F3'} />
+                    <Ionicons name="chevron-back" size={18} color="#2196F3" />
+                    <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
                   </TouchableOpacity>
-                  <Text style={{ fontSize: 9, color: dir1NudgeCount === 0 ? '#555' : '#2196F3', minWidth: 40, textAlign: 'center' }}>
-                    {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 2.5) > 0 ? '+' : ''}${(dir1NudgeCount * 2.5).toFixed(1)}%`}
-                  </Text>
+                  <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, color: dir1NudgeCount === 0 ? '#666' : '#2196F3', fontWeight: '700' }}>
+                      {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 2.5) > 0 ? '+' : ''}${(dir1NudgeCount * 2.5).toFixed(1)}%`}
+                    </Text>
+                  </View>
                   <TouchableOpacity
                     onPress={() => nudgeElement('dir1', 1)}
-                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: dir1NudgeCount >= 5 ? '#333' : '#1a1a1a' }}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount >= 5 ? '#333' : '#2196F3', opacity: dir1NudgeCount >= 5 ? 0.4 : 1 }}
                     disabled={dir1NudgeCount >= 5}
                   >
-                    <Ionicons name="arrow-forward" size={14} color={dir1NudgeCount >= 5 ? '#444' : '#2196F3'} />
+                    <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginRight: 2 }}>Farther</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#2196F3" />
                   </TouchableOpacity>
                 </View>
               </View>
