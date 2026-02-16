@@ -197,6 +197,7 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
 
 def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0,
                            gamma_rod_dia: float = None, gamma_rod_spacing: float = None,
+                           gamma_bar_pos: float = None, gamma_element_gap: float = None,
                            hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None) -> tuple:
     if feed_type == "gamma":
