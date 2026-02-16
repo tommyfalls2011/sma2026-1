@@ -443,10 +443,10 @@ export default function AntennaCalculator() {
     }));
   };
 
-  // Nudge element position by 0.5% per click, ±10% max
+  // Nudge element position by 0.5% per click, ±45% max
   const nudgeElement = (type: 'driven' | 'dir1', direction: number) => {
     const STEP = 0.5;
-    const MAX = 10;
+    const MAX = 45;
     const currentCount = type === 'driven' ? drivenNudgeCount : dir1NudgeCount;
     const newCount = currentCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
