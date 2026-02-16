@@ -563,12 +563,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             dir1_spacing_m = abs(convert_element_to_meters(dir_elems[0].position - driven_elem.position, "inches"))
             dir1_lambda = dir1_spacing_m / wavelength if wavelength > 0 else 0.13
             optimal_dir1 = 0.13
-            dir1_dev = abs(dir1_lambda - optimal_dir1)
-            if dir1_dev > 0.02:
-                spacing_gain_adj -= 0.5 * dir1_dev / 0.05
-                spacing_fb_adj += (1.0 if dir1_lambda < optimal_dir1 else -1.0) * dir1_dev / 0.05
+            dir1_dev = dir1_lambda - optimal_dir1
+            # Director spacing has significant effect on gain and pattern
+            # Closer than optimal: gain drops, F/B improves slightly
+            # Farther than optimal: gain rises slightly then drops, F/B degrades
+            if dir1_dev < -0.005:
+                # Too close — mutual coupling degrades gain
+                spacing_gain_adj += 1.8 * dir1_dev / 0.05  # negative dev → negative gain adj
+                spacing_fb_adj += -1.5 * dir1_dev / 0.05   # closer = better F/B
+            elif dir1_dev > 0.005:
+                # Farther — some gain initially, then drops; F/B degrades
+                if dir1_dev < 0.04:
+                    spacing_gain_adj += 0.6 * dir1_dev / 0.04  # slight gain boost
+                else:
+                    spacing_gain_adj += 0.6 - 1.5 * (dir1_dev - 0.04) / 0.05
+                spacing_fb_adj -= 1.2 * dir1_dev / 0.05
 
-        spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
+        spacing_gain_adj = round(max(-2.5, min(1.0, spacing_gain_adj)), 2)
         spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
         fb_ratio += spacing_fb_adj
         fs_ratio += spacing_fb_adj * 0.5
