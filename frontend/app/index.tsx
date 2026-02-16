@@ -1913,7 +1913,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'normal' ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
-                  onPress={() => { setSpacingMode('normal'); applySpacing('1.0'); }}
+                  onPress={() => { setSpacingMode('normal'); applySpacing('1.0'); setSpacingNudgeCount(0); }}
                 >
                   <Ionicons name="remove-outline" size={14} color={spacingMode === 'normal' ? '#fff' : '#888'} />
                   <Text style={{ fontSize: 11, color: spacingMode === 'normal' ? '#fff' : '#888', marginTop: 2 }}>Normal</Text>
