@@ -351,6 +351,12 @@ export default function AntennaCalculator() {
   const [spacingMode, setSpacingMode] = useState<'normal' | 'tight' | 'long'>('normal');
   const [spacingLevel, setSpacingLevel] = useState('1.0');
   
+  // Spacing Overrides for Auto-Tune
+  const [closeDriven, setCloseDriven] = useState(false);
+  const [farDriven, setFarDriven] = useState(false);
+  const [closeDir1, setCloseDir1] = useState(false);
+  const [farDir1, setFarDir1] = useState(false);
+  
   const SPACING_OPTIONS = {
     tight: [
       { value: '0.6', label: 'Very Tight (60%)' },
