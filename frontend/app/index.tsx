@@ -1668,7 +1668,7 @@ export default function AntennaCalculator() {
               <View style={styles.orientationToggle}>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.feed_type === 'direct' && styles.orientationBtnActive]} 
-                  onPress={() => setInputs(p => ({ ...p, feed_type: 'direct' }))}
+                  onPress={() => switchFeedType('direct')}
                 >
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'direct' && styles.orientationBtnTextActive]}>Direct</Text>
                 </TouchableOpacity>
