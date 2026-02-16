@@ -1799,8 +1799,9 @@ export default function AntennaCalculator() {
                     const z0 = s > 0 && d > 0 ? 276.0 * Math.log10(2.0 * s / d) : hp.z0_ohms;
                     const lenDeg = z0 > 0 ? Math.atan(hp.required_reactance_ohms / z0) * (180 / Math.PI) : 0;
                     const lenIn = (lenDeg / 360.0) * hp.wavelength_inches;
-                    return (
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    const barIn = lenIn * hairpinBarPos;
+                    return (<>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                         <View style={{ flex: 1 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Z0</Text>
                           <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>{z0.toFixed(1)} ohms</Text>
@@ -1814,7 +1815,51 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{lenIn.toFixed(2)}"</Text>
                         </View>
                       </View>
-                    );
+
+                      <View style={{ height: 1, backgroundColor: '#333', marginVertical: 6 }} />
+
+                      <View style={{ marginBottom: 8 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position</Text>
+                          <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700' }}>{barIn.toFixed(2)}" from open end</Text>
+                        </View>
+                        <Slider
+                          minimumValue={0.2}
+                          maximumValue={0.9}
+                          step={0.05}
+                          value={hairpinBarPos}
+                          onValueChange={setHairpinBarPos}
+                          minimumTrackTintColor="#4CAF50"
+                          maximumTrackTintColor="#333"
+                          thumbTintColor="#4CAF50"
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Less inductance</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>More inductance</Text>
+                        </View>
+                      </View>
+
+                      <View style={{ marginBottom: 4 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Rods to Boom Gap</Text>
+                          <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{hairpinBoomGap.toFixed(2)}"</Text>
+                        </View>
+                        <Slider
+                          minimumValue={0.25}
+                          maximumValue={3.0}
+                          step={0.25}
+                          value={hairpinBoomGap}
+                          onValueChange={setHairpinBoomGap}
+                          minimumTrackTintColor="#2196F3"
+                          maximumTrackTintColor="#333"
+                          thumbTintColor="#2196F3"
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Closer to boom</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Farther from boom</Text>
+                        </View>
+                      </View>
+                    </>);
                   })()}
 
                   <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
