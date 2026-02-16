@@ -1974,24 +1974,43 @@ export default function AntennaCalculator() {
                 <View style={{ flexDirection: 'row' }}>
                   <TouchableOpacity
                     style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: closeDir1 ? '#2196F3' : '#252525', marginRight: 4, alignItems: 'center' }}
-                    onPress={() => { setCloseDir1(!closeDir1); if (!closeDir1) setFarDir1(false); }}
+                    onPress={() => { setCloseDir1(!closeDir1); if (!closeDir1) setFarDir1(false); setDir1NudgeCount(0); }}
                   >
                     <Ionicons name="arrow-back-outline" size={14} color={closeDir1 ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 11, color: closeDir1 ? '#fff' : '#888', marginTop: 2 }}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: (!closeDir1 && !farDir1) ? '#4CAF50' : '#252525', marginHorizontal: 4, alignItems: 'center' }}
-                    onPress={() => { setCloseDir1(false); setFarDir1(false); }}
+                    onPress={() => { setCloseDir1(false); setFarDir1(false); setDir1NudgeCount(0); }}
                   >
                     <Ionicons name="remove-outline" size={14} color={(!closeDir1 && !farDir1) ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 11, color: (!closeDir1 && !farDir1) ? '#fff' : '#888', marginTop: 2 }}>Normal</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: farDir1 ? '#FF9800' : '#252525', marginLeft: 4, alignItems: 'center' }}
-                    onPress={() => { setFarDir1(!farDir1); if (!farDir1) setCloseDir1(false); }}
+                    onPress={() => { setFarDir1(!farDir1); if (!farDir1) setCloseDir1(false); setDir1NudgeCount(0); }}
                   >
                     <Ionicons name="arrow-forward-outline" size={14} color={farDir1 ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 11, color: farDir1 ? '#fff' : '#888', marginTop: 2 }}>Far</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: 'row', marginTop: 4, justifyContent: 'center', alignItems: 'center', gap: 10 }}>
+                  <TouchableOpacity
+                    onPress={() => nudgeElement('dir1', -1)}
+                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: dir1NudgeCount <= -5 ? '#333' : '#1a1a1a' }}
+                    disabled={dir1NudgeCount <= -5}
+                  >
+                    <Ionicons name="arrow-back" size={14} color={dir1NudgeCount <= -5 ? '#444' : '#2196F3'} />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 9, color: dir1NudgeCount === 0 ? '#555' : '#2196F3', minWidth: 40, textAlign: 'center' }}>
+                    {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 2.5) > 0 ? '+' : ''}${(dir1NudgeCount * 2.5).toFixed(1)}%`}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => nudgeElement('dir1', 1)}
+                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: dir1NudgeCount >= 5 ? '#333' : '#1a1a1a' }}
+                    disabled={dir1NudgeCount >= 5}
+                  >
+                    <Ionicons name="arrow-forward" size={14} color={dir1NudgeCount >= 5 ? '#444' : '#2196F3'} />
                   </TouchableOpacity>
                 </View>
               </View>
