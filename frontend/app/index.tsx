@@ -2295,8 +2295,8 @@ export default function AntennaCalculator() {
                 <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <TouchableOpacity
                     onPress={() => nudgeElement('driven', -1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount <= -10 ? '#333' : '#4CAF50', opacity: drivenNudgeCount <= -10 ? 0.4 : 1 }}
-                    disabled={drivenNudgeCount <= -10}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount <= -20 ? '#333' : '#4CAF50', opacity: drivenNudgeCount <= -20 ? 0.4 : 1 }}
+                    disabled={drivenNudgeCount <= -20}
                   >
                     <Ionicons name="chevron-back" size={18} color="#4CAF50" />
                     <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
@@ -2308,8 +2308,8 @@ export default function AntennaCalculator() {
                   </View>
                   <TouchableOpacity
                     onPress={() => nudgeElement('driven', 1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount >= 10 ? '#333' : '#4CAF50', opacity: drivenNudgeCount >= 10 ? 0.4 : 1 }}
-                    disabled={drivenNudgeCount >= 10}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount >= 20 ? '#333' : '#4CAF50', opacity: drivenNudgeCount >= 20 ? 0.4 : 1 }}
+                    disabled={drivenNudgeCount >= 20}
                   >
                     <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700', marginRight: 2 }}>Farther</Text>
                     <Ionicons name="chevron-forward" size={18} color="#4CAF50" />
@@ -2361,8 +2361,8 @@ export default function AntennaCalculator() {
                   {inputs.elements.some(e => e.element_type === 'director') ? (<>
                   <TouchableOpacity
                     onPress={() => nudgeElement('dir1', -1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount <= -10 ? '#333' : '#2196F3', opacity: dir1NudgeCount <= -10 ? 0.4 : 1 }}
-                    disabled={dir1NudgeCount <= -10}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount <= -20 ? '#333' : '#2196F3', opacity: dir1NudgeCount <= -20 ? 0.4 : 1 }}
+                    disabled={dir1NudgeCount <= -20}
                   >
                     <Ionicons name="chevron-back" size={18} color="#2196F3" />
                     <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
@@ -2374,8 +2374,8 @@ export default function AntennaCalculator() {
                   </View>
                   <TouchableOpacity
                     onPress={() => nudgeElement('dir1', 1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount >= 10 ? '#333' : '#2196F3', opacity: dir1NudgeCount >= 10 ? 0.4 : 1 }}
-                    disabled={dir1NudgeCount >= 10}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount >= 20 ? '#333' : '#2196F3', opacity: dir1NudgeCount >= 20 ? 0.4 : 1 }}
+                    disabled={dir1NudgeCount >= 20}
                   >
                     <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginRight: 2 }}>Farther</Text>
                     <Ionicons name="chevron-forward" size={18} color="#2196F3" />
