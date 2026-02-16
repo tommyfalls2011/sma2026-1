@@ -1650,6 +1650,60 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
 
+              {/* Gamma Match Design Panel */}
+              {inputs.feed_type === 'gamma' && results && results.matching_info?.gamma_design && (
+                <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#FF9800' }}>
+                  <Text style={{ fontSize: 13, color: '#FF9800', fontWeight: '700', marginBottom: 8 }}>Gamma Match Design</Text>
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Feedpoint R</Text>
+                      <Text style={{ fontSize: 14, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.feedpoint_impedance_ohms} ohms</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Target</Text>
+                      <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>50 ohms</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Step-Up Ratio</Text>
+                      <Text style={{ fontSize: 14, color: '#FF9800', fontWeight: '700' }}>{results.matching_info.gamma_design.step_up_ratio}:1</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Rod Diameter</Text>
+                      <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600' }}>{results.matching_info.gamma_design.gamma_rod_diameter_in}" (1/3 elem)</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Rod Spacing</Text>
+                      <Text style={{ fontSize: 13, color: '#fff', fontWeight: '600' }}>{results.matching_info.gamma_design.gamma_rod_spacing_in}" c-to-c</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Gamma Rod Length</Text>
+                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.gamma_rod_length_in}"</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Series Cap</Text>
+                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.capacitance_pf} pF</Text>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                      <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
+                      <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.gamma_design.shorting_bar_position_in}"</Text>
+                    </View>
+                  </View>
+
+                  <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
+                  <Text style={{ fontSize: 10, color: '#FF9800' }}>Shorten driven element ~{results.matching_info.gamma_design.element_shortening_pct}% from standard length</Text>
+                  <Text style={{ fontSize: 9, color: '#666', marginTop: 4 }}>Adjust shorting bar for resistance, slide inner rod for capacitance. Element grounded to boom.</Text>
+                </View>
+              )}
+
               {/* Hairpin Design Panel */}
               {inputs.feed_type === 'hairpin' && results && results.matching_info?.hairpin_design && (
                 <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#2196F3' }}>
