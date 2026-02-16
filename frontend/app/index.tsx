@@ -1991,6 +1991,7 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                 </View>
                 <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  {inputs.elements.some(e => e.element_type === 'director') ? (<>
                   <TouchableOpacity
                     onPress={() => nudgeElement('dir1', -1)}
                     style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount <= -5 ? '#333' : '#2196F3', opacity: dir1NudgeCount <= -5 ? 0.4 : 1 }}
@@ -2012,6 +2013,9 @@ export default function AntennaCalculator() {
                     <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginRight: 2 }}>Farther</Text>
                     <Ionicons name="chevron-forward" size={18} color="#2196F3" />
                   </TouchableOpacity>
+                  </>) : (
+                    <Text style={{ fontSize: 10, color: '#555', fontStyle: 'italic' }}>Add 3+ elements for director nudge</Text>
+                  )}
                 </View>
               </View>
             </View>
