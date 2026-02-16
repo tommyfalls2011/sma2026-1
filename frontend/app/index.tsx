@@ -1947,23 +1947,27 @@ export default function AntennaCalculator() {
                     <Text style={{ fontSize: 11, color: farDriven ? '#fff' : '#888', marginTop: 2 }}>Far (0.22)</Text>
                   </TouchableOpacity>
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 4, justifyContent: 'center', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <TouchableOpacity
                     onPress={() => nudgeElement('driven', -1)}
-                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: drivenNudgeCount <= -5 ? '#333' : '#1a1a1a' }}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount <= -5 ? '#333' : '#4CAF50', opacity: drivenNudgeCount <= -5 ? 0.4 : 1 }}
                     disabled={drivenNudgeCount <= -5}
                   >
-                    <Ionicons name="arrow-back" size={14} color={drivenNudgeCount <= -5 ? '#444' : '#4CAF50'} />
+                    <Ionicons name="chevron-back" size={18} color="#4CAF50" />
+                    <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
                   </TouchableOpacity>
-                  <Text style={{ fontSize: 9, color: drivenNudgeCount === 0 ? '#555' : '#4CAF50', minWidth: 40, textAlign: 'center' }}>
-                    {drivenNudgeCount === 0 ? '0%' : `${(drivenNudgeCount * 2.5) > 0 ? '+' : ''}${(drivenNudgeCount * 2.5).toFixed(1)}%`}
-                  </Text>
+                  <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, color: drivenNudgeCount === 0 ? '#666' : '#4CAF50', fontWeight: '700' }}>
+                      {drivenNudgeCount === 0 ? '0%' : `${(drivenNudgeCount * 2.5) > 0 ? '+' : ''}${(drivenNudgeCount * 2.5).toFixed(1)}%`}
+                    </Text>
+                  </View>
                   <TouchableOpacity
                     onPress={() => nudgeElement('driven', 1)}
-                    style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, backgroundColor: drivenNudgeCount >= 5 ? '#333' : '#1a1a1a' }}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: drivenNudgeCount >= 5 ? '#333' : '#4CAF50', opacity: drivenNudgeCount >= 5 ? 0.4 : 1 }}
                     disabled={drivenNudgeCount >= 5}
                   >
-                    <Ionicons name="arrow-forward" size={14} color={drivenNudgeCount >= 5 ? '#444' : '#4CAF50'} />
+                    <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700', marginRight: 2 }}>Farther</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#4CAF50" />
                   </TouchableOpacity>
                 </View>
               </View>
