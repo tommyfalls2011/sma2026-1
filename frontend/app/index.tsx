@@ -556,6 +556,19 @@ export default function AntennaCalculator() {
       const res = await fetch(`${BACKEND_URL}/api/optimize-return-loss`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       setRlResult(data);
+      // Auto-apply the best spacing immediately
+      if (data?.best_elements?.length) {
+        const newElements = data.best_elements.map((e: any) => ({
+          element_type: e.element_type,
+          length: String(e.length),
+          diameter: String(e.diameter),
+          position: String(e.position),
+        }));
+        setInputs((p: any) => ({ ...p, elements: newElements }));
+        setDrivenNudgeCount(0);
+        setDir1NudgeCount(0);
+        setSpacingNudgeCount(0);
+      }
     } catch (err) {
       console.error('RL tune error:', err);
     }
