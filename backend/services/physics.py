@@ -229,9 +229,27 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
             z0_penalty = min(0.10, z0_deviation * 0.12)
-        tuning_factor = 1.0 + min(0.35, bar_penalty + insertion_penalty + z0_penalty)
+        # Shorting bar shifts resonant frequency: bar out = lower freq, bar in = higher freq
+        # At 0.5 (center), resonant = operating freq. Each 0.1 shift = ~0.3 MHz offset
+        freq_shift_mhz = round((bar_pos - 0.5) * 3.0, 3)  # +/- up to ~1.5 MHz
+        resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
+        # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
+        # Baseline Q for CB Yagi gamma match: ~12. Range: 6 (low insertion) to 25 (high)
+        q_factor = round(8.0 + rod_insertion * 22.0, 1)  # 8 at 0, 19 at 0.5, 30 at 1.0
+        # Bandwidth from Q: BW = f_center / Q
+        gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
+        # Off-resonance SWR penalty: further from resonant freq = worse SWR
+        freq_offset = abs(operating_freq_mhz - resonant_freq)
+        half_bw = gamma_bw_mhz / 2
+        if half_bw > 0:
+            off_resonance = min(1.0, freq_offset / half_bw)
+            off_resonance_penalty = off_resonance * 0.25
+        else:
+            off_resonance_penalty = 0
+        tuning_factor = 1.0 + min(0.45, bar_penalty + insertion_penalty + z0_penalty + off_resonance_penalty)
         matched_swr *= tuning_factor
-        info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Slightly narrower (-5%)", "bandwidth_mult": 0.95, "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Adjust shorting strap and capacitor", "mitigation": "Proper tuning minimizes beam skew"}}
+        bw_label = f"{gamma_bw_mhz:.2f} MHz (Q={q_factor:.0f})"
+        info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "resonant_freq_mhz": resonant_freq, "q_factor": q_factor, "gamma_bandwidth_mhz": gamma_bw_mhz, "bandwidth_effect": bw_label, "bandwidth_mult": round(max(0.6, 1.0 - (q_factor - 12) * 0.02), 2), "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Bar sets resonant freq, rod sets Q/bandwidth", "mitigation": "Proper tuning minimizes beam skew"}}
         return round(max(1.0, matched_swr), 3), info
     elif feed_type == "hairpin":
         if swr <= 1.2: matched_swr = 1.03 + (swr - 1.0) * 0.20
