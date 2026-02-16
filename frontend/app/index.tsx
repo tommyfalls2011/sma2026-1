@@ -466,10 +466,10 @@ export default function AntennaCalculator() {
     });
   };
 
-  // Nudge ALL element spacing by 0.5% per click, ±10% max
+  // Nudge ALL element spacing by 0.5% per click, ±45% max
   const nudgeSpacing = (direction: number) => {
     const STEP = 0.5;
-    const MAX = 10;
+    const MAX = 45;
     const newCount = spacingNudgeCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
     setSpacingNudgeCount(newCount);
