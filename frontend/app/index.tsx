@@ -1729,11 +1729,11 @@ export default function AntennaCalculator() {
 
                   <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Dia (in)</Text>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Gamma Rod Dia (in)</Text>
                       <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={gammaRodDia || String(results.matching_info.gamma_design.gamma_rod_diameter_in)} onChangeText={setGammaRodDia} keyboardType="decimal-pad" placeholder={String(results.matching_info.gamma_design.gamma_rod_diameter_in)} placeholderTextColor="#555" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod Spacing (in)</Text>
+                      <Text style={{ fontSize: 10, color: '#888', marginBottom: 4 }}>Rod-Element Spacing (in)</Text>
                       <TextInput style={{ backgroundColor: '#252525', color: '#fff', borderRadius: 6, padding: 8, fontSize: 13, borderWidth: 1, borderColor: '#333' }} value={gammaRodSpacing || String(results.matching_info.gamma_design.gamma_rod_spacing_in)} onChangeText={setGammaRodSpacing} keyboardType="decimal-pad" placeholder={String(results.matching_info.gamma_design.gamma_rod_spacing_in)} placeholderTextColor="#555" />
                     </View>
                   </View>
