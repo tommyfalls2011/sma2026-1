@@ -415,6 +415,26 @@ export default function AntennaCalculator() {
     });
   };
 
+  // Nudge ALL element spacing by 2.5% per click, ±12.5% max (25% total)
+  const nudgeSpacing = (direction: number) => {
+    const STEP = 2.5;
+    const MAX = 12.5;
+    const newCount = spacingNudgeCount + direction;
+    if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
+    setSpacingNudgeCount(newCount);
+    setInputs(prev => {
+      const e = [...prev.elements];
+      for (let i = 1; i < e.length; i++) {
+        const pos = parseFloat(e[i].position) || 0;
+        if (pos > 0) {
+          const step = pos * (STEP / 100);
+          e[i] = { ...e[i], position: (pos + direction * step).toFixed(3) };
+        }
+      }
+      return { ...prev, elements: e };
+    });
+  };
+
   // Height optimizer sort option
   const [heightSortBy, setHeightSortBy] = useState<'default' | 'takeoff' | 'gain' | 'fb'>('default');
   
