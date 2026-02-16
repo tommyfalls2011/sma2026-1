@@ -2478,6 +2478,62 @@ export default function AntennaCalculator() {
               </View>
             )}
 
+            {/* Return Loss Tune */}
+            <View style={{ marginTop: 14, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 12 }}>
+              <TouchableOpacity
+                onPress={runReturnLossTune}
+                disabled={rlTuning}
+                style={{ backgroundColor: rlTuning ? '#333' : '#00BCD4', borderRadius: 8, padding: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
+                data-testid="return-loss-tune-btn"
+              >
+                {rlTuning ? (
+                  <ActivityIndicator size="small" color="#00BCD4" />
+                ) : (
+                  <Ionicons name="pulse-outline" size={16} color="#fff" />
+                )}
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13, marginLeft: 8 }}>
+                  {rlTuning ? 'Sweeping Spacings...' : 'Return Loss Tune'}
+                </Text>
+              </TouchableOpacity>
+              <Text style={{ fontSize: 9, color: '#555', marginTop: 4, textAlign: 'center' }}>
+                Sweeps driven & director spacing to find highest return loss
+              </Text>
+
+              {rlResult && rlResult.best_elements && (
+                <View style={{ marginTop: 10, backgroundColor: '#0d2818', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#4CAF50' }}>
+                  <Text style={{ color: '#4CAF50', fontWeight: '700', fontSize: 13, marginBottom: 6 }}>
+                    Best Match Found
+                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <View>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Return Loss</Text>
+                      <Text style={{ color: '#00BCD4', fontSize: 18, fontWeight: '700' }}>{rlResult.best_return_loss_db} dB</Text>
+                    </View>
+                    <View>
+                      <Text style={{ color: '#888', fontSize: 10 }}>SWR</Text>
+                      <Text style={{ color: '#4CAF50', fontSize: 18, fontWeight: '700' }}>{rlResult.best_swr}:1</Text>
+                    </View>
+                    <View>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Tested</Text>
+                      <Text style={{ color: '#aaa', fontSize: 18, fontWeight: '700' }}>{rlResult.sweep_count}</Text>
+                    </View>
+                  </View>
+                  {rlResult.best_elements.map((e: any, i: number) => (
+                    <Text key={i} style={{ color: '#aaa', fontSize: 10 }}>
+                      {e.element_type}: {e.length}" @ {e.position}"
+                    </Text>
+                  ))}
+                  <TouchableOpacity
+                    onPress={applyRlResult}
+                    style={{ backgroundColor: '#4CAF50', borderRadius: 6, padding: 10, alignItems: 'center', marginTop: 10 }}
+                    data-testid="apply-rl-result-btn"
+                  >
+                    <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>Apply These Spacings</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+
           </View>
 
           {/* Taper */}
