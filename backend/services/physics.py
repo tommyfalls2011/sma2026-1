@@ -554,6 +554,35 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "wavelength_inches": round(wavelength_in, 2),
         }
 
+    # Gamma match design calculations
+    if feed_type == "gamma" and yagi_feedpoint_r < 50.0:
+        wavelength_in = wavelength * 39.3701
+        step_up_ratio = round(math.sqrt(50.0 / yagi_feedpoint_r), 3)
+        # Driven element diameter (get from actual element data)
+        driven_elem_calc = next((e for e in input_data.elements if e.element_type == "driven"), None)
+        element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
+        # Rules of thumb
+        gamma_rod_dia = round(element_dia / 3.0, 3)  # 1/3 of element diameter
+        gamma_rod_spacing = round(element_dia * 4.0, 3)  # ~4x element diameter center-to-center
+        gamma_rod_length = round(wavelength_in * 0.045, 2)  # 0.04-0.05 lambda
+        # Series capacitance: ~7pF per meter of wavelength
+        capacitance_pf = round(7.0 * wavelength, 1)
+        # Shorting bar position from center (approximate)
+        shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
+        matching_info["gamma_design"] = {
+            "feedpoint_impedance_ohms": yagi_feedpoint_r,
+            "target_impedance_ohms": 50.0,
+            "step_up_ratio": step_up_ratio,
+            "element_diameter_in": element_dia,
+            "gamma_rod_diameter_in": gamma_rod_dia,
+            "gamma_rod_spacing_in": gamma_rod_spacing,
+            "gamma_rod_length_in": gamma_rod_length,
+            "capacitance_pf": capacitance_pf,
+            "shorting_bar_position_in": shorting_bar_pos,
+            "element_shortening_pct": 3.0,
+            "wavelength_inches": round(wavelength_in, 2),
+        }
+
     if boom_correction["enabled"]:
         swr = round(swr * boom_correction["swr_factor"], 3)
         swr = round(max(1.0, min(swr, 5.0)), 2)
