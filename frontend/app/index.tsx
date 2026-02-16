@@ -2796,7 +2796,7 @@ export default function AntennaCalculator() {
               
               {/* Side View / Elevation Pattern */}
               {results.takeoff_angle && (
-                <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} orientation={inputs.antenna_orientation} />
+                <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} orientation={inputs.antenna_orientation} elevationData={results.elevation_pattern} fbRatio={results.fb_ratio} />
               )}
               
               {/* Pattern Data Table */}
