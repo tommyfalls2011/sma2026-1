@@ -195,20 +195,51 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
 
 # ── Matching Network ──
 
-def apply_matching_network(swr: float, feed_type: str) -> tuple:
+def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0,
+                           gamma_rod_dia: float = None, gamma_rod_spacing: float = None,
+                           hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
+                           hairpin_bar_pos: float = None, hairpin_boom_gap: float = None) -> tuple:
     if feed_type == "gamma":
         if swr <= 1.2: matched_swr = 1.02 + (swr - 1.0) * 0.15
         elif swr <= 2.0: matched_swr = 1.05 + (swr - 1.2) * 0.06
         elif swr <= 3.0: matched_swr = 1.10 + (swr - 2.0) * 0.10
         else: matched_swr = 1.20 + (swr - 3.0) * 0.15
-        info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "bandwidth_effect": "Slightly narrower (-5%)", "bandwidth_mult": 0.95, "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Adjust shorting strap and capacitor", "mitigation": "Proper tuning minimizes beam skew"}}
+        # Gamma rod tuning: Z0 of gamma section affects impedance match quality
+        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
+        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
+        tuning_factor = 1.0
+        if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
+            gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
+            optimal_z0 = math.sqrt(max(feedpoint_r, 12.0) * 50.0)
+            z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
+            tuning_factor = 1.0 + min(0.25, z0_deviation * 0.4)
+        matched_swr *= tuning_factor
+        info = {"type": "Gamma Match", "description": "Rod + capacitor alongside driven element transforms impedance to 50\u03a9", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Slightly narrower (-5%)", "bandwidth_mult": 0.95, "technical_notes": {"mechanism": "Series LC network", "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations", "advantage": "Feeds balanced Yagi with unbalanced coax", "tuning": "Adjust shorting strap and capacitor", "mitigation": "Proper tuning minimizes beam skew"}}
         return round(max(1.0, matched_swr), 3), info
     elif feed_type == "hairpin":
         if swr <= 1.2: matched_swr = 1.03 + (swr - 1.0) * 0.20
         elif swr <= 2.0: matched_swr = 1.07 + (swr - 1.2) * 0.10
         elif swr <= 3.0: matched_swr = 1.15 + (swr - 2.0) * 0.12
         else: matched_swr = 1.27 + (swr - 3.0) * 0.18
-        info = {"type": "Hairpin Match", "description": "Shorted stub adds inductance to cancel capacitive reactance at feedpoint", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "bandwidth_effect": "Broadband (minimal effect)", "bandwidth_mult": 1.0, "technical_notes": {"mechanism": "Shorted transmission line stub", "asymmetry": "Symmetrical design — no beam skew", "advantage": "Simple construction, broadband", "tuning": "Adjust hairpin length and spacing", "tradeoff": "Requires split driven element", "balun_note": "Use current choke balun alongside"}}
+        # Hairpin stub tuning: rod dimensions + bar position affect match
+        h_rod_dia = hairpin_rod_dia if hairpin_rod_dia and hairpin_rod_dia > 0 else None
+        h_rod_spacing = hairpin_rod_spacing if hairpin_rod_spacing and hairpin_rod_spacing > 0 else None
+        bar_pos = hairpin_bar_pos if hairpin_bar_pos is not None else 0.5
+        boom_gap = hairpin_boom_gap if hairpin_boom_gap is not None else 1.0
+        tuning_factor = 1.0
+        if h_rod_dia and h_rod_spacing and h_rod_spacing > h_rod_dia / 2:
+            hairpin_z0 = 276.0 * math.log10(2.0 * h_rod_spacing / h_rod_dia)
+            if feedpoint_r < 50.0:
+                xl_required = math.sqrt(max(feedpoint_r, 12.0) * (50.0 - feedpoint_r))
+            else:
+                xl_required = 10.0
+            effective_ratio = bar_pos / 0.5
+            reactance_deviation = abs(effective_ratio - 1.0)
+            z0_penalty = abs(hairpin_z0 - xl_required * 2.5) / (xl_required * 2.5) if xl_required > 0 else 0
+            boom_gap_penalty = max(0, (0.5 - boom_gap) * 0.15) if boom_gap < 0.5 else 0
+            tuning_factor = 1.0 + min(0.30, reactance_deviation * 0.3 + z0_penalty * 0.15 + boom_gap_penalty)
+        matched_swr *= tuning_factor
+        info = {"type": "Hairpin Match", "description": "Shorted stub adds inductance to cancel capacitive reactance at feedpoint", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Broadband (minimal effect)", "bandwidth_mult": 1.0, "technical_notes": {"mechanism": "Shorted transmission line stub", "asymmetry": "Symmetrical design \u2014 no beam skew", "advantage": "Simple construction, broadband", "tuning": "Adjust hairpin length and spacing", "tradeoff": "Requires split driven element", "balun_note": "Use current choke balun alongside"}}
         return round(max(1.0, matched_swr), 3), info
     else:
         return swr, {"type": "Direct Feed", "description": "Direct 50\u03a9 coax connection to driven element", "original_swr": round(swr, 3), "matched_swr": round(swr, 3), "bandwidth_effect": "No effect", "bandwidth_mult": 1.0}
