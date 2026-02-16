@@ -951,11 +951,19 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gain_breakdown["final_gain"] = gain_dbi
         antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
 
-    # SWR curve
+    # SWR curve — center the minimum on the resonant frequency (from match tuning)
+    # but display range centered on the operating frequency
+    curve_resonant_freq = center_freq
+    curve_min_swr = swr
+    if feed_type != "direct" and matching_info:
+        if "resonant_freq_mhz" in matching_info:
+            curve_resonant_freq = matching_info["resonant_freq_mhz"]
+        if "swr_at_resonance" in matching_info:
+            curve_min_swr = matching_info["swr_at_resonance"]
     swr_curve = []
     for i in range(-30, 31):
         freq = center_freq + (i * channel_spacing)
-        swr_at_freq = calculate_swr_at_frequency(freq, center_freq, bandwidth_mhz, swr)
+        swr_at_freq = calculate_swr_at_frequency(freq, curve_resonant_freq, bandwidth_mhz, curve_min_swr)
         swr_curve.append({"frequency": round(freq, 4), "swr": round(swr_at_freq, 2), "channel": i})
     usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
     usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
