@@ -253,10 +253,14 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             # Bar position: 0.5 = ideal, deviation increases SWR
             bar_deviation = abs(bar_pos - 0.5) / 0.5  # 0 at center, 1 at extremes
             bar_penalty = bar_deviation * 0.20
-            # Z0: optimal range is 100-300 for typical hairpin; penalize extremes
-            optimal_z0 = max(80.0, xl_required * 4.0)
+            # Z0: optimal range is 200-600 ohms for HF Yagi hairpin stubs
+            optimal_z0 = 400.0  # center of 200-600 range
             z0_deviation = abs(hairpin_z0 - optimal_z0) / optimal_z0
-            z0_penalty = min(0.15, z0_deviation * 0.12)
+            # Gentle penalty within 200-600, steeper outside
+            if 200.0 <= hairpin_z0 <= 600.0:
+                z0_penalty = z0_deviation * 0.08
+            else:
+                z0_penalty = min(0.15, z0_deviation * 0.15)
             # Boom gap: closer than 0.5" adds parasitic coupling
             boom_gap_penalty = max(0, (0.5 - boom_gap) * 0.20) if boom_gap < 0.5 else 0
             tuning_factor = 1.0 + min(0.35, bar_penalty + z0_penalty + boom_gap_penalty)
