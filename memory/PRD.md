@@ -14,24 +14,20 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 - Director spacing physics fix, Ground radials fix
 
 ### Current Session (Feb 2026)
-- **Real-time matching network tuning**: All design panel adjustments now affect SWR in real time
-  - Backend `AntennaInput` accepts: `gamma_rod_dia`, `gamma_rod_spacing`, `gamma_bar_pos`, `gamma_element_gap`, `hairpin_rod_dia`, `hairpin_rod_spacing`, `hairpin_bar_pos`, `hairpin_boom_gap`
-  - `apply_matching_network()` computes tuning quality from design parameters
-  - Frontend sends design parameters in every `/api/calculate` call, auto-recalculates on change (300ms debounce)
-  - UI shows "Tuning Quality %" in matching info section and bonus card
-- **Gamma match sliders** (matching Hairpin panel style):
-  - **Shorting Strap Position**: +/- buttons, 0.2–0.9 range, affects impedance step-up ratio
-  - **Rod-to-Element Gap**: +/- buttons, 0.25–3.0" range, affects parasitic coupling
-  - Both sliders update SWR in real time via backend
-- **Updated Z0 physics** per user-provided antenna engineering formulas:
-  - Gamma Z0: `276 * log10(2S/d)`, optimal ~250 ohms, rod:spacing ratio optimal at 8:1
-  - Hairpin Z0: `276 * log10(2S/d)`, optimal range 200–600 ohms (HF Yagi standard)
-  - Shorting bar position affects impedance transformation for both match types
+- **Real-time matching network tuning**: All design panel adjustments affect SWR in real time
+- **Gamma match redesigned** to model real-world components:
+  - **Shorting Bar Position** slider (0.2-0.9): acts as autotransformer tap, sets resistive impedance step-up to 50 ohms
+  - **Rod Insertion** slider (10%-90%): rod slides into tube (Teflon-insulated), forms variable series capacitor to cancel inductive reactance
+  - Backend physics: bar position optimal depends on feedpoint R (`sqrt(50/R_feed)`), rod insertion optimal at 50% (symmetric reactance cancellation)
+- **Hairpin Z0 updated**: optimal range 200-600 ohms per HF Yagi engineering standards
+- **Tuning Quality %** indicator shown in matching info section and bonus card
+- All 8 design parameters sent to backend on every change (300ms debounce)
 
 ## Key Architecture
 - Backend: `/app/backend/services/physics.py`, `/app/backend/routes/antenna.py`, `/app/backend/models.py`
 - Frontend: `/app/frontend/app/index.tsx`
-- Key state: `gammaBarPos`, `gammaElementGap`, `hairpinBarPos`, `hairpinBoomGap`, `gammaRodDia`, `gammaRodSpacing`, `hairpinRodDia`, `hairpinRodSpacing`
+- Gamma state: `gammaBarPos`, `gammaRodInsertion`, `gammaRodDia`, `gammaRodSpacing`
+- Hairpin state: `hairpinBarPos`, `hairpinBoomGap`, `hairpinRodDia`, `hairpinRodSpacing`
 
 ## Prioritized Backlog
 ### P2
@@ -40,3 +36,8 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 - Replace deprecated `shadow*` style props with `boxShadow`
 ### P3
 - iOS build
+
+## Notes
+- User VM path: ~/sma2026-1
+- Vite website is being removed by user (not our concern)
+- Expo does NOT hot-reload in preview environment
