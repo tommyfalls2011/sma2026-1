@@ -1680,7 +1680,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.feed_type === 'hairpin' && styles.orientationBtnActive]} 
-                  onPress={() => setInputs(p => ({ ...p, feed_type: 'hairpin' }))}
+                  onPress={() => switchFeedType('hairpin')}
                 >
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'hairpin' && styles.orientationBtnTextActive]}>Hairpin</Text>
                 </TouchableOpacity>
