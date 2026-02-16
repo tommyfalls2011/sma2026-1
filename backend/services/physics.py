@@ -1330,7 +1330,13 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         spacing_gain_adj = round(max(-1.5, min(0.5, spacing_gain_adj)), 2)
         spacing_fb_adj = round(max(-4.0, min(3.0, spacing_fb_adj)), 1)
         if request.boom_lock_enabled and request.max_boom_length:
-            requested_lambda = 0.12 if request.close_driven else (0.22 if request.far_driven else 0.18)
+            close_d = request.close_driven
+            far_d = request.far_driven
+            if close_d == 'vclose': requested_lambda = 0.08
+            elif close_d == 'close' or close_d is True: requested_lambda = 0.12
+            elif far_d == 'vfar': requested_lambda = 0.28
+            elif far_d == 'far' or far_d is True: requested_lambda = 0.22
+            else: requested_lambda = 0.18
             actual_vs_requested = abs(refl_driven_lambda - requested_lambda)
             if actual_vs_requested > 0.02 and (request.close_driven or request.far_driven):
                 notes.append(f"Note: Boom restraint limits driven spacing to {round(refl_driven_lambda, 3)}\u03bb (requested {requested_lambda}\u03bb). Use a longer boom for full effect.")
