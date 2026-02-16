@@ -1906,7 +1906,7 @@ export default function AntennaCalculator() {
               <View style={{ flexDirection: 'row', marginBottom: 8 }}>
                 <TouchableOpacity 
                   style={{ flex: 1, padding: 8, borderRadius: 6, backgroundColor: spacingMode === 'tight' ? '#9C27B0' : '#252525', marginRight: 4, alignItems: 'center' }}
-                  onPress={() => { if (spacingMode === 'tight') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('tight'); applySpacing('0.75'); } }}
+                  onPress={() => { if (spacingMode === 'tight') { applySpacing('1.0'); setSpacingMode('normal'); } else { setSpacingMode('tight'); applySpacing('0.75'); } setSpacingNudgeCount(0); }}
                 >
                   <Ionicons name="contract-outline" size={14} color={spacingMode === 'tight' ? '#fff' : '#888'} />
                   <Text style={{ fontSize: 11, color: spacingMode === 'tight' ? '#fff' : '#888', marginTop: 2 }}>Tight</Text>
