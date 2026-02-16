@@ -10,24 +10,25 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 - Feed type physics: Gamma, Hairpin, Direct with distinct effects on gain/F/B/SWR/bandwidth
 - Auto-shortening of driven element: 3% (gamma), 4% (hairpin)
 - Interactive Gamma & Hairpin design panels with editable rod dia/spacing
-- Custom Hairpin sliders (Shorting Bar Position & Rods-to-Boom Gap)
 - Director spacing physics fix, Ground radials fix
 
 ### Current Session (Feb 2026)
 - **Real-time matching network tuning**: All design panel adjustments affect SWR in real time
-- **Gamma match redesigned** to model real-world components:
-  - **Shorting Bar Position** slider (0.2-0.9): acts as autotransformer tap, sets resistive impedance step-up to 50 ohms
-  - **Rod Insertion** slider (10%-90%): rod slides into tube (Teflon-insulated), forms variable series capacitor to cancel inductive reactance
-  - Backend physics: bar position optimal depends on feedpoint R (`sqrt(50/R_feed)`), rod insertion optimal at 50% (symmetric reactance cancellation)
-- **Hairpin Z0 updated**: optimal range 200-600 ohms per HF Yagi engineering standards
-- **Tuning Quality %** indicator shown in matching info section and bonus card
-- All 8 design parameters sent to backend on every change (300ms debounce)
+- **Gamma match redesigned** with real-world component model:
+  - **Shorting Bar Position** slider: autotransformer tap along element, sets R to 50 ohm
+  - **Rod Insertion (Capacitance)** slider: rod in/out of tube, variable series cap, cancels reactance
+  - Components section: Rod (inner, coax center) + Tube (outer) + Teflon (PTFE, 60kV/mm)
+  - Backend physics: bar optimal = sqrt(50/R_feed)*0.35, rod insertion optimal at 50%
+- **Hairpin sliders**: Shorting Bar Position + Rods-to-Boom Gap (also updated to Pressable)
+- **Pressable fix**: Replaced TouchableOpacity with Pressable for slider buttons — fixes web click handling in Expo Web
+- **Hairpin Z0**: optimal range updated to 200-600 ohms per HF Yagi standards
+- **Tuning Quality %** shown in matching info section and bonus card
+- **Expo Web mode**: Preview now runs Expo web on port 3000 (not Vite)
 
 ## Key Architecture
 - Backend: `/app/backend/services/physics.py`, `/app/backend/routes/antenna.py`, `/app/backend/models.py`
 - Frontend: `/app/frontend/app/index.tsx`
-- Gamma state: `gammaBarPos`, `gammaRodInsertion`, `gammaRodDia`, `gammaRodSpacing`
-- Hairpin state: `hairpinBarPos`, `hairpinBoomGap`, `hairpinRodDia`, `hairpinRodSpacing`
+- Frontend supervisor: `npx expo start --web --port 3000 --non-interactive`
 
 ## Prioritized Backlog
 ### P2
@@ -39,5 +40,6 @@ A full-stack antenna modeling/calculator application (React Native Expo frontend
 
 ## Notes
 - User VM path: ~/sma2026-1
-- Vite website is being removed by user (not our concern)
-- Expo does NOT hot-reload in preview environment
+- User is removing the Vite website themselves
+- Expo Web requires `Pressable` (not `TouchableOpacity`) for reliable click handling
+- Metro CI mode: restart frontend after code changes
