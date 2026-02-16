@@ -356,10 +356,10 @@ export default function AntennaCalculator() {
   const [spacingLevel, setSpacingLevel] = useState('1.0');
   
   // Spacing Overrides for Auto-Tune
-  const [closeDriven, setCloseDriven] = useState(false);
-  const [farDriven, setFarDriven] = useState(false);
-  const [closeDir1, setCloseDir1] = useState(false);
-  const [farDir1, setFarDir1] = useState(false);
+  const [closeDriven, setCloseDriven] = useState<string | false>(false);
+  const [farDriven, setFarDriven] = useState<string | false>(false);
+  const [closeDir1, setCloseDir1] = useState<string | false>(false);
+  const [farDir1, setFarDir1] = useState<string | false>(false);
   
   // Fine-tune nudge for element positions (±25% = 50% total range, 2.5% per step)
   const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
