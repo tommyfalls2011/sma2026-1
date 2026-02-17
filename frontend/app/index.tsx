@@ -606,10 +606,13 @@ export default function AntennaCalculator() {
   const [farDriven, setFarDriven] = useState<string | false>(false);
   const [closeDir1, setCloseDir1] = useState<string | false>(false);
   const [farDir1, setFarDir1] = useState<string | false>(false);
+  const [closeDir2, setCloseDir2] = useState<string | false>(false);
+  const [farDir2, setFarDir2] = useState<string | false>(false);
   
   // Fine-tune nudge for element positions (±10% total range, 0.5% per step)
   const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
   const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // -10 to +10 steps
+  const [dir2NudgeCount, setDir2NudgeCount] = useState(0); // -10 to +10 steps
   const [spacingNudgeCount, setSpacingNudgeCount] = useState(0); // -10 to +10 steps
   const [rlTuning, setRlTuning] = useState(false);
   const [rlResult, setRlResult] = useState<any>(null);
