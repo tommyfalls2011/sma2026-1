@@ -294,8 +294,10 @@ class TestOtherEndpoints:
         response = requests.get(f"{BASE_URL}/api/subscription/tiers")
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
-        print(f"✓ Subscription tiers: {len(data)} tiers available")
+        # API returns object with 'tiers' key
+        assert "tiers" in data
+        assert isinstance(data["tiers"], dict)
+        print(f"✓ Subscription tiers: {len(data['tiers'])} tiers available")
     
     def test_app_update_check(self):
         """Test app update check endpoint"""
