@@ -1117,6 +1117,57 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
     usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
 
+    # ── Smith Chart Data: impedance sweep across frequency ──
+    smith_chart_data = []
+    # Determine resonant frequency for impedance calculations
+    smith_res_freq = curve_resonant_freq
+    for i in range(-30, 31):
+        freq = center_freq + (i * channel_spacing)
+        # Base resistance stays roughly constant across band
+        sc_r = yagi_feedpoint_r
+        # Reactance varies with frequency: X = Q * R * (f/f0 - f0/f)
+        if smith_res_freq > 0:
+            fr = freq / smith_res_freq
+            sc_x = antenna_q * yagi_feedpoint_r * (fr - 1.0 / fr)
+        else:
+            sc_x = 0.0
+        # Apply matching network transformation
+        if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
+            tq = matching_info["tuning_quality"]
+            cancel = max(0.0002, (1.0 - tq) ** 1.5)
+            sc_x *= cancel
+            nat_r = sc_r
+            if tq < 0.9:
+                sc_r = nat_r + (50.0 - nat_r) * tq
+            else:
+                base_r = nat_r + (50.0 - nat_r) * 0.9
+                fine = (tq - 0.9) / 0.1
+                sc_r = base_r + (50.0 - base_r) * (1.0 - (1.0 - fine) ** 4)
+            if tq > 0.98:
+                sc_r = max(sc_r, 50.0 * 1.0004)
+        elif feed_type == "hairpin" and matching_info and "tuning_quality" in matching_info:
+            tq = matching_info["tuning_quality"]
+            sc_x *= 0.10
+            residual = (1.0 - tq) * 0.25
+            sc_r = 50.0 * (1.0 + residual)
+        # Reflection coefficient Γ = (Z - Z0) / (Z + Z0)
+        denom_r = (sc_r + z_0) ** 2 + sc_x ** 2
+        g_re = ((sc_r - z_0) * (sc_r + z_0) + sc_x ** 2) / denom_r if denom_r > 0 else 0
+        g_im = (2 * sc_x * z_0) / denom_r if denom_r > 0 else 0
+        # Derive L or C from reactance: X = 2πfL or X = -1/(2πfC)
+        omega = 2 * math.pi * freq * 1e6
+        inductance_nh = round(sc_x / omega * 1e9, 2) if sc_x > 0 and omega > 0 else 0
+        capacitance_pf = round(-1e12 / (omega * sc_x), 2) if sc_x < 0 and omega > 0 else 0
+        smith_chart_data.append({
+            "freq": round(freq, 4),
+            "z_real": round(sc_r, 2),
+            "z_imag": round(sc_x, 2),
+            "gamma_real": round(g_re, 5),
+            "gamma_imag": round(g_im, 5),
+            "inductance_nh": inductance_nh,
+            "capacitance_pf": capacitance_pf,
+        })
+
     # Far field pattern
     far_field_pattern = []
     for angle in range(0, 361, 5):
