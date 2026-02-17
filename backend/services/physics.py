@@ -963,6 +963,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         return_loss_db = 60.0
 
     swr_from_gamma = (1 + reflection_coefficient) / (1 - reflection_coefficient) if reflection_coefficient < 1.0 else 99.0
+    # SWR must be derived from reflection coefficient for consistency
+    swr = round(max(1.0, swr_from_gamma), 2)
     mismatch_loss = 1 - (reflection_coefficient ** 2)
     mismatch_loss_db = round(-10 * math.log10(mismatch_loss), 3) if mismatch_loss > 0 else 0
     reflected_power_100w = round(100 * (reflection_coefficient ** 2), 2)
