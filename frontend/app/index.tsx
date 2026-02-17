@@ -3104,19 +3104,29 @@ export default function AntennaCalculator() {
                 <View style={styles.reflectedPowerTable}>
                   <View style={styles.reflectedPowerTableHeader}>
                     <Text style={styles.reflectedPowerTableHeaderText}>Input</Text>
+                    <Text style={styles.reflectedPowerTableHeaderText}>At Antenna</Text>
                     <Text style={styles.reflectedPowerTableHeaderText}>Forward</Text>
                     <Text style={styles.reflectedPowerTableHeaderText}>Reflected</Text>
                   </View>
+                  {results.coax_info && (
+                    <View style={styles.reflectedPowerTableRow}>
+                      <Text style={styles.reflectedPowerTableCell}>{results.coax_info.transmit_power_watts}W</Text>
+                      <Text style={[styles.reflectedPowerTableCell, { color: '#2196F3' }]}>{results.power_at_antenna_watts?.toFixed(1)}W</Text>
+                      <Text style={[styles.reflectedPowerTableCell, { color: '#4CAF50' }]}>{results.forward_power_watts?.toFixed(1)}W</Text>
+                      <Text style={[styles.reflectedPowerTableCell, { color: '#f44336' }]}>{results.reflected_power_watts?.toFixed(2)}W</Text>
+                    </View>
+                  )}
                   <View style={styles.reflectedPowerTableRow}>
                     <Text style={styles.reflectedPowerTableCell}>100W</Text>
+                    <Text style={[styles.reflectedPowerTableCell, { color: '#2196F3' }]}>-</Text>
                     <Text style={[styles.reflectedPowerTableCell, { color: '#4CAF50' }]}>{results.forward_power_100w?.toFixed(1) || '100'}W</Text>
                     <Text style={[styles.reflectedPowerTableCell, { color: '#f44336' }]}>{results.reflected_power_100w?.toFixed(2) || '0'}W</Text>
                   </View>
-                  <View style={styles.reflectedPowerTableRow}>
-                    <Text style={styles.reflectedPowerTableCell}>1000W</Text>
-                    <Text style={[styles.reflectedPowerTableCell, { color: '#4CAF50' }]}>{results.forward_power_1kw?.toFixed(0) || '1000'}W</Text>
-                    <Text style={[styles.reflectedPowerTableCell, { color: '#f44336' }]}>{results.reflected_power_1kw?.toFixed(1) || '0'}W</Text>
-                  </View>
+                  {results.coax_info && (
+                    <View style={{ marginTop: 4, paddingHorizontal: 4 }}>
+                      <Text style={{ fontSize: 8, color: '#666' }}>Feedline: {results.coax_info.type} {results.coax_info.length_ft}ft | Loss: {results.coax_info.total_loss_db} dB</Text>
+                    </View>
+                  )}
                 </View>
                 
                 <View style={styles.impedanceRow}>
