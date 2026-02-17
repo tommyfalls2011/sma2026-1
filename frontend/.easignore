@@ -79,3 +79,7 @@ __tests__
 *.spec.ts
 *.spec.tsx
 coverage/
+
+# === Unused assets ===
+assets/images/react-logo*
+assets/images/partial-react-logo*
