@@ -1089,21 +1089,14 @@ export default function AntennaCalculator() {
     } catch (err) { console.error(err); }
   }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts]);
 
-  // Debounced auto-calculate on every change
+  // Initial calculation on mount
+  useEffect(() => { calculateAntenna(); }, []);
+
+  // Single debounced auto-recalculate on any input change
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => calculateAntenna(), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [inputs, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
-
-  useEffect(() => { calculateAntenna(); }, []);
-
-  // Auto-recalculate on any input change (debounced)
-  const autoCalcTimer = useRef<any>(null);
-  useEffect(() => {
-    if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current);
-    autoCalcTimer.current = setTimeout(() => calculateAntenna(), 300);
-    return () => { if (autoCalcTimer.current) clearTimeout(autoCalcTimer.current); };
   }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, gammaCapPf, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts]);
 
   const optimizeStacking = async () => {
