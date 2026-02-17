@@ -11,7 +11,18 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - **Physics Engine**: `backend/services/physics.py` — models SWR, gain, F/B ratio, resonant frequency, Q-factor, complex impedance, return loss
 - **Deployment**: EAS Build for Android APK, Railway for backend
 
-## Completed Features (This Session)
+## Completed Features (This Session - Feb 17 2026)
+- **Smith Chart**: Full impedance sweep visualization across 61 frequency points
+  - Plots normalized impedance on standard Smith Chart grid (constant R circles, constant X arcs)
+  - Tracks R (resistance), X (reactance), L (inductance), C (capacitance)
+  - Shows reflection coefficient Γ for each frequency point
+  - Band edge markers (Lo/Hi) and center frequency marker (f0)
+  - Works with all feed types: Direct, Gamma, Hairpin
+- **P0 Bug Fix Verified**: Return Loss Tune now correctly uses user's selected feed type (gamma/hairpin/direct)
+- **P0 Bug Fix Verified**: Elevation pattern lobes now correctly oriented (forward = right)
+- **SVG Width Fix**: All SVG components now use minimum widths to prevent negative dimension errors on Expo Web
+
+## Completed Features (Previous Session)
 - **v4.1.5 applied** across all config files and database
 - **SWR curve shifts with resonant frequency** — SWR dip moves based on gamma/hairpin match tuning, centered on operating freq
 - **Resonant frequency marker** on SWR chart (orange "RES" line when shifted)
