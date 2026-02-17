@@ -870,6 +870,9 @@ export default function AntennaCalculator() {
           } : {}),
           dual_active: inputs.dual_active,
           dual_selected_beam: inputs.antenna_orientation === 'dual' ? inputs.dual_selected_beam : undefined,
+          coax_type: coaxType,
+          coax_length_ft: parseFloat(coaxLengthFt) || 100,
+          transmit_power_watts: parseFloat(transmitPowerWatts) || 500,
         }),
       });
       if (response.ok) setResults(await response.json());
