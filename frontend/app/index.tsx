@@ -1756,14 +1756,7 @@ export default function AntennaCalculator() {
               <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#333' }}>
                 <Text style={{ fontSize: 12, color: '#888', fontWeight: '700', marginBottom: 8 }}>Feedline / Power</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-                  {[
-                    { key: 'ldf5-50a', label: '7/8" Heliax' },
-                    { key: 'ldf4-50a', label: '1/2" Heliax' },
-                    { key: 'rg213', label: 'RG-213' },
-                    { key: 'rg8', label: 'RG-8' },
-                    { key: 'rg8x', label: 'RG-8X' },
-                    { key: 'rg58', label: 'RG-58' },
-                  ].map(c => (
+                  {COAX_OPTIONS.map(c => (
                     <TouchableOpacity key={c.key}
                       style={{ paddingHorizontal: 8, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: coaxType === c.key ? '#2196F3' : '#333', backgroundColor: coaxType === c.key ? '#2196F322' : '#1a1a1a' }}
                       onPress={() => setCoaxType(c.key)}
