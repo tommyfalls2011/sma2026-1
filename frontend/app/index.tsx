@@ -540,29 +540,35 @@ export default function AntennaCalculator() {
     setRlTuning(true);
     setRlResult(null);
     try {
+      const elementsForRl = elementUnit === 'meters'
+        ? inputs.elements.map((e: any) => ({ element_type: e.element_type, length: parseFloat(e.length) * 39.3701, diameter: parseFloat(e.diameter) * 39.3701, position: parseFloat(e.position) * 39.3701 }))
+        : inputs.elements.map((e: any) => ({ element_type: e.element_type, length: parseFloat(e.length) || 0, diameter: parseFloat(e.diameter) || 0, position: parseFloat(e.position) || 0 }));
       const body = {
         num_elements: inputs.elements.length,
-        band: inputs.band, frequency_mhz: inputs.frequency_mhz,
-        feed_type: inputs.feed_type, antenna_orientation: inputs.antenna_orientation,
-        height_from_ground: inputs.height_from_ground, height_unit: inputs.height_unit,
-        boom_diameter: inputs.boom_diameter, boom_unit: inputs.boom_unit,
-        boom_grounded: inputs.boom_grounded, boom_mount: inputs.boom_mount,
-        gamma_bar_pos: gammaBarPos, gamma_element_gap: gammaElementGap,
-        elements: inputs.elements.map((e: any) => ({
-          element_type: e.element_type, length: parseFloat(e.length),
-          diameter: parseFloat(e.diameter), position: parseFloat(e.position)
-        })),
+        band: inputs.band,
+        frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+        feed_type: inputs.feed_type,
+        antenna_orientation: inputs.antenna_orientation,
+        height_from_ground: parseFloat(inputs.height_from_ground) || 0,
+        height_unit: inputs.height_unit,
+        boom_diameter: parseFloat(inputs.boom_diameter) || 0,
+        boom_unit: inputs.boom_unit,
+        boom_grounded: inputs.boom_mount === 'bonded',
+        boom_mount: inputs.boom_mount,
+        gamma_bar_pos: gammaBarPos,
+        gamma_element_gap: gammaRodInsertion,
+        elements: elementsForRl,
       };
       const res = await fetch(`${BACKEND_URL}/api/optimize-return-loss`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!res.ok) { setRlTuning(false); return; }
       const data = await res.json();
       setRlResult(data);
-      // Auto-apply the best spacing immediately
       if (data?.best_elements?.length) {
         const newElements = data.best_elements.map((e: any) => ({
           element_type: e.element_type,
-          length: String(e.length),
-          diameter: String(e.diameter),
-          position: String(e.position),
+          length: String(elementUnit === 'meters' ? (e.length / 39.3701).toFixed(4) : e.length),
+          diameter: String(elementUnit === 'meters' ? (e.diameter / 39.3701).toFixed(4) : e.diameter),
+          position: String(elementUnit === 'meters' ? (e.position / 39.3701).toFixed(4) : e.position),
         }));
         setInputs((p: any) => ({ ...p, elements: newElements }));
         setDrivenNudgeCount(0);
