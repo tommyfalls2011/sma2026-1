@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Lazy import for SSR compatibility
+let AsyncStorage: any = null;
+if (typeof window !== 'undefined') {
+  try { AsyncStorage = require('@react-native-async-storage/async-storage').default; } catch {}
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
