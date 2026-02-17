@@ -211,6 +211,11 @@ class AntennaOutput(BaseModel):
     forward_power_1kw: Optional[float] = None
     impedance_high: Optional[float] = None
     impedance_low: Optional[float] = None
+    coax_loss_db: Optional[float] = None
+    coax_info: Optional[dict] = None
+    power_at_antenna_watts: Optional[float] = None
+    reflected_power_watts: Optional[float] = None
+    forward_power_watts: Optional[float] = None
     takeoff_angle: Optional[float] = None
     takeoff_angle_description: Optional[str] = None
     height_performance: Optional[str] = None
