@@ -219,10 +219,10 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
         tuning_factor = 1.0
         # Shorting bar: acts as autotransformer tap on the driven element
-        # Optimal position depends on feedpoint R: needs sqrt(50/R_feed) ratio
-        optimal_bar = min(0.9, max(0.2, math.sqrt(50.0 / max(feedpoint_r, 12.0)) * 0.35))
+        # Optimal position depends on feedpoint R: typical range 0.15-0.35 of half-element
+        optimal_bar = min(0.9, max(0.15, math.sqrt(50.0 / max(feedpoint_r, 12.0)) * 0.20))
         bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
-        bar_penalty = min(0.80, bar_deviation ** 0.8 * 0.80)
+        bar_penalty = min(0.40, bar_deviation ** 1.2 * 0.30)
         # Rod insertion: slides rod into tube to form variable series capacitor
         # 0.5 = optimal cancellation of gamma section inductance
         # Too little (0.0) = residual inductance, too much (1.0) = excess capacitance
