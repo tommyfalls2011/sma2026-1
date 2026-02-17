@@ -2984,7 +2984,7 @@ export default function AntennaCalculator() {
 
           {/* Debug */}
           <View style={{ padding: 8, backgroundColor: '#220' }}>
-            <Text style={{ color: results ? '#0f0' : '#f00', fontSize: 12 }}>Results: {results ? `SWR=${results.swr} Gain=${results.gain_dbi}` : `NULL ${calcError || 'no error'}`}</Text>
+            <Text style={{ color: results ? '#0f0' : '#f00', fontSize: 12 }}>Results: {results ? `SWR=${results.swr}` : `NULL ${calcError || 'no error'}`} | effect={effectRan ? 'YES' : 'NO'}</Text>
           </View>
 
           {/* Results */}
