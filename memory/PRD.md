@@ -1,59 +1,84 @@
 # SMA Antenna Analyzer - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack antenna calculator mobile app with React Native (Expo) frontend and FastAPI backend. Features include realistic RF physics modeling, gamma/hairpin/direct feed types, coax simulation, radiation patterns, and Smith Chart.
+Build a mobile antenna calculator app with advanced physics modeling, interactive controls, and real-time visualization for antenna design and analysis.
 
 ## Architecture
-- **Frontend**: React Native + Expo (app/frontend/)
-- **Backend**: FastAPI + Python (app/backend/)
-- **Database**: MongoDB
-- **Physics Engine**: backend/services/physics.py
+- **Frontend**: React Native (Expo) with Expo Router, deployed via EAS
+- **Backend**: Python FastAPI, deployed on Railway
+- **Database**: MongoDB Atlas
+- **Web Preview**: Expo Web with static output mode
 
-## Completed Features (Feb 17 2026 Session)
-- **Smith Chart Backend**: 61-point impedance sweep (R, X, Γ, L, C) for all feed types — 14/14 tests passed
-- **SmithChart Frontend Component**: SVG polar plot with constant-R circles, constant-X arcs, impedance trace, Lo/f0/Hi markers, readout panel (R, X, L, C)
-- **Return Loss Tune Fix Verified**: Uses user's selected feed type
-- **Elevation Pattern Fix Verified**: Forward lobe correctly points right
-- **SVG Min-Width Guards**: All SVG components use Math.max(200, ...) to prevent negative dimensions
-
-## Completed Features (Previous Sessions)
-- Realistic Gamma Match physics (two-phase blend, <16dB poor to ~74dB excellent)
-- Coax & Power Simulation (7 cable types, loss modeling)
-- Editable Gamma Match inputs (null sentinel pattern)
-- .easignore optimization
-- Nudge arrows for element spacing
-- Auto element shortening for Gamma (3%) and Hairpin (4%)
-- Interactive Gamma/Hairpin panels with real-time SWR
+## Core Features (Implemented)
+- Antenna element calculations with realistic physics
+- Multiple feed types: Direct, Gamma, Hairpin
+- SWR bandwidth chart
+- Radiation pattern (polar plot)
 - Multi-lobe elevation pattern
-- Return Loss Tune optimizer
+- Smith Chart (impedance tracking)
+- Performance metrics (Gain, F/B, F/S, Efficiency)
+- Reflected power analysis
+- Resonant frequency modeling
+- Auto-scaling performance bars
+- Return Loss Tune (auto-tuner)
+- Coax & power simulation
+- Gamma/Hairpin match interactive panels
+- Nudge arrows for element spacing
+- Subscription tiers & login
+- App update checker
 
-## Known Issues
-- **P0: Expo Web SSR Hydration**: `Cannot read properties of undefined (reading 'default')` prevents useEffect from running in web preview. App works on Expo Go mobile. Root cause: Expo Router treats files in `app/context/` and `app/components/` as routes. Moving outside `app/` fixes the route warning but a deeper client-side error persists.
+## Critical Bug Fix (Feb 17, 2026)
+**Root cause**: `pretty-format@30.2.0`'s ESM wrapper (`index.mjs`) had a broken default re-export chain that crashed Metro's HMR client in the web bundle with: `"Cannot read properties of undefined (reading 'default')"`. This prevented ALL client-side JavaScript from executing, blocking `useEffect` hooks, API calls, and result rendering.
 
-## Backlog
-### P1
-- Frontend Vite cleanup (remove index.html, vite.config.js, src/main.tsx, etc.)
+**Fix applied**:
+1. Patched `pretty-format/build/index.mjs` with correct ESM re-exports
+2. Added persistent `postinstall` script (`scripts/patch-pretty-format.js`)
+3. Moved `context/AuthContext.tsx` and `components/InstallPrompt.tsx` out of `app/` to avoid Expo Router route conflicts
+4. Made native-only imports (`expo-file-system`, `expo-sharing`, `expo-constants`) lazy/conditional
+5. Fixed undefined `setCalcError` reference
+6. Guarded `Constants.statusBarHeight` with optional chaining
 
-### P2
-- PayPal/CashApp Payments
-- Improve .easignore to reduce APK build size
-- Replace deprecated shadow* style props with boxShadow
+## File Structure
+```
+frontend/
+├── app/
+│   ├── _layout.tsx          # Root layout
+│   ├── index.tsx            # Main calculator page
+│   ├── login.tsx            # Login page
+│   ├── admin.tsx            # Admin panel
+│   └── subscription.tsx     # Subscription page
+├── context/
+│   └── AuthContext.tsx       # Auth state (moved from app/context/)
+├── components/
+│   ├── InstallPrompt.tsx    # PWA install prompt (moved from app/components/)
+│   └── ElevationPattern.tsx # Elevation pattern chart
+├── scripts/
+│   └── patch-pretty-format.js  # Postinstall patch for Metro
+├── metro.config.js
+├── app.json
+└── package.json
 
-### P3
+backend/
+├── server.py               # FastAPI routes
+├── models.py               # Pydantic models
+└── services/
+    └── physics.py           # Antenna physics engine
+```
+
+## Pending/Upcoming Tasks
+### P1 - Frontend Cleanup
+- Remove Vite-related files (index.html, vite.config.js, src/main.tsx)
+
+### P2 - Improvements
+- PayPal/CashApp payment integration
+- Improve .easignore for APK build size
+- Replace deprecated shadow* props with boxShadow
+
+### P3 - Future
 - Build iOS version
-
-## Key API Endpoints
-- `POST /api/calculate` — Main calculation. Returns smith_chart_data, elevation_pattern, swr_curve, etc.
-- `POST /api/auto-tune` — Auto-tune element dimensions
-- `POST /api/optimize-return-loss` — Sweep spacings for best return loss
-
-## Key Files
-- `backend/services/physics.py` — Core physics engine
-- `backend/models.py` — Pydantic models (AntennaOutput has smith_chart_data)
-- `backend/server.py` — API routes
-- `frontend/app/index.tsx` — Main UI + SmithChart component
-- `frontend/app/context/AuthContext.tsx` — Auth provider
-- `frontend/app/_layout.tsx` — Root layout
 
 ## Test Credentials
 - Store Admin: `fallstommy@gmail.com` / `admin123`
+
+## 3rd Party Integrations
+- Stripe (Payments), Railway (Deploy), MongoDB Atlas (DB), GitHub API (Updates), EAS (Mobile builds)
