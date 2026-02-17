@@ -307,6 +307,7 @@ class SavedDesign(BaseModel):
     name: str
     description: Optional[str] = ""
     design_data: dict
+    spacing_state: Optional[dict] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -314,6 +315,7 @@ class SaveDesignRequest(BaseModel):
     name: str
     description: Optional[str] = ""
     design_data: dict
+    spacing_state: Optional[dict] = None
 
 class SaveDesignResponse(BaseModel):
     id: str
