@@ -173,7 +173,7 @@ async def get_subscription_status(user: dict = Depends(require_user)):
 
 @router.post("/designs/save", response_model=SaveDesignResponse)
 async def save_design(request: SaveDesignRequest, user: dict = Depends(require_user)):
-    design = SavedDesign(user_id=user["id"], name=request.name, description=request.description, design_data=request.design_data)
+    design = SavedDesign(user_id=user["id"], name=request.name, description=request.description, design_data=request.design_data, spacing_state=request.spacing_state)
     await db.saved_designs.insert_one(design.dict())
     return SaveDesignResponse(id=design.id, name=design.name, message="Design saved successfully")
 
@@ -189,7 +189,7 @@ async def get_design(design_id: str, user: dict = Depends(require_user)):
     design = await db.saved_designs.find_one({"id": design_id, "user_id": user["id"]})
     if not design:
         raise HTTPException(status_code=404, detail="Design not found")
-    return {"id": design["id"], "name": design["name"], "description": design.get("description", ""), "design_data": design["design_data"], "created_at": design["created_at"]}
+    return {"id": design["id"], "name": design["name"], "description": design.get("description", ""), "design_data": design["design_data"], "spacing_state": design.get("spacing_state"), "created_at": design["created_at"]}
 
 
 @router.delete("/designs/{design_id}")
