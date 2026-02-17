@@ -31,15 +31,9 @@ const APP_VERSION = appJson.expo.version;
 const APP_BUILD_DATE = '2026-02-10T12:00:00';
 const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
-const ResultCard = ({ title, value, description, icon, color }: any) => (
-  <View style={[styles.resultCard, { borderLeftColor: color }]}>
-    <View style={styles.resultHeader}><Ionicons name={icon} size={16} color={color} /><Text style={styles.resultTitle}>{title}</Text></View>
-    <Text style={[styles.resultValue, { color }]}>{value}</Text>
-    {description && <Text style={styles.resultDescription}>{description}</Text>}
-  </View>
-);
-
-const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, channelSpacing }: any) => {
+// SwrMeter placeholder - scanning for remaining inline definitions
+const _REMOVE_MARKER_START = true; // This will be cleaned up
+const SwrMeter_OLD = ({ data, centerFreq, resonantFreq, usable15, usable20, channelSpacing }: any) => {
   const width = Math.max(200, Math.min(screenWidth - 32, 380)); const height = 195;
   const padding = { top: 18, right: 12, bottom: 52, left: 36 };
   const chartWidth = width - padding.left - padding.right; const chartHeight = height - padding.top - padding.bottom;
