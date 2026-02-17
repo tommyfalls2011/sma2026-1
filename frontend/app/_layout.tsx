@@ -1,10 +1,9 @@
-'use client';
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
-import { AuthProvider } from '../context/AuthContext';
-import InstallPrompt from '../components_custom/InstallPrompt';
+import { AuthProvider } from './context/AuthContext';
+import InstallPrompt from './components/InstallPrompt';
 
 export default function RootLayout() {
   return (
