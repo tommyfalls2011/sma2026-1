@@ -55,7 +55,7 @@ const ResultCard = ({ title, value, description, icon, color }: any) => (
 );
 
 const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, channelSpacing }: any) => {
-  const width = Math.min(screenWidth - 32, 380); const height = 195;
+  const width = Math.max(200, Math.min(screenWidth - 32, 380)); const height = 195;
   const padding = { top: 18, right: 12, bottom: 52, left: 36 };
   const chartWidth = width - padding.left - padding.right; const chartHeight = height - padding.top - padding.bottom;
   if (!data?.length) return null;
@@ -91,7 +91,7 @@ const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, channelS
 };
 
 const PolarPattern = ({ data, stackedData, isStacked }: any) => {
-  const size = Math.min(screenWidth - 48, 260); const center = size / 2; const maxRadius = center - 22;
+  const size = Math.max(200, Math.min(screenWidth - 48, 260)); const center = size / 2; const maxRadius = center - 22;
   const createPath = (d: any[]) => { if (!d?.length) return ''; let p = ''; d.forEach((pt, i) => { const r = (pt.magnitude / 100) * maxRadius; const a = (pt.angle - 90) * Math.PI / 180; p += i === 0 ? `M ${center + r * Math.cos(a)} ${center + r * Math.sin(a)}` : ` L ${center + r * Math.cos(a)} ${center + r * Math.sin(a)}`; }); return p + ' Z'; };
   return (
     <View style={styles.polarContainer}>
@@ -110,7 +110,7 @@ const PolarPattern = ({ data, stackedData, isStacked }: any) => {
 
 // Elevation/Side View Pattern — polar plot showing ALL lobes, front and back (F/B)
 const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRatio }: { takeoffAngle: number, gain: number, orientation?: string, elevationData?: any[], fbRatio?: number }) => {
-  const width = Math.min(screenWidth - 48, 340);
+  const width = Math.max(200, Math.min(screenWidth - 48, 340));
   const height = 200;
   const groundY = height - 22;
   const centerX = width / 2;
