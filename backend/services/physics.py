@@ -994,6 +994,38 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     impedance_high = round(50 * swr, 1)
     impedance_low = round(50 / swr, 1)
 
+    # Coax feedline loss calculation
+    coax_loss_table = {
+        "ldf5-50a": {"name": "LDF5-50A 7/8\" Heliax", "loss_per_100ft": 0.22, "power_rating_watts": 14000, "velocity_factor": 0.89},
+        "ldf4-50a": {"name": "LDF4-50A 1/2\" Heliax", "loss_per_100ft": 0.41, "power_rating_watts": 4800, "velocity_factor": 0.88},
+        "rg213": {"name": "RG-213/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
+        "rg8": {"name": "RG-8/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
+        "rg8x": {"name": "RG-8X Mini-8", "loss_per_100ft": 1.6, "power_rating_watts": 300, "velocity_factor": 0.78},
+        "rg58": {"name": "RG-58/U", "loss_per_100ft": 2.4, "power_rating_watts": 200, "velocity_factor": 0.66},
+    }
+    coax_type = getattr(input_data, 'coax_type', 'ldf5-50a')
+    coax_length_ft = getattr(input_data, 'coax_length_ft', 100.0)
+    transmit_power = getattr(input_data, 'transmit_power_watts', 500.0)
+    coax_spec = coax_loss_table.get(coax_type, coax_loss_table["ldf5-50a"])
+    coax_loss_db = round(coax_spec["loss_per_100ft"] * coax_length_ft / 100.0, 2)
+    # Additional loss from SWR (standing waves increase cable heating)
+    swr_loss_multiplier = 1.0 + (swr - 1.0) * 0.05 if swr > 1.0 else 1.0
+    total_coax_loss_db = round(coax_loss_db * swr_loss_multiplier, 2)
+    coax_loss_ratio = 10 ** (-total_coax_loss_db / 10)
+    power_at_antenna = round(transmit_power * coax_loss_ratio, 1)
+    reflected_power_watts = round(power_at_antenna * (reflection_coefficient ** 2), 2)
+    forward_power_watts = round(power_at_antenna - reflected_power_watts, 2)
+    coax_info = {
+        "type": coax_spec["name"],
+        "length_ft": coax_length_ft,
+        "matched_loss_db": coax_loss_db,
+        "total_loss_db": total_coax_loss_db,
+        "swr_loss_multiplier": round(swr_loss_multiplier, 3),
+        "power_rating_watts": coax_spec["power_rating_watts"],
+        "velocity_factor": coax_spec["velocity_factor"],
+        "transmit_power_watts": transmit_power,
+    }
+
     # Take-off angle
     ground_radials = input_data.ground_radials
     ground_type = "average"
