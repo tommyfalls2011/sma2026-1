@@ -125,8 +125,8 @@ const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRa
     // Only render 0-180° (above ground plane)
     const points = elevationData.filter((p: any) => p.angle <= 180);
     points.forEach((pt: any, i: number) => {
-      const angleDeg = pt.angle; // 0°=right horizon, 90°=up, 180°=left horizon
-      const angleRad = Math.PI - (angleDeg * Math.PI / 180); // flip so 0° is right
+      const angleDeg = pt.angle; // 0°=front horizon, 90°=up, 180°=back horizon
+      const angleRad = angleDeg * Math.PI / 180; // 0°=right(fwd), 90°=up, 180°=left(back)
       const r = (pt.magnitude / maxMag) * maxRadius;
       const x = centerX + Math.cos(angleRad) * r;
       const y = centerY - Math.sin(angleRad) * r;
@@ -143,7 +143,7 @@ const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRa
     let path = `M ${centerX} ${centerY}`;
     const front = elevationData.filter((p: any) => p.angle <= 90);
     front.forEach((pt: any) => {
-      const angleRad = Math.PI - (pt.angle * Math.PI / 180);
+      const angleRad = pt.angle * Math.PI / 180;
       const r = (pt.magnitude / maxMag) * maxRadius;
       path += ` L ${centerX + Math.cos(angleRad) * r} ${centerY - Math.sin(angleRad) * r}`;
     });
@@ -157,7 +157,7 @@ const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRa
     let path = `M ${centerX} ${centerY - 1}`;
     const back = elevationData.filter((p: any) => p.angle >= 90 && p.angle <= 180);
     back.forEach((pt: any) => {
-      const angleRad = Math.PI - (pt.angle * Math.PI / 180);
+      const angleRad = pt.angle * Math.PI / 180;
       const r = (pt.magnitude / maxMag) * maxRadius;
       path += ` L ${centerX + Math.cos(angleRad) * r} ${centerY - Math.sin(angleRad) * r}`;
     });
