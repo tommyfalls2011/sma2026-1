@@ -2072,7 +2072,14 @@ export default function AntennaCalculator() {
                     // Series cap: user-editable, defaults to backend-calculated value
                     const autoCapPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
                     const capPf = gammaCapPf !== null ? (parseFloat(gammaCapPf) || autoCapPf) : autoCapPf;
-                    const barPos = rodLen * gammaBarPos;
+                    // Shorting bar length = rod-element spacing (bridges the gap)
+                    const barLength = rodSpace;
+                    // Shorting bar position in inches from feedpoint center
+                    const barPosIn = gammaBarPos;
+                    // Inductance: L(nH) ≈ 5.08 * length * (ln(2*length/dia) - 1)
+                    const barInductanceNh = barPosIn > 0 && rodDia > 0 ? (5.08 * barPosIn * (Math.log(2.0 * barPosIn / rodDia) - 1.0 + rodDia / (2.0 * barPosIn))) : 0;
+                    // Freq shift: longer position = more inductance = lower freq
+                    const freqShift = (barPosIn - 24.0) * 0.03;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                         <View style={{ flex: 1 }}>
@@ -2092,7 +2099,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
-                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{barPos.toFixed(2)}"</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{barLength.toFixed(1)}"</Text>
                         </View>
                       </View>
 
@@ -2100,23 +2107,24 @@ export default function AntennaCalculator() {
 
                       <View style={{ marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position</Text>
-                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{(gammaBarPos * 100).toFixed(0)}% along element</Text>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position (from feedpoint center)</Text>
+                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn}" along element</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Pressable onPress={() => setGammaBarPos(Math.max(0.2, gammaBarPos - 0.05))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.max(6, gammaBarPos - 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
-                            <View style={{ width: `${((gammaBarPos - 0.2) / 0.7) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
+                            <View style={{ width: `${((barPosIn - 6) / 42) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
                           </View>
-                          <Pressable onPress={() => setGammaBarPos(Math.min(0.9, gammaBarPos + 0.05))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.min(48, gammaBarPos + 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>+</Text>
                           </Pressable>
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
-                          <Text style={{ fontSize: 9, color: '#555' }}>Lower impedance</Text>
-                          <Text style={{ fontSize: 9, color: '#555' }}>Higher impedance</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Toward feedpoint (higher freq)</Text>
+                          <Text style={{ fontSize: 9, color: barInductanceNh > 0 ? '#FF9800' : '#555' }}>L: {barInductanceNh.toFixed(0)} nH | {freqShift >= 0 ? '+' : ''}{freqShift.toFixed(2)} MHz</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>Toward tip (lower freq)</Text>
                         </View>
                       </View>
 
