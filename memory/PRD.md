@@ -8,28 +8,38 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 ## Architecture
 - **Frontend**: React Native (Expo), Expo Web for preview
 - **Backend**: FastAPI (Python), MongoDB
-- **Physics Engine**: `backend/services/physics.py` — models SWR, gain, F/B ratio, resonant frequency, Q-factor
+- **Physics Engine**: `backend/services/physics.py` — models SWR, gain, F/B ratio, resonant frequency, Q-factor, complex impedance, return loss
 - **Deployment**: EAS Build for Android APK, Railway for backend
 
-## Completed Features
+## Completed Features (This Session)
+- **v4.1.5 applied** across all config files and database
+- **SWR curve shifts with resonant frequency** — SWR dip moves based on gamma/hairpin match tuning, centered on operating freq
+- **Resonant frequency marker** on SWR chart (orange "RES" line when shifted)
+- **Spacing-dependent resonant frequency** — element resonant freq changes with mutual coupling (closer=lower freq, wider=higher freq per HF physics)
+- **Spacing-dependent feedpoint impedance** — closer elements = stronger coupling = lower impedance (exponential decay model)
+- **5 spacing presets** for Driven Element (V.Close 0.08λ, Close 0.12λ, Normal 0.18λ, Far 0.22λ, V.Far 0.28λ)
+- **5 spacing presets** for 1st Director (V.Close, Close, Normal, Far, V.Far)
+- **Smooth nudge controls** — 0.5% per click, ±45% max range (90 clicks each direction)
+- **Full elevation pattern** — polar plot showing ALL lobes (multiple ground-reflection lobes), front AND back with F/B attenuation
+- **Return Loss Tune** button — sweeps driven & director spacings to find best natural impedance match
+- **Complex impedance return loss** — Γ = (Z_ant - Z_0)/(Z_ant + Z_0) with R+jX, RL = -20log10(|Γ|)
+- **Consistent SWR/RL/Γ** — all derived from single complex impedance calculation
+- **Gamma match models 95% reactance cancellation** — achievable RL matches real-world values (30-74 dB range)
+- **Larger frequency text** under SWR meter (fontSize 13, bold)
+
+## Previously Completed Features
 - Antenna calculator with element spacing, dimensions, frequency input
 - Real-time SWR/Frequency tuning (Gamma & Hairpin match panels)
 - Interactive Gamma Match sliders (Shorting Bar, Rod Insertion)
 - Realistic Gamma Match physics model
 - Auto-scaling performance bars
-- Resonant Frequency UI card (element resonance, match-tuned resonance, Q-Factor/Bandwidth)
+- Resonant Frequency UI card
 - Updated gain curve (+2.8 dB first director jump)
 - 2x2 Quad Stacking, Wavelength Spacing Presets
 - Far-Field Pattern Analysis, Wind Load Calculations
 - 3-Way Boom Mount Selector, Visual Element Viewer
 - Store with Stripe payments, Admin panel
 - Update system with version checking
-- Expo Web preview environment configured
-- v4.1.5 version applied across all config files and database
-- **SWR curve shifts with resonant frequency** — SWR dip moves based on gamma/hairpin match tuning, centered on operating freq
-- **Resonant frequency marker** on SWR chart (orange "RES" line)
-- **Realistic element resonant frequency** — mutual coupling factors (reflector -3%, directors -0.6% each)
-- **Reduced gamma bar shift factor** — 1.5 MHz range (was 3.0) for more realistic tuning
 
 ## Pending Tasks
 ### P1
@@ -44,12 +54,16 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - Build iOS version
 
 ## Key Files
-- `backend/services/physics.py` — All antenna calculation logic
+- `backend/services/physics.py` — All antenna calculation logic (complex impedance, return loss, resonant freq)
+- `backend/routes/antenna.py` — API routes including optimize-return-loss endpoint
+- `backend/models.py` — Pydantic models (AntennaOutput, AutoTuneRequest with Union[str,bool] spacing fields)
 - `frontend/app/index.tsx` — Main UI and state management
 - `frontend/app.json` — Expo config (version 4.1.5, versionCode 8)
-- `frontend/update.json` — Update system config
-- `backend/routes/public.py` — Public API including app-update endpoint
-- `backend/models.py` — Pydantic models (AntennaOutput includes resonant_freq_mhz)
+
+## Key API Endpoints
+- `POST /api/calculate` — Main calculation (accepts gamma_bar_pos, gamma_rod_insertion)
+- `POST /api/auto-tune` — Auto-tune element dimensions
+- `POST /api/optimize-return-loss` — Sweep spacings for best return loss
 
 ## Test Credentials
 - Store Admin: `fallstommy@gmail.com` / `admin123`
