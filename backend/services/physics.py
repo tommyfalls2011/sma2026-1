@@ -216,19 +216,19 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Optimal position depends on feedpoint R: needs sqrt(50/R_feed) ratio
         optimal_bar = min(0.9, max(0.2, math.sqrt(50.0 / max(feedpoint_r, 12.0)) * 0.35))
         bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
-        bar_penalty = min(0.20, bar_deviation * 0.25)
+        bar_penalty = min(0.80, bar_deviation ** 0.8 * 0.80)
         # Rod insertion: slides rod into tube to form variable series capacitor
         # 0.5 = optimal cancellation of gamma section inductance
         # Too little (0.0) = residual inductance, too much (1.0) = excess capacitance
         insertion_deviation = abs(rod_insertion - 0.5) / 0.5
-        insertion_penalty = min(0.15, insertion_deviation * 0.20)
+        insertion_penalty = min(0.50, insertion_deviation ** 0.8 * 0.50)
         # Z0 of gamma section from rod dimensions
         z0_penalty = 0
         if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
             gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
             optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
-            z0_penalty = min(0.10, z0_deviation * 0.12)
+            z0_penalty = min(0.20, z0_deviation * 0.25)
         # Shorting bar shifts resonant frequency: bar out = lower freq, bar in = higher freq
         # At 0.5 (center), resonant = operating freq. Each 0.1 shift = ~0.15 MHz offset
         freq_shift_mhz = round((bar_pos - 0.5) * 1.5, 3)  # +/- up to ~0.75 MHz
