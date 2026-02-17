@@ -2069,8 +2069,9 @@ export default function AntennaCalculator() {
                     // Recalculate based on user inputs
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
                     const rodLen = gd.wavelength_inches * 0.045 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
-                    // Series cap: base value from backend, scaled by rod dia ratio (larger rod = more cap)
-                    const capPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
+                    // Series cap: user-editable, defaults to backend-calculated value
+                    const autoCapPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
+                    const capPf = gammaCapPf !== null ? (parseFloat(gammaCapPf) || autoCapPf) : autoCapPf;
                     const barPos = rodLen * gammaBarPos;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -2079,8 +2080,15 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{rodLen.toFixed(2)}"</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
-                          <Text style={{ fontSize: 10, color: '#888' }}>Series Cap</Text>
-                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{capPf.toFixed(1)} pF</Text>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Series Cap (pF)</Text>
+                          <TextInput
+                            style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700', backgroundColor: '#252525', borderRadius: 6, padding: 4, borderWidth: 1, borderColor: gammaCapPf !== null ? '#4CAF50' : '#333', textAlign: 'center', minWidth: 80 }}
+                            value={gammaCapPf !== null ? gammaCapPf : autoCapPf.toFixed(1)}
+                            onChangeText={setGammaCapPf}
+                            keyboardType="decimal-pad"
+                            placeholder={autoCapPf.toFixed(1)}
+                            placeholderTextColor="#555"
+                          />
                         </View>
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
