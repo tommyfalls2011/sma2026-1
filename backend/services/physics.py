@@ -734,8 +734,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gamma_rod_dia = 0.5  # Default 1/2" rod
         gamma_rod_spacing = 4.0  # Default 4" center-to-center
         gamma_rod_length = round(wavelength_in * 0.045, 2)  # 0.04-0.05 lambda
-        # Series capacitance: user override or auto
-        capacitance_pf = user_cap
+        # Series capacitance: compute locally (same formula as in apply_matching_network)
+        design_auto_cap_pf = round(6.9 * wavelength, 1)
+        design_user_cap = input_data.gamma_cap_pf if input_data.gamma_cap_pf and input_data.gamma_cap_pf > 0 else design_auto_cap_pf
         # Shorting bar position from center (approximate)
         shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
         matching_info["gamma_design"] = {
@@ -746,8 +747,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_diameter_in": gamma_rod_dia,
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
-            "capacitance_pf": capacitance_pf,
-            "auto_capacitance_pf": auto_cap_pf,
+            "capacitance_pf": design_user_cap,
+            "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
             "element_shortening_pct": 3.0,
             "wavelength_inches": round(wavelength_in, 2),
