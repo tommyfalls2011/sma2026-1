@@ -406,6 +406,11 @@ export default function AntennaCalculator() {
   const [rlTuning, setRlTuning] = useState(false);
   const [rlResult, setRlResult] = useState<any>(null);
 
+  // Coax feedline settings
+  const [coaxType, setCoaxType] = useState('ldf5-50a');
+  const [coaxLengthFt, setCoaxLengthFt] = useState('100');
+  const [transmitPowerWatts, setTransmitPowerWatts] = useState('500');
+
   // Hairpin design adjustments
   const [hairpinRodDia, setHairpinRodDia] = useState('0.25');
   const [hairpinRodSpacing, setHairpinRodSpacing] = useState('1.0');
