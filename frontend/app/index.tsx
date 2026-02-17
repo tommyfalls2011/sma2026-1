@@ -1092,18 +1092,6 @@ export default function AntennaCalculator() {
 
   useEffect(() => { calculateAntenna(); }, []);
 
-  // Hydration workaround: if effects didn't fire, trigger calc via rAF
-  _calcRef.current = calculateAntenna;
-  if (!_initCalcDone.current && typeof window !== 'undefined') {
-    _initCalcDone.current = true;
-    const tryCalc = () => {
-      if (_calcRef.current) _calcRef.current();
-    };
-    // Schedule multiple attempts in case the first doesn't work
-    setTimeout(tryCalc, 500);
-    setTimeout(tryCalc, 2000);
-  }
-
   // Auto-recalculate on any input change (debounced)
   const autoCalcTimer = useRef<any>(null);
   useEffect(() => {
