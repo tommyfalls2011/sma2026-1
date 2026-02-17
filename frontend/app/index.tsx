@@ -261,6 +261,7 @@ const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRa
 // Smith Chart — impedance/reactance polar plot with R, X, L, C tracking
 const SmithChart = ({ data, centerFreq }: { data: any[], centerFreq: number }) => {
   const size = Math.max(200, Math.min(screenWidth - 48, 340));
+  const cx = size / 2;
   const cy = size / 2;
   const R = (size - 44) / 2; // chart radius
 
