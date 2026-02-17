@@ -263,15 +263,8 @@ async def optimize_return_loss(input_data: AntennaInput):
                     new_pos = round(new_elements[-1].position + orig_gap, 1)
                     new_elements.append(type(directors[j])(element_type="director", length=directors[j].length, diameter=directors[j].diameter, position=new_pos))
 
-            # Calculate with DIRECT feed to get raw impedance, then also with user's feed
+            # Calculate with user's actual feed type (includes matching network)
             try:
-                # Raw impedance calculation (direct feed, no matching network)
-                direct_input = input_data.model_copy(update={"elements": new_elements, "feed_type": "direct"})
-                direct_result = calculate_antenna_parameters(direct_input)
-                raw_swr = direct_result.swr
-                raw_rl = direct_result.return_loss_db or 0
-
-                # Also calculate with user's actual feed type for the matched result
                 matched_input = input_data.model_copy(update={"elements": new_elements})
                 matched_result = calculate_antenna_parameters(matched_input)
                 matched_rl = matched_result.return_loss_db or 0
@@ -279,14 +272,12 @@ async def optimize_return_loss(input_data: AntennaInput):
                 gain = matched_result.gain_dbi
                 fb = matched_result.fb_ratio
 
-                # Score: weighted combo — prioritize raw RL but also reward gain and F/B
-                score = raw_rl * 2.0 + matched_rl + gain * 0.5 + fb * 0.3
+                # Score: prioritize matched RL, reward gain and F/B
+                score = matched_rl * 2.5 + gain * 0.5 + fb * 0.3
 
                 sweep_results.append({
                     "driven_pos": round(driven_pos, 1),
                     "dir1_pos": round(dir1_pos, 1) if directors else None,
-                    "raw_return_loss_db": round(raw_rl, 2),
-                    "raw_swr": round(raw_swr, 3),
                     "matched_return_loss_db": round(matched_rl, 2),
                     "matched_swr": round(matched_swr, 3),
                     "gain_dbi": round(gain, 2),
@@ -295,8 +286,8 @@ async def optimize_return_loss(input_data: AntennaInput):
                 })
                 if score > best_score:
                     best_score = score
-                    best_rl = raw_rl
-                    best_swr = raw_swr
+                    best_rl = matched_rl
+                    best_swr = matched_swr
                     best_gain = gain
                     best_fb = fb
                     best_elements = [{"element_type": e.element_type, "length": e.length, "diameter": e.diameter, "position": e.position} for e in new_elements]
