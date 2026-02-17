@@ -2349,9 +2349,9 @@ export default function AntennaCalculator() {
           {/* Visual Element Viewer - Top Down */}
           <View style={{ backgroundColor: '#111', borderRadius: 8, padding: 8, marginBottom: 10, borderWidth: 1, borderColor: '#222' }}>
             <Text style={{ fontSize: 12, color: '#fff', marginBottom: 4, fontWeight: '600' }}>TOP VIEW (looking down on boom)</Text>
-            <Svg width={screenWidth - 40} height={80}>
+            <Svg width={Math.max(200, screenWidth - 40)} height={80}>
               {(() => {
-                const w = screenWidth - 40;
+                const w = Math.max(200, screenWidth - 40);
                 const pad = 20;
                 const elements = inputs.elements;
                 const positions = elements.map(e => parseFloat(e.position) || 0);
