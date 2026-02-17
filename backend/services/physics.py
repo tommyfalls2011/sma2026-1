@@ -733,10 +733,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Optimal cap is auto_cap_pf. Deviation from optimal increases SWR
         cap_ratio = capacitance_pf / max(auto_cap_pf, 1.0)
         cap_deviation = abs(cap_ratio - 1.0)
-        cap_penalty = min(1.0, cap_deviation ** 0.6 * 1.5)
-        tuning_factor += cap_penalty
-        # Recalculate matched SWR with cap effect
-        matched_swr = round(max(1.0, matched_swr * tuning_factor), 3)
+        cap_penalty = cap_deviation ** 0.6 * 0.8
+        # Apply cap mismatch to SWR (additive, not multiplicative)
+        matched_swr = round(max(1.0, matched_swr + cap_penalty), 3)
+        # Update tuning quality to reflect cap effect
+        tuning_factor_with_cap = tuning_factor + cap_penalty
         # Shorting bar position from center (approximate)
         shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
         matching_info["gamma_design"] = {
