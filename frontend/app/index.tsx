@@ -19,6 +19,14 @@ const APP_VERSION = appJson.expo.version;
 const APP_BUILD_DATE = '2026-02-10T12:00:00';
 const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
 
+// Global callback registry for hydration workaround
+const _globalCallbacks: (() => void)[] = [];
+if (typeof window !== 'undefined') {
+  requestAnimationFrame(() => {
+    _globalCallbacks.forEach(cb => cb());
+  });
+}
+
 const TIER_COLORS: Record<string, string> = {
   trial: '#888',
   bronze: '#CD7F32',
