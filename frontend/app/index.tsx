@@ -2785,39 +2785,39 @@ export default function AntennaCalculator() {
               <View style={{ marginTop: 10 }}>
                 <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>2nd Director Spacing</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(closeDir2 === 'vclose' ? false : 'vclose'); setFarDir2(false); setDir2NudgeCount(0); }} data-testid="dir2-vclose-btn">
+                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(closeDir2 === 'vclose' ? false : 'vclose'); setFarDir2(false); setDir2NudgeCount(0); }}>
                     <Ionicons name="arrow-back-outline" size={12} color={closeDir2 === 'vclose' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: closeDir2 === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(closeDir2 === 'close' ? false : 'close'); setFarDir2(false); setDir2NudgeCount(0); }} data-testid="dir2-close-btn">
+                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(closeDir2 === 'close' ? false : 'close'); setFarDir2(false); setDir2NudgeCount(0); }}>
                     <Ionicons name="arrow-back-outline" size={12} color={closeDir2 === 'close' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: closeDir2 === 'close' ? '#fff' : '#888', marginTop: 1 }}>Close</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDir2 && !farDir2) ? '#4CAF50' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(false); setFarDir2(false); setDir2NudgeCount(0); }} data-testid="dir2-normal-btn">
+                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDir2 && !farDir2) ? '#4CAF50' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(false); setFarDir2(false); setDir2NudgeCount(0); }}>
                     <Ionicons name="remove-outline" size={12} color={(!closeDir2 && !farDir2) ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: (!closeDir2 && !farDir2) ? '#fff' : '#888', marginTop: 1 }}>Normal</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }} onPress={() => { setFarDir2(farDir2 === 'far' ? false : 'far'); setCloseDir2(false); setDir2NudgeCount(0); }} data-testid="dir2-far-btn">
+                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }} onPress={() => { setFarDir2(farDir2 === 'far' ? false : 'far'); setCloseDir2(false); setDir2NudgeCount(0); }}>
                     <Ionicons name="arrow-forward-outline" size={12} color={farDir2 === 'far' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: farDir2 === 'far' ? '#fff' : '#888', marginTop: 1 }}>Far</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }} onPress={() => { setFarDir2(farDir2 === 'vfar' ? false : 'vfar'); setCloseDir2(false); setDir2NudgeCount(0); }} data-testid="dir2-vfar-btn">
+                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }} onPress={() => { setFarDir2(farDir2 === 'vfar' ? false : 'vfar'); setCloseDir2(false); setDir2NudgeCount(0); }}>
                     <Ionicons name="arrow-forward-outline" size={12} color={farDir2 === 'vfar' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: farDir2 === 'vfar' ? '#fff' : '#888', marginTop: 1 }}>V.Far</Text>
                   </TouchableOpacity>
                 </View>
                 {inputs.elements.filter(e => e.element_type === 'director').length >= 2 ? (
                 <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <TouchableOpacity onPress={() => nudgeElement('dir2', -1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount <= -90 ? '#333' : '#FF9800', opacity: dir2NudgeCount <= -90 ? 0.4 : 1 }} disabled={dir2NudgeCount <= -90} data-testid="dir2-closer-btn">
+                  <TouchableOpacity onPress={() => nudgeElement('dir2', -1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount <= -90 ? '#333' : '#FF9800', opacity: dir2NudgeCount <= -90 ? 0.4 : 1 }} disabled={dir2NudgeCount <= -90}>
                     <Ionicons name="chevron-back" size={18} color="#FF9800" />
                     <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
                   </TouchableOpacity>
                   <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: dir2NudgeCount === 0 ? '#666' : '#FF9800', fontWeight: '700' }} data-testid="dir2-nudge-display">
+                    <Text style={{ fontSize: 11, color: dir2NudgeCount === 0 ? '#666' : '#FF9800', fontWeight: '700' }}>
                       {dir2NudgeCount === 0 ? '0%' : `${(dir2NudgeCount * 0.5) > 0 ? '+' : ''}${(dir2NudgeCount * 0.5).toFixed(1)}%`}
                     </Text>
                   </View>
-                  <TouchableOpacity onPress={() => nudgeElement('dir2', 1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount >= 90 ? '#333' : '#FF9800', opacity: dir2NudgeCount >= 90 ? 0.4 : 1 }} disabled={dir2NudgeCount >= 90} data-testid="dir2-farther-btn">
+                  <TouchableOpacity onPress={() => nudgeElement('dir2', 1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount >= 90 ? '#333' : '#FF9800', opacity: dir2NudgeCount >= 90 ? 0.4 : 1 }} disabled={dir2NudgeCount >= 90}>
                     <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700', marginRight: 2 }}>Farther</Text>
                     <Ionicons name="chevron-forward" size={18} color="#FF9800" />
                   </TouchableOpacity>
