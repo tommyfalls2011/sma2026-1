@@ -2067,8 +2067,9 @@ export default function AntennaCalculator() {
                     const elemDia = gd.element_diameter_in;
                     // Recalculate based on user inputs
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
-                    const rodLen = gd.wavelength_inches * 0.045 * (rodDia / gd.gamma_rod_diameter_in);
-                    const capPf = 7.0 * (gd.wavelength_inches / 39.3701) * (gd.gamma_rod_diameter_in / rodDia);
+                    const rodLen = gd.wavelength_inches * 0.045 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
+                    // Series cap: base value from backend, scaled by rod dia ratio (larger rod = more cap)
+                    const capPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
                     const barPos = rodLen * gammaBarPos;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
