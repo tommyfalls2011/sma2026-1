@@ -139,6 +139,9 @@ class AntennaInput(BaseModel):
     ground_radials: Optional[GroundRadialConfig] = Field(default=None)
     boom_grounded: bool = Field(default=True)
     boom_mount: Optional[str] = Field(default=None)
+    coax_type: str = Field(default="ldf5-50a")
+    coax_length_ft: float = Field(default=100.0, ge=0)
+    transmit_power_watts: float = Field(default=500.0, ge=0)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
