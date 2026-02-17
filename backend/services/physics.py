@@ -627,6 +627,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
 
+    # Apply impedance mismatch to SWR: SWR = max(Z/50, 50/Z) for direct feed
+    # For matched feeds, the matching network compensates later
+    impedance_swr = max(yagi_feedpoint_r / 50.0, 50.0 / yagi_feedpoint_r)
+    # Blend element-based SWR with impedance-based SWR
+    swr = round(max(1.0, min(swr * 0.3 + impedance_swr * 0.7, 10.0)), 2)
+
     # Element-based resonant frequency: driven element length determines natural resonance
     # Mutual coupling from ALL neighboring elements LOWERS resonant freq (mutual capacitance)
     # Closer spacing = more capacitive loading = lower freq. Wider = less loading = higher freq.
