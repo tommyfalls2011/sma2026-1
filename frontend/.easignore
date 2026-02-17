@@ -1,32 +1,82 @@
+# === Node / Package Manager ===
 node_modules
-.expo
-dist
-web-build
-.git
-.metro-cache
-*.log
-*.map
+package-lock.json
+yarn.lock
+yarn-error.log
 
-# Backend - not needed for mobile build
+# === Expo / Metro Cache ===
+.expo
+.metro-cache
+web-build
+dist
+
+# === Git / CI ===
+.git
+.github
+.gitignore
+
+# === Vite (legacy, not used by Expo) ===
+index.html
+vite.config.js
+src/
+postcss.config.js
+tailwind.config.js
+public/
+
+# === Backend & project-level (not needed in mobile build) ===
 ../backend
 ../src
 ../tests
 ../test_reports
 ../memory
 ../.emergent
+../.git
 
-# Cache and temp files
+# === Dev / Config files ===
+eslint.config.js
+expo-shim.js
+babel.config.js
+tsconfig.json
+metro.config.js
+update.json
+README.md
+eas.json
+
+# === Env files (secrets, not for build) ===
+.env.local
+.env.development
+.env.production
+
+# === Cache / temp / build artifacts ===
 .cache
 *.tsbuildinfo
 __pycache__
 *.pyc
-.env.local
-.env.development
+*.log
+*.map
 
-# Large unnecessary files
+# === Platform build artifacts ===
 android/app/build
+android/.gradle
 ios/Pods
 ios/build
+ios/DerivedData
 *.apk
 *.aab
 *.ipa
+
+# === IDE / Editor ===
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# === Test / documentation ===
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage/
