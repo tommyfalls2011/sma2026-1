@@ -2525,16 +2525,16 @@ export default function AntennaCalculator() {
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                     <View>
-                      <Text style={{ color: '#888', fontSize: 10 }}>Return Loss</Text>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Raw Return Loss</Text>
                       <Text style={{ color: '#00BCD4', fontSize: 18, fontWeight: '700' }}>{rlResult.best_return_loss_db} dB</Text>
                     </View>
                     <View>
-                      <Text style={{ color: '#888', fontSize: 10 }}>SWR</Text>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Raw SWR</Text>
                       <Text style={{ color: '#4CAF50', fontSize: 18, fontWeight: '700' }}>{rlResult.best_swr}:1</Text>
                     </View>
                     <View>
-                      <Text style={{ color: '#888', fontSize: 10 }}>Tested</Text>
-                      <Text style={{ color: '#aaa', fontSize: 18, fontWeight: '700' }}>{rlResult.sweep_count}</Text>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Gain</Text>
+                      <Text style={{ color: '#FF9800', fontSize: 18, fontWeight: '700' }}>{rlResult.best_gain}</Text>
                     </View>
                   </View>
                   {rlResult.best_elements.map((e: any, i: number) => (
