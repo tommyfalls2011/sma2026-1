@@ -2051,7 +2051,54 @@ export default function AntennaCalculator() {
 
               {/* Coax Feedline Settings */}
               <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#333' }}>
-                <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700', marginBottom: 8 }}>FEEDLINE TEST</Text>
+                <Text style={{ fontSize: 12, color: '#888', fontWeight: '700', marginBottom: 8 }}>Feedline / Power</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                  {[
+                    { key: 'ldf5-50a', label: '7/8" Heliax' },
+                    { key: 'ldf4-50a', label: '1/2" Heliax' },
+                    { key: 'rg213', label: 'RG-213' },
+                    { key: 'rg8', label: 'RG-8' },
+                    { key: 'rg8x', label: 'RG-8X' },
+                    { key: 'rg58', label: 'RG-58' },
+                  ].map(c => (
+                    <TouchableOpacity key={c.key}
+                      style={{ paddingHorizontal: 8, paddingVertical: 5, borderRadius: 5, borderWidth: 1, borderColor: coaxType === c.key ? '#2196F3' : '#333', backgroundColor: coaxType === c.key ? '#2196F322' : '#1a1a1a' }}
+                      onPress={() => setCoaxType(c.key)}
+                    >
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: coaxType === c.key ? '#2196F3' : '#888' }}>{c.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9, color: '#888', marginBottom: 3 }}>Length (ft)</Text>
+                    <TextInput
+                      style={{ backgroundColor: '#111', borderWidth: 1, borderColor: '#333', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 5, color: '#fff', fontSize: 13, fontWeight: '700' }}
+                      value={coaxLengthFt}
+                      onChangeText={setCoaxLengthFt}
+                      keyboardType="numeric"
+                      placeholder="100"
+                      placeholderTextColor="#555"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 9, color: '#888', marginBottom: 3 }}>TX Power (W)</Text>
+                    <TextInput
+                      style={{ backgroundColor: '#111', borderWidth: 1, borderColor: '#333', borderRadius: 5, paddingHorizontal: 8, paddingVertical: 5, color: '#fff', fontSize: 13, fontWeight: '700' }}
+                      value={transmitPowerWatts}
+                      onChangeText={setTransmitPowerWatts}
+                      keyboardType="numeric"
+                      placeholder="500"
+                      placeholderTextColor="#555"
+                    />
+                  </View>
+                </View>
+                {results?.coax_info && (
+                  <View style={{ marginTop: 6, flexDirection: 'row', gap: 12 }}>
+                    <Text style={{ fontSize: 9, color: '#666' }}>Loss: <Text style={{ color: (results.coax_info.total_loss_db || 0) > 1.0 ? '#f44336' : '#4CAF50', fontWeight: '700' }}>{results.coax_info.total_loss_db} dB</Text></Text>
+                    <Text style={{ fontSize: 9, color: '#666' }}>At antenna: <Text style={{ color: '#2196F3', fontWeight: '700' }}>{results.power_at_antenna_watts}W</Text></Text>
+                  </View>
+                )}
               </View>
 
             </View>
