@@ -3,8 +3,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
-import { AuthProvider } from './_context/AuthContext';
-import InstallPrompt from './_components/InstallPrompt';
+import { AuthProvider } from '../context/AuthContext';
+import InstallPrompt from '../components_custom/InstallPrompt';
 
 export default function RootLayout() {
   return (
