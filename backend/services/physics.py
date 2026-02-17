@@ -945,12 +945,17 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             # tq=1.0: 99.98% cancelled, tq=0.7: ~84% cancelled, tq=0.5: ~65% cancelled
             cancellation_factor = max(0.0002, (1.0 - tq) ** 1.5)
             z_x *= cancellation_factor
-            # Impedance transformation: linear blend from natural R toward 50Ω
-            # The gamma match autotransformer taps the driven element;
-            # tq=1.0 → perfect 50Ω match, tq→0 → stays near natural feedpoint R
-            z_r = natural_z_r + (50.0 - natural_z_r) * tq
-            # At perfect tuning, add tiny component tolerance for ~74 dB ceiling
-            if tq > 0.99:
+            # Two-phase impedance blend:
+            # Below tq=0.9: linear blend from natural R toward 50 (bulk transformation)
+            # Above tq=0.9: exponential refinement (fine-tuning precision of real gamma match)
+            if tq < 0.9:
+                z_r = natural_z_r + (50.0 - natural_z_r) * tq
+            else:
+                base_z_r = natural_z_r + (50.0 - natural_z_r) * 0.9
+                fine_tq = (tq - 0.9) / 0.1
+                z_r = base_z_r + (50.0 - base_z_r) * (1.0 - (1.0 - fine_tq) ** 4)
+            # Component tolerance floor (~74 dB ceiling matches real-world measurements)
+            if tq > 0.98:
                 z_r = max(z_r, 50.0 * 1.0004)
         else:
             z_x *= 0.5
