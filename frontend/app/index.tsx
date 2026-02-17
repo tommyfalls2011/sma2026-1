@@ -583,6 +583,8 @@ export default function AntennaCalculator() {
     boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',  // bonded, insulated, nonconductive
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
+  const [effectRan, setEffectRan] = useState(false);
+  useEffect(() => { setEffectRan(true); }, []);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
   const [optimizingHeight, setOptimizingHeight] = useState(false);
   const [loading, setLoading] = useState(false);
