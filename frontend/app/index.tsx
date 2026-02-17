@@ -578,17 +578,6 @@ export default function AntennaCalculator() {
     boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',  // bonded, insulated, nonconductive
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
-  const [effectRan, setEffectRan] = useState(false);
-  useEffect(() => { setEffectRan(true); }, []);
-  
-  // Workaround for React 19 hydration issue - trigger calculation outside effect system
-  const calcTriggered = useRef(false);
-  if (!calcTriggered.current && typeof window !== 'undefined') {
-    calcTriggered.current = true;
-    setTimeout(() => {
-      setEffectRan(true);
-    }, 100);
-  }
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
   const [optimizingHeight, setOptimizingHeight] = useState(false);
   const [loading, setLoading] = useState(false);
