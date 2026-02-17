@@ -209,8 +209,13 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
-        bar_pos = gamma_bar_pos if gamma_bar_pos is not None else 0.5
         rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.5
+        # Shorting bar position in inches from feedpoint center (default 24")
+        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 24.0
+        # Convert inches to fraction of driven half-element for physics
+        wavelength_in = (11802.71 / operating_freq_mhz) * 39.3701
+        half_element_in = wavelength_in * 0.23  # approximate half-element length
+        bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
         tuning_factor = 1.0
         # Shorting bar: acts as autotransformer tap on the driven element
         # Optimal position depends on feedpoint R: needs sqrt(50/R_feed) ratio
@@ -229,9 +234,13 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
             z0_penalty = min(0.20, z0_deviation * 0.25)
-        # Shorting bar shifts resonant frequency: bar out = lower freq, bar in = higher freq
-        # At 0.5 (center), resonant = operating freq. Each 0.1 shift = ~0.15 MHz offset
-        freq_shift_mhz = round((bar_pos - 0.5) * 1.5, 3)  # +/- up to ~0.75 MHz
+        # Shorting bar inductance: L = mu0 * bar_inches / (2*pi) * ln(2*bar_inches/rod_dia)
+        # Simplified: inductance proportional to length, affects resonant frequency
+        rod_dia_for_calc = rod_dia if rod_dia else 0.5
+        bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia_for_calc) - 1.0 + rod_dia_for_calc / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
+        # Shorting bar shifts resonant frequency: longer bar = more inductance = lower freq
+        # 24" is the reference point (no shift). Each inch = ~0.03 MHz shift
+        freq_shift_mhz = round((bar_inches - 24.0) * 0.03, 3)
         resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
         # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
         # Baseline Q for CB Yagi gamma match: ~12. Range: 8 (low insertion) to 25 (high)
