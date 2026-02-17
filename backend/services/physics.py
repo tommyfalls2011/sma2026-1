@@ -937,21 +937,24 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     # For matched feeds (gamma/hairpin), the match tunes out most reactance
     if feed_type == "gamma":
-        # Gamma match reactance cancellation depends on tuning quality.
-        # A perfectly tuned gamma match (tq=1.0) cancels >99.98% of reactance,
-        # achieving return loss values of ~74 dB as seen in real-world measurements.
+        # Save natural feedpoint impedance before gamma transformation
+        natural_z_r = z_r
         if matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
-            # tq=1.0: factor=0.0002 (99.98% cancelled), tq=0.5: ~5%, tq=0: ~10%
-            cancellation_factor = 0.1 * (1.0 - tq) + 0.0002
+            # Reactance cancellation: (1-tq)^1.5 curve
+            # tq=1.0: 99.98% cancelled, tq=0.7: ~84% cancelled, tq=0.5: ~65% cancelled
+            cancellation_factor = max(0.0002, (1.0 - tq) ** 1.5)
             z_x *= cancellation_factor
-            # Impedance transformation: perfect match → z_r ≈ 50.02Ω (component tolerances)
-            # 0.0004 minimum residual represents real-world solder/connector imperfections
-            residual = max(0.0004, (1.0 - tq) * 0.15)
-            z_r = 50.0 * (1.0 + residual)
+            # Impedance transformation: linear blend from natural R toward 50Ω
+            # The gamma match autotransformer taps the driven element;
+            # tq=1.0 → perfect 50Ω match, tq→0 → stays near natural feedpoint R
+            z_r = natural_z_r + (50.0 - natural_z_r) * tq
+            # At perfect tuning, add tiny component tolerance for ~74 dB ceiling
+            if tq > 0.99:
+                z_r = max(z_r, 50.0 * 1.0004)
         else:
-            z_x *= 0.05
-            z_r = 50.0 * 1.03  # default ~3% off
+            z_x *= 0.5
+            z_r = natural_z_r * 1.1  # slight transformation without tuning info
     elif feed_type == "hairpin":
         z_x *= 0.10  # hairpin cancels ~90% of reactance
         if matching_info and "tuning_quality" in matching_info:
