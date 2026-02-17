@@ -1,8 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
+
+// Lazy imports for SSR compatibility
+let AsyncStorage: any = null;
+let NetInfo: any = null;
+if (typeof window !== 'undefined') {
+  try { AsyncStorage = require('@react-native-async-storage/async-storage').default; } catch {}
+  try { NetInfo = require('@react-native-community/netinfo').default; } catch {}
+}
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const MAX_RETRIES = 3;
