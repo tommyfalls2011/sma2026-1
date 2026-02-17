@@ -6,19 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G, Ellipse } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import appJson from '../app.json';
-
-// Lazy imports for SSR compatibility
-let FileSystem: any = null;
-let Sharing: any = null;
-let AsyncStorage: any = null;
-let Constants: any = { statusBarHeight: 0 };
-if (typeof window !== 'undefined') {
-  try { FileSystem = require('expo-file-system/legacy'); } catch {}
-  try { Sharing = require('expo-sharing'); } catch {}
-  try { AsyncStorage = require('@react-native-async-storage/async-storage').default; } catch {}
-  try { Constants = require('expo-constants').default || { statusBarHeight: 0 }; } catch {}
-}
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const { width: screenWidth } = Dimensions.get('window');
