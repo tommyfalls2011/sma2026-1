@@ -25,7 +25,8 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - **Complex impedance return loss** — Γ = (Z_ant - Z_0)/(Z_ant + Z_0) with R+jX, RL = -20log10(|Γ|)
 - **Consistent SWR/RL/Γ** — all derived from single complex impedance calculation
 - **Gamma match tuning-quality-dependent model** — two-phase impedance blend (linear + exponential refinement) with realistic penalty system; achieves 74 dB RL at perfect tuning, drops below 16 dB at extreme detuning
-- **Increased reflection coefficient precision** — 8 decimal places (was 4), RL cap raised to 80 dB (was 60)
+- **Coax feedline settings** — Default: LDF5-50A 7/8" Heliax, 100ft, 500W TX. User can select from 6 cable types with real loss data. Live coax loss + SWR loss calculation, power-at-antenna display.
+- **Optimized .easignore** — Excludes Vite files, dev configs, IDE files, test artifacts, lock files, backend code from APK build for smaller binary size.
 - **Larger frequency text** under SWR meter (fontSize 13, bold)
 
 ## Previously Completed Features
