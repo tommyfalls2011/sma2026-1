@@ -877,7 +877,7 @@ export default function AntennaCalculator() {
       });
       if (response.ok) setResults(await response.json());
     } catch (err) { console.error(err); }
-  }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap]);
+  }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, hairpinRodDia, hairpinRodSpacing, hairpinBarPos, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts]);
 
   // Debounced auto-calculate on every change
   useEffect(() => {
