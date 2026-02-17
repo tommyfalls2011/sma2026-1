@@ -1143,8 +1143,24 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Apply matching network transformation
         if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
-            cancel = max(0.0002, (1.0 - tq) ** 1.5)
-            sc_x *= cancel
+            ri = matching_info.get("rod_insertion", 0.5)
+            # Rod insertion directly cancels reactance:
+            # At 0.5 (optimal), full cancellation. Away from 0.5, residual reactance remains
+            # Less insertion (toward 0) = residual inductive reactance (+X)
+            # More insertion (toward 1) = excess capacitive reactance (-X)
+            insertion_offset = (ri - 0.5) * 2.0  # -1 to +1
+            residual_x = sc_x * max(0.02, abs(insertion_offset) * 0.8 + (1.0 - tq) * 0.5)
+            if insertion_offset < 0:
+                # Under-inserted: inductance not fully cancelled, positive residual
+                sc_x = abs(residual_x)
+            elif insertion_offset > 0:
+                # Over-inserted: excess capacitance, negative residual
+                sc_x = -abs(residual_x)
+            else:
+                # Optimal: minimal residual
+                cancel = max(0.02, (1.0 - tq) ** 1.5)
+                sc_x *= cancel
+            # Resistance transformation toward 50 ohms
             nat_r = sc_r
             if tq < 0.9:
                 sc_r = nat_r + (50.0 - nat_r) * tq
@@ -1152,7 +1168,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 base_r = nat_r + (50.0 - nat_r) * 0.9
                 fine = (tq - 0.9) / 0.1
                 sc_r = base_r + (50.0 - base_r) * (1.0 - (1.0 - fine) ** 4)
-            if tq > 0.98:
+            if tq > 0.98 and abs(insertion_offset) < 0.1:
                 sc_r = max(sc_r, 50.0 * 1.0004)
         elif feed_type == "hairpin" and matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
