@@ -1,7 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
+import { Platform } from 'react-native';
+
+let NetInfo: any = null;
+if (Platform.OS !== 'web') {
+  try { NetInfo = require('@react-native-community/netinfo'); } catch {}
+}
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
 const MAX_RETRIES = 3;
