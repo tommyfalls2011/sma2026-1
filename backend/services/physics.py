@@ -226,7 +226,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # 0.5 = optimal cancellation of gamma section inductance
         # Too little (0.0) = residual inductance, too much (1.0) = excess capacitance
         insertion_deviation = abs(rod_insertion - 0.5) / 0.5
-        insertion_penalty = min(0.50, insertion_deviation ** 0.8 * 0.50)
+        insertion_penalty = min(1.5, insertion_deviation ** 0.6 * 1.5)
         # Z0 of gamma section from rod dimensions
         z0_penalty = 0
         if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
