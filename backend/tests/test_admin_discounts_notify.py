@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 # Get backend URL from environment
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "").rstrip("/")
 if not BASE_URL:
-    BASE_URL = "https://swr-sim.preview.emergentagent.com"
+    BASE_URL = "https://impedance-match-1.preview.emergentagent.com"
 
 # Admin credentials
 ADMIN_EMAIL = "fallstommy@gmail.com"
@@ -360,7 +360,7 @@ class TestNotifyEndpoints:
         """PUT /api/admin/app-update-settings - Save expo_url and download_link"""
         payload = {
             "expo_url": "https://expo.dev/@smaantenna/antenna-calc",
-            "download_link": "https://swr-sim.preview.emergentagent.com/download"
+            "download_link": "https://impedance-match-1.preview.emergentagent.com/download"
         }
         response = requests.put(
             f"{BASE_URL}/api/admin/app-update-settings",
@@ -484,7 +484,7 @@ class TestNotifyEndpoints:
             "subject": "Test Update - Antenna Calc v2.0",
             "message": "This is a test notification email. Please ignore.",
             "expo_url": "https://expo.dev/@smaantenna/antenna-calc",
-            "download_link": "https://swr-sim.preview.emergentagent.com/download",
+            "download_link": "https://impedance-match-1.preview.emergentagent.com/download",
             "send_to": "fallstommy@gmail.com"  # Specific email, not 'all'
         }
         response = requests.post(
