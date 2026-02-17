@@ -65,6 +65,10 @@ backend/
     └── physics.py           # Antenna physics engine
 ```
 
+## Recent Fixes (Feb 2026)
+- **Backend NameError crash**: Fixed `user_cap` and `auto_cap_pf` variables being referenced in `calculate_antenna_parameters` but only defined inside `apply_matching_network`. Computed them locally as `design_user_cap` and `design_auto_cap_pf`.
+- **Series Cap (pF) integration**: The user-provided `gamma_cap_pf` value now correctly overrides the auto-calculated capacitance and impacts SWR, Smith Chart, and tuning quality. Tested with cap values of 50, 76.1 (auto), and 120 pF — all produce different SWR results as expected.
+
 ## Pending/Upcoming Tasks
 ### P1 - Frontend Cleanup
 - Remove Vite-related files (index.html, vite.config.js, src/main.tsx)
@@ -73,6 +77,7 @@ backend/
 - PayPal/CashApp payment integration
 - Improve .easignore for APK build size
 - Replace deprecated shadow* props with boxShadow
+- Refactor monolithic `frontend/app/index.tsx` (1500+ lines) into smaller components
 
 ### P3 - Future
 - Build iOS version
