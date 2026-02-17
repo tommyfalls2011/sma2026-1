@@ -937,18 +937,23 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     # For matched feeds (gamma/hairpin), the match tunes out most reactance
     if feed_type == "gamma":
-        z_x *= 0.15  # gamma match cancels ~85% of reactance
-        z_r = z_r * 50.0 / max(z_r, 1)  # gamma transforms R toward 50Ω
-        # Imperfect match: residual mismatch based on tuning quality
+        z_x *= 0.05  # gamma match cancels ~95% of reactance (tunes both L and C)
+        # Gamma transforms R toward 50Ω — quality depends on tuning
         if matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
-            z_r = 50.0 * (1.0 + (1.0 - tq) * 0.5)  # higher quality = closer to 50
+            # At tq=1.0 (perfect): z_r ≈ 50.0, at tq=0.5: z_r drifts
+            residual = (1.0 - tq) * 0.15  # higher quality = less residual mismatch
+            z_r = 50.0 * (1.0 + residual)
+        else:
+            z_r = 50.0 * 1.03  # default ~3% off
     elif feed_type == "hairpin":
-        z_x *= 0.2  # hairpin cancels ~80% of reactance
-        z_r = z_r * 50.0 / max(z_r, 1)
+        z_x *= 0.10  # hairpin cancels ~90% of reactance
         if matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
-            z_r = 50.0 * (1.0 + (1.0 - tq) * 0.6)
+            residual = (1.0 - tq) * 0.25
+            z_r = 50.0 * (1.0 + residual)
+        else:
+            z_r = 50.0 * 1.05
 
     # Complex reflection coefficient: Γ = (Z_ant - Z_0) / (Z_ant + Z_0)
     # Z_ant = z_r + j*z_x, Z_0 = 50 (real)
