@@ -854,7 +854,12 @@ export default function AntennaCalculator() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           name: designName,
-          design_data: inputs
+          design_data: inputs,
+          spacing_state: {
+            spacingMode, spacingLevel, spacingNudgeCount,
+            closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2,
+            drivenNudgeCount, dir1NudgeCount, dir2NudgeCount,
+          }
         })
       });
       if (response.ok) {
