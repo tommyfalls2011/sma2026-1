@@ -573,11 +573,14 @@ export default function AntennaCalculator() {
   // Initial calculation on mount
   useEffect(() => { calculateAntenna(); }, []);
 
-  // Auto-tune when spacing override presets change (V.Close/Close/Normal/Far/V.Far)
+  // Track whether spacing override changes should trigger auto-tune
+  const spacingOverrideTriggered = useRef(false);
+  const triggerSpacingAutoTune = () => { spacingOverrideTriggered.current = true; };
   useEffect(() => {
-    // Skip the initial render (all defaults)
-    if (!closeDriven && !farDriven && !closeDir1 && !farDir1 && !closeDir2 && !farDir2) return;
-    autoTune();
+    if (spacingOverrideTriggered.current) {
+      spacingOverrideTriggered.current = false;
+      autoTune();
+    }
   }, [closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2]);
 
   // Single debounced auto-recalculate on any input change
