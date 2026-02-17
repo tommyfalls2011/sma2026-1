@@ -903,12 +903,68 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * boom_efficiency * spacing_efficiency * taper_efficiency * feed_efficiency)
     antenna_efficiency = round(min(antenna_efficiency * 100, 200.0), 1)
 
-    # Reflected power
-    reflection_coefficient = round(swr_reflection_coeff, 4)
-    if swr_reflection_coeff > 0.0001:
-        return_loss_db = round(-20 * math.log10(swr_reflection_coeff), 2)
-    else: return_loss_db = 60.0
-    mismatch_loss_db = round(-10 * math.log10(swr_mismatch_loss), 3) if swr_mismatch_loss > 0 else 0
+    # Return loss from complex impedance: Γ = (Z_ant - Z_0) / (Z_ant + Z_0)
+    # Z_ant = R + jX where R = feedpoint resistance, X = reactance
+    # Reactance depends on how far from resonance the antenna is
+    z_0 = 50.0  # feedline characteristic impedance
+    z_r = yagi_feedpoint_r  # resistive component
+
+    # Reactance: off-resonance creates reactive component
+    # At resonance X=0, off-resonance X increases
+    # For a Yagi near resonance: X ≈ Q * R * (f/f0 - f0/f) where Q ~ 10-15
+    antenna_q = 12.0  # typical Yagi Q
+    if feed_type == "gamma" and matching_info and "resonant_freq_mhz" in matching_info:
+        res_freq = matching_info["resonant_freq_mhz"]
+        if res_freq > 0:
+            freq_ratio = center_freq / res_freq
+            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
+        else:
+            z_x = 0.0
+    elif feed_type == "hairpin" and matching_info and "resonant_freq_mhz" in matching_info:
+        res_freq = matching_info["resonant_freq_mhz"]
+        if res_freq > 0:
+            freq_ratio = center_freq / res_freq
+            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
+        else:
+            z_x = 0.0
+    else:
+        # Direct feed: reactance from element resonance vs operating freq
+        if element_resonant_freq > 0:
+            freq_ratio = center_freq / element_resonant_freq
+            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
+        else:
+            z_x = 0.0
+
+    # For matched feeds (gamma/hairpin), the match tunes out most reactance
+    if feed_type == "gamma":
+        z_x *= 0.15  # gamma match cancels ~85% of reactance
+        z_r = z_r * 50.0 / max(z_r, 1)  # gamma transforms R toward 50Ω
+        # Imperfect match: residual mismatch based on tuning quality
+        if matching_info and "tuning_quality" in matching_info:
+            tq = matching_info["tuning_quality"]
+            z_r = 50.0 * (1.0 + (1.0 - tq) * 0.5)  # higher quality = closer to 50
+    elif feed_type == "hairpin":
+        z_x *= 0.2  # hairpin cancels ~80% of reactance
+        z_r = z_r * 50.0 / max(z_r, 1)
+        if matching_info and "tuning_quality" in matching_info:
+            tq = matching_info["tuning_quality"]
+            z_r = 50.0 * (1.0 + (1.0 - tq) * 0.6)
+
+    # Complex reflection coefficient: Γ = (Z_ant - Z_0) / (Z_ant + Z_0)
+    # Z_ant = z_r + j*z_x, Z_0 = 50 (real)
+    gamma_real = ((z_r - z_0) * (z_r + z_0) + z_x * z_x) / ((z_r + z_0) ** 2 + z_x ** 2)
+    gamma_imag = (2 * z_x * z_0) / ((z_r + z_0) ** 2 + z_x ** 2)  # note: sign doesn't matter for magnitude
+    reflection_coefficient = round(math.sqrt(gamma_real ** 2 + gamma_imag ** 2), 4)
+    reflection_coefficient = min(reflection_coefficient, 0.999)  # clamp
+
+    if reflection_coefficient > 0.0001:
+        return_loss_db = round(-20 * math.log10(reflection_coefficient), 2)
+    else:
+        return_loss_db = 60.0
+
+    swr_from_gamma = (1 + reflection_coefficient) / (1 - reflection_coefficient) if reflection_coefficient < 1.0 else 99.0
+    mismatch_loss = 1 - (reflection_coefficient ** 2)
+    mismatch_loss_db = round(-10 * math.log10(mismatch_loss), 3) if mismatch_loss > 0 else 0
     reflected_power_100w = round(100 * (reflection_coefficient ** 2), 2)
     reflected_power_1kw = round(1000 * (reflection_coefficient ** 2), 1)
     forward_power_100w = round(100 - reflected_power_100w, 2)
