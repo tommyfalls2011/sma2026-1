@@ -726,8 +726,17 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gamma_rod_dia = 0.5  # Default 1/2" rod
         gamma_rod_spacing = 4.0  # Default 4" center-to-center
         gamma_rod_length = round(wavelength_in * 0.045, 2)  # 0.04-0.05 lambda
-        # Series capacitance: ~6.9pF per meter of wavelength (targets ~76pF at 27MHz)
-        capacitance_pf = round(6.9 * wavelength, 1)
+        # Series capacitance: user override or ~6.9pF per meter of wavelength
+        auto_cap_pf = round(6.9 * wavelength, 1)
+        capacitance_pf = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else auto_cap_pf
+        # Capacitance affects reactance cancellation and match quality
+        # Optimal cap is auto_cap_pf. Deviation from optimal increases SWR
+        cap_ratio = capacitance_pf / max(auto_cap_pf, 1.0)
+        cap_deviation = abs(cap_ratio - 1.0)
+        cap_penalty = min(1.0, cap_deviation ** 0.6 * 1.5)
+        tuning_factor += cap_penalty
+        # Recalculate matched SWR with cap effect
+        matched_swr = round(max(1.0, matched_swr * tuning_factor), 3)
         # Shorting bar position from center (approximate)
         shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
         matching_info["gamma_design"] = {
@@ -739,6 +748,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
             "capacitance_pf": capacitance_pf,
+            "auto_capacitance_pf": auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
             "element_shortening_pct": 3.0,
             "wavelength_inches": round(wavelength_in, 2),
