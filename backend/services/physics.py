@@ -214,7 +214,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Shorting bar position in inches from feedpoint center (default 24")
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 24.0
         # Convert inches to fraction of driven half-element for physics
-        wavelength_in = (11802.71 / operating_freq_mhz) * 39.3701
+        wavelength_in = 11802.71 / operating_freq_mhz  # already in inches
         half_element_in = wavelength_in * 0.23  # approximate half-element length
         bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
         tuning_factor = 1.0
