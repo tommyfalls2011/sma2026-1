@@ -2969,6 +2969,11 @@ export default function AntennaCalculator() {
               )}</>            )}
           </View>
 
+          {/* Debug */}
+          <View style={{ padding: 8, backgroundColor: '#220' }}>
+            <Text style={{ color: results ? '#0f0' : '#f00', fontSize: 12 }}>Results: {results ? `SWR=${results.swr} Gain=${results.gain_dbi}` : 'NULL'}</Text>
+          </View>
+
           {/* Results */}
           {results && (
             <View style={styles.resultsSection}>
