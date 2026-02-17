@@ -74,9 +74,12 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - `frontend/app.json` — Expo config (version 4.1.5, versionCode 8)
 
 ## Key API Endpoints
-- `POST /api/calculate` — Main calculation (accepts gamma_bar_pos, gamma_rod_insertion)
+- `POST /api/calculate` — Main calculation (accepts gamma_bar_pos, gamma_rod_insertion, coax_type, coax_length_ft, transmit_power_watts). Returns smith_chart_data, elevation_pattern, swr_curve, etc.
 - `POST /api/auto-tune` — Auto-tune element dimensions
-- `POST /api/optimize-return-loss` — Sweep spacings for best return loss
+- `POST /api/optimize-return-loss` — Sweep spacings for best return loss (uses user's selected feed_type)
+
+## Known Issues
+- **Expo Web Preview**: React 19 + Expo Router SSR causes `PAGE ERROR: Cannot read properties of undefined (reading 'default')` which prevents useEffect hooks from running. The UI renders but API calls don't execute. This is a preview-only issue — the app works correctly on Expo Go (mobile). The P1 Vite cleanup may help resolve this.
 
 ## Test Credentials
 - Store Admin: `fallstommy@gmail.com` / `admin123`
