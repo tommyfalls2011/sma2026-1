@@ -857,8 +857,8 @@ export default function AntennaCalculator() {
           antenna_orientation: inputs.antenna_orientation,
           feed_type: inputs.feed_type,
           ...(inputs.feed_type === 'gamma' ? {
-            gamma_rod_dia: parseFloat(gammaRodDia) || undefined,
-            gamma_rod_spacing: parseFloat(gammaRodSpacing) || undefined,
+            gamma_rod_dia: gammaRodDia !== null ? (parseFloat(gammaRodDia) || undefined) : undefined,
+            gamma_rod_spacing: gammaRodSpacing !== null ? (parseFloat(gammaRodSpacing) || undefined) : undefined,
             gamma_bar_pos: gammaBarPos,
             gamma_element_gap: gammaRodInsertion,
           } : {}),
