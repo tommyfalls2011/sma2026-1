@@ -593,17 +593,39 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Feedpoint impedance estimate for Yagi (mutual coupling reduces it)
     num_directors = len([e for e in input_data.elements if e.element_type == "director"])
     has_reflector_for_z = any(e.element_type == "reflector" for e in input_data.elements)
-    yagi_feedpoint_r = 73.0  # half-wave dipole baseline
-    if has_reflector_for_z:
-        yagi_feedpoint_r *= 0.55  # reflector coupling reduces ~45%
-    if num_directors >= 1:
-        yagi_feedpoint_r *= 0.70  # 1st director reduces ~30%
-    if num_directors >= 2:
-        yagi_feedpoint_r *= 0.85
-    if num_directors >= 3:
-        yagi_feedpoint_r *= 0.90
-    if num_directors >= 4:
-        yagi_feedpoint_r *= 0.95
+    # Feedpoint impedance: starts at 73Ω (free-space half-wave dipole)
+    # Mutual coupling reduces it — CLOSER spacing = STRONGER coupling = LOWER impedance
+    yagi_feedpoint_r = 73.0
+    driven_el = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    refl_el = next((e for e in input_data.elements if e.element_type == "reflector"), None)
+    dir_els = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
+
+    if has_reflector_for_z and driven_el and refl_el:
+        refl_gap_in = abs(driven_el.position - refl_el.position)
+        refl_gap_wl = (refl_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.18
+        # Closer reflector = stronger coupling = more impedance drop
+        # At 0.1λ: ~50% drop, at 0.15λ: ~45%, at 0.2λ: ~40%, at 0.3λ: ~30%
+        refl_factor = max(0.35, 0.25 + refl_gap_wl * 1.5)
+        yagi_feedpoint_r *= refl_factor
+
+    if num_directors >= 1 and driven_el and dir_els:
+        d1_gap_in = abs(dir_els[0].position - driven_el.position)
+        d1_gap_wl = (d1_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.13
+        # Closer 1st director = stronger coupling = more impedance drop
+        # At 0.08λ: ~60% drop, at 0.13λ: ~70%, at 0.2λ: ~80%
+        d1_factor = max(0.50, 0.40 + d1_gap_wl * 2.0)
+        yagi_feedpoint_r *= d1_factor
+
+    # Subsequent directors have progressively weaker effect
+    for i in range(1, min(num_directors, len(dir_els))):
+        if i < len(dir_els) and i - 1 < len(dir_els):
+            gap_in = abs(dir_els[i].position - dir_els[i - 1].position) if i > 0 else 60
+            gap_wl = (gap_in * 0.0254) / wavelength if wavelength > 0 else 0.15
+            factor = max(0.80, 0.70 + gap_wl * 1.0)
+        else:
+            factor = 0.90
+        yagi_feedpoint_r *= factor
+
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
 
     # Element-based resonant frequency: driven element length determines natural resonance
