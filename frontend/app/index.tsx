@@ -4200,6 +4200,16 @@ const styles = StyleSheet.create({
   elevationLegendText: { fontSize: 11, color: '#4CAF50', fontWeight: '500' },
   elevationLegendRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   elevationLegendDot: { width: 8, height: 8, borderRadius: 4 },
+  // Smith Chart styles
+  smithContainer: { backgroundColor: '#1a1a1a', borderRadius: 12, padding: 12, marginVertical: 10, alignItems: 'center' },
+  smithTitle: { fontSize: 12, fontWeight: '600', color: '#00BCD4', marginBottom: 8, textAlign: 'center' },
+  smithReadout: { width: '100%', marginTop: 10, backgroundColor: '#111', borderRadius: 8, padding: 10 },
+  smithReadoutRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  smithReadoutItem: { flex: 1, alignItems: 'center' },
+  smithReadoutLabel: { fontSize: 9, color: '#666', marginBottom: 2 },
+  smithReadoutValue: { fontSize: 12, fontWeight: '700', color: '#00BCD4' },
+  smithBandEdges: { marginTop: 6, borderTopWidth: 1, borderTopColor: '#222', paddingTop: 6 },
+  smithBandEdgeText: { fontSize: 9, color: '#888', marginBottom: 2 },
   // Antenna Orientation styles
   orientationSection: { marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#333' },
   orientationLabel: { fontSize: 10, color: '#888', marginBottom: 6 },
