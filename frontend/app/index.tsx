@@ -2781,8 +2781,7 @@ export default function AntennaCalculator() {
                 </View>
               </View>
 
-              {/* 2nd Director Spacing - only show when 4+ elements (at least 2 directors) */}
-              {inputs.elements.filter(e => e.element_type === 'director').length >= 2 && (
+              {/* 2nd Director Spacing - always show, hint when < 2 directors */}
               <View style={{ marginTop: 10 }}>
                 <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>2nd Director Spacing</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
