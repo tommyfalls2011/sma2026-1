@@ -1123,13 +1123,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     # SWR curve — center the minimum on the resonant frequency (from match tuning)
     # but display range centered on the operating frequency
+    # Use the impedance-derived 'swr' as curve minimum so curve matches displayed value
     curve_resonant_freq = center_freq
     curve_min_swr = swr
     if feed_type != "direct" and matching_info:
         if "resonant_freq_mhz" in matching_info:
             curve_resonant_freq = matching_info["resonant_freq_mhz"]
-        if "swr_at_resonance" in matching_info:
-            curve_min_swr = matching_info["swr_at_resonance"]
     swr_curve = []
     for i in range(-30, 31):
         freq = center_freq + (i * channel_spacing)
