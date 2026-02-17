@@ -906,6 +906,22 @@ export default function AntennaCalculator() {
       if (response.ok) {
         const data = await response.json();
         setInputs(data.design_data);
+        // Restore spacing state if saved
+        if (data.spacing_state) {
+          const s = data.spacing_state;
+          setSpacingMode(s.spacingMode ?? 'normal');
+          setSpacingLevel(s.spacingLevel ?? '1.0');
+          setSpacingNudgeCount(s.spacingNudgeCount ?? 0);
+          setCloseDriven(s.closeDriven ?? false);
+          setFarDriven(s.farDriven ?? false);
+          setCloseDir1(s.closeDir1 ?? false);
+          setFarDir1(s.farDir1 ?? false);
+          setCloseDir2(s.closeDir2 ?? false);
+          setFarDir2(s.farDir2 ?? false);
+          setDrivenNudgeCount(s.drivenNudgeCount ?? 0);
+          setDir1NudgeCount(s.dir1NudgeCount ?? 0);
+          setDir2NudgeCount(s.dir2NudgeCount ?? 0);
+        }
         setShowLoadModal(false);
         Alert.alert('Loaded', `Design "${data.name}" loaded successfully`);
       }
