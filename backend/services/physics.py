@@ -250,7 +250,15 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
         # SWR at resonance (best achievable): no off-resonance penalty
         tuning_factor = 1.0 + bar_penalty + insertion_penalty + z0_penalty
-        swr_at_resonance = round(max(1.0, matched_swr * tuning_factor), 3)
+        # Series cap effect: deviation from optimal increases SWR
+        wavelength = 11802.71 / operating_freq_mhz / 39.3701
+        auto_cap_pf = round(6.9 * wavelength, 1)
+        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else auto_cap_pf
+        cap_ratio = user_cap / max(auto_cap_pf, 1.0)
+        cap_deviation = abs(cap_ratio - 1.0)
+        cap_penalty = cap_deviation ** 0.6 * 0.8
+        tuning_factor_with_cap = tuning_factor + cap_penalty
+        swr_at_resonance = round(max(1.0, matched_swr * tuning_factor_with_cap), 3)
         # Off-resonance SWR penalty for the operating frequency SWR display
         freq_offset = abs(operating_freq_mhz - resonant_freq)
         half_bw = gamma_bw_mhz / 2
