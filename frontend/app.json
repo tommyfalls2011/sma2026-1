@@ -25,23 +25,31 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      ["expo-build-properties", {
-        "android": {
-          "newArchEnabled": true,
-          "extraCMakeArgs": ["-DCMAKE_CXX_FLAGS=-Wno-error=deprecated-declarations"]
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "newArchEnabled": true,
+            "extraCMakeArgs": [
+              "-DCMAKE_CXX_FLAGS=-Wno-error=deprecated-declarations"
+            ]
+          }
         }
-      }],
+      ],
       "expo-router",
-      ["expo-splash-screen", {
-        "image": "./assets/images/splash-icon.png",
-        "imageWidth": 200,
-        "resizeMode": "contain",
-        "backgroundColor": "#121212"
-      }],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#121212"
+        }
+      ],
       "expo-font",
       "expo-web-browser"
     ],
