@@ -2782,13 +2782,9 @@ export default function AntennaCalculator() {
               </View>
 
               {/* 2nd Director Spacing - always show, hint when < 2 directors */}
-              <View style={{ marginTop: 10, borderWidth: 2, borderColor: 'red' }}>
-                <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>2nd Director Spacing</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setCloseDir2(closeDir2 === 'vclose' ? false : 'vclose'); setFarDir2(false); setDir2NudgeCount(0); }}
-                    data-testid="dir2-vclose-btn"
+              <View style={{ marginTop: 10, borderWidth: 2, borderColor: 'red', padding: 8 }}>
+                <Text style={{ fontSize: 14, color: '#ff0000', fontWeight: 'bold' }}>DIR2 TEST</Text>
+              </View>
                   >
                     <Ionicons name="arrow-back-outline" size={12} color={closeDir2 === 'vclose' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: closeDir2 === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close</Text>
