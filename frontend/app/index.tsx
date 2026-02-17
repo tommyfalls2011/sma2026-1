@@ -573,6 +573,13 @@ export default function AntennaCalculator() {
   // Initial calculation on mount
   useEffect(() => { calculateAntenna(); }, []);
 
+  // Auto-tune when spacing override presets change (V.Close/Close/Normal/Far/V.Far)
+  useEffect(() => {
+    // Skip the initial render (all defaults)
+    if (!closeDriven && !farDriven && !closeDir1 && !farDir1 && !closeDir2 && !farDir2) return;
+    autoTune();
+  }, [closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2]);
+
   // Single debounced auto-recalculate on any input change
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
