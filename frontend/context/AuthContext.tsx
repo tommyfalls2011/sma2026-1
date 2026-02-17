@@ -91,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Monitor network status
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
+    if (!NetInfo) return;
+    const unsubscribe = NetInfo.addEventListener((state: any) => {
       setIsOnline(state.isConnected ?? true);
     });
     
