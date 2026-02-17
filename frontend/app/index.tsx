@@ -1193,6 +1193,8 @@ export default function AntennaCalculator() {
           far_driven: farDriven,
           close_dir1: closeDir1,
           far_dir1: farDir1,
+          close_dir2: closeDir2,
+          far_dir2: farDir2,
         }),
       });
       if (response.ok) {

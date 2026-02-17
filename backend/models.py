@@ -168,6 +168,8 @@ class AutoTuneRequest(BaseModel):
     far_driven: Union[str, bool] = Field(default=False)
     close_dir1: Union[str, bool] = Field(default=False)
     far_dir1: Union[str, bool] = Field(default=False)
+    close_dir2: Union[str, bool] = Field(default=False)
+    far_dir2: Union[str, bool] = Field(default=False)
     element_diameter: Optional[float] = Field(default=0.5)
 
 class AntennaOutput(BaseModel):
