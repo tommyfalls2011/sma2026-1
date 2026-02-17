@@ -417,8 +417,8 @@ export default function AntennaCalculator() {
   const [hairpinBarPos, setHairpinBarPos] = useState(0.5); // 0-1 ratio along hairpin length
   const [hairpinBoomGap, setHairpinBoomGap] = useState(1.0); // inches from rods to boom
   // Gamma design adjustments
-  const [gammaRodDia, setGammaRodDia] = useState('');
-  const [gammaRodSpacing, setGammaRodSpacing] = useState('');
+  const [gammaRodDia, setGammaRodDia] = useState<string | null>(null);
+  const [gammaRodSpacing, setGammaRodSpacing] = useState<string | null>(null);
   const [gammaBarPos, setGammaBarPos] = useState(0.5); // shorting bar position along element (autotransformer tap)
   const [gammaRodInsertion, setGammaRodInsertion] = useState(0.5); // rod insertion into tube (series capacitor)
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
