@@ -22,18 +22,4 @@ config.cacheStores = [
 // Reduce the number of workers to decrease resource usage
 config.maxWorkers = 2;
 
-// Fix: pretty-format@30 ESM wrapper has broken default re-export.
-// Force Metro to resolve pretty-format to CJS build to avoid
-// "Cannot read properties of undefined (reading 'default')" in HMR client.
-const origResolveRequest = config.resolver.resolveRequest;
-config.resolver.resolveRequest = (context, moduleName, platform) => {
-  if (moduleName === 'pretty-format' || moduleName === 'pretty-format/build/index.mjs') {
-    return context.resolveRequest(context, 'pretty-format/build/index.js', platform);
-  }
-  if (origResolveRequest) {
-    return origResolveRequest(context, moduleName, platform);
-  }
-  return context.resolveRequest(context, moduleName, platform);
-};
-
 module.exports = config;
