@@ -5,14 +5,21 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Line, Path, Text as SvgText, Rect, G, Ellipse } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import appJson from '../app.json';
 
+// Lazy-load native-only modules to avoid SSR crash
+let FileSystem: any = null;
+let Sharing: any = null;
+let Constants: any = null;
+if (Platform.OS !== 'web') {
+  try { FileSystem = require('expo-file-system/legacy'); } catch {}
+  try { Sharing = require('expo-sharing'); } catch {}
+  try { Constants = require('expo-constants'); } catch {}
+}
+
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://helpful-adaptation-production.up.railway.app';
-const { width: screenWidth } = Dimensions.get('window');
+const screenWidth = typeof window !== 'undefined' ? Dimensions.get('window').width : 400;
 const APP_VERSION = appJson.expo.version;
 const APP_BUILD_DATE = '2026-02-10T12:00:00';
 const UPDATE_CHECK_URL = 'https://gist.githubusercontent.com/tommyfalls2011/3bb5c9e586bfa929d26da16776b0b9c6/raw/';
