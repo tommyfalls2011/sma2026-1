@@ -1034,8 +1034,6 @@ export default function AntennaCalculator() {
     }
     if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0 || !inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) return;
     
-    setCalcError(null);
-    
     // Convert to inches for API if currently in meters
     const elementsForApi = elementUnit === 'meters' 
       ? inputs.elements.map(e => ({
