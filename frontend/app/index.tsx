@@ -2782,7 +2782,7 @@ export default function AntennaCalculator() {
               </View>
 
               {/* 2nd Director Spacing - always show, hint when < 2 directors */}
-              <View style={{ marginTop: 10 }}>
+              <View style={{ marginTop: 10, borderWidth: 2, borderColor: 'red' }}>
                 <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>2nd Director Spacing</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                   <TouchableOpacity
