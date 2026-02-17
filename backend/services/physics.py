@@ -965,13 +965,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # Z_ant = z_r + j*z_x, Z_0 = 50 (real)
     gamma_real = ((z_r - z_0) * (z_r + z_0) + z_x * z_x) / ((z_r + z_0) ** 2 + z_x ** 2)
     gamma_imag = (2 * z_x * z_0) / ((z_r + z_0) ** 2 + z_x ** 2)  # note: sign doesn't matter for magnitude
-    reflection_coefficient = round(math.sqrt(gamma_real ** 2 + gamma_imag ** 2), 4)
+    reflection_coefficient = round(math.sqrt(gamma_real ** 2 + gamma_imag ** 2), 8)
     reflection_coefficient = min(reflection_coefficient, 0.999)  # clamp
 
-    if reflection_coefficient > 0.0001:
+    if reflection_coefficient > 1e-6:
         return_loss_db = round(-20 * math.log10(reflection_coefficient), 2)
+        return_loss_db = min(return_loss_db, 80.0)  # practical ceiling for real-world measurements
     else:
-        return_loss_db = 60.0
+        return_loss_db = 80.0
 
     swr_from_gamma = (1 + reflection_coefficient) / (1 - reflection_coefficient) if reflection_coefficient < 1.0 else 99.0
     # SWR must be derived from reflection coefficient for consistency
