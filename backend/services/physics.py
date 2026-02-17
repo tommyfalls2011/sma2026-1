@@ -239,7 +239,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Bandwidth from Q: BW = f_center / Q
         gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
         # SWR at resonance (best achievable): no off-resonance penalty
-        tuning_factor = 1.0 + min(0.35, bar_penalty + insertion_penalty + z0_penalty)
+        tuning_factor = 1.0 + bar_penalty + insertion_penalty + z0_penalty
         swr_at_resonance = round(max(1.0, matched_swr * tuning_factor), 3)
         # Off-resonance SWR penalty for the operating frequency SWR display
         freq_offset = abs(operating_freq_mhz - resonant_freq)
