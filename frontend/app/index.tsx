@@ -2640,8 +2640,8 @@ export default function AntennaCalculator() {
               <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <TouchableOpacity
                   onPress={() => nudgeSpacing(-1)}
-                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount <= -5 ? '#333' : '#9C27B0', opacity: spacingNudgeCount <= -5 ? 0.4 : 1 }}
-                  disabled={spacingNudgeCount <= -5}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount <= -20 ? '#333' : '#9C27B0', opacity: spacingNudgeCount <= -20 ? 0.4 : 1 }}
+                  disabled={spacingNudgeCount <= -20}
                 >
                   <Ionicons name="chevron-back" size={18} color="#9C27B0" />
                   <Text style={{ fontSize: 12, color: '#9C27B0', fontWeight: '700', marginLeft: 2 }}>Tighter</Text>
@@ -2653,8 +2653,8 @@ export default function AntennaCalculator() {
                 </View>
                 <TouchableOpacity
                   onPress={() => nudgeSpacing(1)}
-                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount >= 5 ? '#333' : '#9C27B0', opacity: spacingNudgeCount >= 5 ? 0.4 : 1 }}
-                  disabled={spacingNudgeCount >= 5}
+                  style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: spacingNudgeCount >= 20 ? '#333' : '#9C27B0', opacity: spacingNudgeCount >= 20 ? 0.4 : 1 }}
+                  disabled={spacingNudgeCount >= 20}
                 >
                   <Text style={{ fontSize: 12, color: '#9C27B0', fontWeight: '700', marginRight: 2 }}>Wider</Text>
                   <Ionicons name="chevron-forward" size={18} color="#9C27B0" />
