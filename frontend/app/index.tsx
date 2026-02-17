@@ -2852,7 +2852,10 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                 </View>
               </View>
+              {inputs.elements.filter(e => e.element_type === 'director').length < 2 && (
+                <Text style={{ fontSize: 10, color: '#555', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>Add 4+ elements for 2nd director nudge</Text>
               )}
+              </View>
             </View>
             )}
             {boomLockEnabled && (
