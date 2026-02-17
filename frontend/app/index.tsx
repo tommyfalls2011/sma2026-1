@@ -575,11 +575,15 @@ export default function AntennaCalculator() {
 
   // Track whether spacing override changes should trigger auto-tune
   const spacingOverrideTriggered = useRef(false);
-  const triggerSpacingAutoTune = () => { spacingOverrideTriggered.current = true; };
+  const triggerSpacingAutoTune = () => { 
+    spacingOverrideTriggered.current = true;
+  };
   useEffect(() => {
     if (spacingOverrideTriggered.current) {
       spacingOverrideTriggered.current = false;
-      autoTune();
+      // Small delay to ensure all batched state updates are applied
+      const timer = setTimeout(() => autoTune(), 100);
+      return () => clearTimeout(timer);
     }
   }, [closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2]);
 
