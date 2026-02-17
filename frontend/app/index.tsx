@@ -2629,14 +2629,6 @@ export default function AntennaCalculator() {
                   <Text style={{ fontSize: 9, color: spacingMode === 'long' && spacingLevel === '1.5' ? '#fff' : '#888', marginTop: 1 }}>V.Long</Text>
                 </TouchableOpacity>
               </View>
-              {spacingMode !== 'normal' && (
-                <Dropdown 
-                  label={spacingMode === 'tight' ? 'Tighter Spacing' : 'Longer Spacing'} 
-                  value={spacingLevel} 
-                  options={SPACING_OPTIONS[spacingMode]} 
-                  onChange={(v: string) => applySpacing(v)} 
-                />
-              )}
               <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <TouchableOpacity
                   onPress={() => nudgeSpacing(-1)}
