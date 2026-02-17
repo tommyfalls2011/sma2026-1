@@ -1365,7 +1365,7 @@ export default function AntennaCalculator() {
                     <Text style={{ color: '#4CAF50', fontWeight: '700', fontSize: 12 }}>Update Available v{updateAvailable.version}</Text>
                   </View>
                   {updateAvailable.notes ? <Text style={{ color: '#ddd', fontSize: 10, marginBottom: 6 }}>{updateAvailable.notes}</Text> : null}
-                  <TouchableOpacity onPress={() => Linking.openURL(updateAvailable.apkUrl)} style={{ backgroundColor: '#4CAF50', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' }}>
+                  <TouchableOpacity onPress={() => { Linking.openURL(updateAvailable.apkUrl); setUpdateDismissed(true); }} style={{ backgroundColor: '#4CAF50', borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12, alignSelf: 'flex-start' }}>
                     <Text style={{ color: '#000', fontWeight: '700', fontSize: 11 }}>Download APK</Text>
                   </TouchableOpacity>
                 </View>
