@@ -586,7 +586,6 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         swr = round(swr * taper_effects["swr_mult"], 2)
     if boom_dia_m > 0.04: swr = round(swr * 0.95, 2)
     elif boom_dia_m > 0.025: swr = round(swr * 0.97, 2)
-    swr = round(max(1.0, min(swr, 5.0)), 2)
 
     feed_type = input_data.feed_type
 
