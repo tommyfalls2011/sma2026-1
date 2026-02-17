@@ -712,11 +712,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         driven_elem_calc = next((e for e in input_data.elements if e.element_type == "driven"), None)
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
         # Rules of thumb
-        gamma_rod_dia = round(element_dia / 3.0, 3)  # 1/3 of element diameter
-        gamma_rod_spacing = round(element_dia * 4.0, 3)  # ~4x element diameter center-to-center
+        gamma_rod_dia = 0.5  # Default 1/2" rod
+        gamma_rod_spacing = 4.0  # Default 4" center-to-center
         gamma_rod_length = round(wavelength_in * 0.045, 2)  # 0.04-0.05 lambda
-        # Series capacitance: ~7pF per meter of wavelength
-        capacitance_pf = round(7.0 * wavelength, 1)
+        # Series capacitance: ~6.9pF per meter of wavelength (targets ~76pF at 27MHz)
+        capacitance_pf = round(6.9 * wavelength, 1)
         # Shorting bar position from center (approximate)
         shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
         matching_info["gamma_design"] = {
