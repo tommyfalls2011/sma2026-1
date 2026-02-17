@@ -24,7 +24,8 @@ Professional antenna design and analysis tool for ham radio operators. Calculate
 - **Return Loss Tune** button — sweeps driven & director spacings to find best natural impedance match
 - **Complex impedance return loss** — Γ = (Z_ant - Z_0)/(Z_ant + Z_0) with R+jX, RL = -20log10(|Γ|)
 - **Consistent SWR/RL/Γ** — all derived from single complex impedance calculation
-- **Gamma match models 95% reactance cancellation** — achievable RL matches real-world values (30-74 dB range)
+- **Gamma match tuning-quality-dependent reactance cancellation** — at perfect tuning (tq≈1.0): 99.98% cancellation → 74 dB RL; scales smoothly down to ~39 dB at poor tuning
+- **Increased reflection coefficient precision** — 8 decimal places (was 4), RL cap raised to 80 dB (was 60)
 - **Larger frequency text** under SWR meter (fontSize 13, bold)
 
 ## Previously Completed Features
