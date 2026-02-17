@@ -1,89 +1,94 @@
 # SMA Antenna Analyzer - Product Requirements Document
 
 ## Original Problem Statement
-Build a mobile antenna calculator app with advanced physics modeling, interactive controls, and real-time visualization for antenna design and analysis.
+Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi antenna design calculations including gain, SWR, radiation patterns, and matching network design (gamma match, hairpin match).
 
 ## Architecture
-- **Frontend**: React Native (Expo) with Expo Router, deployed via EAS
-- **Backend**: Python FastAPI, deployed on Railway
+- **Frontend**: React Native (Expo) web + mobile app
+- **Backend**: FastAPI (Python) with physics simulation engine
 - **Database**: MongoDB Atlas
-- **Web Preview**: Expo Web with static output mode
+- **Deployment**: Railway (backend), EAS (mobile builds)
+- **3rd Party**: Stripe (payments), GitHub API (app updates)
 
 ## Core Features (Implemented)
-- Antenna element calculations with realistic physics
-- Multiple feed types: Direct, Gamma, Hairpin
-- SWR bandwidth chart
-- Radiation pattern (polar plot)
-- Multi-lobe elevation pattern
-- Smith Chart (impedance tracking)
-- Performance metrics (Gain, F/B, F/S, Efficiency)
+- Multi-band Yagi antenna calculator (17m through 70cm)
+- Gamma match design with adjustable shorting bar + rod insertion
+- Hairpin match design with adjustable parameters
+- SWR bandwidth chart with usable zones
+- Smith Chart impedance visualization
+- Polar radiation pattern display
+- Elevation pattern with take-off angle
+- Element spacing controls (V.Short/Short/Normal/Long/V.Long presets)
+- 1st Director spacing override + nudge controls
+- 2nd Director spacing override + nudge controls
+- Tapered elements support
+- Corona ball calculations
+- Ground radials modeling
+- Stacking analysis (V, H, 2x2 quad)
+- Coax feedline loss calculations
+- Performance metrics (gain, F/B, F/S, efficiency)
 - Reflected power analysis
-- Resonant frequency modeling
-- Auto-scaling performance bars
-- Return Loss Tune (auto-tuner)
-- Coax & power simulation
-- Gamma/Hairpin match interactive panels
-- Nudge arrows for element spacing
-- Subscription tiers & login
-- App update checker
+- Height optimization
+- Return Loss Tune feature
+- Design save/load/export (CSV, PDF)
+- User authentication + subscription tiers (trial/bronze/silver/gold)
+- App update checker via GitHub Gist
 
-## Critical Bug Fix (Feb 17, 2026)
-**Root cause**: `pretty-format@30.2.0`'s ESM wrapper (`index.mjs`) had a broken default re-export chain that crashed Metro's HMR client in the web bundle with: `"Cannot read properties of undefined (reading 'default')"`. This prevented ALL client-side JavaScript from executing, blocking `useEffect` hooks, API calls, and result rendering.
+## Completed Tasks
 
-**Fix applied**:
-1. Patched `pretty-format/build/index.mjs` with correct ESM re-exports
-2. Added persistent `postinstall` script (`scripts/patch-pretty-format.js`)
-3. Moved `context/AuthContext.tsx` and `components/InstallPrompt.tsx` out of `app/` to avoid Expo Router route conflicts
-4. Made native-only imports (`expo-file-system`, `expo-sharing`, `expo-constants`) lazy/conditional
-5. Fixed undefined `setCalcError` reference
-6. Guarded `Constants.statusBarHeight` with optional chaining
+### Session: Feb 17, 2026
+- **P1: Frontend Component Refactoring** - Extracted 11 components from monolithic index.tsx (4321→3562 lines):
+  - `SwrMeter.tsx` - SWR bandwidth chart
+  - `SmithChart.tsx` - Impedance visualization
+  - `PolarPattern.tsx` - Radiation pattern
+  - `ElevationPattern.tsx` - Elevation pattern
+  - `Dropdown.tsx` - Modal dropdown selector
+  - `ElementInput.tsx` - Element dimension card
+  - `ResultCard.tsx` - Result display card
+  - `SpecSection.tsx` + `SpecRow.tsx` - Spec sheet helpers
+  - `styles.ts` - Shared StyleSheet
+  - `types.ts` - TypeScript interfaces
+  - `constants.ts` - BANDS, TIER_COLORS, COAX_OPTIONS
+  - `index.ts` - Barrel export
+- **P2: Vite Cleanup** - Removed all Vite-related files:
+  - Deleted `/frontend/src/` directory (old Vite web app)
+  - Deleted `index.html`, `vite.config.js`
+  - Deleted `postcss.config.js`, `tailwind.config.js`
+  - Removed `vite`, `@vitejs/plugin-react` from package.json
+  - Removed `dev`, `build`, `preview` scripts from package.json
+  - Removed `package-lock.json` (using yarn)
 
-## File Structure
-```
-frontend/
-├── app/
-│   ├── _layout.tsx          # Root layout
-│   ├── index.tsx            # Main calculator page
-│   ├── login.tsx            # Login page
-│   ├── admin.tsx            # Admin panel
-│   └── subscription.tsx     # Subscription page
-├── context/
-│   └── AuthContext.tsx       # Auth state (moved from app/context/)
-├── components/
-│   ├── InstallPrompt.tsx    # PWA install prompt (moved from app/components/)
-│   └── ElevationPattern.tsx # Elevation pattern chart
-├── scripts/
-│   └── patch-pretty-format.js  # Postinstall patch for Metro
-├── metro.config.js
-├── app.json
-└── package.json
+### Previous Sessions
+- Backend crash fix (NameError in physics.py)
+- Series capacitor integration
+- Double API call fix
+- Shorting bar functionality fix
+- SWR display mismatch fix
+- Realistic gamma match physics
+- 2nd Director spacing controls
+- Enhanced boom length tuning (5 presets)
 
-backend/
-├── server.py               # FastAPI routes
-├── models.py               # Pydantic models
-└── services/
-    └── physics.py           # Antenna physics engine
-```
+## Pending/Backlog Tasks
+- **(P2) Implement PayPal/CashApp Payments** - Currently mocked
+- **(P2) Improve .easignore** - Reduce APK build size
+- **(P2) Replace deprecated shadow* style props** - Use boxShadow instead
+- **(P3) Build iOS Version** - iOS App Store deployment
 
-## Recent Fixes (Feb 2026)
-- **Backend NameError crash**: Fixed `user_cap` and `auto_cap_pf` variables being referenced in `calculate_antenna_parameters` but only defined inside `apply_matching_network`. Computed them locally as `design_user_cap` and `design_auto_cap_pf`.
-- **Series Cap (pF) integration**: The user-provided `gamma_cap_pf` value now correctly overrides the auto-calculated capacitance and impacts SWR, Smith Chart, and tuning quality. Tested with cap values of 50, 76.1 (auto), and 120 pF — all produce different SWR results as expected.
+## Key API Endpoints
+- `POST /api/calculate` - Main antenna calculation
+- `POST /api/auto-tune` - Automatic element optimization
+- `GET /api/subscription/tiers` - Subscription tier info
+- `GET /api/app-update` - Version check
+- `POST /api/auth/login` - Authentication
+- `POST /api/designs/save` - Save antenna design
+- `GET /api/designs/list` - List saved designs
 
-## Pending/Upcoming Tasks
-### P1 - Frontend Cleanup
-- Remove Vite-related files (index.html, vite.config.js, src/main.tsx)
-
-### P2 - Improvements
-- PayPal/CashApp payment integration
-- Improve .easignore for APK build size
-- Replace deprecated shadow* props with boxShadow
-- Refactor monolithic `frontend/app/index.tsx` (1500+ lines) into smaller components
-
-### P3 - Future
-- Build iOS version
+## Key Files
+- `frontend/app/index.tsx` - Main calculator component (3562 lines)
+- `frontend/components/` - Extracted UI components (11 files)
+- `backend/services/physics.py` - Core physics simulation engine
+- `backend/models.py` - Pydantic data models
+- `backend/server.py` - FastAPI server with routes
 
 ## Test Credentials
-- Store Admin: `fallstommy@gmail.com` / `admin123`
-
-## 3rd Party Integrations
-- Stripe (Payments), Railway (Deploy), MongoDB Atlas (DB), GitHub API (Updates), EAS (Mobile builds)
+- **Admin**: fallstommy@gmail.com / admin123
