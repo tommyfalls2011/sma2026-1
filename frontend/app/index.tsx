@@ -1854,8 +1854,8 @@ export default function AntennaCalculator() {
 
                   {(() => {
                     const gd = results.matching_info.gamma_design;
-                    const rodDia = parseFloat(gammaRodDia) || gd.gamma_rod_diameter_in;
-                    const rodSpace = parseFloat(gammaRodSpacing) || gd.gamma_rod_spacing_in;
+                    const rodDia = gammaRodDia !== null ? parseFloat(gammaRodDia) || gd.gamma_rod_diameter_in : gd.gamma_rod_diameter_in;
+                    const rodSpace = gammaRodSpacing !== null ? parseFloat(gammaRodSpacing) || gd.gamma_rod_spacing_in : gd.gamma_rod_spacing_in;
                     const elemDia = gd.element_diameter_in;
                     // Recalculate based on user inputs
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
