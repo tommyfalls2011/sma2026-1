@@ -1024,10 +1024,11 @@ export default function AntennaCalculator() {
   const [calcError, setCalcError] = useState<string | null>(null);
 
   const calculateAntenna = useCallback(async () => {
+    setCalcError('starting...');
     for (const elem of inputs.elements) {
-      if (!elem.length || parseFloat(elem.length) <= 0 || !elem.diameter || parseFloat(elem.diameter) <= 0) return;
+      if (!elem.length || parseFloat(elem.length) <= 0 || !elem.diameter || parseFloat(elem.diameter) <= 0) { setCalcError('bad element'); return; }
     }
-    if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0 || !inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) return;
+    if (!inputs.height_from_ground || parseFloat(inputs.height_from_ground) <= 0 || !inputs.boom_diameter || parseFloat(inputs.boom_diameter) <= 0) { setCalcError('bad height/boom'); return; }
     
     setCalcError(null);
     
