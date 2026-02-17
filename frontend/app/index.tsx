@@ -579,10 +579,6 @@ export default function AntennaCalculator() {
     boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',  // bonded, insulated, nonconductive
   });
   const [results, setResults] = useState<AntennaOutput | null>(null);
-  
-  // Hydration workaround: trigger initial calc outside React effects
-  const _initCalcDone = useRef(false);
-  const _calcRef = useRef<(() => void) | null>(null);
   const [heightOptResult, setHeightOptResult] = useState<HeightOptResult | null>(null);
   const [optimizingHeight, setOptimizingHeight] = useState(false);
   const [loading, setLoading] = useState(false);
