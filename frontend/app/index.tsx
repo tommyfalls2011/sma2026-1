@@ -3673,19 +3673,29 @@ export default function AntennaCalculator() {
                   <View style={{ backgroundColor: '#252525', borderRadius: 6, overflow: 'hidden' }}>
                     <View style={{ flexDirection: 'row', backgroundColor: '#333', paddingVertical: 6, paddingHorizontal: 8 }}>
                       <Text style={{ flex: 1.5, fontSize: 9, fontWeight: '700', color: '#888' }}></Text>
+                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'center' }}>@ {results.coax_info?.transmit_power_watts || 500}W</Text>
                       <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'center' }}>@ 100W</Text>
-                      <Text style={{ flex: 1, fontSize: 9, fontWeight: '700', color: '#888', textAlign: 'center' }}>@ 1kW</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#333' }}>
+                      <Text style={{ flex: 1.5, fontSize: 11, color: '#2196F3' }}>At Antenna</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.power_at_antenna_watts || '-'}W</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>-</Text>
                     </View>
                     <View style={{ flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 8, borderBottomWidth: 1, borderBottomColor: '#333' }}>
                       <Text style={{ flex: 1.5, fontSize: 11, color: '#4CAF50' }}>Forward</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.forward_power_watts?.toFixed(1) || '-'}W</Text>
                       <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.forward_power_100w}W</Text>
-                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.forward_power_1kw}W</Text>
                     </View>
                     <View style={{ flexDirection: 'row', paddingVertical: 6, paddingHorizontal: 8 }}>
                       <Text style={{ flex: 1.5, fontSize: 11, color: '#f44336' }}>Reflected</Text>
+                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.reflected_power_watts?.toFixed(2) || '-'}W</Text>
                       <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.reflected_power_100w}W</Text>
-                      <Text style={{ flex: 1, fontSize: 11, color: '#fff', textAlign: 'center' }}>{results.reflected_power_1kw}W</Text>
                     </View>
+                    {results.coax_info && (
+                      <View style={{ paddingVertical: 6, paddingHorizontal: 8, borderTopWidth: 1, borderTopColor: '#333', backgroundColor: '#1a1a2e' }}>
+                        <Text style={{ fontSize: 9, color: '#888' }}>Feedline: {results.coax_info.type} | {results.coax_info.length_ft}ft | Loss: {results.coax_info.total_loss_db} dB</Text>
+                      </View>
+                    )}
                   </View>
                 </SpecSection>
               )}
