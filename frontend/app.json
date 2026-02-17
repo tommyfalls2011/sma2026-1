@@ -11,7 +11,7 @@
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
     "android": {
       "package": "com.smaantennaanalyzer.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#121212"
