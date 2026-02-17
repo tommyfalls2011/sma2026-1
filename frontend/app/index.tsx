@@ -3180,6 +3180,11 @@ export default function AntennaCalculator() {
                 <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} orientation={inputs.antenna_orientation} elevationData={results.elevation_pattern} fbRatio={results.fb_ratio} />
               )}
               
+              {/* Smith Chart */}
+              {results.smith_chart_data && results.smith_chart_data.length > 0 && (
+                <SmithChart data={results.smith_chart_data} centerFreq={results.center_frequency} />
+              )}
+              
               {/* Pattern Data Table */}
               <View style={styles.patternDataSection}>
                 <Text style={styles.patternDataTitle}><Ionicons name="analytics-outline" size={14} color="#4CAF50" /> Pattern Analysis</Text>
