@@ -56,11 +56,19 @@ Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi an
 - 2nd Director spacing controls, Enhanced boom length tuning (5 presets)
 
 ## Pending/Backlog Tasks
-- **(P2) Implement PayPal/CashApp Payments** — Currently mocked
+- **(P2) Implement PayPal/CashApp Payments** — Currently MOCKED
 - **(P3) Build iOS Version** — Requires Apple Developer Account ($99/yr)
 - **(P3) Further component extraction** — GammaMatchPanel, HairpinMatchPanel, ElementSpacingControls
+- **(P3) Create Release Script** — Automate post-build workflow on user's VM
 
-## Key Physics (from user)
+## Completed Tasks (Latest)
+
+### Session: Feb 2026 (Fork 2)
+- **(P0) Gamma Rod Defaults Updated**: Spacing 3", rod length ~32" (wavelength*0.074), insertion 4" (0.125 ratio), bar position reference updated to 32"
+- **(P1) Admin Panel Feature Limits Expanded**: Increased from 8 to 20 feature toggles per subscription tier. New features: Gamma Match, Hairpin Match, Smith Chart, Polar Pattern, Elevation Pattern, Dual Polarity, Coax Loss, Wind Load, PDF Export, Spacing Control, Return Loss Tune, Reflected Power
+- **Testing**: 12/12 backend tests passed (gamma defaults + admin features)
+
+## Current Version: 4.2.2 (versionCode 10)
 - Element spacing affects antenna resonant frequency (not just impedance)
 - Shorting bar position: moves lowest SWR frequency up/down the band
 - Gamma rod depth: changes depth of SWR dip (matching quality)
