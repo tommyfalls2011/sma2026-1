@@ -732,8 +732,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
         # Rules of thumb
         gamma_rod_dia = 0.5  # Default 1/2" rod
-        gamma_rod_spacing = 4.0  # Default 4" center-to-center
-        gamma_rod_length = round(wavelength_in * 0.045, 2)  # 0.04-0.05 lambda
+        gamma_rod_spacing = 3.0  # Default 3" center-to-center
+        gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
         # Series capacitance: compute locally (same formula as in apply_matching_network)
         design_auto_cap_pf = round(6.9 * wavelength, 1)
         design_user_cap = input_data.gamma_cap_pf if input_data.gamma_cap_pf and input_data.gamma_cap_pf > 0 else design_auto_cap_pf
