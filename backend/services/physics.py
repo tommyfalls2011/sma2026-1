@@ -210,9 +210,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
-        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.5
-        # Shorting bar position in inches from feedpoint center (default 24")
-        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 24.0
+        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.125
+        # Shorting bar position in inches from feedpoint center (default 32")
+        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 32.0
         # Convert inches to fraction of driven half-element for physics
         wavelength_in = 11802.71 / operating_freq_mhz  # already in inches
         half_element_in = wavelength_in * 0.23  # approximate half-element length
