@@ -3608,6 +3608,7 @@ export default function AntennaCalculator() {
                     })}
                   </View>
                 </SpecSection>
+                </FeatureGate>
               )}
 
               <Text style={{ fontSize: 9, color: '#444', textAlign: 'center', marginTop: 16 }}>Generated {new Date().toLocaleString()} | {user?.email || 'guest'}</Text>
