@@ -203,7 +203,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
                            operating_freq_mhz: float = 27.185,
                            num_elements: int = 3,
-                           driven_element_half_length_in: float = 101.5) -> tuple:
+                           driven_element_half_length_in: float = 101.5,
+                           driven_element_dia_in: float = 0.5) -> tuple:
     if feed_type == "gamma":
         # Gamma match hardware scales with element count (standard aluminum tubing sizes)
         # More elements = lower feedpoint R = higher step-up = beefier hardware
