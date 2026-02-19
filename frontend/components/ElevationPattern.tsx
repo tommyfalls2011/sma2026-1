@@ -7,8 +7,8 @@ import { styles } from './styles';
 const screenWidth = typeof window !== 'undefined' ? Dimensions.get('window').width : 400;
 
 export const ElevationPattern = ({ takeoffAngle, gain, orientation, elevationData, fbRatio }: { takeoffAngle: number, gain: number, orientation?: string, elevationData?: any[], fbRatio?: number }) => {
-  const width = Math.max(200, Math.min(screenWidth - 48, 340));
-  const height = 200;
+  const width = Math.max(280, Math.min(screenWidth - 32, 500));
+  const height = 320;
   const groundY = height - 22;
   const centerX = width / 2;
   const centerY = groundY;
