@@ -758,8 +758,16 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gamma_rod_dia = 0.5  # Default 1/2" rod
         gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
         gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
-        # Series capacitance: compute locally (same formula as in apply_matching_network)
-        design_auto_cap_pf = round(6.9 * wavelength, 1)
+        # Series capacitance: from actual coaxial geometry (rod insertion into tube)
+        rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
+        rod_insertion_design = max(0, min(rod_insertion_design, 11.0))
+        design_tube_id = gamma_rod_dia + 0.4
+        design_rod_od = gamma_rod_dia + 0.1
+        if rod_insertion_design > 0 and design_tube_id > design_rod_od:
+            design_cap_per_inch = 1.413 * 2.1 / math.log(design_tube_id / design_rod_od)
+            design_auto_cap_pf = round(design_cap_per_inch * rod_insertion_design, 1)
+        else:
+            design_auto_cap_pf = 0
         design_user_cap = input_data.gamma_cap_pf if input_data.gamma_cap_pf and input_data.gamma_cap_pf > 0 else design_auto_cap_pf
         # Shorting bar position from center (approximate)
         shorting_bar_pos = round(gamma_rod_length * 0.4, 2)
