@@ -63,6 +63,11 @@ Custom tube OD supported via gamma_tube_od API parameter.
   - 2-element: ideal bar 6.5", R_feed ~29Ω
   - 3-element: ideal bar 12.6", R_feed ~20Ω → SWR 1.0 at null
   - 5-element: ideal bar 22.3", R_feed ~13Ω → SWR 1.0 at null
+- **(P1) Gamma Match Designer**: COMPLETE. One-click recipe tool for any Yagi.
+  - Backend: POST /api/gamma-designer — auto or custom hardware, bar/insertion sweep data, notes
+  - Frontend: Full-screen modal with recipe card, SWR charts, Apply to Calculator button
+  - Handles: auto hardware scaling, custom hardware analysis, null reachability check
+  - 9/9 backend + 8/8 frontend tests pass
 
 ### Session: Feb 19, 2026 (Fork 4)
 - **(P0) SWR/Smith Chart Unification**: COMPLETE. SWR derives from Gamma = (Z-50)/(Z+50). 13 automated tests pass.
