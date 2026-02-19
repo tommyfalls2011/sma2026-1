@@ -82,12 +82,10 @@ Custom tube OD supported via gamma_tube_od API parameter.
 
 ## Known Issues / Next Steps
 - **Tube/Rod ratio validation**: Model doesn't warn when ratio is too large (>2x) making match impossible
-- **K derived from bar position**: Currently K = sqrt(50/R) auto-computed. Should tie K to bar position geometry so different antennas need different bar positions
 - **Air gap in dielectric**: Real teflon sleeve doesn't fill entire tube gap. User reported expected 76.1 pF vs model's 87.2 pF. Need teflon sleeve OD to model two-layer dielectric (teflon + air gap as series capacitors)
 - **SWR curve consistency**: SWR curve uses parabolic approximation. Could derive from Smith Chart impedance at each frequency for full consistency
 
 ## Backlog
-- (P1) Tie K (step-up ratio) to bar position geometry
 - (P1) Model air gap in dielectric (teflon sleeve OD parameter)
 - (P2) PayPal/CashApp Payments
 - (P2) Improve .easignore
