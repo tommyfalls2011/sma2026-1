@@ -98,6 +98,7 @@ export default function AntennaCalculator() {
   const [dir2NudgeCount, setDir2NudgeCount] = useState(0); // -10 to +10 steps
   const [spacingNudgeCount, setSpacingNudgeCount] = useState(0); // -10 to +10 steps
   const [rlTuning, setRlTuning] = useState(false);
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [rlResult, setRlResult] = useState<any>(null);
 
   // Coax feedline settings
