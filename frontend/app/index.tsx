@@ -3645,6 +3645,9 @@ export default function AntennaCalculator() {
         numElements={inputs.num_elements}
         drivenLength={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.length || '203') || 203}
         frequencyMhz={inputs.frequency_mhz}
+        calculatedFeedpointR={results?.matching_info?.gamma_design?.feedpoint_r}
+        currentRodDia={gammaRodDia !== null ? parseFloat(gammaRodDia) || undefined : results?.matching_info?.gamma_design?.gamma_rod_diameter_in}
+        currentRodSpacing={gammaRodSpacing !== null ? parseFloat(gammaRodSpacing) || undefined : results?.matching_info?.gamma_design?.rod_element_spacing_in}
         onApply={(barPos, insertion) => {
           setGammaBarPos(barPos);
           setGammaRodInsertion(insertion);
