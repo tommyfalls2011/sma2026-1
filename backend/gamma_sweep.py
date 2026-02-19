@@ -40,7 +40,8 @@ for tube_od in TUBE_ODS:
             continue
         
         # Capacitance per inch (coaxial capacitor with teflon)
-        cap_per_inch = 24.16 * DIELECTRIC_K / (25.4 * math.log(tube_id / rod_od))
+        # C(pF/in) = 2πε₀εᵣ / ln(D/d) × (1m/39.37in) × 1e12 = 1.413 × εᵣ / ln(D/d)
+        cap_per_inch = 1.413 * DIELECTRIC_K / math.log(tube_id / rod_od)
         
         # Z0 of gamma section (unequal conductor two-wire line)
         geo_mean = math.sqrt(ELEMENT_DIA * rod_od)
