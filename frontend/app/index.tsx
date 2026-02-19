@@ -3714,6 +3714,15 @@ export default function AntennaCalculator() {
         }}
       />
 
+      {/* Physics Debug Panel - floating sidebar */}
+      <PhysicsDebugPanel
+        visible={showDebugPanel}
+        onClose={() => setShowDebugPanel(false)}
+        debugTrace={results?.matching_info?.debug_trace || []}
+        smithChartData={results?.smith_chart_data}
+        centerFreq={parseFloat(inputs.frequency_mhz) || 27.185}
+      />
+
     </SafeAreaView>
   );
 }
