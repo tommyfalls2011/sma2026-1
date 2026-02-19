@@ -1538,13 +1538,13 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.feed_type === 'gamma' && styles.orientationBtnActive]} 
-                  onPress={() => switchFeedType('gamma')}
+                  onPress={() => { if (checkFeature('gamma_match', 'Gamma Match')) switchFeedType('gamma'); }}
                 >
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'gamma' && styles.orientationBtnTextActive]}>Gamma</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.feed_type === 'hairpin' && styles.orientationBtnActive]} 
-                  onPress={() => switchFeedType('hairpin')}
+                  onPress={() => { if (checkFeature('hairpin_match', 'Hairpin Match')) switchFeedType('hairpin'); }}
                 >
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'hairpin' && styles.orientationBtnTextActive]}>Hairpin</Text>
                 </TouchableOpacity>
