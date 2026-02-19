@@ -976,6 +976,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # For gamma match: use physics-based Z from matching network model
     # For hairpin/direct: use feedpoint impedance with reactance model
     z_0 = 50.0  # feedline characteristic impedance
+    antenna_q = 12.0  # typical Yagi Q
 
     if feed_type == "gamma" and matching_info and "z_matched_r" in matching_info:
         # Physics-based impedance from unified gamma match model
