@@ -1413,11 +1413,11 @@ export default function AntennaCalculator() {
                   <Ionicons name="refresh-outline" size={14} color="#fff" />
                   <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Reset</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#2196F3', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowSaveModal(true)}>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#2196F3', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => { if (checkFeature('save_designs', 'Save Designs')) setShowSaveModal(true); }}>
                   <Ionicons name="save-outline" size={14} color="#fff" />
                   <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Save</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={loadDesignsList} disabled={loadingDesigns}>
+                <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => { if (checkFeature('save_designs', 'Save Designs')) loadDesignsList(); }} disabled={loadingDesigns}>
                   {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={14} color="#fff" />}
                   <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Load</Text>
                 </TouchableOpacity>
@@ -1877,7 +1877,7 @@ export default function AntennaCalculator() {
               <View style={{ flex: 1, zIndex: 1000 }}>
                 <Dropdown value={inputs.num_elements.toString()} options={elementOptions} onChange={(v: string) => updateElementCount(parseInt(v))} />
               </View>
-              <TouchableOpacity style={styles.autoTuneBtn} onPress={autoTune} disabled={tuning}>
+              <TouchableOpacity style={styles.autoTuneBtn} onPress={() => { if (checkFeature('auto_tune', 'Auto-Tune')) autoTune(); }} disabled={tuning}>
                 {tuning ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="flash" size={14} color="#fff" /><Text style={styles.autoTuneBtnText}>Auto-Tune</Text></>}
               </TouchableOpacity>
             </View>
@@ -1954,7 +1954,7 @@ export default function AntennaCalculator() {
               })}
             </View>
             {/* Optimize Height Button */}
-            <TouchableOpacity style={styles.optimizeHeightBtn} onPress={optimizeHeight} disabled={optimizingHeight}>
+            <TouchableOpacity style={styles.optimizeHeightBtn} onPress={() => { if (checkFeature('optimize_height', 'Optimize Height')) optimizeHeight(); }} disabled={optimizingHeight}>
               {optimizingHeight ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="trending-up" size={14} color="#fff" /><Text style={styles.optimizeHeightBtnText}>Optimize Height (10'-100')</Text></>}
             </TouchableOpacity>
             {/* Height Optimization Result */}
