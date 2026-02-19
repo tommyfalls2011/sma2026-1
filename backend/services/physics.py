@@ -403,7 +403,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             {"step": 2, "label": "WAVELENGTH & ROD", "items": [
                 {"var": "freq", "val": operating_freq_mhz, "unit": "MHz"},
                 {"var": "wavelength", "val": round(wavelength_in, 2), "unit": "in", "formula": f"11802.71 / {operating_freq_mhz}"},
-                {"var": "gamma_rod_length", "val": round(gamma_rod_length, 2), "unit": "in", "formula": f"{round(wavelength_in,1)} × 0.045"},
+                {"var": "gamma_rod_length", "val": round(gamma_rod_length, 2), "unit": "in", "formula": "36.0 (fixed)"},
                 {"var": "tube_length", "val": round(tube_length, 1), "unit": "in"},
                 {"var": "teflon_sleeve", "val": round(teflon_sleeve_in, 1), "unit": "in"},
             ]},
