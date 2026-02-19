@@ -122,14 +122,17 @@ class TestGammaDesignerConsistency:
         
         data = response.json()
         assert "error" not in data, f"Designer returned error: {data.get('error')}"
-        assert data.get("null_reachable") == True, f"3-element Yagi should have null_reachable=true, got {data.get('null_reachable')}"
+        
+        # Response has nested 'recipe' object
+        recipe = data.get("recipe", {})
+        assert recipe.get("null_reachable") == True, f"3-element Yagi should have null_reachable=true, got {recipe.get('null_reachable')}"
         
         # Check recipe has valid tuning settings
-        assert "ideal_bar_position_inches" in data, "Recipe should include ideal_bar_position_inches"
-        assert "optimal_insertion_inches" in data, "Recipe should include optimal_insertion_inches"
-        assert data["ideal_bar_position_inches"] > 0, "Bar position should be positive"
+        assert "ideal_bar_position" in recipe, "Recipe should include ideal_bar_position"
+        assert "optimal_insertion" in recipe, "Recipe should include optimal_insertion"
+        assert recipe["ideal_bar_position"] > 0, "Bar position should be positive"
         
-        print(f"Designer recipe: bar={data['ideal_bar_position_inches']:.2f}\", insertion={data['optimal_insertion_inches']:.2f}\", SWR={data.get('swr_at_null', 'N/A')}")
+        print(f"Designer recipe: bar={recipe['ideal_bar_position']:.2f}\", insertion={recipe['optimal_insertion']:.2f}\", SWR={recipe.get('swr_at_null', 'N/A')}")
 
     def test_designer_recipe_applied_to_calculator_swr_matches(self):
         """Applying designer recipe values to /api/calculate should give consistent SWR."""
@@ -141,14 +144,16 @@ class TestGammaDesignerConsistency:
         }
         designer_response = requests.post(f"{BASE_URL}/api/gamma-designer", json=designer_payload)
         assert designer_response.status_code == 200
-        recipe = designer_response.json()
-        assert "error" not in recipe
+        data = designer_response.json()
+        assert "error" not in data
         
-        bar_pos = recipe["ideal_bar_position_inches"]
-        insertion = recipe["optimal_insertion_inches"]
-        rod_od = recipe.get("rod_od_inches", 0.375)
-        tube_od = recipe.get("tube_od_inches", 0.625)
-        rod_spacing = recipe.get("rod_spacing_inches", 3.5)
+        # Response has nested 'recipe' object
+        recipe = data.get("recipe", {})
+        bar_pos = recipe["ideal_bar_position"]
+        insertion = recipe["optimal_insertion"]
+        rod_od = recipe.get("rod_od", 0.375)
+        tube_od = recipe.get("tube_od", 0.625)
+        rod_spacing = recipe.get("rod_spacing", 3.5)
         designer_swr = recipe.get("swr_at_null", 1.0)
         
         print(f"Designer recipe: bar={bar_pos:.2f}\", insertion={insertion:.2f}\", rod={rod_od:.3f}\", tube={tube_od:.3f}\", SWR={designer_swr:.3f}")
@@ -309,16 +314,17 @@ class TestFeedTypeComparison:
             "driven_element_length_in": 203.0,
             "frequency_mhz": 27.185
         })
-        recipe = designer_response.json()
+        data = designer_response.json()
+        recipe = data.get("recipe", {})
         
         gamma_payload = {
             **YAGI_3EL_BASE,
             "feed_type": "gamma",
-            "gamma_rod_dia": recipe.get("rod_od_inches", 0.375),
-            "gamma_rod_spacing": recipe.get("rod_spacing_inches", 3.5),
-            "gamma_bar_pos": recipe["ideal_bar_position_inches"],
-            "gamma_element_gap": recipe["optimal_insertion_inches"],
-            "gamma_tube_od": recipe.get("tube_od_inches", 0.625)
+            "gamma_rod_dia": recipe.get("rod_od", 0.375),
+            "gamma_rod_spacing": recipe.get("rod_spacing", 3.5),
+            "gamma_bar_pos": recipe["ideal_bar_position"],
+            "gamma_element_gap": recipe["optimal_insertion"],
+            "gamma_tube_od": recipe.get("tube_od", 0.625)
         }
         gamma_response = requests.post(f"{BASE_URL}/api/calculate", json=gamma_payload)
         assert gamma_response.status_code == 200
