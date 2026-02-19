@@ -339,6 +339,13 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                     "advantage": "Feeds balanced Yagi with unbalanced coax",
                     "tuning": "Bar position sets stub inductance, rod insertion sets capacitance",
                     "mitigation": "Proper tuning minimizes beam skew"}}
+        info["hardware"] = {
+            "rod_od": round(rod_dia, 3), "tube_od": round(rod_dia + 2 * (tube_id - rod_dia + 2 * wall) / 2, 3) if wall else 0,
+            "tube_od": round(tube_id + 2 * wall, 3), "tube_id": round(tube_id, 3),
+            "tube_wall": wall, "rod_spacing": round(rod_spacing, 1),
+            "rod_length": round(gamma_rod_length, 1), "tube_length": tube_length,
+            "teflon_length": teflon_sleeve_in, "cap_per_inch": round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 3) if tube_id > rod_od_actual else 0,
+        }
         return matched_swr, info
     elif feed_type == "hairpin":
         if swr <= 1.2: matched_swr = 1.03 + (swr - 1.0) * 0.20
