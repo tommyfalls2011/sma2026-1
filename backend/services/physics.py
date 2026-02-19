@@ -1051,7 +1051,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         "rg8x": {"name": "RG-8X Mini-8", "loss_per_100ft": 1.6, "power_rating_watts": 300, "velocity_factor": 0.78},
         "rg58": {"name": "RG-58/U", "loss_per_100ft": 2.4, "power_rating_watts": 200, "velocity_factor": 0.66},
     }
-    coax_type = getattr(input_data, 'coax_type', 'ldf5-50a')
+    coax_type = getattr(input_data, 'coax_type', 'ldf5-50a').lower().replace('-', '').replace('/', '').replace(' ', '')
     coax_length_ft = getattr(input_data, 'coax_length_ft', 100.0)
     transmit_power = getattr(input_data, 'transmit_power_watts', 500.0)
     coax_spec = coax_loss_table.get(coax_type, coax_loss_table["ldf5-50a"])
