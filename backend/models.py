@@ -375,3 +375,4 @@ class GammaDesignerRequest(BaseModel):
     custom_rod_od: Optional[float] = Field(default=None, description="Custom rod OD in inches")
     custom_rod_spacing: Optional[float] = Field(default=None, description="Custom rod-element spacing in inches")
     custom_teflon_length: Optional[float] = Field(default=None, description="Custom teflon sleeve length in inches")
+    custom_tube_length: Optional[float] = Field(default=None, description="Custom tube length in inches")
