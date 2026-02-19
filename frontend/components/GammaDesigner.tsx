@@ -57,12 +57,20 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
         driven_element_length_in: drivenLength,
         frequency_mhz: frequencyMhz,
       };
+      // Always pass calculator's actual feedpoint R if available
+      if (calculatedFeedpointR && calculatedFeedpointR > 0) {
+        body.feedpoint_impedance = calculatedFeedpointR;
+      }
       if (useCustom) {
         if (customTubeOd) body.custom_tube_od = parseFloat(customTubeOd);
         if (customRodOd) body.custom_rod_od = parseFloat(customRodOd);
         if (customSpacing) body.custom_rod_spacing = parseFloat(customSpacing);
         if (customTeflon) body.custom_teflon_length = parseFloat(customTeflon);
         if (customFeedpointR) body.feedpoint_impedance = parseFloat(customFeedpointR);
+      } else {
+        // Auto mode: also pass current rod_dia and spacing from calculator
+        if (currentRodDia && currentRodDia > 0) body.custom_rod_od = currentRodDia;
+        if (currentRodSpacing && currentRodSpacing > 0) body.custom_rod_spacing = currentRodSpacing;
       }
       const res = await fetch(`${BACKEND_URL}/api/gamma-designer`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
