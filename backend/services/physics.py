@@ -1868,6 +1868,17 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     length_ratio = driven_len_m / ideal_half_wave_m if ideal_half_wave_m > 0 else 1.0
     element_res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
 
+    # Apply mutual coupling corrections (same as main calculator)
+    # Reflector pulls resonance down, directors pull it down further
+    if num_elements >= 2:
+        refl_gap_wl = 48 * 0.0254 / wavelength_m  # assume standard reflector gap
+        refl_coupling = 0.0067 * math.exp(-4.0 * refl_gap_wl)
+        element_res_freq *= (1.0 - refl_coupling)
+    for d_idx in range(num_elements - 2):  # directors
+        d_gap_wl = (48 + d_idx * 64) * 0.0254 / wavelength_m
+        dir_coupling = 0.015 * math.exp(-5.0 * d_gap_wl)
+        element_res_freq *= (1.0 - dir_coupling)
+
     # Feedpoint impedance: user-provided or estimated from element count
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
