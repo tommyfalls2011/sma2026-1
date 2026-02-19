@@ -2893,7 +2893,7 @@ export default function AntennaCalculator() {
               </View>
               
               {/* Reflected Power Card */}
-              {isFeatureAvailable('reflected_power') && (
+              <FeatureGate feature="reflected_power" label="Reflected Power Analysis">
               <View style={styles.reflectedPowerCard}>
                 <Text style={styles.reflectedPowerTitle}><Ionicons name="git-compare-outline" size={14} color="#f44336" /> Reflected Power Analysis</Text>
                 
