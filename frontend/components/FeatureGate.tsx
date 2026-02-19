@@ -12,11 +12,8 @@ interface FeatureGateProps {
 }
 
 export function FeatureGate({ feature, label, children, compact }: FeatureGateProps) {
-  const { user, isFeatureAvailable, tiers } = useAuth();
+  const { user, isFeatureAvailable } = useAuth();
   const router = useRouter();
-
-  // Debug logging
-  console.log(`FeatureGate[${feature}]: user=${user?.subscription_tier || 'null'}, tiers=${tiers ? Object.keys(tiers).length : 'null'}, available=${user && tiers ? isFeatureAvailable(feature) : 'N/A'}`);
 
   // Non-logged-in users see everything (gated by login elsewhere)
   if (!user) return <>{children}</>;
