@@ -1877,7 +1877,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     if num_elements <= 3:
         auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 3.5
     elif num_elements <= 6:
-        auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 4.0
+        auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 3.5
     elif num_elements <= 10:
         auto_rod = 0.500; auto_tube = 0.875; auto_spacing = 4.5
     elif num_elements <= 14:
