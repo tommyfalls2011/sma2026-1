@@ -201,7 +201,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            gamma_cap_pf: float = None,
                            hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
-                           operating_freq_mhz: float = 27.185) -> tuple:
+                           operating_freq_mhz: float = 27.185,
+                           num_elements: int = 3) -> tuple:
     if feed_type == "gamma":
         # Physics-based gamma match: transmission line stub + coaxial series capacitor
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.375
