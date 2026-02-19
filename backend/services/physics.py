@@ -229,23 +229,21 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Convert bar inches to fraction of driven half-element
         half_element_in = wavelength_in * 0.23
         bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
-        tuning_factor = 1.0
-        # Shorting bar: acts as autotransformer tap on the driven element
-        # Optimal position depends on feedpoint R: typical range 0.15-0.35 of half-element
-        optimal_bar = min(0.9, max(0.15, math.sqrt(50.0 / max(feedpoint_r, 12.0)) * 0.20))
+        # --- Impedance transformation via bar position ---
+        optimal_bar = min(0.9, max(0.1, math.sqrt(50.0 / max(feedpoint_r, 5.0)) * 0.20))
         bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
-        bar_penalty = min(0.40, bar_deviation ** 1.2 * 0.30)
-        # Rod insertion: slides rod into tube to form variable series capacitor
-        # 0.5 ratio (half tube) = optimal cancellation of gamma section inductance
+        bar_swr_add = min(0.5, bar_deviation ** 1.5 * 0.15)
+        # --- Reactance cancellation via rod insertion ---
         insertion_deviation = abs(insertion_ratio - 0.5) / 0.5
-        insertion_penalty = min(1.5, insertion_deviation ** 0.6 * 1.5)
-        # Z0 of gamma section from rod dimensions
-        z0_penalty = 0
+        insertion_swr_add = min(0.4, insertion_deviation ** 1.5 * 0.12)
+        # --- Z0 of gamma section ---
+        z0_swr_add = 0
         if rod_spacing > rod_dia / 2:
             gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
-            optimal_z0 = 250.0
-            z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
-            z0_penalty = min(0.20, z0_deviation * 0.25)
+            if gamma_z0 < 200:
+                z0_swr_add = min(0.15, ((200 - gamma_z0) / 200) ** 2 * 0.15)
+            elif gamma_z0 > 350:
+                z0_swr_add = min(0.15, ((gamma_z0 - 350) / 350) ** 2 * 0.15)
         # Shorting bar inductance
         bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia) - 1.0 + rod_dia / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
         # Shorting bar shifts resonant frequency: longer bar = more inductance = lower freq
