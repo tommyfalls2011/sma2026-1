@@ -190,10 +190,13 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
                   <TextInput style={inputStyle} value={customTeflon} onChangeText={setCustomTeflon} placeholder="16" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-teflon-input" />
                 </View>
                 <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 9, color: '#888', marginBottom: 2 }}>Tube Length (in)</Text>
+                  <TextInput style={inputStyle} value={customTubeLength} onChangeText={setCustomTubeLength} placeholder="15" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-tube-length-input" />
+                </View>
+                <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 9, color: '#888', marginBottom: 2 }}>Feedpoint R (ohms)</Text>
                   <TextInput style={inputStyle} value={customFeedpointR} onChangeText={setCustomFeedpointR} placeholder="estimated" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-feedpoint-input" />
                 </View>
-                <View style={{ flex: 1 }} />
               </View>
             </View>
           )}
