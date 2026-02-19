@@ -19,39 +19,48 @@ Full-stack antenna calculator mobile app (React Native/Expo + FastAPI + MongoDB)
 - `release.sh` — Automated release script
 
 ## Physical Dimensions (User's Real Hardware)
-- Outer tube: 5/8" OD, 0.049" standard wall → 0.527" ID
+- Outer tube: 5/8" OD, 0.049" standard wall -> 0.527" ID
 - Gamma rod: 3/8" (0.375") diameter
-- Teflon sleeve: 12" long over rod (εr = 2.1)
+- Teflon sleeve: 12" long over rod (er = 2.1)
 - Tube length: 11"
 - Rod-to-element spacing: 3.5" center-to-center
-- Coaxial cap constant: 1.413 pF/inch factor → 8.72 pF/inch for these dims
+- Coaxial cap constant: 1.413 pF/inch factor -> 8.72 pF/inch for these dims
 - Cap range: ~9-96 pF for 1"-11" insertion (target 20-100 pF)
 
-## Gamma Match Physics Model
-- Z0_gamma = 276 × log10(2 × 3.5 / 0.375) ≈ 351 ohms
-- X_stub = Z0 × tan(β × bar_pos) — shorted transmission line stub
-- X_cap = -1/(2πfC) — series capacitor from rod insertion
-- Tuning: bar position adjusts R (impedance transform) + stub inductance
-- Rod insertion adjusts capacitance to cancel stub inductance
-- At bar=13", ~10" insertion (87 pF): stub and cap nearly cancel
+## Gamma Match Physics Model (Unified)
+- Z0_gamma = 276 * log10(2 * 3.5 / 0.375) ~ 351 ohms
+- X_stub = Z0 * tan(beta * bar_pos) -- shorted transmission line stub
+- X_cap = -1/(2*pi*f*C) -- series capacitor from rod insertion
+- K^2 = 50/feedpoint_R -- step-up ratio (geometric, constant)
+- Z_matched = R_feedpoint * K^2 + j(X_stub + X_cap)
+- Gamma = (Z_matched - 50)/(Z_matched + 50)
+- SWR = (1 + |Gamma|)/(1 - |Gamma|)
+- Return Loss = -20 * log10(|Gamma|)
+- At bar=13", 10" insertion (87 pF): X_stub ~ 66.8, X_cap ~ -67.1, net ~ -0.3 -> SWR ~ 1.01
 
-## IN PROGRESS: SWR/Smith Chart Unification
-Replace heuristic additive SWR model in apply_matching_network() with:
-- Z_matched = R_feedpoint × K² + j(X_antenna × K + X_stub + X_cap)
-- Γ = (Z_matched - 50)/(Z_matched + 50)
-- SWR = (1 + |Γ|)/(1 - |Γ|)
-The Smith chart section already uses this model. Need SWR to match.
+## COMPLETED: SWR/Smith Chart Unification (Feb 19, 2026 - Fork 4)
+- Replaced heuristic additive SWR model in apply_matching_network() with physics-based impedance
+- SWR now derived from reflection coefficient using Z_matched
+- Smith Chart and SWR use identical physics model (transmission line stub + series cap)
+- Removed frequency-dependent k_eff degradation from Smith Chart (K^2 is geometric constant)
+- Return loss section uses matching_info z_matched_r/z_matched_x directly for gamma
+- All 13 automated tests pass: SWR formula, return loss formula, Smith Chart consistency
+
+## Session History
+
+### Session: Feb 19, 2026 (Fork 4) -- Current
+- **(P0) SWR/Smith Chart Unification**: COMPLETE. Rewrote apply_matching_network gamma section with physics-based impedance model. SWR now derives from Gamma = (Z-50)/(Z+50). Smith Chart uses same model. Tested with 13 automated tests.
+- **(P1) release.sh Fix**: COMPLETE. Added asset cleanup logic for pre-existing releases (deletes old APK assets before re-upload).
 
 ### Session: Feb 19, 2026 (Fork 3)
-- **(P1) Feature Enforcement with FeatureGate Component**: Created FeatureGate component, replaced 7 hide patterns with visual lock overlays
-- **(P0) Critical Bug Fix: Tier Key Mapping**: Fixed isFeatureAvailable() bronze → bronze_monthly
-- **(P0) Coaxial Capacitance Formula**: Fixed constant 0.614→1.413, real dimensions, geometry-based cap
-- **(P0) Shorting bar default**: 32"→13" (rod×0.4)
-- **(P0) Rod diameter**: 0.5"→0.375" (3/8")
-- **(P1) Smith Chart**: Transmission line stub model replaces forced 50+0j
-- **(P1) Frontend fixes**: Elevation height scaling, spec sheet padding, real reactance display
-- **(P2) release.sh**: Automated build release workflow
-- **IN PROGRESS**: SWR/Smith chart unification (code written, not yet applied)
+- Feature Gating with FeatureGate component
+- Auth tier key mapping fix (bronze -> bronze_monthly)
+- Coaxial capacitance formula correction (0.614->1.413)
+- Shorting bar default fix (32"->13")
+- Rod diameter fix (0.5"->0.375")
+- Smith Chart transmission line stub model
+- Frontend fixes (elevation height, spec sheet padding, reactance display)
+- release.sh creation
 
 ### Session: Feb 2026 (Fork 2)
 - Gamma match physics rewrite
@@ -64,7 +73,6 @@ The Smith chart section already uses this model. Need SWR to match.
 - (P2) PayPal/CashApp Payments
 - (P2) Improve .easignore
 - (P3) Build iOS Version
-- (P3) Improve release.sh (auto-detect APK path, version bump)
 
 ## Build Notes
 - Local build: `cd frontend && eas build --profile preview --platform android --local`
