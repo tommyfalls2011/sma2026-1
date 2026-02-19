@@ -1851,6 +1851,9 @@ export default function AntennaCalculator() {
               </FeatureGate>
 
             </View>
+          </View>
+
+          {/* Elements */}
           <View style={[styles.section, { zIndex: 100 }]}>
             <View style={styles.rowSpaced}>
               <Text style={styles.sectionTitle}><Ionicons name="git-branch-outline" size={14} color="#4CAF50" /> Elements <Text style={styles.maxElementsHint}>(max: {maxElements})</Text></Text>
