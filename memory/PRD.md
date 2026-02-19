@@ -25,15 +25,17 @@ Full-stack antenna calculator mobile app (React Native/Expo + FastAPI + MongoDB)
 - Rod-to-element spacing: 3.5" center-to-center
 - Rod length: 32"
 
-## Gamma Match Physics Model (Unified - Completed Fork 4)
+## Gamma Match Physics Model (Unified + Geometric K)
 - Z0_gamma = 276 * log10(2 * spacing / rod_dia)
+- **K = 1 + (bar_pos / half_element_length) × coupling_multiplier** (NEW - Fork 5)
+- **coupling_multiplier = Z0_gamma / 73** (normalized rod coupling, ~4.8 for standard hardware)
 - X_stub = Z0 * tan(beta * bar_pos) — shorted transmission line stub
 - X_cap = -1/(2*pi*f*C) — series capacitor from rod insertion
-- K^2 = 50/feedpoint_R — step-up ratio (geometric, constant with frequency)
-- Z_matched = R_feedpoint * K^2 + j(X_stub + X_cap)
+- Z_matched = R_feedpoint * K² + j(X_stub + X_cap)
 - Gamma = (Z_matched - 50)/(Z_matched + 50)
 - SWR = (1 + |Gamma|)/(1 - |Gamma|)
 - Return Loss = -20 * log10(|Gamma|)
+- **Ideal bar position = half_len × (K_ideal - 1) / coupling** (NEW - Fork 5)
 - Capacitance uses full precision internally (rounded only for display)
 
 ## Hardware Scaling Rule (2-20 Elements)
