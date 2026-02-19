@@ -95,5 +95,9 @@ Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi an
 
 ## Test Credentials
 - **Admin**: fallstommy@gmail.com / admin123
+- **Bronze Test**: test_bronze@testuser.com / test123
 
-## Current Version: 4.2.2 (versionCode 10)
+## Files of Reference
+- `frontend/components/FeatureGate.tsx` — Lock overlay component for gated features
+- `frontend/context/AuthContext.tsx` — isFeatureAvailable() with corrected tier key mapping
+- `frontend/app/index.tsx` — 7 FeatureGate usages + checkFeature() for interactive controls
