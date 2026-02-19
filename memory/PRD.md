@@ -85,10 +85,12 @@ freq → wavelength → driven_length → element_res_freq (with mutual coupling
 ```
 
 #### Current Defaults (validated Feb 19, 2026)
-- **≤3 elements**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
-- **4-6 elements**: Rod 0.500", Tube 0.750" (same)
-- **Tube Length**: Dynamic, ~19.5" for 11m CB (= gamma_rod_length = wavelength × 0.045)
-- **Teflon Sleeve**: tube_length + 1.0" (~20.5" for 11m CB)
+- **Gamma Rod**: 36" (fixed physical hardware)
+- **Tube**: 22" (fixed physical hardware)
+- **Teflon Sleeve**: 23" (fixed physical hardware)
+- **Shorting Bar**: 24" from boom (default position)
+- **Rod Insertion**: 11" default
+- **Rod/Tube Hardware**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
 
 #### Resolved Issues (Fork 8)
 - Tube length was hardcoded at 15" → now dynamic
