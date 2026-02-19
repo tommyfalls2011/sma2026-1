@@ -11,6 +11,9 @@ interface GammaDesignerProps {
   numElements: number;
   drivenLength: number;
   frequencyMhz: number;
+  calculatedFeedpointR?: number;
+  currentRodDia?: number;
+  currentRodSpacing?: number;
   onApply?: (barPos: number, insertion: number) => void;
 }
 
