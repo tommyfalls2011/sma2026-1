@@ -1212,86 +1212,54 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gain_breakdown["final_gain"] = gain_dbi
         antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
 
-    # SWR curve — center the minimum on the resonant frequency (from match tuning)
-    # but display range centered on the operating frequency
-    # Use the impedance-derived 'swr' as curve minimum so curve matches displayed value
+    # Resonant frequency for impedance sweep
     curve_resonant_freq = center_freq
-    curve_min_swr = swr
     if feed_type != "direct" and matching_info:
         if "resonant_freq_mhz" in matching_info:
             curve_resonant_freq = matching_info["resonant_freq_mhz"]
-    swr_curve = []
-    for i in range(-30, 31):
-        freq = center_freq + (i * channel_spacing)
-        swr_at_freq = calculate_swr_at_frequency(freq, curve_resonant_freq, bandwidth_mhz, curve_min_swr)
-        swr_curve.append({"frequency": round(freq, 4), "swr": round(swr_at_freq, 2), "channel": i})
-    usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
-    usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
 
-    # ── Smith Chart Data: impedance sweep across frequency ──
+    # ── Smith Chart Data: full-physics impedance sweep across frequency ──
+    # Computed FIRST so we can derive the SWR curve from actual impedance
     smith_chart_data = []
-    # Determine resonant frequency for impedance calculations
     smith_res_freq = curve_resonant_freq
     for i in range(-30, 31):
         freq = center_freq + (i * channel_spacing)
-        # Base resistance stays roughly constant across band
         sc_r = yagi_feedpoint_r
-        # Reactance varies with frequency: X = Q * R * (f/f0 - f0/f)
         if smith_res_freq > 0:
             fr = freq / smith_res_freq
             sc_x = antenna_q * yagi_feedpoint_r * (fr - 1.0 / fr)
         else:
             sc_x = 0.0
-        # Apply matching network transformation
         if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
-            # Gamma match = shorted transmission line stub + series capacitor
             step_up = matching_info.get("step_up_ratio", math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0)))
             if isinstance(step_up, str):
                 try: step_up = float(str(step_up).replace(':1',''))
                 except: step_up = math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0))
             k_sq = step_up ** 2
-
             bar_pos_in = matching_info.get("bar_position_inches", 13.0)
             cap_pf = matching_info.get("insertion_cap_pf", 50.0)
-            rod_spacing_in = matching_info.get("gamma_design", {}).get("gamma_rod_spacing_in", 3.5)
-            rod_dia_in = matching_info.get("gamma_design", {}).get("gamma_rod_diameter_in", 0.375)
-
-            # Z0 of gamma section (two-wire transmission line)
-            if rod_spacing_in > 0 and rod_dia_in > 0:
-                z0_gamma = 276.0 * math.log10(2.0 * rod_spacing_in / rod_dia_in)
-            else:
-                z0_gamma = 300.0
-
-            # Shorted stub reactance: X_stub = Z0 * tan(beta * l)
+            # Use pre-computed z0_gamma from apply_matching_network (actual hardware)
+            z0_g = matching_info.get("z0_gamma", 300.0)
             freq_hz = freq * 1e6
             wavelength_m = 299792458.0 / freq_hz
             bar_pos_m = bar_pos_in * 0.0254
             beta_l = 2.0 * math.pi * bar_pos_m / wavelength_m
-            x_stub = z0_gamma * math.tan(beta_l)
-
-            # Series capacitor reactance: X_cap = -1/(2*pi*f*C)
+            x_stub = z0_g * math.tan(beta_l)
             omega_f = 2.0 * math.pi * freq_hz
             x_cap = -1.0 / (omega_f * (cap_pf * 1e-12)) if cap_pf > 0 else 0
-
-            # Transform R through step-up (K^2 is geometric, constant with frequency)
             sc_r = sc_r * k_sq
-
-            # Net reactance: natural antenna X (transformed) + stub - cap
             sc_x = (sc_x * step_up) + x_stub + x_cap
-
         elif feed_type == "hairpin" and matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
             sc_x *= 0.10
             residual = (1.0 - tq) * 0.25
             sc_r = 50.0 * (1.0 + residual)
-        # Reflection coefficient Γ = (Z - Z0) / (Z + Z0)
         denom_r = (sc_r + z_0) ** 2 + sc_x ** 2
         g_re = ((sc_r - z_0) * (sc_r + z_0) + sc_x ** 2) / denom_r if denom_r > 0 else 0
         g_im = (2 * sc_x * z_0) / denom_r if denom_r > 0 else 0
-        # Derive L or C from reactance: X = 2πfL or X = -1/(2πfC)
         omega = 2 * math.pi * freq * 1e6
         inductance_nh = round(sc_x / omega * 1e9, 2) if sc_x > 0 and omega > 0 else 0
-        capacitance_pf = round(-1e12 / (omega * sc_x), 2) if sc_x < 0 and omega > 0 else 0
+        capacitance_pf_val = round(-1e12 / (omega * sc_x), 2) if sc_x < 0 and omega > 0 else 0
         smith_chart_data.append({
             "freq": round(freq, 4),
             "z_real": round(sc_r, 2),
@@ -1299,8 +1267,19 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_real": round(g_re, 5),
             "gamma_imag": round(g_im, 5),
             "inductance_nh": inductance_nh,
-            "capacitance_pf": capacitance_pf,
+            "capacitance_pf": capacitance_pf_val,
         })
+
+    # SWR curve — derived from Smith Chart full-physics impedance data
+    swr_curve = []
+    for idx, sc_pt in enumerate(smith_chart_data):
+        g_mag = math.sqrt(sc_pt["gamma_real"] ** 2 + sc_pt["gamma_imag"] ** 2)
+        g_mag = min(g_mag, 0.999)
+        sc_swr = (1 + g_mag) / (1 - g_mag) if g_mag < 1.0 else 99.0
+        sc_swr = round(max(1.0, min(sc_swr, 10.0)), 2)
+        swr_curve.append({"frequency": sc_pt["freq"], "swr": sc_swr, "channel": idx - 30})
+    usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
+    usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
 
     # Far field pattern
     far_field_pattern = []
