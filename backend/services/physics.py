@@ -238,21 +238,18 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
         bar_penalty = min(0.40, bar_deviation ** 1.2 * 0.30)
         # Rod insertion: slides rod into tube to form variable series capacitor
-        # 0.5 = optimal cancellation of gamma section inductance
-        # Too little (0.0) = residual inductance, too much (1.0) = excess capacitance
-        insertion_deviation = abs(rod_insertion - 0.5) / 0.5
+        # 0.5 ratio (half tube) = optimal cancellation of gamma section inductance
+        insertion_deviation = abs(insertion_ratio - 0.5) / 0.5
         insertion_penalty = min(1.5, insertion_deviation ** 0.6 * 1.5)
         # Z0 of gamma section from rod dimensions
         z0_penalty = 0
-        if rod_dia and rod_spacing and rod_spacing > rod_dia / 2:
+        if rod_spacing > rod_dia / 2:
             gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
             optimal_z0 = 250.0
             z0_deviation = abs(gamma_z0 - optimal_z0) / optimal_z0
             z0_penalty = min(0.20, z0_deviation * 0.25)
-        # Shorting bar inductance: L = mu0 * bar_inches / (2*pi) * ln(2*bar_inches/rod_dia)
-        # Simplified: inductance proportional to length, affects resonant frequency
-        rod_dia_for_calc = rod_dia if rod_dia else 0.5
-        bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia_for_calc) - 1.0 + rod_dia_for_calc / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
+        # Shorting bar inductance
+        bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia) - 1.0 + rod_dia / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
         # Shorting bar shifts resonant frequency: longer bar = more inductance = lower freq
         # 32" is the reference point (no shift). Each inch = ~0.03 MHz shift
         freq_shift_mhz = round((bar_inches - 32.0) * 0.03, 3)
