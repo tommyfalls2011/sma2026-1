@@ -1826,7 +1826,6 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
 
     # Find null ANALYTICALLY using X_stub from apply_matching_network
-    # Get X_stub at ideal bar with minimal insertion (to avoid cap interference)
     _, stub_info = _eval(bar_ideal_clamped, 0.001)
     x_stub_val = stub_info.get("x_stub", 0)
 
@@ -1842,6 +1841,53 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         optimal_insertion = 0.0
         c_needed_pf = 0.0
+
+    # If null not reachable at ideal bar, OPTIMIZE: sweep bar positions to find
+    # the best achievable SWR within the tube length. A longer bar increases
+    # X_stub (needs less cap = less insertion) but overshoots R_matched > 50Ω.
+    # The optimizer finds the sweet spot.
+    optimized_bar = bar_ideal_clamped
+    if not null_reachable:
+        best_swr_opt = 999.0
+        best_bar_opt = bar_ideal_clamped
+        best_ins_opt = tube_length
+        # Sweep from ideal bar out to rod length in fine steps
+        steps = 60
+        for i in range(steps + 1):
+            test_bar = bar_ideal_clamped + (gamma_rod_length - bar_ideal_clamped) * i / steps
+            if test_bar <= 0:
+                continue
+            # Get X_stub at this bar
+            _, ti = _eval(test_bar, 0.001)
+            xs = ti.get("x_stub", 0)
+            if xs <= 0:
+                continue
+            # Analytical null insertion for this bar
+            c_need = 1e12 / (omega * xs)
+            ins_need = c_need / cap_per_inch
+            if ins_need <= tube_length:
+                # Null reachable at this bar — use it
+                test_ins = ins_need
+            else:
+                test_ins = tube_length
+            s, _ = _eval(test_bar, test_ins)
+            if s < best_swr_opt:
+                best_swr_opt = s
+                best_bar_opt = test_bar
+                best_ins_opt = test_ins
+        optimized_bar = best_bar_opt
+        optimal_insertion = best_ins_opt
+        bar_ideal_clamped = optimized_bar
+        # Re-check null reachability at optimized bar
+        _, stub_opt = _eval(optimized_bar, 0.001)
+        xs_opt = stub_opt.get("x_stub", 0)
+        if xs_opt > 0:
+            c_opt = 1e12 / (omega * xs_opt)
+            ins_opt = c_opt / cap_per_inch
+            null_reachable = ins_opt <= tube_length
+            if null_reachable:
+                optimal_insertion = ins_opt
+                c_needed_pf = c_opt
 
     # Get authoritative values at the design point
     matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
