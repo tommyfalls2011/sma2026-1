@@ -1609,6 +1609,10 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{rodLen.toFixed(2)}"</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Tube (1/4 rod)</Text>
+                          <Text style={{ fontSize: 14, color: '#2196F3', fontWeight: '700' }}>{(rodLen / 4).toFixed(1)}"</Text>
+                        </View>
+                        <View style={{ flex: 1, alignItems: 'center' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Series Cap (pF)</Text>
                           <TextInput
                             style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700', backgroundColor: '#252525', borderRadius: 6, padding: 4, borderWidth: 1, borderColor: gammaCapPf !== null ? '#4CAF50' : '#333', textAlign: 'center', minWidth: 80 }}
