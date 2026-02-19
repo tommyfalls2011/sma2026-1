@@ -210,7 +210,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         wavelength_in = 11802.71 / operating_freq_mhz
         gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m CB
-        tube_length = 13.0
+        tube_length = 16.0
         teflon_sleeve_in = 12.0
 
         # Rod insertion: actual inches into tube (0 to tube_length)
