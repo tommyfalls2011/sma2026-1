@@ -74,7 +74,7 @@ Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi an
 - **(P1) Feature Enforcement Wired Up**: All 20 admin-toggleable features now enforced in the main calculator UI. Buttons show "Upgrade Required" alert, sections are hidden for restricted tiers. Non-logged-in users see everything.
 - **Testing**: 13/13 backend + 10/10 frontend UI tests passed
 
-## Current Version: 4.2.2 (versionCode 10)
+## Current Version: 4.2.3 (versionCode 11)
 - Element spacing affects antenna resonant frequency (not just impedance)
 - Shorting bar position: moves lowest SWR frequency up/down the band
 - Gamma rod depth: changes depth of SWR dip (matching quality)
