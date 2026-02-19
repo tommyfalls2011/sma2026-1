@@ -2353,7 +2353,7 @@ export default function AntennaCalculator() {
             {/* Return Loss Tune */}
             <View style={{ marginTop: 14, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 12 }}>
               <TouchableOpacity
-                onPress={runReturnLossTune}
+                onPress={() => { if (checkFeature('return_loss_tune', 'Return Loss Tune')) runReturnLossTune(); }}
                 disabled={rlTuning}
                 style={{ backgroundColor: rlTuning ? '#333' : '#00BCD4', borderRadius: 8, padding: 12, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' }}
                 data-testid="return-loss-tune-btn"
