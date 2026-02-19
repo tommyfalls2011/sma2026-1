@@ -63,6 +63,11 @@ Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi an
 
 ## Completed Tasks (Latest)
 
+### Session: Feb 19, 2026 (Fork 3)
+- **(P1) Feature Enforcement with FeatureGate Component**: Created `FeatureGate` component that shows locked sections with dimmed content + lock overlay + "Not included in [Tier] plan" message + orange Upgrade button. Replaced all 7 `isFeatureAvailable(feature) && (...)` hide patterns with visual lock overlays for: Coax Loss, Spacing Control, Polar Pattern, Elevation Pattern, Smith Chart, Reflected Power, Wind Load.
+- **(P0) Critical Bug Fix: Tier Key Mapping**: Fixed `isFeatureAvailable()` in AuthContext.tsx - was using `tiers['bronze']` but API returns `tiers['bronze_monthly']`. Feature gating was never actually enforcing for paid tiers. Fixed `getMaxElements()` with the same mapping.
+- **Testing**: 12/12 tests passed (4 backend + 8 frontend visual verification)
+
 ### Session: Feb 2026 (Fork 2)
 - **(P0) Gamma Rod Defaults Updated**: Spacing 3", rod length ~32" (wavelength*0.074), insertion 4" (0.125 ratio), bar position reference updated to 32"
 - **(P1) Admin Panel Feature Limits Expanded**: Increased from 8 to 20 feature toggles per subscription tier. New features: Gamma Match, Hairpin Match, Smith Chart, Polar Pattern, Elevation Pattern, Dual Polarity, Coax Loss, Wind Load, PDF Export, Spacing Control, Return Loss Tune, Reflected Power
