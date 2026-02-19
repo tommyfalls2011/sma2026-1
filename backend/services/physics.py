@@ -1058,7 +1058,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     coax_type = getattr(input_data, 'coax_type', 'ldf5-50a').lower().replace('-', '').replace('/', '').replace(' ', '')
     coax_length_ft = getattr(input_data, 'coax_length_ft', 100.0)
     transmit_power = getattr(input_data, 'transmit_power_watts', 500.0)
-    coax_spec = coax_loss_table.get(coax_type, coax_loss_table["ldf5-50a"])
+    coax_spec = coax_loss_table.get(coax_type, coax_loss_table["ldf550a"])
     coax_loss_db = round(coax_spec["loss_per_100ft"] * coax_length_ft / 100.0, 2)
     # Additional loss from SWR (standing waves increase cable heating)
     swr_loss_multiplier = 1.0 + (swr - 1.0) * 0.05 if swr > 1.0 else 1.0
