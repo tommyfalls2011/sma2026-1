@@ -66,7 +66,8 @@ Mobile-first antenna calculator app for ham radio/CB operators. Provides Yagi an
 ### Session: Feb 2026 (Fork 2)
 - **(P0) Gamma Rod Defaults Updated**: Spacing 3", rod length ~32" (wavelength*0.074), insertion 4" (0.125 ratio), bar position reference updated to 32"
 - **(P1) Admin Panel Feature Limits Expanded**: Increased from 8 to 20 feature toggles per subscription tier. New features: Gamma Match, Hairpin Match, Smith Chart, Polar Pattern, Elevation Pattern, Dual Polarity, Coax Loss, Wind Load, PDF Export, Spacing Control, Return Loss Tune, Reflected Power
-- **Testing**: 12/12 backend tests passed (gamma defaults + admin features)
+- **(P1) Feature Enforcement Wired Up**: All 20 admin-toggleable features now enforced in the main calculator UI. Buttons show "Upgrade Required" alert, sections are hidden for restricted tiers. Non-logged-in users see everything.
+- **Testing**: 13/13 backend + 10/10 frontend UI tests passed
 
 ## Current Version: 4.2.2 (versionCode 10)
 - Element spacing affects antenna resonant frequency (not just impedance)
