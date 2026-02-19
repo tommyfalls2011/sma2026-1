@@ -273,9 +273,12 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else insertion_cap_pf_exact
         cap_ratio = round(user_cap / max(insertion_cap_pf, 1.0), 3) if insertion_cap_pf > 0 else 1.0
 
-        # Z0 of gamma section (two-wire transmission line)
-        if rod_spacing > rod_dia / 2:
-            z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
+        # Z0 of gamma section (two-wire line with UNEQUAL conductors)
+        # Driven element dia (d1) and gamma rod dia (d2) differ
+        # Z0 = 276 * log10(2 * D / sqrt(d1 * d2))
+        geo_mean_dia = math.sqrt(driven_element_dia_in * rod_dia)
+        if rod_spacing > geo_mean_dia / 2:
+            z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / geo_mean_dia)
         else:
             z0_gamma = 300.0
 
