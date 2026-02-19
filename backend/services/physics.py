@@ -777,6 +777,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 element_resonant_freq *= (1.0 - dir_coupling)
             element_resonant_freq = round(element_resonant_freq, 3)
 
+    # Get driven element half-length for geometric K calculation
+    driven_for_k = next((e for e in input_data.elements if e.element_type == "driven"), None)
+    driven_half_length_in = driven_for_k.length / 2.0 if driven_for_k else 101.5
+
     matched_swr, matching_info = apply_matching_network(
         swr, feed_type, feedpoint_r=yagi_feedpoint_r,
         gamma_rod_dia=input_data.gamma_rod_dia,
@@ -791,6 +795,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hairpin_boom_gap=input_data.hairpin_boom_gap,
         operating_freq_mhz=center_freq,
         num_elements=input_data.num_elements,
+        driven_element_half_length_in=driven_half_length_in,
     )
     # Add element-based resonant freq to matching info
     if matching_info and feed_type != "direct":
