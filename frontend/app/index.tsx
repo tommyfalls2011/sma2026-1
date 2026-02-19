@@ -1634,16 +1634,16 @@ export default function AntennaCalculator() {
                       <View style={{ marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position (from feedpoint center)</Text>
-                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn}" along element</Text>
+                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn}" along {rodLen.toFixed(0)}" rod</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Pressable onPress={() => setGammaBarPos(Math.max(6, gammaBarPos - 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.max(4, gammaBarPos - 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
-                            <View style={{ width: `${((barPosIn - 6) / 42) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
+                            <View style={{ width: `${((barPosIn - 4) / Math.max(rodLen - 4, 1)) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
                           </View>
-                          <Pressable onPress={() => setGammaBarPos(Math.min(48, gammaBarPos + 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.min(Math.floor(rodLen), gammaBarPos + 1))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>+</Text>
                           </Pressable>
                         </View>
