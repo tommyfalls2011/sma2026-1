@@ -250,7 +250,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             tube_id = default_tube_id
 
         wavelength_in = 11802.71 / operating_freq_mhz
-        gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m CB
+        gamma_rod_length = wavelength_in * 0.045  # 4-5% of λ (~19" for 11m CB)
         tube_length = 15.0
         teflon_sleeve_in = 16.0
 
@@ -849,7 +849,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Rules of thumb
         gamma_rod_dia = 0.340  # 3/8" rod (actual measured OD)
         gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
-        gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
+        gamma_rod_length = round(wavelength_in * 0.045, 2)  # 4-5% of λ (~19" at 11m CB)
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
         # Real dims: 5/8" tube (0.049" wall → 0.527" ID), 3/8" rod, teflon
         rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
@@ -1800,7 +1800,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-    gamma_rod_length = wavelength_in * 0.074
+    gamma_rod_length = wavelength_in * 0.045
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
