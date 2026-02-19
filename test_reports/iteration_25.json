@@ -1,0 +1,69 @@
+{
+  "summary": "P0 Bug Fix Verified: SWR curve and Smith Chart physics corrected. 9/9 backend tests pass. The bug where gamma match designer recipe caused SWR meter to show antenna tuned higher than 27.185 MHz is FIXED. Root cause: (1) hardcoded rod dimensions in Smith Chart code, (2) parabolic SWR approximation. Fix: Smith Chart now uses z0_gamma from matching_info (actual hardware), SWR curve is derived from Smith Chart reflection coefficients.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_swr_curve_physics.py",
+    "/app/test_reports/pytest/pytest_swr_curve_physics.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_swr_curve_physics.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "Not tested (backend-only testing requested)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P0 bug fix verified. The SWR curve minimum is now at operating frequency (27.185 MHz) not shifted higher. Smith Chart uses actual hardware z0_gamma from matching_info. SWR curve is derived from Smith Chart reflection coefficients using formula SWR = (1+|Γ|)/(1-|Γ|).",
+  "backend_test_results": {
+    "test_gamma_feed_swr_minimum_at_operating_freq": "PASSED - SWR minimum 1.230 at 27.185 MHz (0.000 MHz deviation)",
+    "test_direct_feed_swr_curve": "PASSED - SWR curve spans correct frequency range",
+    "test_hairpin_feed_swr_curve": "PASSED - SWR minimum achievable",
+    "test_designer_recipe_null_reachable_for_3el": "PASSED - null_reachable=true, bar=12.27\", insertion=10.66\"",
+    "test_designer_recipe_applied_to_calculator_swr_matches": "PASSED - Calculator SWR matches designer recipe SWR",
+    "test_smith_chart_uses_actual_z0_gamma": "PASSED - z0_gamma=350.8 ohms for spacing=3.5/rod=0.375",
+    "test_smith_chart_data_has_valid_structure": "PASSED - All fields present, frequency sweep correct",
+    "test_swr_curve_matches_smith_chart_gamma": "PASSED - SWR values match |Γ| from Smith Chart",
+    "test_gamma_vs_direct_feed_swr": "PASSED - Gamma SWR (1.23) < Direct SWR (2.53)"
+  },
+  "verified_p0_bug_fix": {
+    "issue": "After applying gamma designer recipe, main SWR meter showed antenna tuned to higher frequency than 27.185 MHz",
+    "root_cause_1": "Hardcoded rod dimensions (3.5/0.375) in Smith Chart code instead of using actual hardware from matching_info",
+    "root_cause_2": "SWR curve used parabolic approximation (calculate_swr_at_frequency) instead of full physics",
+    "fix_applied": "Smith Chart now uses z0_gamma from matching_info, SWR curve derived from Smith Chart reflection coefficients",
+    "verification": {
+      "swr_curve_minimum_freq": "27.185 MHz (exactly at operating frequency)",
+      "swr_curve_minimum_value": "1.230",
+      "deviation_from_operating_freq": "0.000 MHz",
+      "main_swr_matches_curve": true
+    }
+  },
+  "technical_details": {
+    "smith_chart_z0_gamma": "Now computed from matching_info.z0_gamma (actual hardware: rod_spacing, rod_dia)",
+    "swr_curve_derivation": "SWR = (1+|Γ|)/(1-|Γ|) where Γ is from Smith Chart impedance sweep",
+    "matching_info_fields": ["z0_gamma", "step_up_ratio", "z_matched_r", "z_matched_x", "reflection_coefficient"],
+    "physics_file_location": "backend/services/physics.py lines 1215-1282"
+  },
+  "rca_of_issue": {
+    "bug_description": "Gamma match designer recipe applied to main calculator showed SWR curve minimum at ~27.5 MHz instead of 27.185 MHz",
+    "root_cause": "Smith Chart code used hardcoded rod dimensions and SWR curve used parabolic approximation",
+    "fix": "Unified physics: Smith Chart uses actual z0_gamma from matching_info, SWR curve derived from reflection coefficients",
+    "reproduction_steps": [
+      "1. Get gamma designer recipe for 3-element Yagi at 27.185 MHz",
+      "2. Apply recipe to /api/calculate",
+      "3. Check SWR curve minimum frequency"
+    ],
+    "mitigation": "Full physics model now ensures SWR curve and Smith Chart are consistent with matching network parameters"
+  }
+}
