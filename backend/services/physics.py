@@ -357,6 +357,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "bandwidth_effect": bw_label, "bandwidth_mult": round(max(0.6, 1.0 - (q_factor - 12) * 0.02), 2),
                 "z0_gamma": round(z0_gamma, 1),
                 "x_stub": round(x_stub, 2), "x_cap": round(x_cap, 2),
+                "stub_inductance_nh": stub_inductance_nh,
+                "driven_element_dia_in": driven_element_dia_in,
                 "net_reactance": round(net_reactance, 2),
                 "z_matched_r": round(z_r_matched, 2), "z_matched_x": round(z_x_matched, 2),
                 "reflection_coefficient": round(gamma_mag, 6),
