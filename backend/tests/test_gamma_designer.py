@@ -12,6 +12,30 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 class TestGammaDesignerAutoHardware:
     """Tests for gamma designer with auto-selected hardware"""
 
+    def test_2element_auto_hardware_short_bar_position(self):
+        """2-element returns ideal_bar_position < 10 (short bar needed)"""
+        payload = {
+            "num_elements": 2,
+            "driven_element_length_in": 204.0,
+            "frequency_mhz": 27.185
+        }
+        response = requests.post(f"{BASE_URL}/api/gamma-designer", json=payload)
+        
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        data = response.json()
+        
+        recipe = data["recipe"]
+        
+        # 2-element has higher feedpoint impedance (~32 ohms) → needs less step-up → shorter bar
+        assert recipe["ideal_bar_position"] < 10, \
+            f"2-element bar ({recipe['ideal_bar_position']}\") should be < 10\""
+        
+        # Feedpoint impedance for 2-element should be around 32 ohms
+        assert 25.0 <= data["feedpoint_impedance"] <= 40.0, \
+            f"Feedpoint impedance {data['feedpoint_impedance']} unexpected for 2-element"
+        
+        print(f"✓ 2-element auto design: bar={recipe['ideal_bar_position']}\" (< 10\"), feedpoint={data['feedpoint_impedance']}Ω")
+
     def test_3element_auto_hardware_returns_recipe_with_swr_1(self):
         """3-element, 203" driven, 27.185 MHz returns recipe with SWR 1.0 and null_reachable=true"""
         payload = {
