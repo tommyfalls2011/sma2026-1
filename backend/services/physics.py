@@ -218,7 +218,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         #   - Shorting bar (4") slides along rod+element to tune resonance
         wavelength_in = 11802.71 / operating_freq_mhz
         gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m
-        tube_length = gamma_rod_length / 4.0  # ~8" tube
+        tube_length = 12.0  # 12" tube to accommodate teflon sleeve
         teflon_sleeve_in = 12.0  # 12" teflon sleeve on rod
         # Rod insertion: actual inches into tube (0 to tube_length)
         if gamma_element_gap is not None:
