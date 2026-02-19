@@ -278,9 +278,17 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         else:
             z0_gamma = 300.0
 
-        # Step-up ratio: K = sqrt(Z_target / Z_feedpoint)
-        step_up = math.sqrt(50.0 / max(feedpoint_r, 5.0))
+        # Step-up ratio from bar position geometry:
+        # K = 1 + bar_pos / half_element_length
+        # This ties K to the physical bar position on the driven element,
+        # so different Yagi designs need different bar positions for a 50Ω match.
+        half_len = max(driven_element_half_length_in, 1.0)
+        step_up = 1.0 + bar_inches / half_len
         k_sq = step_up ** 2
+        # Ideal bar position for perfect resistive match: R_feed * K² = 50
+        # → K_ideal = sqrt(50 / R_feed) → bar_ideal = half_len * (K_ideal - 1)
+        k_ideal = math.sqrt(50.0 / max(feedpoint_r, 5.0))
+        bar_ideal_inches = round(half_len * (k_ideal - 1.0), 2)
 
         # Shorted transmission line stub: X_stub = Z0 * tan(beta * L)
         wavelength_m = 299792458.0 / (operating_freq_mhz * 1e6)
