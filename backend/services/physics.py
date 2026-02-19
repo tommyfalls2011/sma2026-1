@@ -1910,6 +1910,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             operating_freq_mhz=frequency_mhz,
             num_elements=num_elements,
             driven_element_half_length_in=half_len,
+            element_resonant_freq_mhz=element_res_freq,
         )
         return matched_swr, info
 
