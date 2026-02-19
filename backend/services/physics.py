@@ -1205,11 +1205,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             omega_f = 2.0 * math.pi * freq_hz
             x_cap = -1.0 / (omega_f * (cap_pf * 1e-12)) if cap_pf > 0 else 0
 
-            # Transform R through step-up (degrades away from resonance)
-            freq_ratio = freq / smith_res_freq if smith_res_freq > 0 else 1.0
-            freq_dev = abs(freq_ratio - 1.0)
-            k_eff = k_sq * max(0.5, 1.0 - freq_dev * 3.0)
-            sc_r = sc_r * k_eff
+            # Transform R through step-up (K^2 is geometric, constant with frequency)
+            sc_r = sc_r * k_sq
 
             # Net reactance: natural antenna X (transformed) + stub - cap
             sc_x = (sc_x * step_up) + x_stub + x_cap
