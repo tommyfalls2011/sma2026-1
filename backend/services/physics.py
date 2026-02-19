@@ -1771,7 +1771,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else 15.0
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else round(wavelength_in * 0.045, 1)
 
     # Feedpoint impedance: user-provided or estimated from element count
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
@@ -1949,7 +1949,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             "tube_od": round(tube_od, 3),
             "tube_id": round(tube_id, 3),
             "rod_spacing": round(rod_spacing, 1),
-            "teflon_length": round(custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else 16.0, 1),
+            "teflon_length": round(custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0, 1),
             "tube_length": tube_length,
             "gamma_rod_length": round(gamma_rod_length, 1),
             "ideal_bar_position": round(bar_ideal_clamped, 2),
