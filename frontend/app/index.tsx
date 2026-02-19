@@ -1842,6 +1842,7 @@ export default function AntennaCalculator() {
                   </View>
                 )}
               </View>
+              )}
 
             </View>
           </View>
