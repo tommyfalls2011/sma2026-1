@@ -362,3 +362,16 @@ class SendUpdateEmail(BaseModel):
 
 class UpdateTutorialRequest(BaseModel):
     content: str
+
+
+
+# ── Gamma Match Designer ──
+class GammaDesignerRequest(BaseModel):
+    num_elements: int = Field(..., ge=2, le=20)
+    driven_element_length_in: float = Field(..., gt=0)
+    frequency_mhz: float = Field(default=27.185)
+    feedpoint_impedance: Optional[float] = Field(default=None, description="Override feedpoint R if known")
+    custom_tube_od: Optional[float] = Field(default=None, description="Custom tube OD in inches")
+    custom_rod_od: Optional[float] = Field(default=None, description="Custom rod OD in inches")
+    custom_rod_spacing: Optional[float] = Field(default=None, description="Custom rod-element spacing in inches")
+    custom_teflon_length: Optional[float] = Field(default=None, description="Custom teflon sleeve length in inches")
