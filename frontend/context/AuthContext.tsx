@@ -306,7 +306,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isFeatureAvailable = (feature: string): boolean => {
     if (!user || !tiers) return true; // Non-logged-in users see all features (gated by login elsewhere)
-    const tierInfo = tiers[user.subscription_tier];
+    // Admin/subadmin get everything
+    if (user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') return true;
+    // Tier data uses keys like 'bronze_monthly', but user.subscription_tier is 'bronze'
+    const tierKey = user.subscription_tier === 'trial' ? 'trial' : `${user.subscription_tier}_monthly`;
+    const tierInfo = tiers[tierKey];
     if (!tierInfo) return true;
     return tierInfo.features.includes('all') || tierInfo.features.includes(feature);
   };
