@@ -208,14 +208,28 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         elif swr <= 3.0: matched_swr = 1.10 + (swr - 2.0) * 0.10
         else: matched_swr = 1.20 + (swr - 3.0) * 0.15
         # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
-        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
-        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
-        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.5
+        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.5
+        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else 3.5
         # Shorting bar position in inches from feedpoint center (default 32")
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 32.0
-        # Convert inches to fraction of driven half-element for physics
-        wavelength_in = 11802.71 / operating_freq_mhz  # already in inches
-        half_element_in = wavelength_in * 0.23  # approximate half-element length
+        # Physical gamma match model:
+        #   - Gamma rod runs parallel to driven element (~32" for 11m CB)
+        #   - Tube at feedpoint end = 1/4 rod length (~8")
+        #   - Rod has 12" teflon sleeve (dielectric) that slides into tube
+        #   - Creates variable series capacitor
+        #   - Shorting bar (4") slides along rod+element to tune resonance
+        wavelength_in = 11802.71 / operating_freq_mhz
+        gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m
+        tube_length = gamma_rod_length / 4.0  # ~8" tube
+        teflon_sleeve_in = 12.0  # 12" teflon sleeve on rod
+        # Rod insertion: actual inches into tube (0 to tube_length)
+        if gamma_element_gap is not None:
+            rod_insertion_in = max(0, min(gamma_element_gap, tube_length))
+        else:
+            rod_insertion_in = tube_length / 2.0  # default = half tube = ~4"
+        insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
+        # Convert bar inches to fraction of driven half-element
+        half_element_in = wavelength_in * 0.23
         bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
         tuning_factor = 1.0
         # Shorting bar: acts as autotransformer tap on the driven element
