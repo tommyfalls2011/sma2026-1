@@ -203,10 +203,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
                            operating_freq_mhz: float = 27.185) -> tuple:
     if feed_type == "gamma":
-        if swr <= 1.2: matched_swr = 1.02 + (swr - 1.0) * 0.15
-        elif swr <= 2.0: matched_swr = 1.05 + (swr - 1.2) * 0.06
-        elif swr <= 3.0: matched_swr = 1.10 + (swr - 2.0) * 0.10
-        else: matched_swr = 1.20 + (swr - 3.0) * 0.15
+        # A properly tuned gamma match achieves 1.0:1 SWR
+        # SWR starts at 1.0 and deviations from optimal add small penalties
         # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.5
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else 3.5
