@@ -1917,19 +1917,23 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # Get ideal bar position from the same coupling formula as apply_matching_network
     _, probe_info = _eval(13.0, 8.0)
     coupling_multiplier = probe_info.get("coupling_multiplier", 4.5)
+    x_antenna_at_center = probe_info.get("x_antenna", 0)  # antenna reactance at operating freq
+
     k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
     bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
     bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
 
-    # Find null ANALYTICALLY using X_stub from apply_matching_network
+    # Find null ANALYTICALLY: X_antenna*K + X_stub + X_cap = 0
     _, stub_info = _eval(bar_ideal_clamped, 0.001)
     x_stub_val = stub_info.get("x_stub", 0)
+    x_ant_k = x_antenna_at_center * k_ideal  # antenna X transformed by K
 
-    # Null occurs when X_cap = -X_stub, i.e. C = 1/(omega * X_stub)
+    # Null: cap must cancel both antenna reactance and stub inductance
     omega = 2.0 * math.pi * frequency_mhz * 1e6
     null_reachable = True
-    if x_stub_val > 0:
-        c_needed_pf = 1e12 / (omega * x_stub_val)
+    positive_x_total = x_ant_k + x_stub_val  # total reactance to cancel with cap
+    if positive_x_total > 0:
+        c_needed_pf = 1e12 / (omega * positive_x_total)
         optimal_insertion = c_needed_pf / cap_per_inch
         if optimal_insertion > tube_length or optimal_insertion < 0:
             null_reachable = False
@@ -1937,6 +1941,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         optimal_insertion = 0.0
         c_needed_pf = 0.0
+        null_reachable = False
 
     # If null not reachable at ideal bar, OPTIMIZE: sweep bar positions to find
     # the best achievable SWR within the tube length. A longer bar increases
