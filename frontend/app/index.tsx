@@ -3638,6 +3638,19 @@ export default function AntennaCalculator() {
         </View>
       </Modal>
 
+      {/* Gamma Match Designer Modal */}
+      <GammaDesigner
+        visible={showGammaDesigner}
+        onClose={() => setShowGammaDesigner(false)}
+        numElements={inputs.num_elements}
+        drivenLength={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.length || '203') || 203}
+        frequencyMhz={inputs.frequency_mhz}
+        onApply={(barPos, insertion) => {
+          setGammaBarPos(barPos);
+          setGammaRodInsertion(insertion);
+        }}
+      />
+
     </SafeAreaView>
   );
 }
