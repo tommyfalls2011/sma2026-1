@@ -1824,24 +1824,23 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
     bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
 
-    # Binary search for null insertion at ideal bar position
-    lo, hi = 0.0, tube_length
-    for _ in range(40):
-        mid = (lo + hi) / 2
-        _, info_mid = _eval(bar_ideal_clamped, mid)
-        net_x = info_mid.get("net_reactance", 0)
-        if net_x > 0:
-            lo = mid
-        else:
-            hi = mid
-    optimal_insertion = (lo + hi) / 2
+    # Find null ANALYTICALLY using X_stub from apply_matching_network
+    # Get X_stub at ideal bar with minimal insertion (to avoid cap interference)
+    _, stub_info = _eval(bar_ideal_clamped, 0.001)
+    x_stub_val = stub_info.get("x_stub", 0)
 
-    # Check if null is reachable: if at full insertion X is still positive
-    _, info_full = _eval(bar_ideal_clamped, tube_length)
-    null_reachable = info_full.get("net_reactance", 0) <= 0
-
-    if not null_reachable:
-        optimal_insertion = tube_length
+    # Null occurs when X_cap = -X_stub, i.e. C = 1/(omega * X_stub)
+    omega = 2.0 * math.pi * frequency_mhz * 1e6
+    null_reachable = True
+    if x_stub_val > 0:
+        c_needed_pf = 1e12 / (omega * x_stub_val)
+        optimal_insertion = c_needed_pf / cap_per_inch
+        if optimal_insertion > tube_length or optimal_insertion < 0:
+            null_reachable = False
+            optimal_insertion = tube_length
+    else:
+        optimal_insertion = 0.0
+        c_needed_pf = 0.0
 
     # Get authoritative values at the design point
     matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
