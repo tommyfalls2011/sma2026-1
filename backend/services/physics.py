@@ -198,7 +198,7 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
 def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0,
                            gamma_rod_dia: float = None, gamma_rod_spacing: float = None,
                            gamma_bar_pos: float = None, gamma_element_gap: float = None,
-                           gamma_cap_pf: float = None,
+                           gamma_cap_pf: float = None, gamma_tube_od: float = None,
                            hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
                            operating_freq_mhz: float = 27.185,
@@ -238,6 +238,14 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else default_rod_od
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else default_spacing
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 13.0
+
+        # Allow custom tube OD override
+        if gamma_tube_od and gamma_tube_od > 0:
+            actual_tube_od = gamma_tube_od
+            tube_id = actual_tube_od - 2 * wall
+        else:
+            actual_tube_od = default_tube_od
+            tube_id = default_tube_id
 
         wavelength_in = 11802.71 / operating_freq_mhz
         gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m CB
