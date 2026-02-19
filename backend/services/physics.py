@@ -210,7 +210,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else None
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else None
-        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.125
+        rod_insertion = gamma_element_gap if gamma_element_gap is not None else 0.5
         # Shorting bar position in inches from feedpoint center (default 32")
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 32.0
         # Convert inches to fraction of driven half-element for physics
@@ -732,7 +732,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
         # Rules of thumb
         gamma_rod_dia = 0.5  # Default 1/2" rod
-        gamma_rod_spacing = 3.0  # Default 3" center-to-center
+        gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
         gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
         # Series capacitance: compute locally (same formula as in apply_matching_network)
         design_auto_cap_pf = round(6.9 * wavelength, 1)

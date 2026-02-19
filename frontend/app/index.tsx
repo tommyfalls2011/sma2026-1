@@ -109,10 +109,10 @@ export default function AntennaCalculator() {
   const [hairpinBoomGap, setHairpinBoomGap] = useState(1.0); // inches from rods to boom
   // Gamma design adjustments
   const [gammaRodDia, setGammaRodDia] = useState<string | null>(null);
-  const [gammaRodSpacing, setGammaRodSpacing] = useState<string | null>('3');
+  const [gammaRodSpacing, setGammaRodSpacing] = useState<string | null>('3.5');
   const [gammaCapPf, setGammaCapPf] = useState<string | null>(null);
   const [gammaBarPos, setGammaBarPos] = useState(32); // shorting bar position in inches from feedpoint center
-  const [gammaRodInsertion, setGammaRodInsertion] = useState(0.125); // rod insertion into tube (series capacitor)
+  const [gammaRodInsertion, setGammaRodInsertion] = useState(0.5); // rod insertion into tube (series capacitor) — default half the tube
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
