@@ -38,7 +38,7 @@ interface DesignerResult {
   error?: string;
 }
 
-export function GammaDesigner({ visible, onClose, numElements, drivenLength, frequencyMhz, onApply }: GammaDesignerProps) {
+export function GammaDesigner({ visible, onClose, numElements, drivenLength, frequencyMhz, calculatedFeedpointR, currentRodDia, currentRodSpacing, onApply }: GammaDesignerProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DesignerResult | null>(null);
   const [showCustom, setShowCustom] = useState(false);
