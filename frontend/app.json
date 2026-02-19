@@ -63,8 +63,8 @@
         "projectId": "6e765fe6-aa21-4fce-accc-6815d4db4bfc"
       },
       "router": {
-        "origin": "https://release-auto.preview.emergentagent.com",
-        "headOrigin": "https://release-auto.preview.emergentagent.com"
+        "origin": "https://gamma-physics-sim.preview.emergentagent.com",
+        "headOrigin": "https://gamma-physics-sim.preview.emergentagent.com"
       }
     },
     "runtimeVersion": {
