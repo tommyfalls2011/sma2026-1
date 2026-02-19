@@ -1738,7 +1738,7 @@ export default function AntennaCalculator() {
                       <View style={{ marginBottom: 4 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Rod Insertion (Capacitance)</Text>
-                          <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{gammaRodInsertion.toFixed(1)}" into {results?.matching_info?.tube_length_inches?.toFixed(1) || '~8'}" tube</Text>
+                          <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{gammaRodInsertion.toFixed(1)}" into {results?.matching_info?.tube_length_inches?.toFixed(1) || '22'}" tube</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Pressable onPress={() => setGammaRodInsertion(Math.max(0, gammaRodInsertion - 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginRight: 6 }}>
@@ -1753,7 +1753,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Less capacitance (0")</Text>
-                          <Text style={{ fontSize: 9, color: '#888' }}>{results?.matching_info?.teflon_sleeve_inches?.toFixed(0) || '~16'}" teflon sleeve on rod</Text>
+                          <Text style={{ fontSize: 9, color: '#888' }}>{results?.matching_info?.teflon_sleeve_inches?.toFixed(0) || '23'}" teflon sleeve on rod</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>More capacitance ({(results?.matching_info?.tube_length_inches || 8).toFixed(0)}")</Text>
                         </View>
                       </View>
