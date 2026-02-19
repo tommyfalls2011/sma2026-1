@@ -35,6 +35,16 @@ export default function AntennaCalculator() {
   const router = useRouter();
   const { user, token, loading: authLoading, getMaxElements, isFeatureAvailable, tiers } = useAuth();
   
+  // Feature gate helper — returns true if feature is available, shows upgrade alert if not
+  const checkFeature = (feature: string, featureLabel: string): boolean => {
+    if (!user) return true; // Non-logged-in users get unrestricted UI (they're gated by login/subscription elsewhere)
+    if (isFeatureAvailable(feature)) return true;
+    Alert.alert('Upgrade Required', `"${featureLabel}" is not available on your ${user.subscription_tier} plan. Upgrade to unlock this feature!`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Upgrade', onPress: () => router.push('/subscription') }
+    ]);
+    return false;
+  };
   const [inputs, setInputs] = useState<AntennaInput>({
     num_elements: 2,
     elements: [
