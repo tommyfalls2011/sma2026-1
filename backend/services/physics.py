@@ -271,7 +271,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Series cap: use physical capacitor value or user override
         wavelength_m = 11802.71 / operating_freq_mhz / 39.3701
         auto_cap_pf = round(6.9 * wavelength_m, 1)
-        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else auto_cap_pf
+        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else (insertion_cap_pf if insertion_cap_pf > 0 else auto_cap_pf)
         cap_ratio = user_cap / max(auto_cap_pf, 1.0)
         cap_deviation = abs(cap_ratio - 1.0)
         cap_penalty = cap_deviation ** 0.6 * 0.8
