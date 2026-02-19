@@ -1747,7 +1747,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Less capacitance (0")</Text>
-                          <Text style={{ fontSize: 9, color: '#888' }}>12" teflon sleeve on rod</Text>
+                          <Text style={{ fontSize: 9, color: '#888' }}>{results?.matching_info?.teflon_sleeve_inches?.toFixed(0) || '~16'}" teflon sleeve on rod</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>More capacitance ({(results?.matching_info?.tube_length_inches || 8).toFixed(0)}")</Text>
                         </View>
                       </View>
