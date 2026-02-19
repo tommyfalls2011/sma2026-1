@@ -55,6 +55,13 @@ Custom tube OD supported via gamma_tube_od API parameter.
 
 ## Session History
 
+### Session: Feb 19, 2026 (Fork 5)
+- **(P0) Custom Hardware Test**: 1" OD tube / 1/2" rod — cap/inch=5.03, ID/rod ratio 1.80:1 (above optimal 1.3-1.6x). Null at 20.4" exceeds 15" tube. Best SWR=1.29 at full insertion. Confirmed hardware mismatch.
+- **(P1) Geometric K from Bar Position**: COMPLETE. K = 1 + (bar_pos / half_element_length) × (Z0_gamma / 73). Coupling multiplier derived from two-wire line impedance, normalized to free-space dipole Z. New output fields: step_up_k_squared, ideal_bar_position_inches, ideal_step_up_ratio, coupling_multiplier. 12 new tests + 13 regression pass.
+  - 2-element: ideal bar 6.5", R_feed ~29Ω
+  - 3-element: ideal bar 12.6", R_feed ~20Ω → SWR 1.0 at null
+  - 5-element: ideal bar 22.3", R_feed ~13Ω → SWR 1.0 at null
+
 ### Session: Feb 19, 2026 (Fork 4)
 - **(P0) SWR/Smith Chart Unification**: COMPLETE. SWR derives from Gamma = (Z-50)/(Z+50). 13 automated tests pass.
 - **(P1) release.sh Fix**: COMPLETE. Handles pre-existing releases by deleting old assets.
