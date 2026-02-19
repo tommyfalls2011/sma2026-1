@@ -58,7 +58,7 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend + MongoDB) 
 8. **driven_element_dia_in Parameter**: Added to `apply_matching_network()` function signature and passed from caller. Used in Z0 geometric mean calculation.
 9. **Gamma Parameter Sweep Simulation** (`/app/backend/gamma_sweep.py`): Tested 3960 combinations of tube OD (10 sizes), rod OD (4 tube/rod ratios: 1.3-1.6), tube length (10 lengths), and rod length (22-48"). Found ~130 pF is the magic capacitance for cancelling stub inductance at 27.185 MHz with 25Ω feedpoint.
 
-### Session: Feb 19, 2026 (Fork 8 — CURRENT) — COMPLETED
+### Session: Feb 19, 2026 (Fork 8) — COMPLETED
 
 #### Bug Fixes & Physics Overhaul (Tested, all passing)
 1. **(P0) Dynamic Tube Length**: Changed hardcoded `tube_length = 15.0"` to `round(gamma_rod_length, 1)` (~19.5" for 11m CB)
