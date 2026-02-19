@@ -1746,3 +1746,199 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         notes.append(f"Note: No reflector mode - reduced F/B ratio")
 
     return AutoTuneOutput(optimized_elements=elements, predicted_swr=predicted_swr, predicted_gain=predicted_gain, predicted_fb_ratio=round(max(predicted_fb, 6), 1), optimization_notes=notes)
+
+
+# ════════════════════════════════════════════════════════════════
+# Gamma Match Designer — one-click recipe for any Yagi
+# ════════════════════════════════════════════════════════════════
+
+# Typical feedpoint impedance by element count (standard Yagi spacings)
+_FEEDPOINT_R_TABLE = {
+    2: 32.0, 3: 20.0, 4: 16.0, 5: 13.5, 6: 12.0, 7: 11.0,
+    8: 10.0, 9: 9.5, 10: 9.0, 11: 8.5, 12: 8.0, 13: 7.8,
+    14: 7.5, 15: 7.2, 16: 7.0, 17: 6.8, 18: 6.5, 19: 6.3, 20: 6.0,
+}
+
+
+def design_gamma_match(num_elements: int, driven_element_length_in: float,
+                       frequency_mhz: float = 27.185,
+                       feedpoint_impedance: float = None,
+                       custom_tube_od: float = None, custom_rod_od: float = None,
+                       custom_rod_spacing: float = None,
+                       custom_teflon_length: float = None) -> dict:
+    """Design a gamma match recipe for a given Yagi configuration."""
+    wall = 0.049
+    half_len = driven_element_length_in / 2.0
+    wavelength_in = 11802.71 / frequency_mhz
+    tube_length = 15.0
+    teflon_length = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else 16.0
+
+    # Feedpoint impedance: user-provided or estimated from element count
+    r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
+
+    # Hardware selection: custom or auto-scaled
+    is_custom = bool(custom_tube_od or custom_rod_od)
+    if num_elements <= 3:
+        auto_rod = 0.375; auto_tube = 0.625; auto_spacing = 3.5
+    elif num_elements <= 6:
+        auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 4.0
+    elif num_elements <= 10:
+        auto_rod = 0.500; auto_tube = 0.875; auto_spacing = 4.5
+    elif num_elements <= 14:
+        auto_rod = 0.625; auto_tube = 1.000; auto_spacing = 5.0
+    elif num_elements <= 17:
+        auto_rod = 0.625; auto_tube = 1.125; auto_spacing = 5.5
+    else:
+        auto_rod = 0.750; auto_tube = 1.250; auto_spacing = 6.0
+
+    rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
+    tube_od = custom_tube_od if custom_tube_od and custom_tube_od > 0 else auto_tube
+    rod_spacing = custom_rod_spacing if custom_rod_spacing and custom_rod_spacing > 0 else auto_spacing
+    tube_id = tube_od - 2 * wall
+
+    # Validate geometry
+    if tube_id <= rod_od:
+        return {"error": f"Tube ID ({tube_id:.3f}\") must be larger than rod OD ({rod_od:.3f}\"). Increase tube OD or decrease rod OD."}
+
+    # Capacitance per inch
+    cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
+    id_rod_ratio = tube_id / rod_od
+
+    # Z0 of gamma section
+    z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_od) if rod_spacing > rod_od / 2 else 300.0
+    coupling_multiplier = z0_gamma / 73.0
+
+    # Ideal K and bar position
+    k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
+    bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
+    gamma_rod_length = wavelength_in * 0.074
+
+    # Clamp bar to rod length
+    bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
+
+    # At ideal bar position, compute K and R_matched
+    k_at_ideal = 1.0 + (bar_ideal_clamped / half_len) * coupling_multiplier
+    r_matched_at_ideal = r_feed * k_at_ideal ** 2
+
+    # X_stub at ideal bar position
+    wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
+    omega = 2.0 * math.pi * frequency_mhz * 1e6
+    bar_m = bar_ideal_clamped * 0.0254
+    beta_l = 2.0 * math.pi * bar_m / wavelength_m
+    x_stub = z0_gamma * math.tan(beta_l)
+
+    # Binary search for insertion that cancels X_stub
+    # X_cap = -1/(omega * C), C = cap_per_inch * insertion
+    # Need X_cap = -X_stub → C_needed = 1/(omega * X_stub) → ins = C_needed / cap_per_inch
+    null_reachable = True
+    if x_stub > 0:
+        c_needed_pf = 1e12 / (omega * x_stub)
+        optimal_insertion = c_needed_pf / cap_per_inch
+        if optimal_insertion > tube_length:
+            null_reachable = False
+            optimal_insertion = tube_length
+    else:
+        optimal_insertion = 0.0
+        c_needed_pf = 0.0
+
+    # Compute final values at optimal insertion
+    actual_cap = cap_per_inch * optimal_insertion
+    x_cap = -1.0 / (omega * actual_cap * 1e-12) if actual_cap > 0 else 0
+    net_x = x_stub + x_cap
+
+    # SWR at the design point
+    z_r = r_matched_at_ideal
+    z_x = net_x
+    z0 = 50.0
+    denom = (z_r + z0) ** 2 + z_x ** 2
+    gamma_re = ((z_r - z0) * (z_r + z0) + z_x ** 2) / denom if denom > 0 else 0
+    gamma_im = (2 * z_x * z0) / denom if denom > 0 else 0
+    gamma_mag = min(math.sqrt(gamma_re ** 2 + gamma_im ** 2), 0.999)
+    swr = round((1 + gamma_mag) / (1 - gamma_mag), 3) if gamma_mag < 1.0 else 99.0
+    swr = max(1.0, swr)
+    rl = round(-20 * math.log10(max(gamma_mag, 1e-8)), 2)
+    rl = min(rl, 80.0)
+
+    # Build sweep data: bar position sweep at optimal insertion
+    bar_sweep = []
+    for b_pct in range(0, 105, 5):
+        b = gamma_rod_length * b_pct / 100.0
+        k_b = 1.0 + (b / half_len) * coupling_multiplier
+        r_b = r_feed * k_b ** 2
+        b_m = b * 0.0254
+        bl = 2.0 * math.pi * b_m / wavelength_m
+        xs_b = z0_gamma * math.tan(bl)
+        xc_b = -1.0 / (omega * actual_cap * 1e-12) if actual_cap > 0 else 0
+        nx_b = xs_b + xc_b
+        d_b = (r_b + z0) ** 2 + nx_b ** 2
+        gr_b = ((r_b - z0) * (r_b + z0) + nx_b ** 2) / d_b if d_b > 0 else 0
+        gi_b = (2 * nx_b * z0) / d_b if d_b > 0 else 0
+        gm_b = min(math.sqrt(gr_b ** 2 + gi_b ** 2), 0.999)
+        s_b = round((1 + gm_b) / (1 - gm_b), 3) if gm_b < 1.0 else 99.0
+        bar_sweep.append({"bar_inches": round(b, 2), "k": round(k_b, 3),
+                          "r_matched": round(r_b, 2), "x_net": round(nx_b, 2), "swr": max(1.0, s_b)})
+
+    # Insertion sweep at ideal bar position
+    ins_sweep = []
+    for i_pct in range(0, 105, 5):
+        ins = tube_length * i_pct / 100.0
+        c_i = cap_per_inch * ins
+        xc_i = -1.0 / (omega * c_i * 1e-12) if c_i > 0 else 0
+        nx_i = x_stub + xc_i
+        d_i = (r_matched_at_ideal + z0) ** 2 + nx_i ** 2
+        gr_i = ((r_matched_at_ideal - z0) * (r_matched_at_ideal + z0) + nx_i ** 2) / d_i if d_i > 0 else 0
+        gi_i = (2 * nx_i * z0) / d_i if d_i > 0 else 0
+        gm_i = min(math.sqrt(gr_i ** 2 + gi_i ** 2), 0.999)
+        s_i = round((1 + gm_i) / (1 - gm_i), 3) if gm_i < 1.0 else 99.0
+        ins_sweep.append({"insertion_inches": round(ins, 2), "cap_pf": round(c_i, 1),
+                          "x_net": round(nx_i, 2), "swr": max(1.0, s_i)})
+
+    # Notes
+    notes = []
+    if is_custom:
+        notes.append(f"Custom hardware: {tube_od:.3f}\" tube / {rod_od:.3f}\" rod")
+        if id_rod_ratio > 2.0:
+            notes.append(f"WARNING: ID/rod ratio {id_rod_ratio:.2f}:1 exceeds optimal 1.3-1.6x. Low cap/inch may prevent null.")
+        elif id_rod_ratio < 1.2:
+            notes.append(f"WARNING: ID/rod ratio {id_rod_ratio:.2f}:1 is very tight. Assembly may be difficult.")
+    else:
+        notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
+    if not null_reachable:
+        notes.append(f"NULL NOT REACHABLE: Need {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is only {tube_length}\".")
+        notes.append(f"Options: longer tube, smaller tube OD (more cap/inch), or external trim cap.")
+    if feedpoint_impedance:
+        notes.append(f"Using user-provided feedpoint impedance: {feedpoint_impedance:.1f} ohms")
+    else:
+        notes.append(f"Estimated feedpoint impedance for {num_elements}-element Yagi: {r_feed:.1f} ohms")
+
+    return {
+        "recipe": {
+            "rod_od": round(rod_od, 3),
+            "tube_od": round(tube_od, 3),
+            "tube_id": round(tube_id, 3),
+            "rod_spacing": round(rod_spacing, 1),
+            "teflon_length": round(teflon_length, 1),
+            "tube_length": tube_length,
+            "gamma_rod_length": round(gamma_rod_length, 1),
+            "ideal_bar_position": round(bar_ideal_clamped, 2),
+            "optimal_insertion": round(optimal_insertion, 2),
+            "swr_at_null": swr,
+            "return_loss_at_null": rl,
+            "capacitance_at_null": round(actual_cap, 1),
+            "z_matched_r": round(z_r, 2),
+            "z_matched_x": round(z_x, 2),
+            "k_step_up": round(k_at_ideal, 3),
+            "k_squared": round(k_at_ideal ** 2, 3),
+            "coupling_multiplier": round(coupling_multiplier, 3),
+            "cap_per_inch": round(cap_per_inch, 3),
+            "id_rod_ratio": round(id_rod_ratio, 3),
+            "null_reachable": null_reachable,
+        },
+        "feedpoint_impedance": round(r_feed, 1),
+        "hardware_source": "custom" if is_custom else "auto",
+        "auto_hardware": {"rod_od": auto_rod, "tube_od": auto_tube, "spacing": auto_spacing},
+        "bar_sweep": bar_sweep,
+        "insertion_sweep": ins_sweep,
+        "notes": notes,
+    }
+
