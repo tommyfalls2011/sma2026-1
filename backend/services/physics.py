@@ -441,16 +441,25 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 {"var": "C_series", "val": round(user_cap, 1), "unit": "pF"},
                 {"var": "X_cap", "val": round(x_cap, 2), "unit": "Ω", "formula": f"-1 / (ω × C)"},
             ]},
-            {"step": 8, "label": "NET REACTANCE", "items": [
-                {"var": "X_net", "val": round(net_reactance, 2), "unit": "Ω", "formula": f"{round(x_stub,2)} + ({round(x_cap,2)})"},
+            {"step": 8, "label": "ANTENNA REACTANCE", "items": [
+                {"var": "element_res_freq", "val": round(element_resonant_freq_mhz, 3), "unit": "MHz"},
+                {"var": "f_op/f_res", "val": round(operating_freq_mhz / max(element_resonant_freq_mhz, 1), 4), "unit": ""},
+                {"var": "X_antenna", "val": round(x_antenna, 2), "unit": "Ω", "formula": f"Q×R×(fr-1/fr)"},
+                {"var": "X_ant×K", "val": round(x_antenna * step_up, 2), "unit": "Ω"},
             ]},
-            {"step": 9, "label": "IMPEDANCE TRANSFORM", "items": [
+            {"step": 9, "label": "NET REACTANCE", "items": [
+                {"var": "X_ant×K", "val": round(x_antenna * step_up, 2), "unit": "Ω"},
+                {"var": "X_stub", "val": round(x_stub, 2), "unit": "Ω"},
+                {"var": "X_cap", "val": round(x_cap, 2), "unit": "Ω"},
+                {"var": "X_total", "val": round(z_x_matched, 2), "unit": "Ω", "formula": f"{round(x_antenna*step_up,1)} + {round(x_stub,1)} + ({round(x_cap,1)})"},
+            ]},
+            {"step": 10, "label": "IMPEDANCE TRANSFORM", "items": [
                 {"var": "R_feed", "val": round(feedpoint_r, 2), "unit": "Ω"},
                 {"var": "R_matched", "val": round(z_r_matched, 2), "unit": "Ω", "formula": f"{round(feedpoint_r,1)} × {round(k_sq,3)}"},
                 {"var": "X_matched", "val": round(z_x_matched, 2), "unit": "Ω"},
                 {"var": "Z_matched", "val": f"{round(z_r_matched,1)} {'+' if z_x_matched >= 0 else ''}{round(z_x_matched,1)}j", "unit": "Ω"},
             ]},
-            {"step": 10, "label": "REFLECTION & SWR", "items": [
+            {"step": 11, "label": "REFLECTION & SWR", "items": [
                 {"var": "Z0_line", "val": 50.0, "unit": "Ω"},
                 {"var": "Γ_real", "val": round(gamma_re, 6), "unit": ""},
                 {"var": "Γ_imag", "val": round(gamma_im, 6), "unit": ""},
