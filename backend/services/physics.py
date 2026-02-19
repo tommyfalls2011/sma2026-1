@@ -224,7 +224,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         if gamma_element_gap is not None:
             rod_insertion_in = max(0, min(gamma_element_gap, tube_length))
         else:
-            rod_insertion_in = tube_length / 2.0  # default = half tube = ~4"
+            rod_insertion_in = 8.0  # default = 8" in, 4" teflon exposed
         insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
         # Convert bar inches to fraction of driven half-element
         half_element_in = wavelength_in * 0.23
