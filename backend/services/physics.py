@@ -1212,16 +1212,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gain_breakdown["final_gain"] = gain_dbi
         antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
 
-    # Resonant frequency for impedance sweep
-    curve_resonant_freq = center_freq
-    if feed_type != "direct" and matching_info:
-        if "resonant_freq_mhz" in matching_info:
-            curve_resonant_freq = matching_info["resonant_freq_mhz"]
+    # Antenna resonant frequency for impedance model (element geometry, NOT bar-position formula)
+    smith_res_freq = element_resonant_freq if element_resonant_freq > 0 else center_freq
 
     # ── Smith Chart Data: full-physics impedance sweep across frequency ──
     # Computed FIRST so we can derive the SWR curve from actual impedance
     smith_chart_data = []
-    smith_res_freq = curve_resonant_freq
     for i in range(-30, 31):
         freq = center_freq + (i * channel_spacing)
         sc_r = yagi_feedpoint_r
