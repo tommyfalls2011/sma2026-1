@@ -846,16 +846,17 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         # Driven element diameter (get from actual element data)
         driven_elem_calc = next((e for e in input_data.elements if e.element_type == "driven"), None)
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
-        # Rules of thumb
-        gamma_rod_dia = 0.500  # 1/2" rod standard stock
-        gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
-        gamma_rod_length = round(wavelength_in * 0.045, 2)  # 4-5% of λ (~19" at 11m CB)
+        # Use actual hardware from matching calculation
+        hw = matching_info.get("hardware", {})
+        gamma_rod_dia = hw.get("rod_od", 0.500)
+        gamma_rod_spacing = hw.get("rod_spacing", 3.5)
+        gamma_rod_length = round(wavelength_in * 0.045, 2)
+        design_tube_length = hw.get("tube_length", round(wavelength_in * 0.045, 1))
+        design_tube_id = hw.get("tube_id", 0.652)
+        design_rod_od = gamma_rod_dia
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
-        # Real dims: 5/8" tube (0.049" wall → 0.527" ID), 3/8" rod, teflon
         rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
-        rod_insertion_design = max(0, min(rod_insertion_design, 11.0))
-        design_tube_id = 0.527
-        design_rod_od = 0.500
+        rod_insertion_design = max(0, min(rod_insertion_design, design_tube_length))
         if rod_insertion_design > 0 and design_tube_id > design_rod_od:
             design_cap_per_inch = 1.413 * 2.1 / math.log(design_tube_id / design_rod_od)
             design_auto_cap_pf = round(design_cap_per_inch * rod_insertion_design, 1)
@@ -872,8 +873,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_diameter_in": gamma_rod_dia,
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
-            "tube_length_in": round(wavelength_in * 0.045, 1),  # matches rod length
-            "teflon_sleeve_in": round(wavelength_in * 0.045 + 1.0, 1),
+            "tube_length_in": round(design_tube_length, 1),
+            "teflon_sleeve_in": round(design_tube_length + 1.0, 1),
             "capacitance_pf": design_user_cap,
             "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
