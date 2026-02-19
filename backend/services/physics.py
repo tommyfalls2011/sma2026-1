@@ -782,6 +782,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_diameter_in": gamma_rod_dia,
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
+            "tube_length_in": round(gamma_rod_length / 4.0, 2),
+            "teflon_sleeve_in": 12.0,
             "capacitance_pf": design_user_cap,
             "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
