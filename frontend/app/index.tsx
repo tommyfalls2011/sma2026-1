@@ -13,6 +13,7 @@ import {
   ResultCard, SwrMeter, PolarPattern, ElevationPattern, SmithChart,
   Dropdown, ElementInput, SpecSection, SpecRow,
 } from '../components';
+import { FeatureGate } from '../components/FeatureGate';
 import type { ElementDimension, TaperSection, TaperConfig, CoronaBallConfig, StackingConfig, AntennaInput, AntennaOutput, HeightOptResult } from '../components';
 
 // Lazy-load native-only modules to avoid SSR crash
