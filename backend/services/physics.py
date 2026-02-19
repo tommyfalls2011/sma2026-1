@@ -1044,12 +1044,16 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     # Coax feedline loss calculation
     coax_loss_table = {
-        "ldf5-50a": {"name": "LDF5-50A 7/8\" Heliax", "loss_per_100ft": 0.22, "power_rating_watts": 14000, "velocity_factor": 0.89},
-        "ldf4-50a": {"name": "LDF4-50A 1/2\" Heliax", "loss_per_100ft": 0.41, "power_rating_watts": 4800, "velocity_factor": 0.88},
+        "ldf550a": {"name": "LDF5-50A 7/8\" Heliax", "loss_per_100ft": 0.22, "power_rating_watts": 14000, "velocity_factor": 0.89},
+        "ldf450a": {"name": "LDF4-50A 1/2\" Heliax", "loss_per_100ft": 0.41, "power_rating_watts": 4800, "velocity_factor": 0.88},
         "rg213": {"name": "RG-213/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
+        "rg213u": {"name": "RG-213/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
         "rg8": {"name": "RG-8/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
+        "rg8u": {"name": "RG-8/U", "loss_per_100ft": 1.0, "power_rating_watts": 1000, "velocity_factor": 0.66},
         "rg8x": {"name": "RG-8X Mini-8", "loss_per_100ft": 1.6, "power_rating_watts": 300, "velocity_factor": 0.78},
+        "rg8xmini8": {"name": "RG-8X Mini-8", "loss_per_100ft": 1.6, "power_rating_watts": 300, "velocity_factor": 0.78},
         "rg58": {"name": "RG-58/U", "loss_per_100ft": 2.4, "power_rating_watts": 200, "velocity_factor": 0.66},
+        "rg58u": {"name": "RG-58/U", "loss_per_100ft": 2.4, "power_rating_watts": 200, "velocity_factor": 0.66},
     }
     coax_type = getattr(input_data, 'coax_type', 'ldf5-50a').lower().replace('-', '').replace('/', '').replace(' ', '')
     coax_length_ft = getattr(input_data, 'coax_length_ft', 100.0)
