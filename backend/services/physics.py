@@ -1861,6 +1861,13 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wavelength_in = 11802.71 / frequency_mhz
     tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else round(wavelength_in * 0.045, 1)
 
+    # Element resonant frequency from driven element length
+    wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
+    ideal_half_wave_m = wavelength_m / 2.0
+    driven_len_m = driven_element_length_in * 0.0254
+    length_ratio = driven_len_m / ideal_half_wave_m if ideal_half_wave_m > 0 else 1.0
+    element_res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
+
     # Feedpoint impedance: user-provided or estimated from element count
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
