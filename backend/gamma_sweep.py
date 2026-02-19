@@ -71,12 +71,11 @@ for tube_od in TUBE_ODS:
                 for bar_tenth in range(40, int(rod_len * 10) + 1, 5):  # 0.5" steps
                     bar_pos = bar_tenth / 10.0
                     
-                    # Geometric K factor from bar position
+                    # K factor: K = 1 + (bar/half_element) * coupling_multiplier
+                    # coupling_multiplier = Z0_gamma / 73 (free-space dipole normalization)
                     half_el = 101.5  # ~half of 203" driven element
-                    k_geo = 1.0 + bar_pos / half_el
-                    # Coupling multiplier from Z0
-                    coupling = z0_gamma / 75.0
-                    k = k_geo * coupling
+                    coupling_mult = z0_gamma / 73.0
+                    k = 1.0 + (bar_pos / half_el) * coupling_mult
                     k_sq = k ** 2
                     
                     # Transformed resistance
