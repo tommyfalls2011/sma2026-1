@@ -1277,6 +1277,13 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
     usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
 
+    # Derive gamma-tuned resonant frequency from actual SWR curve minimum
+    if swr_curve:
+        min_swr_pt = min(swr_curve, key=lambda p: p["swr"])
+        curve_resonant_freq = min_swr_pt["frequency"]
+    else:
+        curve_resonant_freq = center_freq
+
     # Far field pattern
     far_field_pattern = []
     for angle in range(0, 361, 5):
