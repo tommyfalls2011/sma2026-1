@@ -2640,10 +2640,10 @@ export default function AntennaCalculator() {
                         <Text style={{ fontSize: 15, color: '#FF9800', fontWeight: '700' }}>{results.matching_info.element_resonant_freq_mhz} MHz</Text>
                       </View>
                     )}
-                    {results.matching_info.resonant_freq_mhz && (
+                    {results.resonant_freq_mhz && (
                       <View style={{ flex: 1, alignItems: 'center' }}>
                         <Text style={{ fontSize: 9, color: '#888' }}>{results.feed_type === 'gamma' ? 'Gamma Tuned' : 'Match Tuned'}</Text>
-                        <Text style={{ fontSize: 15, color: '#4CAF50', fontWeight: '700' }}>{results.matching_info.resonant_freq_mhz} MHz</Text>
+                        <Text style={{ fontSize: 15, color: '#4CAF50', fontWeight: '700' }}>{results.resonant_freq_mhz} MHz</Text>
                       </View>
                     )}
                     {results.matching_info.q_factor && (
