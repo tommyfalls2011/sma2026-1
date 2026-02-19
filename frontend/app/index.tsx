@@ -2410,7 +2410,7 @@ export default function AntennaCalculator() {
 
           {/* Taper */}
           <View style={[styles.section, { zIndex: 50 }]}>
-            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-merge-outline" size={14} color="#E91E63" /> Tapered Elements</Text><Switch value={inputs.taper.enabled} onValueChange={v => setInputs(p => ({ ...p, taper: { ...p.taper, enabled: v } }))} trackColor={{ false: '#333', true: '#E91E63' }} thumbColor="#fff" /></View>
+            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-merge-outline" size={14} color="#E91E63" /> Tapered Elements</Text><Switch value={inputs.taper.enabled} onValueChange={v => { if (!v || checkFeature('taper', 'Tapered Elements')) setInputs(p => ({ ...p, taper: { ...p.taper, enabled: v } })); }} trackColor={{ false: '#333', true: '#E91E63' }} thumbColor="#fff" /></View>
             {inputs.taper.enabled && (
               <>
               <Text style={styles.taperHint}>Center is largest (5/8"-1.25"), each taper reduces outward to tip</Text>
@@ -2427,13 +2427,13 @@ export default function AntennaCalculator() {
 
           {/* Corona */}
           <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="ellipse-outline" size={14} color="#00BCD4" /> Corona Balls</Text><Switch value={inputs.corona_balls.enabled} onValueChange={v => setInputs(p => ({ ...p, corona_balls: { ...p.corona_balls, enabled: v } }))} trackColor={{ false: '#333', true: '#00BCD4' }} thumbColor="#fff" /></View>
+            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="ellipse-outline" size={14} color="#00BCD4" /> Corona Balls</Text><Switch value={inputs.corona_balls.enabled} onValueChange={v => { if (!v || checkFeature('corona_balls', 'Corona Balls')) setInputs(p => ({ ...p, corona_balls: { ...p.corona_balls, enabled: v } })); }} trackColor={{ false: '#333', true: '#00BCD4' }} thumbColor="#fff" /></View>
             {inputs.corona_balls.enabled && <View style={{ marginTop: 8 }}><Text style={styles.inputLabel}>Diameter (in)</Text><TextInput style={styles.input} value={inputs.corona_balls.diameter} onChangeText={v => setInputs(p => ({ ...p, corona_balls: { ...p.corona_balls, diameter: v } }))} keyboardType="decimal-pad" /></View>}
           </View>
 
           {/* Ground Radials */}
           <View style={[styles.section, { zIndex: 2000 }]}>
-            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-network-outline" size={14} color="#8BC34A" /> Ground Radials</Text><Switch value={inputs.ground_radials.enabled} onValueChange={v => setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, enabled: v } }))} trackColor={{ false: '#333', true: '#8BC34A' }} thumbColor="#fff" /></View>
+            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-network-outline" size={14} color="#8BC34A" /> Ground Radials</Text><Switch value={inputs.ground_radials.enabled} onValueChange={v => { if (!v || checkFeature('ground_radials', 'Ground Radials')) setInputs(p => ({ ...p, ground_radials: { ...p.ground_radials, enabled: v } })); }} trackColor={{ false: '#333', true: '#8BC34A' }} thumbColor="#fff" /></View>
             {inputs.ground_radials.enabled && (
               <View style={{ marginTop: 8 }}>
                 <View style={[styles.rowSpaced, { zIndex: 2100 }]}>
@@ -2481,7 +2481,7 @@ export default function AntennaCalculator() {
 
           {/* Stacking */}
           <View style={[styles.section, { zIndex: 1500 }]}>
-            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="layers-outline" size={14} color="#9C27B0" /> Stacking</Text><Switch value={inputs.stacking.enabled} onValueChange={v => setInputs(p => ({ ...p, stacking: { ...p.stacking, enabled: v } }))} trackColor={{ false: '#333', true: '#9C27B0' }} thumbColor="#fff" /></View>
+            <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="layers-outline" size={14} color="#9C27B0" /> Stacking</Text><Switch value={inputs.stacking.enabled} onValueChange={v => { if (!v || checkFeature('stacking', 'Stacking')) setInputs(p => ({ ...p, stacking: { ...p.stacking, enabled: v } })); }} trackColor={{ false: '#333', true: '#9C27B0' }} thumbColor="#fff" /></View>
             {inputs.stacking.enabled && (
               <><View style={styles.orientationToggle}><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'vertical' } }))}><Ionicons name="swap-vertical" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'vertical' && styles.orientBtnTextActive]}>V</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnActive]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'line', orientation: 'horizontal' } }))}><Ionicons name="swap-horizontal" size={16} color={inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' ? '#fff' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'line' && inputs.stacking.orientation === 'horizontal' && styles.orientBtnTextActive]}>H</Text></TouchableOpacity><TouchableOpacity style={[styles.orientBtn, inputs.stacking.layout === 'quad' && styles.orientBtnActive, inputs.stacking.layout === 'quad' && { borderColor: '#E91E63' }]} onPress={() => setInputs(p => ({ ...p, stacking: { ...p.stacking, layout: 'quad', num_antennas: 4 } }))}><Ionicons name="grid" size={16} color={inputs.stacking.layout === 'quad' ? '#E91E63' : '#888'} /><Text style={[styles.orientBtnText, inputs.stacking.layout === 'quad' && { color: '#E91E63', fontWeight: '700' }]}>2x2</Text></TouchableOpacity></View>
               {inputs.stacking.layout !== 'quad' && (
