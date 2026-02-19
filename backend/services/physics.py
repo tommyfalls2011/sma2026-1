@@ -209,7 +209,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.5
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else 3.5
         # Shorting bar position in inches from feedpoint center (default 32")
-        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 32.0
+        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 13.0
         # Physical gamma match model:
         #   - Gamma rod runs parallel to driven element (~32" for 11m CB)
         #   - Tube at feedpoint end = 1/4 rod length (~8")
@@ -763,7 +763,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         design_auto_cap_pf = round(6.9 * wavelength, 1)
         design_user_cap = input_data.gamma_cap_pf if input_data.gamma_cap_pf and input_data.gamma_cap_pf > 0 else design_auto_cap_pf
         # Shorting bar position from center (approximate)
-        shorting_bar_pos = round(gamma_rod_length * 0.6, 2)
+        shorting_bar_pos = round(gamma_rod_length * 0.4, 2)
         matching_info["gamma_design"] = {
             "feedpoint_impedance_ohms": yagi_feedpoint_r,
             "target_impedance_ohms": 50.0,
