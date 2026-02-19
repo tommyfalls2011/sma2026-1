@@ -1,0 +1,90 @@
+{
+  "summary": "Verified all 3 gamma match tube length bug fixes. Backend: 12/12 tests passed. Frontend: All displays show correct values (tube=19.5\", capacitance=89.4pF, rod insertion into 19.5\" tube).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_tube_length_bugs.py",
+    "/app/test_reports/pytest/pytest_tube_length_bugs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_tube_length_bugs.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all visual verifications passed)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Three gamma match tube length bugs have been verified as fixed: (1) tube_length is now ~19.5\" for 11m CB, not hardcoded at 15\", (2) gamma_design uses actual hardware from matching_info, (3) Smith chart capacitance is clamped to 0 when near-resonance.",
+  "verified_bug_fixes": {
+    "bug_1_tube_length_dynamic": {
+      "description": "Tube length was hardcoded at 15\" in backend - now dynamic based on wavelength",
+      "verification": "tube_length_inches = 19.54\" for 27.185 MHz (wavelength * 0.045)",
+      "status": "FIXED"
+    },
+    "bug_2_gamma_design_stale_hardware": {
+      "description": "gamma_design section used stale hardcoded values causing inconsistent capacitance (451 pF vs correct 89 pF)",
+      "verification": "matching_info.insertion_cap_pf matches gamma_design.capacitance_pf (89.4 pF)",
+      "status": "FIXED"
+    },
+    "bug_3_smith_chart_unrealistic_capacitance": {
+      "description": "Smith chart capacitance showed 25000+ pF when reactance was near-zero",
+      "verification": "All Smith chart points have capacitance_pf < 1000, center point = 0 when near resonance",
+      "status": "FIXED"
+    },
+    "bug_4_rod_insertion_capped_at_15": {
+      "description": "rod_insertion_inches was capped at 15 instead of tube_length",
+      "verification": "rod_insertion can go up to 19.5\" (tube_length), UI shows '8.0\" into 19.5\" tube'",
+      "status": "FIXED"
+    }
+  },
+  "backend_test_results": {
+    "TestTubeLengthDynamic": {
+      "test_tube_length_is_19_5_for_11m_cb": "PASSED - tube_length=19.54\" (expected ~19.5\")",
+      "test_teflon_sleeve_is_tube_plus_one": "PASSED - teflon_sleeve=20.5\" (tube+1)"
+    },
+    "TestGammaDesignConsistency": {
+      "test_gamma_design_tube_length_matches_matching_info": "PASSED - matching_info=19.54\", gamma_design=19.5\"",
+      "test_gamma_design_capacitance_matches_insertion_cap": "PASSED - insertion_cap=89.4pF, gamma_design=89.4pF",
+      "test_gamma_design_teflon_sleeve_matches_matching_info": "PASSED - Both show ~20.5\""
+    },
+    "TestRodInsertionRange": {
+      "test_rod_insertion_max_is_tube_length": "PASSED - rod_insertion capped at tube_length (19.5\")",
+      "test_rod_insertion_produces_valid_capacitance": "PASSED - 18\" insertion gives ~200pF"
+    },
+    "TestSmithChartCapacitanceClamping": {
+      "test_smith_chart_center_capacitance_is_zero": "PASSED - capacitance=0 when reactance near-zero",
+      "test_smith_chart_band_edges_reasonable_capacitance": "PASSED - All points < 1000pF"
+    },
+    "TestMultiElementYagis": {
+      "test_2_element_yagi_valid_results": "PASSED",
+      "test_3_element_yagi_valid_results": "PASSED",
+      "test_4_element_yagi_valid_results": "PASSED"
+    }
+  },
+  "frontend_verification": {
+    "gamma_match_design_section": {
+      "tube_label": "Shows 'Tube 19.5\"' - CORRECT",
+      "gamma_rod_length": "Shows '19.54\"' - CORRECT",
+      "series_cap": "Shows '89.4 pF' - CORRECT (was 451 pF with old bug)",
+      "shorting_bar": "Shows '3.5\"' - CORRECT",
+      "rod_insertion_display": "Shows '8.0\" into 19.5\" tube' - CORRECT",
+      "teflon_sleeve_note": "Shows '21\" teflon sleeve on rod' - CORRECT (~tube+1)"
+    }
+  },
+  "physics_code_locations": {
+    "tube_length_fix": "physics.py line 254: tube_length = round(gamma_rod_length, 1)",
+    "gamma_design_fix": "physics.py lines 850-883: Uses hw = matching_info.get('hardware', {})",
+    "capacitance_clamp_fix": "physics.py lines 1274-1276: Clamps to 0 when sc_x > -0.5 or cap > 1000pF"
+  }
+}
