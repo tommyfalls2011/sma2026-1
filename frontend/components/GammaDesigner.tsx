@@ -187,11 +187,11 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 9, color: '#888', marginBottom: 2 }}>Teflon Length (in)</Text>
-                  <TextInput style={inputStyle} value={customTeflon} onChangeText={setCustomTeflon} placeholder="16" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-teflon-input" />
+                  <TextInput style={inputStyle} value={customTeflon} onChangeText={setCustomTeflon} placeholder="auto" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-teflon-input" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 9, color: '#888', marginBottom: 2 }}>Tube Length (in)</Text>
-                  <TextInput style={inputStyle} value={customTubeLength} onChangeText={setCustomTubeLength} placeholder="15" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-tube-length-input" />
+                  <TextInput style={inputStyle} value={customTubeLength} onChangeText={setCustomTubeLength} placeholder="auto" placeholderTextColor="#555" keyboardType="decimal-pad" data-testid="custom-tube-length-input" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 9, color: '#888', marginBottom: 2 }}>Feedpoint R (ohms)</Text>
