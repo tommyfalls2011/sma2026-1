@@ -309,3 +309,20 @@ async def optimize_return_loss(input_data: AntennaInput):
         "sweep_count": len(sweep_results),
         "sweep_results": sweep_sorted[:20],
     }
+
+
+# ── Gamma Match Designer ──
+@router.post("/gamma-designer")
+async def gamma_designer_endpoint(req: GammaDesignerRequest):
+    result = design_gamma_match(
+        num_elements=req.num_elements,
+        driven_element_length_in=req.driven_element_length_in,
+        frequency_mhz=req.frequency_mhz,
+        feedpoint_impedance=req.feedpoint_impedance,
+        custom_tube_od=req.custom_tube_od,
+        custom_rod_od=req.custom_rod_od,
+        custom_rod_spacing=req.custom_rod_spacing,
+        custom_teflon_length=req.custom_teflon_length,
+    )
+    return result
+
