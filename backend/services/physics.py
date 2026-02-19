@@ -344,9 +344,10 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         q_factor = round(8.0 + insertion_ratio * 17.0, 1)
         gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
 
-        # Resonant frequency estimate (bar position shifts system resonance)
-        freq_shift_mhz = round((bar_inches - gamma_rod_length * 0.4) * 0.03, 3)
-        resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
+        # Resonant frequency: use actual element resonant frequency
+        # The gamma match transforms impedance but the system resonates 
+        # where total X = 0 (antenna X*K + stub + cap = 0)
+        resonant_freq = round(element_resonant_freq_mhz, 3)
 
         bw_label = f"{gamma_bw_mhz:.2f} MHz (Q={q_factor:.0f})"
         info = {"type": "Gamma Match",
