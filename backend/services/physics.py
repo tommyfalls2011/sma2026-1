@@ -728,26 +728,26 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         refl_gap_in = abs(driven_el.position - refl_el.position)
         refl_gap_wl = (refl_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.18
         # Closer reflector = stronger coupling = more impedance drop
-        # At 0.1λ: ~50% drop, at 0.15λ: ~45%, at 0.2λ: ~40%, at 0.3λ: ~30%
-        refl_factor = max(0.35, 0.25 + refl_gap_wl * 1.5)
+        # At 0.08λ: ~44%, at 0.15λ: ~57%, at 0.25λ: ~75%
+        refl_factor = max(0.35, 0.30 + refl_gap_wl * 1.8)
         yagi_feedpoint_r *= refl_factor
 
     if num_directors >= 1 and driven_el and dir_els:
         d1_gap_in = abs(dir_els[0].position - driven_el.position)
         d1_gap_wl = (d1_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.13
-        # Closer 1st director = stronger coupling = more impedance drop
-        # At 0.08λ: ~60% drop, at 0.13λ: ~70%, at 0.2λ: ~80%
-        d1_factor = max(0.50, 0.40 + d1_gap_wl * 2.0)
+        # 1st director: moderate coupling, ~15-25% drop
+        # At 0.08λ: ~79%, at 0.13λ: ~88%, at 0.2λ: ~96%
+        d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
         yagi_feedpoint_r *= d1_factor
 
-    # Subsequent directors have progressively weaker effect
+    # Subsequent directors have progressively weaker effect (~5-15% drop each)
     for i in range(1, min(num_directors, len(dir_els))):
         if i < len(dir_els) and i - 1 < len(dir_els):
             gap_in = abs(dir_els[i].position - dir_els[i - 1].position) if i > 0 else 60
             gap_wl = (gap_in * 0.0254) / wavelength if wavelength > 0 else 0.15
-            factor = max(0.80, 0.70 + gap_wl * 1.0)
+            factor = max(0.85, 0.85 + gap_wl * 0.5)
         else:
-            factor = 0.90
+            factor = 0.92
         yagi_feedpoint_r *= factor
 
     yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
