@@ -1192,34 +1192,45 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             sc_x = 0.0
         # Apply matching network transformation
         if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
-            tq = matching_info["tuning_quality"]
-            ri = matching_info.get("rod_insertion", 0.5)
-            # Rod insertion directly cancels reactance:
-            # At 0.5 (optimal), full cancellation. Away from 0.5, residual reactance remains
-            # Less insertion (toward 0) = residual inductive reactance (+X)
-            # More insertion (toward 1) = excess capacitive reactance (-X)
-            insertion_offset = (ri - 0.5) * 2.0  # -1 to +1
-            residual_x = sc_x * max(0.02, abs(insertion_offset) * 0.8 + (1.0 - tq) * 0.5)
-            if insertion_offset < 0:
-                # Under-inserted: inductance not fully cancelled, positive residual
-                sc_x = abs(residual_x)
-            elif insertion_offset > 0:
-                # Over-inserted: excess capacitance, negative residual
-                sc_x = -abs(residual_x)
+            # Real gamma match transformation using actual L and C
+            # Step-up ratio: K^2 transforms impedance
+            step_up = matching_info.get("step_up_ratio", math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0)))
+            if isinstance(step_up, str):
+                try: step_up = float(step_up.replace(':1',''))
+                except: step_up = math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0))
+            k_sq = step_up ** 2
+
+            # Bar inductance (from shorting bar position)
+            bar_pos_in = matching_info.get("bar_position_inches", 13.0)
+            rod_dia_in = 0.375  # 3/8" rod
+            if bar_pos_in > 0 and rod_dia_in > 0:
+                bar_L_nH = 5.08 * bar_pos_in * (math.log(2.0 * bar_pos_in / rod_dia_in) - 1.0 + rod_dia_in / (2.0 * bar_pos_in))
             else:
-                # Optimal: minimal residual
-                cancel = max(0.02, (1.0 - tq) ** 1.5)
-                sc_x *= cancel
-            # Resistance transformation toward 50 ohms
-            nat_r = sc_r
-            if tq < 0.9:
-                sc_r = nat_r + (50.0 - nat_r) * tq
-            else:
-                base_r = nat_r + (50.0 - nat_r) * 0.9
-                fine = (tq - 0.9) / 0.1
-                sc_r = base_r + (50.0 - base_r) * (1.0 - (1.0 - fine) ** 4)
-            if tq > 0.98 and abs(insertion_offset) < 0.1:
-                sc_r = max(sc_r, 50.0 * 1.0004)
+                bar_L_nH = 0
+
+            # Series capacitance from rod insertion
+            cap_pf = matching_info.get("insertion_cap_pf", 50.0)
+
+            # At each frequency:
+            # XL_bar = 2*pi*f*L_bar (inductive from shorting bar)
+            # XC_cap = 1/(2*pi*f*C) (capacitive from rod insertion)
+            # Antenna natural X is already in sc_x
+            omega_f = 2 * math.pi * freq * 1e6
+            xL_bar = omega_f * (bar_L_nH * 1e-9)  # ohms
+            xC_cap = 1.0 / (omega_f * (cap_pf * 1e-12)) if cap_pf > 0 else 0  # ohms
+
+            # Transform R through step-up ratio (varies with frequency)
+            # At resonance, R is transformed cleanly. Off-resonance, transformation degrades
+            freq_ratio = freq / smith_res_freq if smith_res_freq > 0 else 1.0
+            freq_deviation = abs(freq_ratio - 1.0)
+            # Step-up effectiveness decreases away from resonance
+            k_eff = k_sq * (1.0 - freq_deviation * 2.5)  # degrades ~2.5x per fraction off-resonance
+            k_eff = max(1.0, k_eff)
+            sc_r = sc_r * k_eff
+
+            # Net reactance: antenna X transformed + bar inductance - cap reactance
+            sc_x = (sc_x * step_up) + xL_bar - xC_cap
+
         elif feed_type == "hairpin" and matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
             sc_x *= 0.10
