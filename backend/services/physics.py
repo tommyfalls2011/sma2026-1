@@ -1300,16 +1300,13 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         else: scale = 1.0 + (math.log2(radial_factor) * 0.5)
         g_bonus = {"swr_improvement": round(base_bonus["swr_improvement"] * scale, 3), "efficiency_bonus": round(base_bonus["efficiency_bonus"] * scale, 1)}
         ground_radials_info = {"enabled": True, "ground_type": ground_type, "ground_conductivity": ground["conductivity"], "ground_permittivity": ground["permittivity"], "ground_reflection_coeff": ground["reflection"], "radial_length_m": round(quarter_wave_m, 2), "radial_length_ft": round(quarter_wave_ft, 2), "radial_length_in": round(quarter_wave_in, 1), "wire_diameter_in": ground_radials.wire_diameter, "num_radials": ground_radials.num_radials, "radial_directions": radial_directions, "total_wire_length_ft": round(quarter_wave_ft * ground_radials.num_radials, 1), "estimated_improvements": {"swr_improvement": g_bonus["swr_improvement"], "efficiency_bonus_percent": g_bonus["efficiency_bonus"]}}
-        swr = max(1.0, swr - g_bonus["swr_improvement"])
+        swr = swr  # radials improve efficiency, NOT impedance match
         gain_breakdown["final_gain"] = gain_dbi
         antenna_efficiency = min(200.0, antenna_efficiency + g_bonus["efficiency_bonus"])
 
-    # Antenna resonant frequency for impedance model — use matching network's
-    # resonant freq to stay consistent with single-point SWR calculation
-    smith_res_freq = center_freq
-    if feed_type != "direct" and matching_info:
-        if "resonant_freq_mhz" in matching_info:
-            smith_res_freq = matching_info["resonant_freq_mhz"]
+    # Antenna resonant frequency for impedance model — use element resonant freq
+    # so the SWR curve reflects the actual driven element reactance at each frequency
+    smith_res_freq = element_resonant_freq if element_resonant_freq > 0 else center_freq
 
     # ── Smith Chart Data: full-physics impedance sweep across frequency ──
     # Computed FIRST so we can derive the SWR curve from actual impedance
