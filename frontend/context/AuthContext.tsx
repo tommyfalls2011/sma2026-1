@@ -305,9 +305,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isFeatureAvailable = (feature: string): boolean => {
-    if (!user || !tiers) return false;
+    if (!user || !tiers) return true; // Non-logged-in users see all features (gated by login elsewhere)
     const tierInfo = tiers[user.subscription_tier];
-    if (!tierInfo) return false;
+    if (!tierInfo) return true;
     return tierInfo.features.includes('all') || tierInfo.features.includes(feature);
   };
 
