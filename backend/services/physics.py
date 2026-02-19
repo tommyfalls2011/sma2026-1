@@ -1887,13 +1887,6 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
     if not null_reachable:
-        z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_od) if rod_spacing > rod_od / 2 else 300.0
-        omega = 2.0 * math.pi * frequency_mhz * 1e6
-        wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
-        bar_m = bar_ideal_clamped * 0.0254
-        beta_l = 2.0 * math.pi * bar_m / wavelength_m
-        x_stub = z0_gamma * math.tan(beta_l)
-        c_needed_pf = 1e12 / (omega * max(x_stub, 0.01))
         notes.append(f"NULL NOT REACHABLE: Need {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is only {tube_length}\".")
         notes.append(f"Options: longer tube, smaller tube OD (more cap/inch), or external trim cap.")
     if feedpoint_impedance:
