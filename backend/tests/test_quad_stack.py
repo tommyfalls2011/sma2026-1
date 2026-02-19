@@ -17,7 +17,7 @@ import os
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', os.environ.get('REACT_APP_BACKEND_URL'))
 if not BASE_URL:
-    BASE_URL = "https://match-designer-v2.preview.emergentagent.com"
+    BASE_URL = "https://gamma-tuner.preview.emergentagent.com"
 
 
 class TestQuadStackCalculation:
