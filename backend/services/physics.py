@@ -1766,15 +1766,15 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                        custom_tube_od: float = None, custom_rod_od: float = None,
                        custom_rod_spacing: float = None,
                        custom_teflon_length: float = None) -> dict:
-    """Design a gamma match recipe for a given Yagi configuration."""
+    """Design a gamma match recipe using the SAME physics as apply_matching_network()."""
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
     tube_length = 15.0
-    teflon_length = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else 16.0
 
     # Feedpoint impedance: user-provided or estimated from element count
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
+    swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
 
     # Hardware selection: custom or auto-scaled
     is_custom = bool(custom_tube_od or custom_rod_od)
@@ -1800,98 +1800,82 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     if tube_id <= rod_od:
         return {"error": f"Tube ID ({tube_id:.3f}\") must be larger than rod OD ({rod_od:.3f}\"). Increase tube OD or decrease rod OD."}
 
-    # Capacitance per inch
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-
-    # Z0 of gamma section
-    z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_od) if rod_spacing > rod_od / 2 else 300.0
-    coupling_multiplier = z0_gamma / 73.0
-
-    # Ideal K and bar position
-    k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
-    bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
     gamma_rod_length = wavelength_in * 0.074
 
-    # Clamp bar to rod length
+    # Helper: call apply_matching_network() for a given bar + insertion
+    def _eval(bar: float, insertion: float) -> tuple:
+        matched_swr, info = apply_matching_network(
+            swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+            gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+            gamma_bar_pos=bar, gamma_element_gap=insertion,
+            gamma_cap_pf=None, gamma_tube_od=tube_od,
+            operating_freq_mhz=frequency_mhz,
+            num_elements=num_elements,
+            driven_element_half_length_in=half_len,
+        )
+        return matched_swr, info
+
+    # Get ideal bar position from the same coupling formula as apply_matching_network
+    _, probe_info = _eval(13.0, 8.0)
+    coupling_multiplier = probe_info.get("coupling_multiplier", 4.5)
+    k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
+    bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
     bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
 
-    # At ideal bar position, compute K and R_matched
-    k_at_ideal = 1.0 + (bar_ideal_clamped / half_len) * coupling_multiplier
-    r_matched_at_ideal = r_feed * k_at_ideal ** 2
+    # Binary search for null insertion at ideal bar position
+    lo, hi = 0.0, tube_length
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        _, info_mid = _eval(bar_ideal_clamped, mid)
+        net_x = info_mid.get("net_reactance", 0)
+        if net_x > 0:
+            lo = mid
+        else:
+            hi = mid
+    optimal_insertion = (lo + hi) / 2
 
-    # X_stub at ideal bar position
-    wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
-    omega = 2.0 * math.pi * frequency_mhz * 1e6
-    bar_m = bar_ideal_clamped * 0.0254
-    beta_l = 2.0 * math.pi * bar_m / wavelength_m
-    x_stub = z0_gamma * math.tan(beta_l)
+    # Check if null is reachable: if at full insertion X is still positive
+    _, info_full = _eval(bar_ideal_clamped, tube_length)
+    null_reachable = info_full.get("net_reactance", 0) <= 0
 
-    # Binary search for insertion that cancels X_stub
-    # X_cap = -1/(omega * C), C = cap_per_inch * insertion
-    # Need X_cap = -X_stub → C_needed = 1/(omega * X_stub) → ins = C_needed / cap_per_inch
-    null_reachable = True
-    if x_stub > 0:
-        c_needed_pf = 1e12 / (omega * x_stub)
-        optimal_insertion = c_needed_pf / cap_per_inch
-        if optimal_insertion > tube_length:
-            null_reachable = False
-            optimal_insertion = tube_length
-    else:
-        optimal_insertion = 0.0
-        c_needed_pf = 0.0
+    if not null_reachable:
+        optimal_insertion = tube_length
 
-    # Compute final values at optimal insertion
-    actual_cap = cap_per_inch * optimal_insertion
-    x_cap = -1.0 / (omega * actual_cap * 1e-12) if actual_cap > 0 else 0
-    net_x = x_stub + x_cap
+    # Get authoritative values at the design point
+    matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
 
-    # SWR at the design point
-    z_r = r_matched_at_ideal
-    z_x = net_x
-    z0 = 50.0
-    denom = (z_r + z0) ** 2 + z_x ** 2
-    gamma_re = ((z_r - z0) * (z_r + z0) + z_x ** 2) / denom if denom > 0 else 0
-    gamma_im = (2 * z_x * z0) / denom if denom > 0 else 0
-    gamma_mag = min(math.sqrt(gamma_re ** 2 + gamma_im ** 2), 0.999)
-    swr = round((1 + gamma_mag) / (1 - gamma_mag), 3) if gamma_mag < 1.0 else 99.0
-    swr = max(1.0, swr)
-    rl = round(-20 * math.log10(max(gamma_mag, 1e-8)), 2)
-    rl = min(rl, 80.0)
+    swr_val = matched_swr
+    rl_val = round(-20 * math.log10(max(null_info.get("reflection_coefficient", 0.001), 1e-8)), 2)
+    rl_val = min(rl_val, 80.0)
+    z_r = null_info.get("z_matched_r", 50.0)
+    z_x = null_info.get("z_matched_x", 0.0)
+    actual_cap = null_info.get("insertion_cap_pf", 0)
+    k_at_ideal = null_info.get("step_up_ratio", 1.0)
 
-    # Build sweep data: bar position sweep at optimal insertion
+    # Bar sweep: use apply_matching_network for each point
     bar_sweep = []
     for b_pct in range(0, 105, 5):
         b = gamma_rod_length * b_pct / 100.0
-        k_b = 1.0 + (b / half_len) * coupling_multiplier
-        r_b = r_feed * k_b ** 2
-        b_m = b * 0.0254
-        bl = 2.0 * math.pi * b_m / wavelength_m
-        xs_b = z0_gamma * math.tan(bl)
-        xc_b = -1.0 / (omega * actual_cap * 1e-12) if actual_cap > 0 else 0
-        nx_b = xs_b + xc_b
-        d_b = (r_b + z0) ** 2 + nx_b ** 2
-        gr_b = ((r_b - z0) * (r_b + z0) + nx_b ** 2) / d_b if d_b > 0 else 0
-        gi_b = (2 * nx_b * z0) / d_b if d_b > 0 else 0
-        gm_b = min(math.sqrt(gr_b ** 2 + gi_b ** 2), 0.999)
-        s_b = round((1 + gm_b) / (1 - gm_b), 3) if gm_b < 1.0 else 99.0
-        bar_sweep.append({"bar_inches": round(b, 2), "k": round(k_b, 3),
-                          "r_matched": round(r_b, 2), "x_net": round(nx_b, 2), "swr": max(1.0, s_b)})
+        s, info_b = _eval(b, optimal_insertion)
+        bar_sweep.append({
+            "bar_inches": round(b, 2), "k": info_b.get("step_up_ratio", 1.0),
+            "r_matched": info_b.get("z_matched_r", 0), "x_net": info_b.get("net_reactance", 0),
+            "swr": max(1.0, s),
+        })
 
-    # Insertion sweep at ideal bar position
+    # Insertion sweep: use apply_matching_network for each point
     ins_sweep = []
     for i_pct in range(0, 105, 5):
         ins = tube_length * i_pct / 100.0
-        c_i = cap_per_inch * ins
-        xc_i = -1.0 / (omega * c_i * 1e-12) if c_i > 0 else 0
-        nx_i = x_stub + xc_i
-        d_i = (r_matched_at_ideal + z0) ** 2 + nx_i ** 2
-        gr_i = ((r_matched_at_ideal - z0) * (r_matched_at_ideal + z0) + nx_i ** 2) / d_i if d_i > 0 else 0
-        gi_i = (2 * nx_i * z0) / d_i if d_i > 0 else 0
-        gm_i = min(math.sqrt(gr_i ** 2 + gi_i ** 2), 0.999)
-        s_i = round((1 + gm_i) / (1 - gm_i), 3) if gm_i < 1.0 else 99.0
-        ins_sweep.append({"insertion_inches": round(ins, 2), "cap_pf": round(c_i, 1),
-                          "x_net": round(nx_i, 2), "swr": max(1.0, s_i)})
+        if ins <= 0:
+            ins = 0.001  # avoid zero-cap singularity
+        s, info_i = _eval(bar_ideal_clamped, ins)
+        ins_sweep.append({
+            "insertion_inches": round(ins, 2), "cap_pf": info_i.get("insertion_cap_pf", 0),
+            "x_net": info_i.get("net_reactance", 0), "swr": max(1.0, s),
+        })
 
     # Notes
     notes = []
@@ -1904,6 +1888,13 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
     if not null_reachable:
+        z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_od) if rod_spacing > rod_od / 2 else 300.0
+        omega = 2.0 * math.pi * frequency_mhz * 1e6
+        wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
+        bar_m = bar_ideal_clamped * 0.0254
+        beta_l = 2.0 * math.pi * bar_m / wavelength_m
+        x_stub = z0_gamma * math.tan(beta_l)
+        c_needed_pf = 1e12 / (omega * max(x_stub, 0.01))
         notes.append(f"NULL NOT REACHABLE: Need {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is only {tube_length}\".")
         notes.append(f"Options: longer tube, smaller tube OD (more cap/inch), or external trim cap.")
     if feedpoint_impedance:
@@ -1917,14 +1908,14 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             "tube_od": round(tube_od, 3),
             "tube_id": round(tube_id, 3),
             "rod_spacing": round(rod_spacing, 1),
-            "teflon_length": round(teflon_length, 1),
+            "teflon_length": round(custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else 16.0, 1),
             "tube_length": tube_length,
             "gamma_rod_length": round(gamma_rod_length, 1),
             "ideal_bar_position": round(bar_ideal_clamped, 2),
             "optimal_insertion": round(optimal_insertion, 2),
-            "swr_at_null": swr,
-            "return_loss_at_null": rl,
-            "capacitance_at_null": round(actual_cap, 1),
+            "swr_at_null": swr_val,
+            "return_loss_at_null": rl_val,
+            "capacitance_at_null": actual_cap,
             "z_matched_r": round(z_r, 2),
             "z_matched_x": round(z_x, 2),
             "k_step_up": round(k_at_ideal, 3),
