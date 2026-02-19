@@ -217,7 +217,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else default_rod_od
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else default_spacing
-        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 24.0
+        bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 18.0
 
         # Allow custom tube OD override
         if gamma_tube_od and gamma_tube_od > 0:
@@ -236,7 +236,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         if gamma_element_gap is not None:
             rod_insertion_in = max(0, min(gamma_element_gap, tube_length))
         else:
-            rod_insertion_in = 11.0
+            rod_insertion_in = 8.0
         insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
 
         # Coaxial capacitor: C = 2*pi*e0*er*L / ln(D/d)
