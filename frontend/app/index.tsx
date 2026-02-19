@@ -1652,6 +1652,60 @@ export default function AntennaCalculator() {
 
                       <View style={{ height: 1, backgroundColor: '#333', marginVertical: 6 }} />
 
+                      {/* Inline Gamma SWR Meter */}
+                      {results.matching_info && (() => {
+                        const mi = results.matching_info;
+                        const swrVal = results.swr || 10;
+                        const stubL = mi.stub_inductance_nh || 0;
+                        const z0g = mi.z0_gamma || 300;
+                        const zR = mi.z_matched_r || 0;
+                        const zX = mi.z_matched_x || 0;
+                        const xStub = mi.x_stub || 0;
+                        const xCap = mi.x_cap || 0;
+                        const netReact = mi.net_reactance || 0;
+                        const swrPct = Math.min((swrVal - 1) / 2, 1);
+                        const swrColor = swrVal <= 1.2 ? '#4CAF50' : swrVal <= 1.5 ? '#8BC34A' : swrVal <= 2.0 ? '#FFC107' : swrVal <= 3.0 ? '#FF9800' : '#F44336';
+                        const drvDia = mi.driven_element_dia_in || 0.5;
+                        const rodOd = mi.hardware?.rod_od || 0.34;
+                        return (
+                          <View style={{ backgroundColor: '#111', borderRadius: 6, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: '#333' }} data-testid="gamma-swr-meter">
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                              <Text style={{ fontSize: 10, color: '#888', flex: 1 }}>Gamma SWR</Text>
+                              <Text style={{ fontSize: 22, color: swrColor, fontWeight: '800', marginRight: 8 }}>{swrVal.toFixed(2)}:1</Text>
+                              <View style={{ flex: 2, height: 10, backgroundColor: '#222', borderRadius: 5, overflow: 'hidden' }}>
+                                <View style={{ width: `${(1 - swrPct) * 100}%`, height: '100%', backgroundColor: swrColor, borderRadius: 5 }} />
+                              </View>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                              <View style={{ marginRight: 12 }}>
+                                <Text style={{ fontSize: 8, color: '#555' }}>Z0 ({drvDia}" + {rodOd}")</Text>
+                                <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '600' }}>{z0g.toFixed(0)}{'\u03A9'}</Text>
+                              </View>
+                              <View style={{ marginRight: 12 }}>
+                                <Text style={{ fontSize: 8, color: '#555' }}>Stub L</Text>
+                                <Text style={{ fontSize: 11, color: '#FF9800', fontWeight: '600' }}>{stubL.toFixed(0)} nH</Text>
+                              </View>
+                              <View style={{ marginRight: 12 }}>
+                                <Text style={{ fontSize: 8, color: '#555' }}>X stub</Text>
+                                <Text style={{ fontSize: 11, color: '#FF9800', fontWeight: '600' }}>+{xStub.toFixed(1)}j</Text>
+                              </View>
+                              <View style={{ marginRight: 12 }}>
+                                <Text style={{ fontSize: 8, color: '#555' }}>X cap</Text>
+                                <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '600' }}>{xCap.toFixed(1)}j</Text>
+                              </View>
+                              <View style={{ marginRight: 12 }}>
+                                <Text style={{ fontSize: 8, color: '#555' }}>Net X</Text>
+                                <Text style={{ fontSize: 11, color: Math.abs(netReact) < 5 ? '#4CAF50' : '#FFC107', fontWeight: '600' }}>{netReact >= 0 ? '+' : ''}{netReact.toFixed(1)}j</Text>
+                              </View>
+                              <View>
+                                <Text style={{ fontSize: 8, color: '#555' }}>Z match</Text>
+                                <Text style={{ fontSize: 11, color: swrColor, fontWeight: '600' }}>{zR.toFixed(0)}{zX >= 0 ? '+' : ''}{zX.toFixed(0)}j</Text>
+                              </View>
+                            </View>
+                          </View>
+                        );
+                      })()}
+
                       <View style={{ marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position (from feedpoint center)</Text>
