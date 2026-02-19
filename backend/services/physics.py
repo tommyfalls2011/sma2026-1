@@ -253,35 +253,29 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
         q_factor = round(8.0 + insertion_ratio * 17.0, 1)
         gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
-        # SWR calculation
-        tuning_factor = 1.0 + bar_penalty + insertion_penalty + z0_penalty
-        # Coaxial capacitor from teflon sleeve: C = 2pi * e0 * er * L / ln(D_outer/D_inner)
-        tube_id = rod_dia + 0.25  # tube inner diameter (clearance for teflon)
-        rod_od_with_teflon = rod_dia + 0.125  # rod OD with teflon sleeve
+        # --- Final SWR: starts at 1.0, deviations add ---
+        swr_at_resonance = round(max(1.0, 1.0 + bar_swr_add + insertion_swr_add + z0_swr_add), 3)
+        # Coaxial capacitor from teflon sleeve
+        tube_id = rod_dia + 0.25
+        rod_od_with_teflon = rod_dia + 0.125
         if rod_insertion_in > 0 and tube_id > rod_od_with_teflon:
-            teflon_epsilon = 2.1
-            cap_per_inch = 0.614 * teflon_epsilon / math.log(tube_id / rod_od_with_teflon)
+            cap_per_inch = 0.614 * 2.1 / math.log(tube_id / rod_od_with_teflon)
             insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
         else:
             insertion_cap_pf = 0
-        # Series cap: use physical capacitor value or user override
-        wavelength_m = 11802.71 / operating_freq_mhz / 39.3701
+        wavelength_m = wavelength_in / 39.3701
         auto_cap_pf = round(6.9 * wavelength_m, 1)
         user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else (insertion_cap_pf if insertion_cap_pf > 0 else auto_cap_pf)
-        cap_ratio = user_cap / max(auto_cap_pf, 1.0)
-        cap_deviation = abs(cap_ratio - 1.0)
-        cap_penalty = cap_deviation ** 0.6 * 0.8
-        tuning_factor_with_cap = tuning_factor + cap_penalty
-        swr_at_resonance = round(max(1.0, matched_swr * tuning_factor_with_cap), 3)
-        # Off-resonance SWR penalty for the operating frequency SWR display
+        cap_ratio = round(user_cap / max(auto_cap_pf, 1.0), 3)
+        # Off-resonance SWR degradation
         freq_offset = abs(operating_freq_mhz - resonant_freq)
         half_bw = gamma_bw_mhz / 2
+        off_resonance_add = 0
         if half_bw > 0:
             off_resonance = min(1.0, freq_offset / half_bw)
-            off_resonance_penalty = off_resonance * 0.25
-        else:
-            off_resonance_penalty = 0
-        matched_swr = round(max(1.0, matched_swr * (tuning_factor + off_resonance_penalty)), 3)
+            off_resonance_add = off_resonance * 0.3
+        matched_swr = round(max(1.0, swr_at_resonance + off_resonance_add), 3)
+        tuning_quality = round(1.0 / max(swr_at_resonance, 1.0), 3)
         bw_label = f"{gamma_bw_mhz:.2f} MHz (Q={q_factor:.0f})"
         info = {"type": "Gamma Match",
                 "description": "Rod with teflon sleeve slides into tube creating variable series capacitor",
