@@ -204,9 +204,38 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            operating_freq_mhz: float = 27.185,
                            num_elements: int = 3) -> tuple:
     if feed_type == "gamma":
-        # Physics-based gamma match: transmission line stub + coaxial series capacitor
-        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.375
-        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else 3.5
+        # Gamma match hardware scales with element count (standard aluminum tubing sizes)
+        # More elements = lower feedpoint R = higher current = beefier hardware
+        # Rod length stays 32", tube length 15", only diameters grow
+        wall = 0.049  # standard aluminum tube wall thickness
+        if num_elements <= 3:
+            default_rod_od = 0.375   # 3/8" rod
+            default_tube_od = 0.625  # 5/8" tube
+            default_spacing = 3.5
+        elif num_elements <= 5:
+            default_rod_od = 0.375   # 3/8" rod
+            default_tube_od = 0.750  # 3/4" tube
+            default_spacing = 4.0
+        elif num_elements <= 8:
+            default_rod_od = 0.500   # 1/2" rod
+            default_tube_od = 0.875  # 7/8" tube
+            default_spacing = 4.5
+        elif num_elements <= 12:
+            default_rod_od = 0.500   # 1/2" rod
+            default_tube_od = 1.000  # 1" tube
+            default_spacing = 5.0
+        elif num_elements <= 16:
+            default_rod_od = 0.625   # 5/8" rod
+            default_tube_od = 1.125  # 1-1/8" tube
+            default_spacing = 5.5
+        else:
+            default_rod_od = 0.625   # 5/8" rod
+            default_tube_od = 1.250  # 1-1/4" tube
+            default_spacing = 6.0
+        default_tube_id = default_tube_od - 2 * wall
+
+        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else default_rod_od
+        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else default_spacing
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 13.0
 
         wavelength_in = 11802.71 / operating_freq_mhz
@@ -222,9 +251,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
 
         # Coaxial capacitor: C = 2*pi*e0*er*L / ln(D/d)
-        # Real dims: 5/8" OD tube (0.049" wall -> 0.527" ID), 3/8" rod, teflon (er=2.1)
-        tube_id = 0.527
-        rod_od_actual = 0.375
+        # Use scaled tube ID and rod OD
+        tube_id = default_tube_id
+        rod_od_actual = rod_dia
         if rod_insertion_in > 0 and tube_id > rod_od_actual:
             cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od_actual)
             insertion_cap_pf_exact = cap_per_inch * rod_insertion_in
