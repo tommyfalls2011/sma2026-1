@@ -1253,8 +1253,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
             bar_pos_in = matching_info.get("bar_position_inches", 13.0)
             cap_pf = matching_info.get("insertion_cap_pf", 50.0)
-            rod_spacing_in = 3.5  # center-to-center rod-to-element
-            rod_dia_in = 0.375
+            rod_spacing_in = matching_info.get("gamma_design", {}).get("gamma_rod_spacing_in", 3.5)
+            rod_dia_in = matching_info.get("gamma_design", {}).get("gamma_rod_diameter_in", 0.375)
 
             # Z0 of gamma section (two-wire transmission line)
             if rod_spacing_in > 0 and rod_dia_in > 0:
