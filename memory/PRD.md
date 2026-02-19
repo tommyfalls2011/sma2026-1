@@ -67,6 +67,9 @@ Custom tube OD supported via gamma_tube_od API parameter.
   - Backend: POST /api/gamma-designer — auto or custom hardware, bar/insertion sweep data, notes
   - Frontend: Full-screen modal with recipe card, SWR charts, Apply to Calculator button
   - Handles: auto hardware scaling, custom hardware analysis, null reachability check
+  - **Fixed: Designer now calls apply_matching_network() internally for guaranteed consistency with calculator**
+  - **Fixed: Analytical null finding (avoids 1/wC singularity in binary search)**
+  - **Fixed: Frontend passes calculator's actual feedpoint R and rod dia to designer**
   - 9/9 backend + 8/8 frontend tests pass
 
 ### Session: Feb 19, 2026 (Fork 4)
