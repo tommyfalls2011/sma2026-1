@@ -941,12 +941,12 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hw = matching_info.get("hardware", {})
         gamma_rod_dia = hw.get("rod_od", 0.500)
         gamma_rod_spacing = hw.get("rod_spacing", 3.5)
-        gamma_rod_length = round(wavelength_in * 0.045, 2)
-        design_tube_length = hw.get("tube_length", round(wavelength_in * 0.045, 1))
+        gamma_rod_length = 36.0
+        design_tube_length = hw.get("tube_length", 22.0)
         design_tube_id = hw.get("tube_id", 0.652)
         design_rod_od = gamma_rod_dia
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
-        rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
+        rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 11.0
         rod_insertion_design = max(0, min(rod_insertion_design, design_tube_length))
         if rod_insertion_design > 0 and design_tube_id > design_rod_od:
             design_cap_per_inch = 1.413 * 2.1 / math.log(design_tube_id / design_rod_od)
@@ -955,7 +955,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             design_auto_cap_pf = 0
         design_user_cap = input_data.gamma_cap_pf if input_data.gamma_cap_pf and input_data.gamma_cap_pf > 0 else design_auto_cap_pf
         # Shorting bar position from center (approximate)
-        shorting_bar_pos = round(gamma_rod_length * 0.4, 2)
+        shorting_bar_pos = round(gamma_rod_length * 0.667, 2)
         matching_info["gamma_design"] = {
             "feedpoint_impedance_ohms": yagi_feedpoint_r,
             "target_impedance_ohms": 50.0,
@@ -965,7 +965,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
             "tube_length_in": round(design_tube_length, 1),
-            "teflon_sleeve_in": round(design_tube_length + 1.0, 1),
+            "teflon_sleeve_in": 23.0,
             "capacitance_pf": design_user_cap,
             "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
@@ -1859,7 +1859,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else round(wavelength_in * 0.045, 1)
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else 22.0
 
     # Element resonant frequency from driven element length
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
@@ -1910,7 +1910,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-    gamma_rod_length = wavelength_in * 0.045
+    gamma_rod_length = 36.0
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
