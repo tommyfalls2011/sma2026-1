@@ -247,8 +247,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Shorting bar inductance
         bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia) - 1.0 + rod_dia / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
         # Shorting bar shifts resonant frequency: longer bar = more inductance = lower freq
-        # 32" is the reference point (no shift). Each inch = ~0.03 MHz shift
-        freq_shift_mhz = round((bar_inches - 32.0) * 0.03, 3)
+        freq_shift_mhz = round((bar_inches - gamma_rod_length * 0.4) * 0.03, 3)
         resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
         # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
         q_factor = round(8.0 + insertion_ratio * 17.0, 1)
