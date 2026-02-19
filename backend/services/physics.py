@@ -308,6 +308,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         net_reactance = x_stub + x_cap
 
+        # Stub inductance: L = X_stub / (2*pi*f)
+        stub_inductance_nh = round(x_stub / omega * 1e9, 2) if omega > 0 else 0
+
         # Transformed impedance at operating frequency
         # R_matched = feedpoint_R * K^2, X_matched = X_ant*K + X_stub + X_cap
         # At operating freq: X_ant ~ 0 (antenna designed for this freq)
