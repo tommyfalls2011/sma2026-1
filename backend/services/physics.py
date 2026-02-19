@@ -255,15 +255,22 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         freq_shift_mhz = round((bar_inches - 32.0) * 0.03, 3)
         resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
         # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
-        # Baseline Q for CB Yagi gamma match: ~12. Range: 8 (low insertion) to 25 (high)
-        q_factor = round(8.0 + rod_insertion * 17.0, 1)  # 8 at 0, 16.5 at 0.5, 25 at 1.0
-        # Bandwidth from Q: BW = f_center / Q
+        q_factor = round(8.0 + insertion_ratio * 17.0, 1)
         gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
-        # SWR at resonance (best achievable): no off-resonance penalty
+        # SWR calculation
         tuning_factor = 1.0 + bar_penalty + insertion_penalty + z0_penalty
-        # Series cap effect: deviation from optimal increases SWR
-        wavelength = 11802.71 / operating_freq_mhz / 39.3701
-        auto_cap_pf = round(6.9 * wavelength, 1)
+        # Coaxial capacitor from teflon sleeve: C = 2pi * e0 * er * L / ln(D_outer/D_inner)
+        tube_id = rod_dia + 0.25  # tube inner diameter (clearance for teflon)
+        rod_od_with_teflon = rod_dia + 0.125  # rod OD with teflon sleeve
+        if rod_insertion_in > 0 and tube_id > rod_od_with_teflon:
+            teflon_epsilon = 2.1
+            cap_per_inch = 0.614 * teflon_epsilon / math.log(tube_id / rod_od_with_teflon)
+            insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
+        else:
+            insertion_cap_pf = 0
+        # Series cap: use physical capacitor value or user override
+        wavelength_m = 11802.71 / operating_freq_mhz / 39.3701
+        auto_cap_pf = round(6.9 * wavelength_m, 1)
         user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else auto_cap_pf
         cap_ratio = user_cap / max(auto_cap_pf, 1.0)
         cap_deviation = abs(cap_ratio - 1.0)
