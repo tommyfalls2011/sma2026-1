@@ -283,6 +283,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "rod_insertion": round(insertion_ratio, 3), "rod_insertion_inches": round(rod_insertion_in, 2),
                 "tube_length_inches": round(tube_length, 2), "teflon_sleeve_inches": teflon_sleeve_in,
                 "insertion_cap_pf": insertion_cap_pf,
+                "bar_position_inches": bar_inches,
+                "step_up_ratio": round(math.sqrt(50.0 / max(feedpoint_r, 5.0)), 3),
                 "cap_ratio": cap_ratio, "resonant_freq_mhz": resonant_freq,
                 "q_factor": q_factor, "gamma_bandwidth_mhz": gamma_bw_mhz,
                 "bandwidth_effect": bw_label, "bandwidth_mult": round(max(0.6, 1.0 - (q_factor - 12) * 0.02), 2),
