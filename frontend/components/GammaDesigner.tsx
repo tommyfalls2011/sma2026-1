@@ -67,6 +67,7 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
         if (customRodOd) body.custom_rod_od = parseFloat(customRodOd);
         if (customSpacing) body.custom_rod_spacing = parseFloat(customSpacing);
         if (customTeflon) body.custom_teflon_length = parseFloat(customTeflon);
+        if (customTubeLength) body.custom_tube_length = parseFloat(customTubeLength);
         if (customFeedpointR) body.feedpoint_impedance = parseFloat(customFeedpointR);
       } else {
         // Auto mode: also pass current rod_dia and spacing from calculator
