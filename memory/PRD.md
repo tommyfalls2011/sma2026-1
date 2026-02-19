@@ -65,6 +65,11 @@ Custom tube OD supported via gamma_tube_od API parameter.
   - **Fix**: Smith Chart computed FIRST with full gamma match physics at each frequency. SWR curve derived from reflection coefficients: SWR = (1+|Γ|)/(1-|Γ|).
   - SWR curve minimum now correctly at operating frequency (27.185 MHz), not shifted.
   - SWR at operating freq matches main displayed SWR value.
+- **(Enhancement) SWR Bandwidth Overlay**: COMPLETE.
+  - Gradient-filled green (≤1.5) and yellow (≤2.0) zone bands with dashed edge boundaries
+  - Channel count badges ("X CH") inside zone bands
+  - Min SWR indicator dot with value label on the curve
+  - Legend shows bandwidth MHz and channel counts per zone
 
 ### Session: Feb 19, 2026 (Fork 5)
 - **(P0) Custom Hardware Test**: 1" OD tube / 1/2" rod — cap/inch=5.03, ID/rod ratio 1.80:1 (above optimal 1.3-1.6x). Null at 20.4" exceeds 15" tube. Best SWR=1.29 at full insertion. Confirmed hardware mismatch.
