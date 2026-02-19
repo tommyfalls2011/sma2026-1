@@ -1485,7 +1485,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.orientationBtn, inputs.antenna_orientation === 'dual' && styles.orientationBtnActive, inputs.antenna_orientation === 'dual' && { borderColor: '#FF9800' }]} 
-                  onPress={() => setInputs(p => ({ ...p, antenna_orientation: 'dual' }))}
+                  onPress={() => { if (checkFeature('dual_polarity', 'Dual Polarity')) setInputs(p => ({ ...p, antenna_orientation: 'dual' })); }}
                 >
                   <Text style={styles.orientationIcon}>+</Text>
                   <Text style={[styles.orientationBtnText, inputs.antenna_orientation === 'dual' && styles.orientationBtnTextActive, inputs.antenna_orientation === 'dual' && { color: '#FF9800' }]}>Dual</Text>
