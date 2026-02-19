@@ -2774,18 +2774,22 @@ export default function AntennaCalculator() {
                 </View>
               )}
               
-              {isFeatureAvailable('polar_pattern') && (
+              <FeatureGate feature="polar_pattern" label="Polar Pattern">
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
-              )}
+              </FeatureGate>
               
               {/* Side View / Elevation Pattern */}
-              {results.takeoff_angle && isFeatureAvailable('elevation_pattern') && (
+              {results.takeoff_angle && (
+                <FeatureGate feature="elevation_pattern" label="Elevation Pattern">
                 <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} orientation={inputs.antenna_orientation} elevationData={results.elevation_pattern} fbRatio={results.fb_ratio} />
+                </FeatureGate>
               )}
               
               {/* Smith Chart */}
-              {results.smith_chart_data && results.smith_chart_data.length > 0 && isFeatureAvailable('smith_chart') && (
+              {results.smith_chart_data && results.smith_chart_data.length > 0 && (
+                <FeatureGate feature="smith_chart" label="Smith Chart">
                 <SmithChart data={results.smith_chart_data} centerFreq={results.center_frequency} />
+                </FeatureGate>
               )}
               
               {/* Pattern Data Table */}
