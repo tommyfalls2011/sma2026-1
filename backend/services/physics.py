@@ -312,11 +312,20 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Stub inductance: L = X_stub / (2*pi*f)
         stub_inductance_nh = round(x_stub / omega * 1e9, 2) if omega > 0 else 0
 
+        # Antenna reactance at operating frequency (driven element may not be resonant here)
+        # X_ant = Q * R * (f/f_res - f_res/f)  — capacitive if element resonates above operating freq
+        antenna_q = 12.0  # typical Yagi Q
+        if element_resonant_freq_mhz > 0 and abs(element_resonant_freq_mhz - operating_freq_mhz) > 0.01:
+            fr_ratio = operating_freq_mhz / element_resonant_freq_mhz
+            x_antenna = antenna_q * feedpoint_r * (fr_ratio - 1.0 / fr_ratio)
+        else:
+            x_antenna = 0.0
+
         # Transformed impedance at operating frequency
-        # R_matched = feedpoint_R * K^2, X_matched = X_ant*K + X_stub + X_cap
-        # At operating freq: X_ant ~ 0 (antenna designed for this freq)
+        # R_matched = feedpoint_R * K^2
+        # X_matched = X_antenna*K + X_stub + X_cap  (antenna reactance is K-transformed)
         z_r_matched = feedpoint_r * k_sq
-        z_x_matched = x_stub + x_cap
+        z_x_matched = (x_antenna * step_up) + x_stub + x_cap
 
         # Reflection coefficient: Gamma = (Z_matched - Z0) / (Z_matched + Z0)
         z0 = 50.0
