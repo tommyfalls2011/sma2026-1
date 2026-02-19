@@ -212,8 +212,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # and the null always falls within a 15" tube
         wall = 0.049  # standard aluminum tube wall thickness
         if num_elements <= 3:
-            default_rod_od = 0.340   # 3/8" rod (actual measured OD)
-            default_tube_od = 0.625  # 5/8" tube  → cap/inch ~8.7
+            default_rod_od = 0.577   # Sim-optimized: 0.750/1.3 ratio
+            default_tube_od = 0.750  # 3/4" tube, 16.3 pF/in, SWR~1.0 at 8" insertion
             default_spacing = 3.5
         elif num_elements <= 6:
             default_rod_od = 0.500   # 1/2" rod
