@@ -1655,7 +1655,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Toward feedpoint (higher freq)</Text>
-                          <Text style={{ fontSize: 9, color: barInductanceNh > 0 ? '#FF9800' : '#555' }}>L: {barInductanceNh.toFixed(0)} nH | {freqShift >= 0 ? '+' : ''}{freqShift.toFixed(2)} MHz</Text>
+                          <Text style={{ fontSize: 9, color: barInductanceNh > 0 ? '#FF9800' : '#555' }}>L: {barInductanceNh.toFixed(0)} nH | {netX >= 0 ? '+' : ''}{netX.toFixed(1)}j ohms</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>Toward tip (lower freq)</Text>
                         </View>
                       </View>
