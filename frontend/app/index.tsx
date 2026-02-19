@@ -1631,7 +1631,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Tube</Text>
-                          <Text style={{ fontSize: 14, color: '#2196F3', fontWeight: '700' }}>{gd.tube_length_in?.toFixed(1) || '11.0'}"</Text>
+                          <Text style={{ fontSize: 14, color: '#2196F3', fontWeight: '700' }}>{gd.tube_length_in?.toFixed(1) || '19.5'}"</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Series Cap (pF)</Text>
