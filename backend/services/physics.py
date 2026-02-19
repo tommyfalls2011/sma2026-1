@@ -226,10 +226,12 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         rod_od_actual = 0.375
         if rod_insertion_in > 0 and tube_id > rod_od_actual:
             cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od_actual)
-            insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
+            insertion_cap_pf_exact = cap_per_inch * rod_insertion_in
+            insertion_cap_pf = round(insertion_cap_pf_exact, 1)
         else:
+            insertion_cap_pf_exact = 0
             insertion_cap_pf = 0
-        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else insertion_cap_pf
+        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else insertion_cap_pf_exact
         cap_ratio = round(user_cap / max(insertion_cap_pf, 1.0), 3) if insertion_cap_pf > 0 else 1.0
 
         # Z0 of gamma section (two-wire transmission line)
