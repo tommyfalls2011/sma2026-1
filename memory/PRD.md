@@ -58,6 +58,15 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend + MongoDB) 
 8. **driven_element_dia_in Parameter**: Added to `apply_matching_network()` function signature and passed from caller. Used in Z0 geometric mean calculation.
 9. **Gamma Parameter Sweep Simulation** (`/app/backend/gamma_sweep.py`): Tested 3960 combinations of tube OD (10 sizes), rod OD (4 tube/rod ratios: 1.3-1.6), tube length (10 lengths), and rod length (22-48"). Found ~130 pF is the magic capacitance for cancelling stub inductance at 27.185 MHz with 25Ω feedpoint.
 
+### Session: Feb 19, 2026 (Fork 8 — CURRENT) — COMPLETED
+
+#### Bug Fixes Completed & Tested (12/12 tests passed)
+1. **(P0) Dynamic Tube Length**: Changed `tube_length = 15.0` to `tube_length = round(gamma_rod_length, 1)` in `apply_matching_network()`. Now ~19.5" for 11m CB, scales with wavelength for other bands. This unblocked 2-element Yagi tuning (needed 17"+ insertion).
+2. **(P0) Gamma Design Consistency**: Fixed `gamma_design` dict to use actual hardware dimensions from matching calculation instead of stale hardcoded `design_tube_id=0.527`, `design_rod_od=0.500`. Series Cap now shows correct 89.4 pF (was 451.4 pF).
+3. **Smith Chart Capacitance Clamping**: Clamped `capacitance_pf` to 0 when |sc_x| < 0.5 Ohm or C > 1000 pF. Eliminates near-resonance artifacts showing 25000+ pF.
+4. **Dynamic Teflon Sleeve**: Teflon sleeve length now = tube_length + 1.0" (was hardcoded 16.0"). Updated backend technical_notes and frontend display.
+5. **Frontend Fallback Updates**: Updated fallback values in frontend for tube length display and teflon sleeve text to match new dynamic values.
+
 #### Current Defaults (just updated, need validation)
 - **≤3 elements**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
 - **4-6 elements**: Rod 0.500", Tube 0.750" (same)
