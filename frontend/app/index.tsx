@@ -2937,7 +2937,7 @@ export default function AntennaCalculator() {
                 <View style={styles.heightPerfCard}>
                   <View style={styles.heightPerfTitleRow}>
                     <Text style={styles.heightPerfTitle}><Ionicons name="trending-up" size={14} color="#00BCD4" /> Height vs Performance ({heightOptResult.heights_tested.length} heights tested)</Text>
-                    <TouchableOpacity style={styles.exportBtn} onPress={() => exportHeightData()}>
+                    <TouchableOpacity style={styles.exportBtn} onPress={() => { if (checkFeature('csv_export', 'CSV Export')) exportHeightData(); }}>
                       <Ionicons name="download-outline" size={14} color="#fff" />
                       <Text style={styles.exportBtnText}>CSV</Text>
                     </TouchableOpacity>
@@ -3158,7 +3158,7 @@ export default function AntennaCalculator() {
                 <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>Antenna Spec Sheet</Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <TouchableOpacity onPress={() => { exportAllData(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
+                <TouchableOpacity onPress={() => { if (checkFeature('csv_export', 'CSV Export')) exportAllData(); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#9C27B0', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6 }}>
                   <Ionicons name="download-outline" size={14} color="#fff" />
                   <Text style={{ fontSize: 11, color: '#fff', fontWeight: '600' }}>CSV</Text>
                 </TouchableOpacity>
