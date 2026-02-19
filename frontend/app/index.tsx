@@ -115,8 +115,8 @@ export default function AntennaCalculator() {
   const [gammaRodDia, setGammaRodDia] = useState<string | null>(null);
   const [gammaRodSpacing, setGammaRodSpacing] = useState<string | null>('3.5');
   const [gammaCapPf, setGammaCapPf] = useState<string | null>(null);
-  const [gammaBarPos, setGammaBarPos] = useState(13); // shorting bar position in inches from feedpoint center
-  const [gammaRodInsertion, setGammaRodInsertion] = useState(8.0); // rod insertion into tube in inches — default 8" in, 4" teflon exposed
+  const [gammaBarPos, setGammaBarPos] = useState(24); // shorting bar position in inches from feedpoint center
+  const [gammaRodInsertion, setGammaRodInsertion] = useState(11.0); // rod insertion into tube in inches
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
@@ -1612,7 +1612,7 @@ export default function AntennaCalculator() {
                     const elemDia = gd.element_diameter_in;
                     // Recalculate based on user inputs
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
-                    const rodLen = gd.wavelength_inches * 0.045 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
+                    const rodLen = 36.0 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
                     // Series cap: user-editable, defaults to backend-calculated value
                     const autoCapPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
                     const capPf = gammaCapPf !== null ? (parseFloat(gammaCapPf) || autoCapPf) : autoCapPf;
@@ -1637,7 +1637,7 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Tube</Text>
-                          <Text style={{ fontSize: 14, color: '#2196F3', fontWeight: '700' }}>{gd.tube_length_in?.toFixed(1) || '19.5'}"</Text>
+                          <Text style={{ fontSize: 14, color: '#2196F3', fontWeight: '700' }}>{gd.tube_length_in?.toFixed(1) || '22.0'}"</Text>
                         </View>
                         <View style={{ flex: 1, alignItems: 'center' }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Series Cap (pF)</Text>
