@@ -205,32 +205,33 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            num_elements: int = 3) -> tuple:
     if feed_type == "gamma":
         # Gamma match hardware scales with element count (standard aluminum tubing sizes)
-        # More elements = lower feedpoint R = higher current = beefier hardware
-        # Rod length stays 32", tube length 15", only diameters grow
+        # More elements = lower feedpoint R = higher step-up = beefier hardware
+        # Key: keep tube/rod diameter ratio ~1.3-1.6 so cap/inch stays 6-11 pF/inch
+        # and the null always falls within a 15" tube
         wall = 0.049  # standard aluminum tube wall thickness
         if num_elements <= 3:
             default_rod_od = 0.375   # 3/8" rod
-            default_tube_od = 0.625  # 5/8" tube
+            default_tube_od = 0.625  # 5/8" tube  → cap/inch ~8.7
             default_spacing = 3.5
-        elif num_elements <= 5:
-            default_rod_od = 0.375   # 3/8" rod
-            default_tube_od = 0.750  # 3/4" tube
+        elif num_elements <= 6:
+            default_rod_od = 0.500   # 1/2" rod
+            default_tube_od = 0.750  # 3/4" tube  → cap/inch ~11.2
             default_spacing = 4.0
-        elif num_elements <= 8:
+        elif num_elements <= 10:
             default_rod_od = 0.500   # 1/2" rod
-            default_tube_od = 0.875  # 7/8" tube
+            default_tube_od = 0.875  # 7/8" tube  → cap/inch ~6.7
             default_spacing = 4.5
-        elif num_elements <= 12:
-            default_rod_od = 0.500   # 1/2" rod
-            default_tube_od = 1.000  # 1" tube
-            default_spacing = 5.0
-        elif num_elements <= 16:
+        elif num_elements <= 14:
             default_rod_od = 0.625   # 5/8" rod
-            default_tube_od = 1.125  # 1-1/8" tube
+            default_tube_od = 1.000  # 1" tube    → cap/inch ~8.1
+            default_spacing = 5.0
+        elif num_elements <= 17:
+            default_rod_od = 0.625   # 5/8" rod
+            default_tube_od = 1.125  # 1-1/8" tube → cap/inch ~6.0
             default_spacing = 5.5
         else:
-            default_rod_od = 0.625   # 5/8" rod
-            default_tube_od = 1.250  # 1-1/4" tube
+            default_rod_od = 0.750   # 3/4" rod
+            default_tube_od = 1.250  # 1-1/4" tube → cap/inch ~6.9
             default_spacing = 6.0
         default_tube_id = default_tube_od - 2 * wall
 
