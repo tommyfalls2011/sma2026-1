@@ -251,8 +251,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         wavelength_in = 11802.71 / operating_freq_mhz
         gamma_rod_length = wavelength_in * 0.045  # 4-5% of λ (~19" for 11m CB)
-        tube_length = 15.0
-        teflon_sleeve_in = 16.0
+        tube_length = round(gamma_rod_length, 1)  # tube scales with rod length (frequency-dependent)
+        teflon_sleeve_in = round(tube_length + 1.0, 1)  # teflon sleeve slightly longer than tube
 
         # Rod insertion: actual inches into tube (0 to tube_length)
         if gamma_element_gap is not None:
@@ -872,8 +872,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_diameter_in": gamma_rod_dia,
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
-            "tube_length_in": 11.0,
-            "teflon_sleeve_in": 12.0,
+            "tube_length_in": round(wavelength_in * 0.045, 1),  # matches rod length
+            "teflon_sleeve_in": round(wavelength_in * 0.045 + 1.0, 1),
             "capacitance_pf": design_user_cap,
             "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
@@ -1270,7 +1270,9 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         g_im = (2 * sc_x * z_0) / denom_r if denom_r > 0 else 0
         omega = 2 * math.pi * freq * 1e6
         inductance_nh = round(sc_x / omega * 1e9, 2) if sc_x > 0 and omega > 0 else 0
-        capacitance_pf_val = round(-1e12 / (omega * sc_x), 2) if sc_x < 0 and omega > 0 else 0
+        capacitance_pf_val = round(-1e12 / (omega * sc_x), 2) if sc_x < -0.5 and omega > 0 else 0
+        if capacitance_pf_val > 1000:
+            capacitance_pf_val = 0  # near-resonance artifact — not a real component value
         smith_chart_data.append({
             "freq": round(freq, 4),
             "z_real": round(sc_r, 2),
