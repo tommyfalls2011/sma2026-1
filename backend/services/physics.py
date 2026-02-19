@@ -256,8 +256,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # --- Final SWR: starts at 1.0, deviations add ---
         swr_at_resonance = round(max(1.0, 1.0 + bar_swr_add + insertion_swr_add + z0_swr_add), 3)
         # Coaxial capacitor from teflon sleeve
-        tube_id = rod_dia + 0.25
-        rod_od_with_teflon = rod_dia + 0.125
+        tube_id = rod_dia + 0.4
+        rod_od_with_teflon = rod_dia + 0.1
         if rod_insertion_in > 0 and tube_id > rod_od_with_teflon:
             cap_per_inch = 0.614 * 2.1 / math.log(tube_id / rod_od_with_teflon)
             insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
