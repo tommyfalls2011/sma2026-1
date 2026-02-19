@@ -1590,7 +1590,7 @@ export default function AntennaCalculator() {
                     const elemDia = gd.element_diameter_in;
                     // Recalculate based on user inputs
                     const ratio = rodSpace > 0 && rodDia > 0 ? Math.sqrt(1 + (elemDia / rodDia) * Math.log(2 * rodSpace / rodDia) / Math.log(2 * rodSpace / elemDia)) : gd.step_up_ratio;
-                    const rodLen = gd.wavelength_inches * 0.045 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
+                    const rodLen = gd.wavelength_inches * 0.074 * Math.max(0.5, Math.min(2.0, rodDia / gd.gamma_rod_diameter_in));
                     // Series cap: user-editable, defaults to backend-calculated value
                     const autoCapPf = gd.capacitance_pf * Math.max(0.3, Math.min(3.0, rodDia / gd.gamma_rod_diameter_in));
                     const capPf = gammaCapPf !== null ? (parseFloat(gammaCapPf) || autoCapPf) : autoCapPf;
