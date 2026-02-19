@@ -3574,6 +3574,7 @@ export default function AntennaCalculator() {
 
               {/* Section: Wind Load */}
               {results.wind_load && (
+                <FeatureGate feature="wind_load" label="Wind Load & Mechanical">
                 <SpecSection title="Wind Load & Mechanical" icon="thunderstorm-outline" color="#FF5722">
                   <SpecRow label="Total Wind Area" value={`${results.wind_load.total_area_sqft} sq ft`} />
                   <SpecRow label="Total Weight" value={`${results.wind_load.total_weight_lbs} lbs`} accent="#FF5722" />
