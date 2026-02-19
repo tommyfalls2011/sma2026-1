@@ -207,35 +207,12 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            driven_element_dia_in: float = 0.5,
                            element_resonant_freq_mhz: float = 27.185) -> tuple:
     if feed_type == "gamma":
-        # Gamma match hardware scales with element count (standard aluminum tubing sizes)
-        # More elements = lower feedpoint R = higher step-up = beefier hardware
-        # Key: keep tube/rod diameter ratio ~1.3-1.6 so cap/inch stays 6-11 pF/inch
-        # and the null always falls within a 15" tube
+        # Gamma match hardware — unified for all element counts
+        # 0.500" rod / 0.750" tube / 3.5" spacing — standard CB gamma match hardware
         wall = 0.049  # standard aluminum tube wall thickness
-        if num_elements <= 3:
-            default_rod_od = 0.500   # 1/2" rod — standard stock
-            default_tube_od = 0.750  # 3/4" tube — ID 0.652", ratio 1.30, 11.2 pF/in
-            default_spacing = 3.5
-        elif num_elements <= 6:
-            default_rod_od = 0.500   # 1/2" rod — standard stock
-            default_tube_od = 0.750  # 3/4" tube — ID 0.652", ratio 1.30
-            default_spacing = 3.5
-        elif num_elements <= 10:
-            default_rod_od = 0.500   # 1/2" rod
-            default_tube_od = 0.875  # 7/8" tube  → cap/inch ~6.7
-            default_spacing = 4.5
-        elif num_elements <= 14:
-            default_rod_od = 0.625   # 5/8" rod
-            default_tube_od = 1.000  # 1" tube    → cap/inch ~8.1
-            default_spacing = 5.0
-        elif num_elements <= 17:
-            default_rod_od = 0.625   # 5/8" rod
-            default_tube_od = 1.125  # 1-1/8" tube → cap/inch ~6.0
-            default_spacing = 5.5
-        else:
-            default_rod_od = 0.750   # 3/4" rod
-            default_tube_od = 1.250  # 1-1/4" tube → cap/inch ~6.9
-            default_spacing = 6.0
+        default_rod_od = 0.500   # 1/2" rod — standard stock
+        default_tube_od = 0.750  # 3/4" tube — ID 0.652", ratio 1.30, 11.2 pF/in
+        default_spacing = 3.5
         default_tube_id = default_tube_od - 2 * wall
 
         rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else default_rod_od
