@@ -89,9 +89,10 @@ Custom tube OD supported via gamma_tube_od API parameter.
 - Gamma match physics rewrite, Admin panel, Feature gating framework, QA
 
 ## Known Issues / Next Steps
-- **Tube/Rod ratio validation**: Model doesn't warn when ratio is too large (>2x) making match impossible
-- **Air gap in dielectric**: Real teflon sleeve doesn't fill entire tube gap. User reported expected 76.1 pF vs model's 87.2 pF. Need teflon sleeve OD to model two-layer dielectric (teflon + air gap as series capacitors)
-- **SWR curve consistency**: SWR curve uses parabolic approximation. Could derive from Smith Chart impedance at each frequency for full consistency
+- **CRITICAL: SWR Curve uses parabolic approximation, not gamma match physics** — When designer recipe is applied, SWR curve shows minimum at wrong frequency. Root cause: `resonant_freq_mhz` shifts based on bar position formula `(bar - rod_length*0.4) * 0.03`, AND Smith Chart hardcoded rod values partially fixed (rod_spacing/rod_dia now from matching_info). Need to derive SWR curve FROM Smith Chart impedance data instead of parabolic approximation.
+- **Smith Chart rod values**: PARTIALLY FIXED — now reads from gamma_design dict, but SWR curve still uses parabolic model centered at shifted resonant_freq
+- **Air gap in dielectric**: Real teflon sleeve doesn't fill entire tube gap. Need teflon sleeve OD for series-capacitor model
+- **Tube/Rod ratio validation**: Model doesn't warn in main calculator when ratio is too large
 
 ## Backlog
 - (P1) Model air gap in dielectric (teflon sleeve OD parameter)
