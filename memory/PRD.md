@@ -102,7 +102,7 @@ Custom tube OD supported via gamma_tube_od API parameter.
 - **Tube/Rod ratio validation**: Model doesn't warn in main calculator when ratio is too large
 
 ## Backlog
-- (P1) Model air gap in dielectric (teflon sleeve OD parameter)
+- (P2) Model air gap in dielectric (teflon sleeve OD parameter)
 - (P2) PayPal/CashApp Payments
 - (P2) Improve .easignore
 - (P3) Build iOS Version
