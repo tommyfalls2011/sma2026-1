@@ -203,62 +203,27 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            hairpin_bar_pos: float = None, hairpin_boom_gap: float = None,
                            operating_freq_mhz: float = 27.185) -> tuple:
     if feed_type == "gamma":
-        # A properly tuned gamma match achieves 1.0:1 SWR
-        # SWR starts at 1.0 and deviations from optimal add small penalties
-        # Gamma match: shorting bar sets R, rod insertion sets C (cancels reactance)
-        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.5
+        # Physics-based gamma match: transmission line stub + coaxial series capacitor
+        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else 0.375
         rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else 3.5
-        # Shorting bar position in inches from feedpoint center (default 32")
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 13.0
-        # Physical gamma match model:
-        #   - Gamma rod runs parallel to driven element (~32" for 11m CB)
-        #   - Tube at feedpoint end = 1/4 rod length (~8")
-        #   - Rod has 12" teflon sleeve (dielectric) that slides into tube
-        #   - Creates variable series capacitor
-        #   - Shorting bar (4") slides along rod+element to tune resonance
+
         wavelength_in = 11802.71 / operating_freq_mhz
-        gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m
-        tube_length = 11.0  # 11" tube — 12" teflon slides in 11", 1" exposed
-        teflon_sleeve_in = 12.0  # 12" teflon sleeve on rod
+        gamma_rod_length = wavelength_in * 0.074  # ~32" for 11m CB
+        tube_length = 11.0
+        teflon_sleeve_in = 12.0
+
         # Rod insertion: actual inches into tube (0 to tube_length)
         if gamma_element_gap is not None:
             rod_insertion_in = max(0, min(gamma_element_gap, tube_length))
         else:
-            rod_insertion_in = 8.0  # default = 8" in, 4" teflon exposed
+            rod_insertion_in = 8.0
         insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
-        # Convert bar inches to fraction of driven half-element
-        half_element_in = wavelength_in * 0.23
-        bar_pos = min(0.9, max(0.1, bar_inches / max(half_element_in, 1.0)))
-        # --- Impedance transformation via bar position ---
-        optimal_bar = min(0.9, max(0.1, math.sqrt(50.0 / max(feedpoint_r, 5.0)) * 0.20))
-        bar_deviation = abs(bar_pos - optimal_bar) / max(optimal_bar, 0.1)
-        bar_swr_add = min(0.5, bar_deviation ** 1.5 * 0.15)
-        # --- Reactance cancellation via rod insertion ---
-        insertion_deviation = abs(insertion_ratio - 0.5) / 0.5
-        insertion_swr_add = min(0.4, insertion_deviation ** 1.5 * 0.12)
-        # --- Z0 of gamma section ---
-        z0_swr_add = 0
-        if rod_spacing > rod_dia / 2:
-            gamma_z0 = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
-            if gamma_z0 < 200:
-                z0_swr_add = min(0.15, ((200 - gamma_z0) / 200) ** 2 * 0.15)
-            elif gamma_z0 > 350:
-                z0_swr_add = min(0.15, ((gamma_z0 - 350) / 350) ** 2 * 0.15)
-        # Shorting bar inductance
-        bar_inductance_nh = round(5.08 * bar_inches * (math.log(2.0 * bar_inches / rod_dia) - 1.0 + rod_dia / (2.0 * bar_inches)), 1) if bar_inches > 0 else 0
-        # Shorting bar shifts resonant frequency: longer bar = more inductance = lower freq
-        freq_shift_mhz = round((bar_inches - gamma_rod_length * 0.4) * 0.03, 3)
-        resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
-        # Rod insertion affects Q-factor: more insertion = higher Q = narrower BW
-        q_factor = round(8.0 + insertion_ratio * 17.0, 1)
-        gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
-        # --- Final SWR: starts at 1.0, deviations add ---
-        swr_at_resonance = round(max(1.0, 1.0 + bar_swr_add + insertion_swr_add + z0_swr_add), 3)
-        # Coaxial capacitor from teflon sleeve
-        # Real dimensions: 5/8" OD tube (0.049" standard wall → 0.527" ID), 3/8" rod, teflon dielectric
-        # C/L = 2*pi*e0*er / ln(D/d), converted to pF/inch: constant = 2*pi*e0*0.0254*1e12 = 1.413
-        tube_id = 0.527   # 5/8" tube, 0.049" wall
-        rod_od_actual = 0.375  # 3/8" rod
+
+        # Coaxial capacitor: C = 2*pi*e0*er*L / ln(D/d)
+        # Real dims: 5/8" OD tube (0.049" wall -> 0.527" ID), 3/8" rod, teflon (er=2.1)
+        tube_id = 0.527
+        rod_od_actual = 0.375
         if rod_insertion_in > 0 and tube_id > rod_od_actual:
             cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od_actual)
             insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
@@ -266,35 +231,81 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             insertion_cap_pf = 0
         user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else insertion_cap_pf
         cap_ratio = round(user_cap / max(insertion_cap_pf, 1.0), 3) if insertion_cap_pf > 0 else 1.0
-        # Off-resonance SWR degradation
-        freq_offset = abs(operating_freq_mhz - resonant_freq)
-        half_bw = gamma_bw_mhz / 2
-        off_resonance_add = 0
-        if half_bw > 0:
-            off_resonance = min(1.0, freq_offset / half_bw)
-            off_resonance_add = off_resonance * 0.3
-        matched_swr = round(max(1.0, swr_at_resonance + off_resonance_add), 3)
-        tuning_quality = round(1.0 / max(swr_at_resonance, 1.0), 3)
+
+        # Z0 of gamma section (two-wire transmission line)
+        if rod_spacing > rod_dia / 2:
+            z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / rod_dia)
+        else:
+            z0_gamma = 300.0
+
+        # Step-up ratio: K = sqrt(Z_target / Z_feedpoint)
+        step_up = math.sqrt(50.0 / max(feedpoint_r, 5.0))
+        k_sq = step_up ** 2
+
+        # Shorted transmission line stub: X_stub = Z0 * tan(beta * L)
+        wavelength_m = 299792458.0 / (operating_freq_mhz * 1e6)
+        bar_pos_m = bar_inches * 0.0254
+        beta_l = 2.0 * math.pi * bar_pos_m / wavelength_m
+        x_stub = z0_gamma * math.tan(beta_l)
+
+        # Series capacitor: X_cap = -1/(2*pi*f*C)
+        omega = 2.0 * math.pi * operating_freq_mhz * 1e6
+        x_cap = -1.0 / (omega * (user_cap * 1e-12)) if user_cap > 0 else 0
+
+        net_reactance = x_stub + x_cap
+
+        # Transformed impedance at operating frequency
+        # R_matched = feedpoint_R * K^2, X_matched = X_ant*K + X_stub + X_cap
+        # At operating freq: X_ant ~ 0 (antenna designed for this freq)
+        z_r_matched = feedpoint_r * k_sq
+        z_x_matched = x_stub + x_cap
+
+        # Reflection coefficient: Gamma = (Z_matched - Z0) / (Z_matched + Z0)
+        z0 = 50.0
+        denom = (z_r_matched + z0) ** 2 + z_x_matched ** 2
+        gamma_re = ((z_r_matched - z0) * (z_r_matched + z0) + z_x_matched ** 2) / denom if denom > 0 else 0
+        gamma_im = (2 * z_x_matched * z0) / denom if denom > 0 else 0
+        gamma_mag = min(math.sqrt(gamma_re ** 2 + gamma_im ** 2), 0.999)
+
+        # SWR from reflection coefficient
+        matched_swr = round((1 + gamma_mag) / (1 - gamma_mag), 3) if gamma_mag < 1.0 else 99.0
+        matched_swr = max(1.0, matched_swr)
+
+        tuning_quality = round(1.0 / max(matched_swr, 1.0), 3)
+
+        # Q-factor and bandwidth
+        q_factor = round(8.0 + insertion_ratio * 17.0, 1)
+        gamma_bw_mhz = round(operating_freq_mhz / q_factor, 3)
+
+        # Resonant frequency estimate (bar position shifts system resonance)
+        freq_shift_mhz = round((bar_inches - gamma_rod_length * 0.4) * 0.03, 3)
+        resonant_freq = round(operating_freq_mhz - freq_shift_mhz, 3)
+
         bw_label = f"{gamma_bw_mhz:.2f} MHz (Q={q_factor:.0f})"
         info = {"type": "Gamma Match",
                 "description": "Rod with teflon sleeve slides into tube creating variable series capacitor",
-                "original_swr": round(swr, 3), "matched_swr": matched_swr, "swr_at_resonance": swr_at_resonance,
+                "original_swr": round(swr, 3), "matched_swr": matched_swr, "swr_at_resonance": matched_swr,
                 "tuning_quality": tuning_quality,
                 "rod_insertion": round(insertion_ratio, 3), "rod_insertion_inches": round(rod_insertion_in, 2),
                 "tube_length_inches": round(tube_length, 2), "teflon_sleeve_inches": teflon_sleeve_in,
                 "insertion_cap_pf": insertion_cap_pf,
                 "bar_position_inches": bar_inches,
-                "step_up_ratio": round(math.sqrt(50.0 / max(feedpoint_r, 5.0)), 3),
+                "step_up_ratio": round(step_up, 3),
                 "cap_ratio": cap_ratio, "resonant_freq_mhz": resonant_freq,
                 "q_factor": q_factor, "gamma_bandwidth_mhz": gamma_bw_mhz,
                 "bandwidth_effect": bw_label, "bandwidth_mult": round(max(0.6, 1.0 - (q_factor - 12) * 0.02), 2),
+                "z0_gamma": round(z0_gamma, 1),
+                "x_stub": round(x_stub, 2), "x_cap": round(x_cap, 2),
+                "net_reactance": round(net_reactance, 2),
+                "z_matched_r": round(z_r_matched, 2), "z_matched_x": round(z_x_matched, 2),
+                "reflection_coefficient": round(gamma_mag, 6),
                 "technical_notes": {
                     "mechanism": "Teflon-sleeve coaxial capacitor in series with shorted bar",
                     "tube": f"{round(tube_length, 1)}\" tube at feedpoint, rod slides in with 12\" teflon sleeve",
                     "shorting_bar": "4\" bar slides along rod + driven element to tune",
                     "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations",
                     "advantage": "Feeds balanced Yagi with unbalanced coax",
-                    "tuning": "Bar position sets resonant freq, rod insertion into tube sets capacitance",
+                    "tuning": "Bar position sets stub inductance, rod insertion sets capacitance",
                     "mitigation": "Proper tuning minimizes beam skew"}}
         return matched_swr, info
     elif feed_type == "hairpin":
