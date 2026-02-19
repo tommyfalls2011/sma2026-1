@@ -240,10 +240,10 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
           {recipe && !result?.error && (
             <>
               {/* Recipe Card */}
-              <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: recipe.null_reachable ? '#4CAF50' : '#f44336' }}>
+              <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: recipe.null_reachable ? '#4CAF50' : recipe.swr_at_null <= 1.5 ? '#FF9800' : '#f44336' }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={{ fontSize: 13, color: recipe.null_reachable ? '#4CAF50' : '#f44336', fontWeight: '700' }}>
-                    {recipe.null_reachable ? 'MATCH ACHIEVABLE' : 'NULL NOT REACHABLE'}
+                  <Text style={{ fontSize: 13, color: recipe.null_reachable ? '#4CAF50' : recipe.swr_at_null <= 1.5 ? '#FF9800' : '#f44336', fontWeight: '700' }}>
+                    {recipe.null_reachable ? 'PERFECT MATCH' : recipe.swr_at_null <= 1.5 ? 'OPTIMIZED MATCH' : 'POOR MATCH'}
                   </Text>
                   <Text style={{ fontSize: 10, color: '#888' }}>{result.hardware_source === 'auto' ? 'Auto Hardware' : 'Custom Hardware'}</Text>
                 </View>
