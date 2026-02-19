@@ -1436,6 +1436,10 @@ export default function AntennaCalculator() {
               <Ionicons name="person-circle-outline" size={14} color="#2196F3" />
               <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '600' }}>Designer Info</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: showDebugPanel ? '#1a3c1a' : '#1a1a1a', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4, borderWidth: 1, borderColor: showDebugPanel ? '#4CAF50' : '#333' }} onPress={() => setShowDebugPanel(!showDebugPanel)} data-testid="debug-panel-toggle">
+              <Ionicons name="code-slash" size={14} color={showDebugPanel ? '#4CAF50' : '#888'} />
+              <Text style={{ fontSize: 10, color: showDebugPanel ? '#4CAF50' : '#888', fontWeight: '600' }}>Physics Trace</Text>
+            </TouchableOpacity>
           </View>
           
           {/* Band & Frequency */}
