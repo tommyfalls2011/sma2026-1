@@ -256,17 +256,16 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # --- Final SWR: starts at 1.0, deviations add ---
         swr_at_resonance = round(max(1.0, 1.0 + bar_swr_add + insertion_swr_add + z0_swr_add), 3)
         # Coaxial capacitor from teflon sleeve
+        # C/L = 2*pi*e0*er / ln(D/d), converted to pF/inch: constant = 2*pi*e0*0.0254*1e12 = 1.413
         tube_id = rod_dia + 0.4
         rod_od_with_teflon = rod_dia + 0.1
         if rod_insertion_in > 0 and tube_id > rod_od_with_teflon:
-            cap_per_inch = 0.614 * 2.1 / math.log(tube_id / rod_od_with_teflon)
+            cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od_with_teflon)
             insertion_cap_pf = round(cap_per_inch * rod_insertion_in, 1)
         else:
             insertion_cap_pf = 0
-        wavelength_m = wavelength_in / 39.3701
-        auto_cap_pf = round(6.9 * wavelength_m, 1)
-        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else (insertion_cap_pf if insertion_cap_pf > 0 else auto_cap_pf)
-        cap_ratio = round(user_cap / max(auto_cap_pf, 1.0), 3)
+        user_cap = gamma_cap_pf if gamma_cap_pf and gamma_cap_pf > 0 else insertion_cap_pf
+        cap_ratio = round(user_cap / max(insertion_cap_pf, 1.0), 3) if insertion_cap_pf > 0 else 1.0
         # Off-resonance SWR degradation
         freq_offset = abs(operating_freq_mhz - resonant_freq)
         half_bw = gamma_bw_mhz / 2
