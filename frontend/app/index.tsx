@@ -1553,6 +1553,19 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
 
+              {/* Gamma Designer Button */}
+              {inputs.feed_type === 'gamma' && (
+                <TouchableOpacity
+                  onPress={() => setShowGammaDesigner(true)}
+                  style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a2e', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#FF9800', gap: 6 }}
+                  data-testid="open-gamma-designer-btn"
+                >
+                  <Ionicons name="construct" size={16} color="#FF9800" />
+                  <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>Gamma Match Designer</Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>- One-click recipe</Text>
+                </TouchableOpacity>
+              )}
+
               {/* Gamma Match Design Panel */}
               {inputs.feed_type === 'gamma' && results && results.matching_info?.gamma_design && (
                 <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#FF9800' }}>
