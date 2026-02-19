@@ -377,6 +377,74 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             "rod_length": round(gamma_rod_length, 1), "tube_length": tube_length,
             "teflon_length": teflon_sleeve_in, "cap_per_inch": round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 3) if tube_id > rod_od_actual else 0,
         }
+        # Debug trace: every computation step in code execution order
+        info["debug_trace"] = [
+            {"step": 1, "label": "HARDWARE SELECTION", "items": [
+                {"var": "num_elements", "val": num_elements, "unit": ""},
+                {"var": "rod_od", "val": round(rod_dia, 3), "unit": "in"},
+                {"var": "tube_od", "val": round(actual_tube_od, 3), "unit": "in"},
+                {"var": "tube_id", "val": round(tube_id, 3), "unit": "in", "formula": f"{actual_tube_od} - 2×{wall}"},
+                {"var": "wall", "val": wall, "unit": "in"},
+                {"var": "rod_spacing", "val": round(rod_spacing, 1), "unit": "in"},
+            ]},
+            {"step": 2, "label": "WAVELENGTH & ROD", "items": [
+                {"var": "freq", "val": operating_freq_mhz, "unit": "MHz"},
+                {"var": "wavelength", "val": round(wavelength_in, 2), "unit": "in", "formula": f"11802.71 / {operating_freq_mhz}"},
+                {"var": "gamma_rod_length", "val": round(gamma_rod_length, 2), "unit": "in", "formula": f"{round(wavelength_in,1)} × 0.045"},
+                {"var": "tube_length", "val": round(tube_length, 1), "unit": "in"},
+                {"var": "teflon_sleeve", "val": round(teflon_sleeve_in, 1), "unit": "in"},
+            ]},
+            {"step": 3, "label": "ROD INSERTION & CAPACITANCE", "items": [
+                {"var": "rod_insertion", "val": round(rod_insertion_in, 2), "unit": "in"},
+                {"var": "insertion_ratio", "val": round(insertion_ratio, 3), "unit": "", "formula": f"{round(rod_insertion_in,1)} / {round(tube_length,1)}"},
+                {"var": "cap_per_inch", "val": round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 3) if tube_id > rod_od_actual else 0, "unit": "pF/in", "formula": f"1.413×2.1 / ln({round(tube_id,3)}/{round(rod_od_actual,3)})"},
+                {"var": "insertion_cap", "val": insertion_cap_pf, "unit": "pF", "formula": f"{round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 2) if tube_id > rod_od_actual else 0} × {round(rod_insertion_in,1)}"},
+                {"var": "user_cap", "val": round(user_cap, 1), "unit": "pF"},
+            ]},
+            {"step": 4, "label": "Z0 (TWO-WIRE LINE)", "items": [
+                {"var": "driven_element_dia", "val": driven_element_dia_in, "unit": "in"},
+                {"var": "geo_mean_dia", "val": round(geo_mean_dia, 4), "unit": "in", "formula": f"√({driven_element_dia_in} × {round(rod_dia,3)})"},
+                {"var": "Z0_gamma", "val": round(z0_gamma, 1), "unit": "Ω", "formula": f"276 × log10(2×{round(rod_spacing,1)} / {round(geo_mean_dia,4)})"},
+            ]},
+            {"step": 5, "label": "STEP-UP RATIO K", "items": [
+                {"var": "coupling_mult", "val": round(coupling_multiplier, 3), "unit": "", "formula": f"{round(z0_gamma,1)} / 73"},
+                {"var": "bar_position", "val": bar_inches, "unit": "in"},
+                {"var": "half_element_len", "val": round(half_len, 1), "unit": "in"},
+                {"var": "K", "val": round(step_up, 4), "unit": "", "formula": f"1 + ({bar_inches}/{round(half_len,1)}) × {round(coupling_multiplier,3)}"},
+                {"var": "K²", "val": round(k_sq, 4), "unit": ""},
+                {"var": "K_ideal", "val": round(k_ideal, 4), "unit": "", "formula": f"√(50 / {round(feedpoint_r,1)})"},
+                {"var": "bar_ideal", "val": bar_ideal_inches, "unit": "in"},
+            ]},
+            {"step": 6, "label": "STUB REACTANCE", "items": [
+                {"var": "wavelength_m", "val": round(wavelength_m, 4), "unit": "m"},
+                {"var": "bar_pos_m", "val": round(bar_pos_m, 4), "unit": "m"},
+                {"var": "β×L", "val": round(beta_l, 4), "unit": "rad"},
+                {"var": "tan(β×L)", "val": round(math.tan(beta_l), 4), "unit": ""},
+                {"var": "X_stub", "val": round(x_stub, 2), "unit": "Ω", "formula": f"{round(z0_gamma,1)} × tan({round(beta_l,4)})"},
+                {"var": "L_stub", "val": stub_inductance_nh, "unit": "nH", "formula": f"X_stub / (2πf)"},
+            ]},
+            {"step": 7, "label": "SERIES CAP REACTANCE", "items": [
+                {"var": "ω", "val": round(omega, 0), "unit": "rad/s"},
+                {"var": "C_series", "val": round(user_cap, 1), "unit": "pF"},
+                {"var": "X_cap", "val": round(x_cap, 2), "unit": "Ω", "formula": f"-1 / (ω × C)"},
+            ]},
+            {"step": 8, "label": "NET REACTANCE", "items": [
+                {"var": "X_net", "val": round(net_reactance, 2), "unit": "Ω", "formula": f"{round(x_stub,2)} + ({round(x_cap,2)})"},
+            ]},
+            {"step": 9, "label": "IMPEDANCE TRANSFORM", "items": [
+                {"var": "R_feed", "val": round(feedpoint_r, 2), "unit": "Ω"},
+                {"var": "R_matched", "val": round(z_r_matched, 2), "unit": "Ω", "formula": f"{round(feedpoint_r,1)} × {round(k_sq,3)}"},
+                {"var": "X_matched", "val": round(z_x_matched, 2), "unit": "Ω"},
+                {"var": "Z_matched", "val": f"{round(z_r_matched,1)} {'+' if z_x_matched >= 0 else ''}{round(z_x_matched,1)}j", "unit": "Ω"},
+            ]},
+            {"step": 10, "label": "REFLECTION & SWR", "items": [
+                {"var": "Z0_line", "val": 50.0, "unit": "Ω"},
+                {"var": "Γ_real", "val": round(gamma_re, 6), "unit": ""},
+                {"var": "Γ_imag", "val": round(gamma_im, 6), "unit": ""},
+                {"var": "|Γ|", "val": round(gamma_mag, 6), "unit": ""},
+                {"var": "SWR", "val": matched_swr, "unit": ":1", "formula": f"(1+{round(gamma_mag,4)}) / (1-{round(gamma_mag,4)})"},
+            ]},
+        ]
         return matched_swr, info
     elif feed_type == "hairpin":
         if swr <= 1.2: matched_swr = 1.03 + (swr - 1.0) * 0.20
