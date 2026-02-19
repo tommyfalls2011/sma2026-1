@@ -889,6 +889,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         num_elements=input_data.num_elements,
         driven_element_half_length_in=driven_half_length_in,
         driven_element_dia_in=driven_dia_in,
+        element_resonant_freq_mhz=element_resonant_freq,
     )
     # Add element-based resonant freq to matching info
     if matching_info and feed_type != "direct":
