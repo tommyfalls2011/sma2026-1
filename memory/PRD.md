@@ -60,12 +60,29 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend + MongoDB) 
 
 ### Session: Feb 19, 2026 (Fork 8 — CURRENT) — COMPLETED
 
-#### Bug Fixes Completed & Tested (12/12 tests passed)
-1. **(P0) Dynamic Tube Length**: Changed `tube_length = 15.0` to `tube_length = round(gamma_rod_length, 1)` in `apply_matching_network()`. Now ~19.5" for 11m CB, scales with wavelength for other bands. This unblocked 2-element Yagi tuning (needed 17"+ insertion).
-2. **(P0) Gamma Design Consistency**: Fixed `gamma_design` dict to use actual hardware dimensions from matching calculation instead of stale hardcoded `design_tube_id=0.527`, `design_rod_od=0.500`. Series Cap now shows correct 89.4 pF (was 451.4 pF).
-3. **Smith Chart Capacitance Clamping**: Clamped `capacitance_pf` to 0 when |sc_x| < 0.5 Ohm or C > 1000 pF. Eliminates near-resonance artifacts showing 25000+ pF.
-4. **Dynamic Teflon Sleeve**: Teflon sleeve length now = tube_length + 1.0" (was hardcoded 16.0"). Updated backend technical_notes and frontend display.
-5. **Frontend Fallback Updates**: Updated fallback values in frontend for tube length display and teflon sleeve text to match new dynamic values.
+#### Bug Fixes & Physics Overhaul (Tested, all passing)
+1. **(P0) Dynamic Tube Length**: Changed hardcoded `tube_length = 15.0"` to `round(gamma_rod_length, 1)` (~19.5" for 11m CB)
+2. **(P0) Gamma Design Consistency**: Fixed gamma_design to use actual hardware dimensions. Series Cap now 89.4 pF (was 451.4 pF)
+3. **Smith Chart Capacitance Clamping**: Eliminated 25000+ pF near-resonance artifacts
+4. **Dynamic Teflon Sleeve**: Now tube_length + 1.0" (was hardcoded 16.0")
+5. **(P0) Antenna Reactance in Match Calc**: `z_x_matched` now includes `X_antenna * K` — driven element reactance is K-transformed and added to stub+cap. Single-point SWR and SWR curve now use same physics
+6. **(P0) Element Resonant Frequency**: SWR curve now uses actual `element_resonant_freq` (from driven length + mutual coupling) instead of fake bar-position-based formula
+7. **(P1) Ground Radials**: Removed incorrect SWR bonus from radials. Radials only affect efficiency, not impedance match
+8. **(P1) Gamma Designer Overhaul**: 
+   - Fixed `_FEEDPOINT_R_TABLE` (was 10× too low for all element counts)
+   - Fixed `coupling_multiplier` retrieval (was using K instead of Z0/73)
+   - Added mutual coupling corrections to element_res_freq (was using raw length, 10× wrong coupling constant)
+   - Null condition now includes antenna reactance: `X_ant*K + X_stub + X_cap = 0`
+9. **Physics Debug Panel**: New floating sidebar showing all 11 computation steps in code execution order
+
+#### Key Physics Formula Chain
+```
+freq → wavelength → driven_length → element_res_freq (with mutual coupling)
+→ feedpoint_R (Yagi coupling model) → K = √(50/R) → bar_position
+→ X_antenna(f) = Q*R*(f/f_res - f_res/f) → X_stub = Z0*tan(βL)
+→ X_cap = -1/(ωC) → X_total = X_ant*K + X_stub + X_cap
+→ Z_matched = R*K² + jX_total → Γ → SWR
+```
 
 #### Current Defaults (validated Feb 19, 2026)
 - **≤3 elements**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
