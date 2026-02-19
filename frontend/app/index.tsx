@@ -1804,7 +1804,7 @@ export default function AntennaCalculator() {
               )}
 
               {/* Coax Feedline Settings */}
-              {isFeatureAvailable('coax_loss') && (
+              <FeatureGate feature="coax_loss" label="Coax Loss Calculator">
               <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#333' }}>
                 <Text style={{ fontSize: 12, color: '#888', fontWeight: '700', marginBottom: 8 }}>Feedline / Power</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
@@ -2103,7 +2103,8 @@ export default function AntennaCalculator() {
             </View>
 
             {/* Element Spacing Control - hidden when boom lock is active */}
-            {!boomLockEnabled && isFeatureAvailable('spacing_control') && (
+            {!boomLockEnabled && (
+            <FeatureGate feature="spacing_control" label="Spacing Control">
             <View style={{ marginTop: 12, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12 }}>
               <Text style={{ fontSize: 12, fontWeight: '700', color: '#aaa', marginBottom: 8 }}>
                 <Ionicons name="resize-outline" size={12} color="#9C27B0" /> Element Spacing
