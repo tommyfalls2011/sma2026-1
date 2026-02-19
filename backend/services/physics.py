@@ -1765,12 +1765,13 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                        feedpoint_impedance: float = None,
                        custom_tube_od: float = None, custom_rod_od: float = None,
                        custom_rod_spacing: float = None,
-                       custom_teflon_length: float = None) -> dict:
+                       custom_teflon_length: float = None,
+                       custom_tube_length: float = None) -> dict:
     """Design a gamma match recipe using the SAME physics as apply_matching_network()."""
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = 15.0
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else 15.0
 
     # Feedpoint impedance: user-provided or estimated from element count
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
