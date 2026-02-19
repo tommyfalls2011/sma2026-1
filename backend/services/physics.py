@@ -759,10 +759,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
         gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
+        # Real dims: 5/8" tube (0.049" wall → 0.527" ID), 3/8" rod, teflon
         rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
         rod_insertion_design = max(0, min(rod_insertion_design, 11.0))
-        design_tube_id = gamma_rod_dia + 0.4
-        design_rod_od = gamma_rod_dia + 0.1
+        design_tube_id = 0.527
+        design_rod_od = 0.375
         if rod_insertion_design > 0 and design_tube_id > design_rod_od:
             design_cap_per_inch = 1.413 * 2.1 / math.log(design_tube_id / design_rod_od)
             design_auto_cap_pf = round(design_cap_per_inch * rod_insertion_design, 1)
