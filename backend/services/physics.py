@@ -1933,9 +1933,11 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             notes.append(f"WARNING: ID/rod ratio {id_rod_ratio:.2f}:1 is very tight. Assembly may be difficult.")
     else:
         notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
+    if optimized_bar != bar_ideal and null_reachable:
+        notes.append(f"Bar optimized: ideal for R was {round(bar_ideal, 2)}\" but moved to {round(optimized_bar, 2)}\" so null fits within {tube_length}\" tube.")
     if not null_reachable:
-        notes.append(f"NULL NOT REACHABLE: Need {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is only {tube_length}\".")
-        notes.append(f"Options: longer tube, smaller tube OD (more cap/inch), or external trim cap.")
+        notes.append(f"NULL NOT REACHABLE at ideal bar ({round(bar_ideal, 2)}\"): needs {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is {tube_length}\".")
+        notes.append(f"Best achievable: bar at {round(optimized_bar, 2)}\", SWR {swr_val:.2f}. Try longer tube or smaller tube OD.")
     if feedpoint_impedance:
         notes.append(f"Using user-provided feedpoint impedance: {feedpoint_impedance:.1f} ohms")
     else:
