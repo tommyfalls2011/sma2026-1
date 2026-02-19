@@ -2414,10 +2414,10 @@ export default function AntennaCalculator() {
                 </View>
               )}
             </View>
+            </FeatureGate>
+            )}
 
           </View>
-
-          {/* Taper */}
           <View style={[styles.section, { zIndex: 50 }]}>
             <View style={styles.sectionHeaderRow}><Text style={styles.sectionTitle}><Ionicons name="git-merge-outline" size={14} color="#E91E63" /> Tapered Elements</Text><Switch value={inputs.taper.enabled} onValueChange={v => { if (!v || checkFeature('taper', 'Tapered Elements')) setInputs(p => ({ ...p, taper: { ...p.taper, enabled: v } })); }} trackColor={{ false: '#333', true: '#E91E63' }} thumbColor="#fff" /></View>
             {inputs.taper.enabled && (
