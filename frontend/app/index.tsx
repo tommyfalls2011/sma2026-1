@@ -1745,16 +1745,16 @@ export default function AntennaCalculator() {
                             <Text style={{ color: '#2196F3', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
-                            <View style={{ width: `${(gammaRodInsertion / (results?.matching_info?.tube_length_inches || 8)) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
+                            <View style={{ width: `${(gammaRodInsertion / (results?.matching_info?.tube_length_inches || 22)) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
                           </View>
-                          <Pressable onPress={() => setGammaRodInsertion(Math.min(results?.matching_info?.tube_length_inches || 8, gammaRodInsertion + 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginLeft: 6 }}>
+                          <Pressable onPress={() => setGammaRodInsertion(Math.min(results?.matching_info?.tube_length_inches || 22, gammaRodInsertion + 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginLeft: 6 }}>
                             <Text style={{ color: '#2196F3', fontWeight: '700', fontSize: 16 }}>+</Text>
                           </Pressable>
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Less capacitance (0")</Text>
                           <Text style={{ fontSize: 9, color: '#888' }}>{results?.matching_info?.teflon_sleeve_inches?.toFixed(0) || '23'}" teflon sleeve on rod</Text>
-                          <Text style={{ fontSize: 9, color: '#555' }}>More capacitance ({(results?.matching_info?.tube_length_inches || 8).toFixed(0)}")</Text>
+                          <Text style={{ fontSize: 9, color: '#555' }}>More capacitance ({(results?.matching_info?.tube_length_inches || 22).toFixed(0)}")</Text>
                         </View>
                       </View>
                     </>);
