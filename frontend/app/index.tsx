@@ -2765,15 +2765,17 @@ export default function AntennaCalculator() {
                 </View>
               )}
               
+              {isFeatureAvailable('polar_pattern') && (
               <PolarPattern data={results.far_field_pattern} stackedData={results.stacked_pattern} isStacked={results.stacking_enabled} />
+              )}
               
               {/* Side View / Elevation Pattern */}
-              {results.takeoff_angle && (
+              {results.takeoff_angle && isFeatureAvailable('elevation_pattern') && (
                 <ElevationPattern takeoffAngle={results.takeoff_angle} gain={results.gain_dbi} orientation={inputs.antenna_orientation} elevationData={results.elevation_pattern} fbRatio={results.fb_ratio} />
               )}
               
               {/* Smith Chart */}
-              {results.smith_chart_data && results.smith_chart_data.length > 0 && (
+              {results.smith_chart_data && results.smith_chart_data.length > 0 && isFeatureAvailable('smith_chart') && (
                 <SmithChart data={results.smith_chart_data} centerFreq={results.center_frequency} />
               )}
               
