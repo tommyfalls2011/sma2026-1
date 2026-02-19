@@ -755,7 +755,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         driven_elem_calc = next((e for e in input_data.elements if e.element_type == "driven"), None)
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
         # Rules of thumb
-        gamma_rod_dia = 0.5  # Default 1/2" rod
+        gamma_rod_dia = 0.375  # 3/8" rod
         gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
         gamma_rod_length = round(wavelength_in * 0.074, 2)  # ~32" at 11m CB
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
