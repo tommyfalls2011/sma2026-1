@@ -2934,6 +2934,7 @@ export default function AntennaCalculator() {
                   <Text style={styles.impedanceValue}>{results.impedance_low?.toFixed(1) || '50'}Ω - {results.impedance_high?.toFixed(1) || '50'}Ω</Text>
                 </View>
               </View>
+              )}
               
               {/* Height vs Performance Data (if height optimizer was run) */}
               {heightOptResult && heightOptResult.heights_tested && heightOptResult.heights_tested.length > 0 && (
