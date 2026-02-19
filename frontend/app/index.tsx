@@ -1602,7 +1602,7 @@ export default function AntennaCalculator() {
                     // Inductance: L(nH) ≈ 5.08 * length * (ln(2*length/dia) - 1)
                     const barInductanceNh = barPosIn > 0 && rodDia > 0 ? (5.08 * barPosIn * (Math.log(2.0 * barPosIn / rodDia) - 1.0 + rodDia / (2.0 * barPosIn))) : 0;
                     // Freq shift: longer position = more inductance = lower freq
-                    const freqShift = (barPosIn - 32.0) * 0.03;
+                    const freqShift = (barPosIn - 13.0) * 0.03;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                         <View style={{ flex: 1 }}>
