@@ -112,7 +112,7 @@ export default function AntennaCalculator() {
   const [gammaRodSpacing, setGammaRodSpacing] = useState<string | null>('3.5');
   const [gammaCapPf, setGammaCapPf] = useState<string | null>(null);
   const [gammaBarPos, setGammaBarPos] = useState(32); // shorting bar position in inches from feedpoint center
-  const [gammaRodInsertion, setGammaRodInsertion] = useState(0.5); // rod insertion into tube (series capacitor) — default half the tube
+  const [gammaRodInsertion, setGammaRodInsertion] = useState(4.0); // rod insertion into tube in inches — default half of ~8" tube
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
