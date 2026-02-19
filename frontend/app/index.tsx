@@ -1798,6 +1798,7 @@ export default function AntennaCalculator() {
               )}
 
               {/* Coax Feedline Settings */}
+              {isFeatureAvailable('coax_loss') && (
               <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#333' }}>
                 <Text style={{ fontSize: 12, color: '#888', fontWeight: '700', marginBottom: 8 }}>Feedline / Power</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
