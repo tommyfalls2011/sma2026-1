@@ -46,6 +46,7 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
   const [customRodOd, setCustomRodOd] = useState('');
   const [customSpacing, setCustomSpacing] = useState('');
   const [customTeflon, setCustomTeflon] = useState('');
+  const [customTubeLength, setCustomTubeLength] = useState('');
   const [customFeedpointR, setCustomFeedpointR] = useState('');
 
   const runDesigner = async (useCustom: boolean) => {
