@@ -1958,16 +1958,18 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             test_bar = bar_ideal_clamped + (gamma_rod_length - bar_ideal_clamped) * i / steps
             if test_bar <= 0:
                 continue
-            # Get X_stub at this bar
+            # Get stub + antenna reactance at this bar
             _, ti = _eval(test_bar, 0.001)
             xs = ti.get("x_stub", 0)
-            if xs <= 0:
+            xa = ti.get("x_antenna", 0)
+            k_at_bar = ti.get("step_up_ratio", 1.0)
+            total_pos_x = xa * k_at_bar + xs  # antenna X * K + stub
+            if total_pos_x <= 0:
                 continue
             # Analytical null insertion for this bar
-            c_need = 1e12 / (omega * xs)
+            c_need = 1e12 / (omega * total_pos_x)
             ins_need = c_need / cap_per_inch
             if ins_need <= tube_length:
-                # Null reachable at this bar — use it
                 test_ins = ins_need
             else:
                 test_ins = tube_length
