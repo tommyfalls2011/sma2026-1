@@ -984,7 +984,6 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         z_x = matching_info["z_matched_x"]
     elif feed_type == "hairpin":
         z_r = yagi_feedpoint_r
-        antenna_q = 12.0
         if matching_info and "resonant_freq_mhz" in matching_info:
             res_freq = matching_info["resonant_freq_mhz"]
             if res_freq > 0:
@@ -1004,7 +1003,6 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     else:
         # Direct feed: reactance from element resonance vs operating freq
         z_r = yagi_feedpoint_r
-        antenna_q = 12.0
         if element_resonant_freq > 0:
             freq_ratio = center_freq / element_resonant_freq
             z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
