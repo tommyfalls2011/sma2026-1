@@ -315,6 +315,7 @@ export default function AntennaCalculator() {
 
   // Designer Info state
   const [showDesignerInfo, setShowDesignerInfo] = useState(false);
+  const [showGammaDesigner, setShowGammaDesigner] = useState(false);
   const [showSpecSheet, setShowSpecSheet] = useState(false);
   const [designerInfoContent, setDesignerInfoContent] = useState('');
   const [gainMode, setGainMode] = useState<'realworld' | 'freespace'>('realworld');
