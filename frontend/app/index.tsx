@@ -14,6 +14,7 @@ import {
   Dropdown, ElementInput, SpecSection, SpecRow,
 } from '../components';
 import { FeatureGate } from '../components/FeatureGate';
+import { GammaDesigner } from '../components/GammaDesigner';
 import type { ElementDimension, TaperSection, TaperConfig, CoronaBallConfig, StackingConfig, AntennaInput, AntennaOutput, HeightOptResult } from '../components';
 
 // Lazy-load native-only modules to avoid SSR crash
