@@ -323,6 +323,7 @@ async def gamma_designer_endpoint(req: GammaDesignerRequest):
         custom_rod_od=req.custom_rod_od,
         custom_rod_spacing=req.custom_rod_spacing,
         custom_teflon_length=req.custom_teflon_length,
+        custom_tube_length=req.custom_tube_length,
     )
     return result
 
