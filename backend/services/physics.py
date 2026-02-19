@@ -972,64 +972,27 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     antenna_efficiency = (radiation_efficiency * swr_mismatch_loss * boom_efficiency * spacing_efficiency * taper_efficiency * feed_efficiency)
     antenna_efficiency = round(min(antenna_efficiency * 100, 200.0), 1)
 
-    # Return loss from complex impedance: Γ = (Z_ant - Z_0) / (Z_ant + Z_0)
-    # Z_ant = R + jX where R = feedpoint resistance, X = reactance
-    # Reactance depends on how far from resonance the antenna is
+    # Return loss from complex impedance: Gamma = (Z - Z0) / (Z + Z0)
+    # For gamma match: use physics-based Z from matching network model
+    # For hairpin/direct: use feedpoint impedance with reactance model
     z_0 = 50.0  # feedline characteristic impedance
-    z_r = yagi_feedpoint_r  # resistive component
 
-    # Reactance: off-resonance creates reactive component
-    # At resonance X=0, off-resonance X increases
-    # For a Yagi near resonance: X ≈ Q * R * (f/f0 - f0/f) where Q ~ 10-15
-    antenna_q = 12.0  # typical Yagi Q
-    if feed_type == "gamma" and matching_info and "resonant_freq_mhz" in matching_info:
-        res_freq = matching_info["resonant_freq_mhz"]
-        if res_freq > 0:
-            freq_ratio = center_freq / res_freq
-            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
-        else:
-            z_x = 0.0
-    elif feed_type == "hairpin" and matching_info and "resonant_freq_mhz" in matching_info:
-        res_freq = matching_info["resonant_freq_mhz"]
-        if res_freq > 0:
-            freq_ratio = center_freq / res_freq
-            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
-        else:
-            z_x = 0.0
-    else:
-        # Direct feed: reactance from element resonance vs operating freq
-        if element_resonant_freq > 0:
-            freq_ratio = center_freq / element_resonant_freq
-            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
-        else:
-            z_x = 0.0
-
-    # For matched feeds (gamma/hairpin), the match tunes out most reactance
-    if feed_type == "gamma":
-        # Save natural feedpoint impedance before gamma transformation
-        natural_z_r = z_r
-        if matching_info and "tuning_quality" in matching_info:
-            tq = matching_info["tuning_quality"]
-            # Reactance cancellation: (1-tq)^1.5 curve
-            # tq=1.0: 99.98% cancelled, tq=0.7: ~84% cancelled, tq=0.5: ~65% cancelled
-            cancellation_factor = max(0.0002, (1.0 - tq) ** 1.5)
-            z_x *= cancellation_factor
-            # Two-phase impedance blend:
-            # Below tq=0.9: linear blend from natural R toward 50 (bulk transformation)
-            # Above tq=0.9: exponential refinement (fine-tuning precision of real gamma match)
-            if tq < 0.9:
-                z_r = natural_z_r + (50.0 - natural_z_r) * tq
-            else:
-                base_z_r = natural_z_r + (50.0 - natural_z_r) * 0.9
-                fine_tq = (tq - 0.9) / 0.1
-                z_r = base_z_r + (50.0 - base_z_r) * (1.0 - (1.0 - fine_tq) ** 4)
-            # Component tolerance floor (~74 dB ceiling matches real-world measurements)
-            if tq > 0.98:
-                z_r = max(z_r, 50.0 * 1.0004)
-        else:
-            z_x *= 0.5
-            z_r = natural_z_r * 1.1  # slight transformation without tuning info
+    if feed_type == "gamma" and matching_info and "z_matched_r" in matching_info:
+        # Physics-based impedance from unified gamma match model
+        z_r = matching_info["z_matched_r"]
+        z_x = matching_info["z_matched_x"]
     elif feed_type == "hairpin":
+        z_r = yagi_feedpoint_r
+        antenna_q = 12.0
+        if matching_info and "resonant_freq_mhz" in matching_info:
+            res_freq = matching_info["resonant_freq_mhz"]
+            if res_freq > 0:
+                freq_ratio = center_freq / res_freq
+                z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
+            else:
+                z_x = 0.0
+        else:
+            z_x = 0.0
         z_x *= 0.10  # hairpin cancels ~90% of reactance
         if matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
@@ -1037,6 +1000,15 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             z_r = 50.0 * (1.0 + residual)
         else:
             z_r = 50.0 * 1.05
+    else:
+        # Direct feed: reactance from element resonance vs operating freq
+        z_r = yagi_feedpoint_r
+        antenna_q = 12.0
+        if element_resonant_freq > 0:
+            freq_ratio = center_freq / element_resonant_freq
+            z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
+        else:
+            z_x = 0.0
 
     # Complex reflection coefficient: Γ = (Z_ant - Z_0) / (Z_ant + Z_0)
     # Z_ant = z_r + j*z_x, Z_0 = 50 (real)
