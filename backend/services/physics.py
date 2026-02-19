@@ -260,8 +260,6 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
 
         # Coaxial capacitor: C = 2*pi*e0*er*L / ln(D/d)
-        # Use scaled tube ID and rod OD
-        tube_id = default_tube_id
         rod_od_actual = rod_dia
         if rod_insertion_in > 0 and tube_id > rod_od_actual:
             cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od_actual)
