@@ -280,11 +280,11 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         info = {"type": "Gamma Match",
                 "description": "Rod with teflon sleeve slides into tube creating variable series capacitor",
                 "original_swr": round(swr, 3), "matched_swr": matched_swr, "swr_at_resonance": swr_at_resonance,
-                "tuning_quality": round(1.0 / max(tuning_factor_with_cap, 1.0), 3),
+                "tuning_quality": tuning_quality,
                 "rod_insertion": round(insertion_ratio, 3), "rod_insertion_inches": round(rod_insertion_in, 2),
                 "tube_length_inches": round(tube_length, 2), "teflon_sleeve_inches": teflon_sleeve_in,
                 "insertion_cap_pf": insertion_cap_pf,
-                "cap_ratio": round(cap_ratio, 3), "resonant_freq_mhz": resonant_freq,
+                "cap_ratio": cap_ratio, "resonant_freq_mhz": resonant_freq,
                 "q_factor": q_factor, "gamma_bandwidth_mhz": gamma_bw_mhz,
                 "bandwidth_effect": bw_label, "bandwidth_mult": round(max(0.6, 1.0 - (q_factor - 12) * 0.02), 2),
                 "technical_notes": {
