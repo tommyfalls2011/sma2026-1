@@ -131,6 +131,25 @@ if [ -z "$RELEASE_ID" ] || [ "$RELEASE_ID" = "" ]; then
         exit 1
     fi
     print_ok "Found existing release (ID: ${RELEASE_ID})"
+    # Delete existing assets with same filename to allow re-upload
+    print_warn "Checking for existing assets to replace..."
+    EXISTING_ASSETS=$(curl -s "https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets" \
+        -H "Authorization: token ${GITHUB_TOKEN}")
+    # Find and delete any asset matching our APK filename
+    ASSET_IDS=$(echo "$EXISTING_ASSETS" | python3 -c "
+import sys, json
+try:
+    assets = json.load(sys.stdin)
+    for a in assets:
+        if a.get('name') == '${APK_FILENAME}':
+            print(a['id'])
+except: pass
+" 2>/dev/null)
+    for AID in $ASSET_IDS; do
+        curl -s -X DELETE "https://api.github.com/repos/${REPO}/releases/assets/${AID}" \
+            -H "Authorization: token ${GITHUB_TOKEN}" > /dev/null
+        print_ok "Deleted existing asset (ID: ${AID})"
+    done
 else
     print_ok "Created release (ID: ${RELEASE_ID})"
 fi
