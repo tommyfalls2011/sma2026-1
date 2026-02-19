@@ -212,8 +212,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # and the null always falls within a 15" tube
         wall = 0.049  # standard aluminum tube wall thickness
         if num_elements <= 3:
-            default_rod_od = 0.577   # Sim-optimized: 0.750/1.3 ratio
-            default_tube_od = 0.750  # 3/4" tube, 16.3 pF/in, SWR~1.0 at 8" insertion
+            default_rod_od = 0.769   # Sim-optimized: 1.000/1.3 ratio
+            default_tube_od = 1.000  # 1" tube, 16.4 pF/in, SWR~1.0 at 7" insertion
             default_spacing = 3.5
         elif num_elements <= 6:
             default_rod_od = 0.500   # 1/2" rod
@@ -847,7 +847,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         driven_elem_calc = next((e for e in input_data.elements if e.element_type == "driven"), None)
         element_dia = float(driven_elem_calc.diameter) if driven_elem_calc else 0.5
         # Rules of thumb
-        gamma_rod_dia = 0.577  # Sim-optimized rod OD
+        gamma_rod_dia = 0.769  # Sim-optimized rod OD
         gamma_rod_spacing = 3.5  # Default 3.5" center-to-center
         gamma_rod_length = round(wavelength_in * 0.045, 2)  # 4-5% of λ (~19" at 11m CB)
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
@@ -855,7 +855,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         rod_insertion_design = input_data.gamma_element_gap if input_data.gamma_element_gap is not None else 8.0
         rod_insertion_design = max(0, min(rod_insertion_design, 11.0))
         design_tube_id = 0.527
-        design_rod_od = 0.577
+        design_rod_od = 0.769
         if rod_insertion_design > 0 and design_tube_id > design_rod_od:
             design_cap_per_inch = 1.413 * 2.1 / math.log(design_tube_id / design_rod_od)
             design_auto_cap_pf = round(design_cap_per_inch * rod_insertion_design, 1)
@@ -1777,7 +1777,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # Hardware selection: custom or auto-scaled
     is_custom = bool(custom_tube_od or custom_rod_od)
     if num_elements <= 3:
-        auto_rod = 0.577; auto_tube = 0.750; auto_spacing = 3.5
+        auto_rod = 0.769; auto_tube = 1.000; auto_spacing = 3.5
     elif num_elements <= 6:
         auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 4.0
     elif num_elements <= 10:
