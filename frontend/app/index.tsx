@@ -1601,8 +1601,13 @@ export default function AntennaCalculator() {
                     const barPosIn = gammaBarPos;
                     // Inductance: L(nH) ≈ 5.08 * length * (ln(2*length/dia) - 1)
                     const barInductanceNh = barPosIn > 0 && rodDia > 0 ? (5.08 * barPosIn * (Math.log(2.0 * barPosIn / rodDia) - 1.0 + rodDia / (2.0 * barPosIn))) : 0;
-                    // Freq shift: longer position = more inductance = lower freq
-                    const freqShift = (barPosIn - 13.0) * 0.03;
+                    // Reactance from bar inductance: XL = 2πfL
+                    const freqHz = inputs.frequency_mhz * 1e6;
+                    const xL = 2 * Math.PI * freqHz * (barInductanceNh * 1e-9); // ohms
+                    // Reactance from series cap: XC = 1/(2πfC)
+                    const xC = capPf > 0 ? 1 / (2 * Math.PI * freqHz * (capPf * 1e-12)) : 0; // ohms
+                    // Net reactance — should be near 0 when tuned (cap cancels bar inductance)
+                    const netX = xL - xC;
                     return (<>
                       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
                         <View style={{ flex: 1 }}>
