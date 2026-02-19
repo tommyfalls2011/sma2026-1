@@ -67,16 +67,17 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend + MongoDB) 
 4. **Dynamic Teflon Sleeve**: Teflon sleeve length now = tube_length + 1.0" (was hardcoded 16.0"). Updated backend technical_notes and frontend display.
 5. **Frontend Fallback Updates**: Updated fallback values in frontend for tube length display and teflon sleeve text to match new dynamic values.
 
-#### Current Defaults (just updated, need validation)
+#### Current Defaults (validated Feb 19, 2026)
 - **≤3 elements**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
 - **4-6 elements**: Rod 0.500", Tube 0.750" (same)
-- Previous attempt with 0.769/1.000 failed because tube wall thickness (0.049") left only 0.067" clearance per side — impractical for assembly
+- **Tube Length**: Dynamic, ~19.5" for 11m CB (= gamma_rod_length = wavelength × 0.045)
+- **Teflon Sleeve**: tube_length + 1.0" (~20.5" for 11m CB)
 
-#### Active Issue
-The user tested the Gamma Designer with the 0.769/1.000 combo and got:
-- "WARNING: ID/rod ratio 1.17:1 is very tight"
-- "NULL NOT REACHABLE" — needs 315 pF (17" insertion) but tube is only 15"
-- Defaults just changed to 0.500/0.750 but not yet tested by user
+#### Resolved Issues (Fork 8)
+- Tube length was hardcoded at 15" → now dynamic
+- Gamma design capacitance was 451 pF (stale hardware) → now consistent at 89.4 pF
+- Smith chart showed 25000+ pF near resonance → now clamped to 0
+- 2-element Yagi can now achieve SWR ~1.15 (at bar=5", insertion=18")
 
 ### Key Physics Concepts the New Agent MUST Understand
 
