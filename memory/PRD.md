@@ -57,6 +57,15 @@ Custom tube OD supported via gamma_tube_od API parameter.
 
 ## Session History
 
+### Session: Feb 2026 (Fork 6)
+- **(P0) SWR Curve & Smith Chart Discrepancy FIX**: COMPLETE. 9/9 tests pass.
+  - **Root cause 1**: Smith Chart code read rod geometry from `gamma_design` dict (hardcoded defaults 3.5"/0.375") instead of actual hardware.
+  - **Fix**: Now uses `matching_info["z0_gamma"]` which is pre-computed from actual rod dimensions in `apply_matching_network()`.
+  - **Root cause 2**: SWR curve used `calculate_swr_at_frequency()` parabolic approximation instead of full physics.
+  - **Fix**: Smith Chart computed FIRST with full gamma match physics at each frequency. SWR curve derived from reflection coefficients: SWR = (1+|Γ|)/(1-|Γ|).
+  - SWR curve minimum now correctly at operating frequency (27.185 MHz), not shifted.
+  - SWR at operating freq matches main displayed SWR value.
+
 ### Session: Feb 19, 2026 (Fork 5)
 - **(P0) Custom Hardware Test**: 1" OD tube / 1/2" rod — cap/inch=5.03, ID/rod ratio 1.80:1 (above optimal 1.3-1.6x). Null at 20.4" exceeds 15" tube. Best SWR=1.29 at full insertion. Confirmed hardware mismatch.
 - **(P1) Geometric K from Bar Position**: COMPLETE. K = 1 + (bar_pos / half_element_length) × (Z0_gamma / 73). Coupling multiplier derived from two-wire line impedance, normalized to free-space dipole Z. New output fields: step_up_k_squared, ideal_bar_position_inches, ideal_step_up_ratio, coupling_multiplier. 12 new tests + 13 regression pass.
@@ -89,8 +98,6 @@ Custom tube OD supported via gamma_tube_od API parameter.
 - Gamma match physics rewrite, Admin panel, Feature gating framework, QA
 
 ## Known Issues / Next Steps
-- **CRITICAL: SWR Curve uses parabolic approximation, not gamma match physics** — When designer recipe is applied, SWR curve shows minimum at wrong frequency. Root cause: `resonant_freq_mhz` shifts based on bar position formula `(bar - rod_length*0.4) * 0.03`, AND Smith Chart hardcoded rod values partially fixed (rod_spacing/rod_dia now from matching_info). Need to derive SWR curve FROM Smith Chart impedance data instead of parabolic approximation.
-- **Smith Chart rod values**: PARTIALLY FIXED — now reads from gamma_design dict, but SWR curve still uses parabolic model centered at shifted resonant_freq
 - **Air gap in dielectric**: Real teflon sleeve doesn't fill entire tube gap. Need teflon sleeve OD for series-capacitor model
 - **Tube/Rod ratio validation**: Model doesn't warn in main calculator when ratio is too large
 
