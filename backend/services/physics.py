@@ -364,7 +364,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "reflection_coefficient": round(gamma_mag, 6),
                 "technical_notes": {
                     "mechanism": "Teflon-sleeve coaxial capacitor in series with shorted bar",
-                    "tube": f"{round(tube_length, 1)}\" tube at feedpoint, rod slides in with 12\" teflon sleeve",
+                    "tube": f"{round(tube_length, 1)}\" tube at feedpoint, rod slides in with {round(teflon_sleeve_in, 0):.0f}\" teflon sleeve",
                     "shorting_bar": "4\" bar slides along rod + driven element to tune",
                     "asymmetry": "Minor beam skew", "pattern_impact": "Negligible for most operations",
                     "advantage": "Feeds balanced Yagi with unbalanced coax",
