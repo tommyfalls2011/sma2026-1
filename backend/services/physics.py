@@ -1194,44 +1194,43 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             sc_x = 0.0
         # Apply matching network transformation
         if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
-            # Real gamma match transformation using actual L and C
-            # Step-up ratio: K^2 transforms impedance
+            # Gamma match = shorted transmission line stub + series capacitor
             step_up = matching_info.get("step_up_ratio", math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0)))
             if isinstance(step_up, str):
-                try: step_up = float(step_up.replace(':1',''))
+                try: step_up = float(str(step_up).replace(':1',''))
                 except: step_up = math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0))
             k_sq = step_up ** 2
 
-            # Bar inductance (from shorting bar position)
             bar_pos_in = matching_info.get("bar_position_inches", 13.0)
-            rod_dia_in = 0.375  # 3/8" rod
-            if bar_pos_in > 0 and rod_dia_in > 0:
-                bar_L_nH = 5.08 * bar_pos_in * (math.log(2.0 * bar_pos_in / rod_dia_in) - 1.0 + rod_dia_in / (2.0 * bar_pos_in))
-            else:
-                bar_L_nH = 0
-
-            # Series capacitance from rod insertion
             cap_pf = matching_info.get("insertion_cap_pf", 50.0)
+            rod_spacing_in = 3.5  # center-to-center rod-to-element
+            rod_dia_in = 0.375
 
-            # At each frequency:
-            # XL_bar = 2*pi*f*L_bar (inductive from shorting bar)
-            # XC_cap = 1/(2*pi*f*C) (capacitive from rod insertion)
-            # Antenna natural X is already in sc_x
-            omega_f = 2 * math.pi * freq * 1e6
-            xL_bar = omega_f * (bar_L_nH * 1e-9)  # ohms
-            xC_cap = 1.0 / (omega_f * (cap_pf * 1e-12)) if cap_pf > 0 else 0  # ohms
+            # Z0 of gamma section (two-wire transmission line)
+            if rod_spacing_in > 0 and rod_dia_in > 0:
+                z0_gamma = 276.0 * math.log10(2.0 * rod_spacing_in / rod_dia_in)
+            else:
+                z0_gamma = 300.0
 
-            # Transform R through step-up ratio (varies with frequency)
-            # At resonance, R is transformed cleanly. Off-resonance, transformation degrades
+            # Shorted stub reactance: X_stub = Z0 * tan(beta * l)
+            freq_hz = freq * 1e6
+            wavelength_m = 299792458.0 / freq_hz
+            bar_pos_m = bar_pos_in * 0.0254
+            beta_l = 2.0 * math.pi * bar_pos_m / wavelength_m
+            x_stub = z0_gamma * math.tan(beta_l)
+
+            # Series capacitor reactance: X_cap = -1/(2*pi*f*C)
+            omega_f = 2.0 * math.pi * freq_hz
+            x_cap = -1.0 / (omega_f * (cap_pf * 1e-12)) if cap_pf > 0 else 0
+
+            # Transform R through step-up (degrades away from resonance)
             freq_ratio = freq / smith_res_freq if smith_res_freq > 0 else 1.0
-            freq_deviation = abs(freq_ratio - 1.0)
-            # Step-up effectiveness decreases away from resonance
-            k_eff = k_sq * (1.0 - freq_deviation * 2.5)  # degrades ~2.5x per fraction off-resonance
-            k_eff = max(1.0, k_eff)
+            freq_dev = abs(freq_ratio - 1.0)
+            k_eff = k_sq * max(0.5, 1.0 - freq_dev * 3.0)
             sc_r = sc_r * k_eff
 
-            # Net reactance: antenna X transformed + bar inductance - cap reactance
-            sc_x = (sc_x * step_up) + xL_bar - xC_cap
+            # Net reactance: natural antenna X (transformed) + stub - cap
+            sc_x = (sc_x * step_up) + x_stub + x_cap
 
         elif feed_type == "hairpin" and matching_info and "tuning_quality" in matching_info:
             tq = matching_info["tuning_quality"]
