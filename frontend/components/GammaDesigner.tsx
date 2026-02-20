@@ -29,6 +29,8 @@ interface Recipe {
   z_matched_r: number; z_matched_x: number;
   k_step_up: number; k_squared: number; coupling_multiplier: number;
   cap_per_inch: number; id_rod_ratio: number; null_reachable: boolean;
+  recommended_driven_length_in?: number; original_driven_length_in?: number;
+  driven_length_corrected?: boolean;
 }
 
 interface DesignerResult {
