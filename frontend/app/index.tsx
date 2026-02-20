@@ -3791,6 +3791,43 @@ export default function AntennaCalculator() {
         }}
       />
 
+      {/* Hairpin Match Designer Modal */}
+      <HairpinDesigner
+        visible={showHairpinDesigner}
+        onClose={() => setShowHairpinDesigner(false)}
+        numElements={inputs.num_elements}
+        drivenLength={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.length || '203') || 203}
+        frequencyMhz={parseFloat(inputs.frequency_mhz) || 27.185}
+        calculatedFeedpointR={results?.matching_info?.hairpin_design?.feedpoint_impedance_ohms}
+        calculatedResonantFreq={results?.matching_info?.element_resonant_freq_mhz}
+        reflectorSpacingIn={(() => {
+          const driven = inputs.elements.find(e => e.element_type === 'driven');
+          const reflector = inputs.elements.find(e => e.element_type === 'reflector');
+          if (driven && reflector) return Math.abs(parseFloat(driven.position) - parseFloat(reflector.position));
+          return undefined;
+        })()}
+        directorSpacingsIn={(() => {
+          const driven = inputs.elements.find(e => e.element_type === 'driven');
+          const dirs = inputs.elements.filter(e => e.element_type === 'director').sort((a, b) => parseFloat(a.position) - parseFloat(b.position));
+          if (driven && dirs.length > 0) return dirs.map(d => Math.abs(parseFloat(d.position) - parseFloat(driven.position)));
+          return undefined;
+        })()}
+        elementDiameter={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.diameter || '0.5') || 0.5}
+        onApply={(hairpinLength, rodDia, rodSpacing, recommendedDrivenLength) => {
+          setHairpinLengthIn(hairpinLength.toFixed(2));
+          setHairpinRodDia(rodDia.toString());
+          setHairpinRodSpacing(rodSpacing.toString());
+          if (recommendedDrivenLength) {
+            setInputs(prev => {
+              const newElements = prev.elements.map(e =>
+                e.element_type === 'driven' ? { ...e, length: recommendedDrivenLength.toFixed(2) } : e
+              );
+              return { ...prev, elements: newElements };
+            });
+          }
+        }}
+      />
+
       {/* Physics Debug Panel - floating sidebar */}
       <PhysicsDebugPanel
         visible={showDebugPanel}
