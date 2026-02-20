@@ -23,12 +23,15 @@ Common: Wall=0.049", Rod spacing=3.5"
 
 ## What's Been Implemented
 
-### Session Feb 20 2026 — System Status Monitor:
+### Session Feb 20 2026 — System Status Monitor + Railway Remote Redeploy:
 - Added `/api/health` endpoint that checks API server, MongoDB, and production Railway app status with latency
 - Created System Status page (`/system-status`) showing all services with green/orange/red indicators
 - Added status dot in the main page header — green when all systems operational, orange for degraded, red when down
 - Auto-refreshes every 5 minutes
-- Tapping the dot navigates to the full System Status page with service details and latency
+- Added **Railway Remote Redeploy** button in Admin Panel → Updates tab
+  - `POST /api/admin/railway/redeploy` — triggers fresh deployment via Railway GraphQL API
+  - `GET /api/admin/railway/status` — shows latest deployment status
+  - Confirmation dialog before triggering, with success/error feedback
 
 ### Session Feb 20 2026 — Payment System Fix + Stripe Integration:
 - **CRITICAL FIX**: PayPal/CashApp upgrades now create PENDING requests requiring admin approval (was instantly upgrading without payment verification)
