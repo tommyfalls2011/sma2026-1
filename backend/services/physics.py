@@ -2004,8 +2004,9 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     auto_rod = max(math.ceil(bar_ideal_unconstrained + 4), auto_tube + 6)
 
     # Apply custom overrides or use auto-sized values
-    tube_length_final = custom_tube_length if custom_tube_length and custom_tube_length > 0 else auto_tube
-    teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length_final + 1.0
+    if not (custom_tube_length and custom_tube_length > 0):
+        tube_length = auto_tube
+    teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
     bar_min = teflon_sleeve + 2.0  # bar must stay 2" past teflon end
     gamma_rod_length = auto_rod
 
