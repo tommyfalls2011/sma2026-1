@@ -581,14 +581,26 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             else:
                 xl_actual = xl_needed
 
-            # SWR from impedance mismatch
-            xl_ratio = xl_actual / xl_needed if xl_needed > 0 else 1.0
-            residual_x = (xl_ratio - 1.0) * xl_needed * 0.5
-            z_r = 50.0 * (1.0 + residual_x ** 2 / (50.0 ** 2) * 0.2)
-            z_x = residual_x * 0.3
-            z_mag = math.sqrt(z_r ** 2 + z_x ** 2)
-            gamma_c = abs(z_mag - 50.0) / (z_mag + 50.0) if (z_mag + 50.0) > 0 else 0
-            matched_swr = (1.0 + gamma_c) / (1.0 - gamma_c) if gamma_c < 1.0 else 10.0
+            # Complex impedance: Z_feed = R - jX_C, Z_hairpin = jX_L
+            # Z_in = (Z_feed * Z_hp) / (Z_feed + Z_hp) — parallel combination
+            z_feed = complex(feedpoint_r, -xc_needed)
+            z_hp = complex(0, xl_actual)
+            z_sum = z_feed + z_hp
+            if abs(z_sum) > 0.001:
+                z_in = (z_feed * z_hp) / z_sum
+            else:
+                z_in = complex(50, 0)
+
+            # Reflection coefficient and SWR
+            gamma_complex = (z_in - 50.0) / (z_in + 50.0)
+            gamma_mag = abs(gamma_complex)
+            matched_swr = (1.0 + gamma_mag) / (1.0 - gamma_mag) if gamma_mag < 0.99 else 99.0
+
+            # Power calculations (reference 5W into 50 ohm)
+            p_forward = 5.0
+            v_forward = math.sqrt(p_forward * 50.0)  # 15.81V
+            p_reflected = p_forward * gamma_mag ** 2
+            p_net = p_forward - p_reflected
 
             if boom_gap < 0.5:
                 matched_swr *= (1.0 + max(0, (0.5 - boom_gap) * 0.15))
