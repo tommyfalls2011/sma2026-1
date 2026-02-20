@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from typing import List
 import uuid
 import os
+import httpx
+import base64
 
 from config import db, ADMIN_EMAIL, SUBSCRIPTION_TIERS, PAYMENT_CONFIG
 from models import (
