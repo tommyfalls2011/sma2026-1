@@ -142,15 +142,31 @@ async def get_subscription_tiers():
 PAYPAL_API_URL = "https://api-m.paypal.com"
 
 
+async def get_payment_credentials(provider: str):
+    """Get payment credentials from DB first, fall back to env vars."""
+    cred = await db.payment_credentials.find_one({"provider": provider}, {"_id": 0})
+    if cred:
+        return cred
+    if provider == "paypal":
+        cid = os.environ.get("PAYPAL_CLIENT_ID", "")
+        sec = os.environ.get("PAYPAL_SECRET", "")
+        if cid and sec:
+            return {"provider": "paypal", "client_id": cid, "secret": sec}
+    elif provider == "stripe":
+        key = os.environ.get("STRIPE_API_KEY", "")
+        if key:
+            return {"provider": "stripe", "api_key": key}
+    return None
+
+
 async def get_paypal_token():
-    client_id = os.environ.get("PAYPAL_CLIENT_ID", "")
-    secret = os.environ.get("PAYPAL_SECRET", "")
-    if not client_id or not secret:
+    cred = await get_payment_credentials("paypal")
+    if not cred or not cred.get("client_id") or not cred.get("secret"):
         return None
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.post(
             f"{PAYPAL_API_URL}/v1/oauth2/token",
-            auth=(client_id, secret),
+            auth=(cred["client_id"], cred["secret"]),
             data={"grant_type": "client_credentials"},
         )
         if resp.status_code == 200:
