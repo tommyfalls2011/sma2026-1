@@ -1,146 +1,74 @@
 # SMA Antenna Analyzer - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack antenna calculator (React/Expo frontend + FastAPI backend + MongoDB) for ham radio operators. Features Yagi antenna design, gamma match physics simulation, and a "Gamma Match Designer" that recommends optimal hardware and tuning settings.
+Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB radio Yagi antennas. The app calculates impedance, SWR, and gamma match tuning for 2-20 element Yagi antennas at 27.185 MHz.
 
-## Architecture
-```
-/app/
-├── backend/
-│   ├── server.py              # FastAPI main server
-│   ├── models.py              # Pydantic models for API requests/responses
-│   ├── gamma_sweep.py         # Parameter sweep simulation script (standalone)
-│   ├── routes/
-│   │   └── antenna.py         # /api/calculate and /api/gamma-designer endpoints
-│   └── services/
-│       └── physics.py         # Core physics engine (~1900 lines)
-├── frontend/
-│   ├── app/
-│   │   └── index.tsx          # Main page (~2800 lines)
-│   └── components/
-│       ├── SwrMeter.tsx       # SWR Bandwidth chart with zone overlays
-│       ├── SmithChart.tsx     # Smith Chart display
-│       ├── GammaDesigner.tsx  # Gamma Match Designer modal
-│       ├── styles.ts          # Shared styles
-│       └── types.ts           # TypeScript interfaces
-└── memory/
-    └── PRD.md                 # This file
-```
+## Core Architecture
+- **Frontend**: React/Expo Web on port 3000
+- **Backend**: FastAPI on port 8001
+- **No database** (stateless calculations)
 
-## Key API Endpoints
-- `POST /api/calculate` — Main antenna calculation (feedpoint R, SWR, gain, matching network, SWR curve, Smith Chart)
-- `POST /api/gamma-designer` — Gamma Match Designer (recommends hardware + tuning for target SWR)
+## Current Hardware Defaults (Feb 20, 2026)
+
+### 2-Element Only:
+- Rod: 48", Tube: 30", Teflon: 31"
+- Rod OD: 0.5625" (9/16"), Tube OD: 0.750"
+- Driven element: 208", Spacing: 3.5"
+
+### 3-20 Elements:
+- Rod: 36", Tube: 22", Teflon: 23"
+- Rod OD: 0.500" (1/2"), Tube OD: 0.750"
+- Driven element: 204", Spacing: 3.5"
+
+### Shared Defaults:
+- Bar position: 18" (average across configs)
+- Rod insertion: 8" (average across configs)
 
 ## What's Been Implemented
 
-### Core Features (Pre-existing)
-- Yagi antenna calculator with 2-8 elements
-- Feedpoint impedance model with mutual coupling
-- Gamma, hairpin, and direct feed matching
-- SWR meter, Smith Chart, gain/F-B calculations
-- User auth, subscription tiers, tutorial system
+### Session Feb 19, 2026 (Fork 7):
+- Major physics engine overhaul & unification
+- Physics Trace debug panel
+- SWR curve centered on element resonant frequency
+- Removed incorrect ground radial SWR bonus
+- Gamma Designer overhaul to match main calculator
 
-### Session: Feb 2026 (Fork 6) — COMPLETED
-- **(P0) SWR Curve & Smith Chart Fix**: SWR curve now derived from full-physics Smith Chart impedance data (was parabolic approximation). Smith Chart uses `matching_info["z0_gamma"]` from actual hardware (was hardcoded 3.5"/0.375").
-- **SWR Bandwidth Overlay**: Green (≤1.5) and yellow (≤2.0) gradient zone bands with channel count badges on SWR chart.
-- **Gamma Tuned Frequency**: Now derived from actual SWR curve minimum (was old bar-position formula). Frontend displays `results.resonant_freq_mhz` (curve min) instead of `matching_info.resonant_freq_mhz` (formula).
+### Session Feb 19, 2026 (Fork 8):
+- Verified P0 (PERFECT MATCH label) and P1 (3-element tune) fixes
 
-### Session: Feb 2026 (Fork 7 — CURRENT) — IN PROGRESS
-
-#### Completed This Session
-1. **Rod OD Default Change**: Changed from 0.375" to current sim-optimized values
-2. **Z0 Unequal Conductor Formula**: `Z0 = 276 × log10(2D / √(d1×d2))` where d1=element dia, d2=rod dia. Previously only used rod diameter.
-3. **Stub Inductance Display**: Added `stub_inductance_nh` to matching_info. `L = X_stub / (2πf)` from shorted transmission line model.
-4. **Inline Gamma SWR Meter**: New UI widget in gamma tuning area showing: SWR bar, Z0 (both conductor diameters), Stub L (nH), X_stub, X_cap, Net X, Z_match. Updates live with bar/insertion adjustments.
-5. **Bar Position Fine Tuning**: Changed from 1" to 0.25" step increments.
-6. **Rod Length Correction**: Changed from 7.4% to 4.5% of wavelength per user's physics reference (~19.5" instead of ~32" for 11m).
-7. **Feedpoint Impedance Correction**: Director coupling factors were too aggressive (dropping 4-elem to 13Ω instead of 25Ω). Corrected to give realistic values: 2-elem ~33-36Ω, 3-elem ~23-27Ω, 4-elem ~20-25Ω.
-8. **driven_element_dia_in Parameter**: Added to `apply_matching_network()` function signature and passed from caller. Used in Z0 geometric mean calculation.
-9. **Gamma Parameter Sweep Simulation** (`/app/backend/gamma_sweep.py`): Tested 3960 combinations of tube OD (10 sizes), rod OD (4 tube/rod ratios: 1.3-1.6), tube length (10 lengths), and rod length (22-48"). Found ~130 pF is the magic capacitance for cancelling stub inductance at 27.185 MHz with 25Ω feedpoint.
-
-### Session: Feb 19, 2026 (Fork 8) — COMPLETED
-
-#### Bug Fixes & Physics Overhaul (Tested, all passing)
-1. **(P0) Dynamic Tube Length**: Changed hardcoded `tube_length = 15.0"` to `round(gamma_rod_length, 1)` (~19.5" for 11m CB)
-2. **(P0) Gamma Design Consistency**: Fixed gamma_design to use actual hardware dimensions. Series Cap now 89.4 pF (was 451.4 pF)
-3. **Smith Chart Capacitance Clamping**: Eliminated 25000+ pF near-resonance artifacts
-4. **Dynamic Teflon Sleeve**: Now tube_length + 1.0" (was hardcoded 16.0")
-5. **(P0) Antenna Reactance in Match Calc**: `z_x_matched` now includes `X_antenna * K` — driven element reactance is K-transformed and added to stub+cap. Single-point SWR and SWR curve now use same physics
-6. **(P0) Element Resonant Frequency**: SWR curve now uses actual `element_resonant_freq` (from driven length + mutual coupling) instead of fake bar-position-based formula
-7. **(P1) Ground Radials**: Removed incorrect SWR bonus from radials. Radials only affect efficiency, not impedance match
-8. **(P1) Gamma Designer Overhaul**: 
-   - Fixed `_FEEDPOINT_R_TABLE` (was 10× too low for all element counts)
-   - Fixed `coupling_multiplier` retrieval (was using K instead of Z0/73)
-   - Added mutual coupling corrections to element_res_freq (was using raw length, 10× wrong coupling constant)
-   - Null condition now includes antenna reactance: `X_ant*K + X_stub + X_cap = 0`
-9. **Physics Debug Panel**: New floating sidebar showing all 11 computation steps in code execution order
-
-#### Key Physics Formula Chain
-```
-freq → wavelength → driven_length → element_res_freq (with mutual coupling)
-→ feedpoint_R (Yagi coupling model) → K = √(50/R) → bar_position
-→ X_antenna(f) = Q*R*(f/f_res - f_res/f) → X_stub = Z0*tan(βL)
-→ X_cap = -1/(ωC) → X_total = X_ant*K + X_stub + X_cap
-→ Z_matched = R*K² + jX_total → Γ → SWR
-```
-
-#### Current Defaults (validated Feb 19, 2026)
-- **Gamma Rod**: 36" (fixed physical hardware)
-- **Tube**: 22" (fixed physical hardware)
-- **Teflon Sleeve**: 23" (fixed physical hardware)
-- **Shorting Bar**: 24" from boom (default position)
-- **Rod Insertion**: 11" default
-- **Rod/Tube Hardware**: Rod 0.500", Tube 0.750" (ID 0.652", ratio 1.30, 11.2 pF/in)
-
-#### Resolved Issues (Fork 8)
-- Tube length was hardcoded at 15" → now dynamic
-- Gamma design capacitance was 451 pF (stale hardware) → now consistent at 89.4 pF
-- Smith chart showed 25000+ pF near resonance → now clamped to 0
-- 2-element Yagi can now achieve SWR ~1.15 (at bar=5", insertion=18")
-
-### Key Physics Concepts the New Agent MUST Understand
-
-1. **Gamma Match = Two Independent Adjustments**:
-   - **Bar position** → Controls Resistance (R). Moving bar outward from center increases the step-up ratio K. R_matched = feedpoint_R × K².
-   - **Rod insertion depth** → Controls Capacitance (C in pF). More overlap between rod and tube = more pF. Capacitance cancels the stub inductance.
-
-2. **Step-Up Ratio K**: `K = 1 + (bar_pos / half_element_length) × coupling_multiplier` where `coupling_multiplier = Z0_gamma / 73.0`
-
-3. **Z0 of Gamma Section** (unequal conductor two-wire line): `Z0 = 276 × log10(2 × spacing / √(element_dia × rod_dia))`
-
-4. **Capacitance Per Inch**: `C_pf_per_inch = 1.413 × ε_r / ln(tube_ID / rod_OD)` where ε_r = 2.1 for Teflon
-
-5. **SWR Curve**: Derived from Smith Chart impedance sweep. For each frequency: compute antenna reactance, apply gamma transform (K², stub, cap), calculate reflection coefficient Γ, derive SWR = (1+|Γ|)/(1-|Γ|).
-
-6. **Rod Length**: 4-5% of wavelength (per user's physics reference). At 27.185 MHz: ~19.5".
-
-7. **Target Capacitance**: ~130 pF for HF gamma match at 27 MHz (cancels ~260 nH stub inductance).
-
-8. **Practical Hardware**: Tube ID / Rod OD ratio must be ≥ 1.2 (preferably 1.3-1.6) for assembly clearance. Wall thickness = 0.049" for standard thin-wall aluminum.
-
-## Backlog
-- (P2) Air gap dielectric model (teflon sleeve OD parameter)
-- (P2) PayPal/CashApp Payments
-- (P2) Improve .easignore
-- (P3) Build iOS Version
+### Session Feb 20, 2026 (Fork 9) — CURRENT:
+- Updated gamma hardware to user specs (rod 48"/36", tube 30"/22", teflon 31"/23")
+- Unified hardware across 3-20 elements (same rod/tube/spacing)
+- 2-element gets special hardware (0.5625" rod, 48" rod, 30" tube)
+- Dynamic feedpoint R based on reflector LENGTH (Q-based coupling model)
+- Feedpoint R no longer hardcoded — varies with element length, spacing, and count
+- Designer now passes driven_element_dia for consistent Z0 calculation
+- Designer now computes dynamic feedpoint R (same formula as main calculator)
+- Fixed director gap formula in designer (was starting at 48" instead of 64")
+- Fixed floating point display on bar position (.toFixed(2))
+- Added teflon end marker and bar range display on slider
+- Rod length now reads from backend (not hardcoded 36")
+- Compared theory vs model for 2, 4, 10 elements — 2 and 10 match perfectly
 
 ## Known Issues
-- Tube/Rod ratio validation: Designer warns but main calculator doesn't
-- Platform Chat UI bug: Messages occasionally duplicate (Emergent platform issue)
-- Frontend caching: Expo Metro bundler aggressively caches; user may need hard refresh or incognito window
+- 4-element SWR 1.19 (X_net = -8.44Ω) — antenna reactance from 204" driven not fully cancelled
+- This could be improved by optimizing 4-element driven length (like 208" for 2-element)
 
-## Credentials
-- Store Admin: fallstommy@gmail.com / admin123
-- Bronze Test: bronze@test.com / password123
+## Prioritized Backlog
+- P1: Optimize driven element length per element count for better default match
+- P2: Air gap dielectric model for series capacitor
+- P2: PayPal/CashApp Payments
+- P2: Improve .easignore
+- P3: Build iOS Version
 
-## 3rd Party Integrations
-- MongoDB Atlas, GitHub API, Expo/EAS, Stripe
+## Key Files
+- `backend/services/physics.py` — All physics calculations
+- `backend/routes/antenna.py` — API endpoints
+- `backend/models.py` — Pydantic models
+- `frontend/app/index.tsx` — Main UI
+- `frontend/components/GammaDesigner.tsx` — Designer modal
+- `frontend/components/PhysicsDebugPanel.tsx` — Debug panel
 
-## Files of Reference (Priority Order)
-1. `backend/services/physics.py` — ALL physics logic, matching network, Smith Chart, SWR curve
-2. `backend/routes/antenna.py` — API endpoints
-3. `backend/models.py` — Pydantic request/response models
-4. `backend/gamma_sweep.py` — Parameter sweep simulation
-5. `frontend/app/index.tsx` — Main UI, state management, gamma controls
-6. `frontend/components/SwrMeter.tsx` — SWR Bandwidth chart with zone overlays
-7. `frontend/components/GammaDesigner.tsx` — Designer modal UI
+## Key API Endpoints
+- `POST /api/calculate` — Main calculation
+- `POST /api/gamma-designer` — Auto-tune designer
