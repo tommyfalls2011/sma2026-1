@@ -58,6 +58,8 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
         driven_element_length_in: drivenLength,
         frequency_mhz: frequencyMhz,
       };
+      // Always pass element diameter for consistent physics
+      body.driven_element_dia = elementDiameter || 1.0;
       // Always pass calculator's actual feedpoint R if available
       if (calculatedFeedpointR && calculatedFeedpointR > 0) {
         body.feedpoint_impedance = calculatedFeedpointR;
