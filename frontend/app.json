@@ -63,8 +63,8 @@
         "projectId": "6e765fe6-aa21-4fce-accc-6815d4db4bfc"
       },
       "router": {
-        "origin": "https://gamma-match-fix.preview.emergentagent.com",
-        "headOrigin": "https://gamma-match-fix.preview.emergentagent.com"
+        "origin": "https://gamma-designer-fix.preview.emergentagent.com",
+        "headOrigin": "https://gamma-designer-fix.preview.emergentagent.com"
       }
     },
     "runtimeVersion": {

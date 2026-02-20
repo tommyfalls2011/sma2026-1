@@ -17,7 +17,7 @@ import requests
 import os
 
 # Base URL from environment
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://gamma-match-fix.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://gamma-designer-fix.preview.emergentagent.com')
 
 
 @pytest.fixture(scope="module")
