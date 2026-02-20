@@ -1001,27 +1001,30 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if feed_type != "direct":
         swr = round(matched_swr, 3)
 
-    # Hairpin design calculations
-    if feed_type == "hairpin" and yagi_feedpoint_r < 50.0:
-        xl_required = round(math.sqrt(yagi_feedpoint_r * (50.0 - yagi_feedpoint_r)), 2)
-        default_rod_dia = 0.25  # inches
-        default_rod_spacing = 1.0  # inches
-        z0_hairpin = round(276.0 * math.log10(2.0 * default_rod_spacing / default_rod_dia), 1)
-        length_deg = round(math.degrees(math.atan(xl_required / z0_hairpin)), 1) if z0_hairpin > 0 else 0
-        wavelength_in = wavelength * 39.3701
-        length_in = round((length_deg / 360.0) * wavelength_in, 2)
-        matching_info["hairpin_design"] = {
-            "feedpoint_impedance_ohms": yagi_feedpoint_r,
-            "target_impedance_ohms": 50.0,
-            "required_reactance_ohms": xl_required,
-            "default_rod_diameter_in": default_rod_dia,
-            "default_rod_spacing_in": default_rod_spacing,
-            "z0_ohms": z0_hairpin,
-            "length_degrees": length_deg,
-            "length_inches": length_in,
-            "element_shortening_pct": 4.0,
-            "wavelength_inches": round(wavelength_in, 2),
-        }
+    # Hairpin design: matching_info now contains all design data from apply_matching_network
+    if feed_type == "hairpin":
+        if "xl_needed" in matching_info:
+            matching_info["hairpin_design"] = {
+                "feedpoint_impedance_ohms": yagi_feedpoint_r,
+                "target_impedance_ohms": 50.0,
+                "q_match": matching_info.get("q_match", 0),
+                "required_xl_ohms": matching_info.get("xl_needed", 0),
+                "required_xc_ohms": matching_info.get("xc_needed", 0),
+                "xl_actual_ohms": matching_info.get("xl_actual", 0),
+                "z0_ohms": matching_info.get("hairpin_z0", 0),
+                "ideal_hairpin_length_in": matching_info.get("ideal_hairpin_length_in", 0),
+                "actual_hairpin_length_in": matching_info.get("actual_hairpin_length_in", 0),
+                "shorten_per_side_in": matching_info.get("shorten_per_side_in", 0),
+                "shortened_total_length_in": matching_info.get("shortened_total_length_in", 0),
+                "wavelength_inches": round(wavelength * 39.3701, 2),
+            }
+        elif "topology_note" in matching_info:
+            matching_info["hairpin_design"] = {
+                "feedpoint_impedance_ohms": yagi_feedpoint_r,
+                "target_impedance_ohms": 50.0,
+                "topology_note": matching_info["topology_note"],
+                "wavelength_inches": round(wavelength * 39.3701, 2),
+            }
 
     # Gamma match design calculations
     if feed_type == "gamma" and yagi_feedpoint_r < 50.0:
