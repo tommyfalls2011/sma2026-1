@@ -42,6 +42,20 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 20 2026 — Hairpin Match Designer + Reflection Coefficient Physics:
+- Built full Hairpin Match Designer modal (mirroring Gamma Designer UX)
+  - Auto-selects optimal rod dia + spacing from candidate matrix for best SWR
+  - Computes ideal hairpin length for perfect match
+  - SWR vs. Hairpin Length sweep chart with 60+ data points
+  - Driven element correction (resonance) + shortening guidance (X_C)
+  - Power analysis: Forward/Reflected/Net power, Gamma, Z_in complex
+  - Apply Recipe button pushes settings to main calculator
+- Upgraded SWR to use complex impedance + reflection coefficient:
+  - Z_in = parallel(Z_feed, Z_hairpin), Gamma = (Z_in-50)/(Z_in+50)
+  - SWR = (1+|Gamma|)/(1-|Gamma|), P_reflected = P_fwd * |Gamma|^2
+- New endpoint: POST /api/hairpin-designer
+- New component: frontend/components/HairpinDesigner.tsx
+
 ### Session Feb 20 2026 — Hairpin Match Physics Rewrite:
 - Replaced empirical SWR curves with physics-based L-network impedance transformation
 - New math: Q=sqrt(50/R_feed-1), X_L=50/Q (hairpin), X_C=Q*R_feed (shortened element)
