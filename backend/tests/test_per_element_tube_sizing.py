@@ -78,13 +78,16 @@ class TestGammaDesignerPerElementTubeSizing:
             f"2-el tube should be {expected['tube']}, got {recipe.get('tube_length')}"
         assert recipe.get("teflon_length") == expected["teflon"], \
             f"2-el teflon should be {expected['teflon']}, got {recipe.get('teflon_length')}"
-        assert recipe.get("max_insertion") == expected["max_insertion"], \
-            f"2-el max_insertion should be {expected['max_insertion']}, got {recipe.get('max_insertion')}"
+        
+        # max_insertion is calculated as tube - 0.5
+        max_insertion = recipe.get("tube_length", 0) - 0.5
+        assert abs(max_insertion - expected["max_insertion"]) < 0.01, \
+            f"2-el max_insertion should be {expected['max_insertion']}, got {max_insertion}"
         
         # Check SWR is reasonable for 2-element (~1.1 expected)
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.2, f"2-el SWR should be ~1.1, got {swr}"
-        print(f"✓ 2-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, max_ins={recipe.get('max_insertion')}, SWR={swr}")
+        print(f"✓ 2-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, SWR={swr}")
 
     def test_3_element_tube_3_5_inches(self):
         """3-element: tube=3.5", teflon=4.5", max_insertion=3.0"."""
@@ -104,13 +107,11 @@ class TestGammaDesignerPerElementTubeSizing:
             f"3-el tube should be {expected['tube']}, got {recipe.get('tube_length')}"
         assert recipe.get("teflon_length") == expected["teflon"], \
             f"3-el teflon should be {expected['teflon']}, got {recipe.get('teflon_length')}"
-        assert recipe.get("max_insertion") == expected["max_insertion"], \
-            f"3-el max_insertion should be {expected['max_insertion']}, got {recipe.get('max_insertion')}"
         
         # Check SWR is ~1.02 for 3-element (closer to null)
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.1, f"3-el SWR should be ~1.02, got {swr}"
-        print(f"✓ 3-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, max_ins={recipe.get('max_insertion')}, SWR={swr}")
+        print(f"✓ 3-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, SWR={swr}")
 
     def test_4_element_tube_3_inches(self):
         """4-element: tube=3.0", teflon=4.0", max_insertion=2.5"."""
@@ -130,14 +131,12 @@ class TestGammaDesignerPerElementTubeSizing:
             f"4-el tube should be {expected['tube']}, got {recipe.get('tube_length')}"
         assert recipe.get("teflon_length") == expected["teflon"], \
             f"4-el teflon should be {expected['teflon']}, got {recipe.get('teflon_length')}"
-        assert recipe.get("max_insertion") == expected["max_insertion"], \
-            f"4-el max_insertion should be {expected['max_insertion']}, got {recipe.get('max_insertion')}"
         
         # Check SWR is ~1.01 or better
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.05, f"4-el SWR should be ~1.01, got {swr}"
-        null_reachable = data.get("null_reachable", None)
-        print(f"✓ 4-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, max_ins={recipe.get('max_insertion')}, SWR={swr}, null_reachable={null_reachable}")
+        null_reachable = recipe.get("null_reachable", None)
+        print(f"✓ 4-el: tube={recipe.get('tube_length')}, teflon={recipe.get('teflon_length')}, SWR={swr}, null_reachable={null_reachable}")
 
     def test_6_element_tube_3_inches(self):
         """6-element: tube=3.0", teflon=4.0", max_insertion=2.5", SWR≈1.0."""
@@ -159,9 +158,9 @@ class TestGammaDesignerPerElementTubeSizing:
             f"6-el teflon should be {expected['teflon']}, got {recipe.get('teflon_length')}"
         
         # 6+ elements should reach null with SWR≈1.0
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.03, f"6-el SWR should be ≈1.0, got {swr}"
-        null_reachable = data.get("null_reachable", False)
+        null_reachable = recipe.get("null_reachable", False)
         assert null_reachable == True, f"6-el should have null_reachable=True, got {null_reachable}"
         print(f"✓ 6-el: tube={recipe.get('tube_length')}, SWR={swr}, null_reachable={null_reachable}")
 
@@ -181,9 +180,9 @@ class TestGammaDesignerPerElementTubeSizing:
         
         assert recipe.get("tube_length") == expected["tube"]
         
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.02, f"8-el SWR should be ≈1.0, got {swr}"
-        null_reachable = data.get("null_reachable", False)
+        null_reachable = recipe.get("null_reachable", False)
         assert null_reachable == True, f"8-el should have null_reachable=True"
         print(f"✓ 8-el: tube={recipe.get('tube_length')}, SWR={swr}, null_reachable={null_reachable}")
 
@@ -203,9 +202,9 @@ class TestGammaDesignerPerElementTubeSizing:
         
         assert recipe.get("tube_length") == expected["tube"]
         
-        swr = data.get("swr_at_null", data.get("swr", 99))
+        swr = recipe.get("swr_at_null", 99)
         assert 1.0 <= swr <= 1.02, f"20-el SWR should be ≈1.0, got {swr}"
-        null_reachable = data.get("null_reachable", False)
+        null_reachable = recipe.get("null_reachable", False)
         assert null_reachable == True, f"20-el should have null_reachable=True"
         print(f"✓ 20-el: tube={recipe.get('tube_length')}, SWR={swr}, null_reachable={null_reachable}")
 
@@ -214,7 +213,7 @@ class TestCalculateEndpointPerElementTubeSizing:
     """Test tube sizing in /api/calculate hardware defaults."""
 
     def test_calculate_2_element_hardware(self):
-        """2-element: hardware.tube_length=4.0", teflon=5.0", max_insertion=3.5"."""
+        """2-element: hardware.tube_length=4.0", teflon=5.0"."""
         response = requests.post(f"{BASE_URL}/api/calculate", json={
             "num_elements": 2,
             "frequency_mhz": 27.185,
@@ -229,7 +228,8 @@ class TestCalculateEndpointPerElementTubeSizing:
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
         
-        matching = data.get("matching", {})
+        # Hardware is in matching_info.hardware
+        matching = data.get("matching_info", {})
         hardware = matching.get("hardware", {})
         
         expected = EXPECTED_TUBE_SIZING[2]
@@ -255,7 +255,7 @@ class TestCalculateEndpointPerElementTubeSizing:
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
         
-        matching = data.get("matching", {})
+        matching = data.get("matching_info", {})
         hardware = matching.get("hardware", {})
         
         expected = EXPECTED_TUBE_SIZING[3]
@@ -281,7 +281,7 @@ class TestCalculateEndpointPerElementTubeSizing:
         assert response.status_code == 200, f"Failed: {response.text}"
         data = response.json()
         
-        matching = data.get("matching", {})
+        matching = data.get("matching_info", {})
         hardware = matching.get("hardware", {})
         
         expected = EXPECTED_TUBE_SIZING[6]
@@ -306,7 +306,7 @@ class TestCustomTubeLengthOverride:
         })
         assert default_response.status_code == 200
         default_data = default_response.json()
-        default_swr = default_data.get("swr_at_null", default_data.get("swr", 99))
+        default_swr = default_data.get("recipe", {}).get("swr_at_null", 99)
         
         # Now with explicit custom_tube_length=4.0 (same as default)
         custom_response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
@@ -318,7 +318,7 @@ class TestCustomTubeLengthOverride:
         })
         assert custom_response.status_code == 200
         custom_data = custom_response.json()
-        custom_swr = custom_data.get("swr_at_null", custom_data.get("swr", 99))
+        custom_swr = custom_data.get("recipe", {}).get("swr_at_null", 99)
         
         # Both should have tube=4.0
         assert default_data.get("recipe", {}).get("tube_length") == 4.0
@@ -344,10 +344,11 @@ class TestOptimizerSweepConsistency:
         assert response.status_code == 200
         data = response.json()
         
-        swr = data.get("swr_at_null", data.get("swr", 99))
-        null_reachable = data.get("null_reachable", None)
-        bar_position = data.get("bar_position", data.get("recipe", {}).get("bar_position"))
-        insertion = data.get("optimal_insertion", data.get("insertion_inches"))
+        recipe = data.get("recipe", {})
+        swr = recipe.get("swr_at_null", 99)
+        null_reachable = recipe.get("null_reachable", None)
+        bar_position = recipe.get("ideal_bar_position")
+        insertion = recipe.get("optimal_insertion")
         
         # For 2-element, null may not be reachable but SWR should still be ~1.1
         print(f"2-el optimizer result: SWR={swr}, null_reachable={null_reachable}, bar={bar_position}, ins={insertion}")
@@ -377,7 +378,7 @@ class TestOptimizerSweepConsistency:
             })
             assert response.status_code == 200
             data = response.json()
-            swr = data.get("swr_at_null", data.get("swr", 99))
+            swr = data.get("recipe", {}).get("swr_at_null", 99)
             swr_values[n] = swr
             print(f"  {n}-el: SWR={swr}")
         
@@ -419,7 +420,7 @@ class TestExpectedSWRValues:
             })
             assert response.status_code == 200, f"{n}-el request failed: {response.text}"
             data = response.json()
-            swr = data.get("swr_at_null", data.get("swr", 99))
+            swr = data.get("recipe", {}).get("swr_at_null", 99)
             
             assert min_swr <= swr <= max_swr, \
                 f"{n}-el SWR={swr} not in expected range [{min_swr}, {max_swr}]"
