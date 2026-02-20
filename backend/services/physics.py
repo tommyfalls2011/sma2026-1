@@ -933,8 +933,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hw = matching_info.get("hardware", {})
         gamma_rod_dia = hw.get("rod_od", 0.500)
         gamma_rod_spacing = hw.get("rod_spacing", 3.5)
-        gamma_rod_length = 32.0 if input_data.num_elements <= 2 else 36.0
-        design_tube_length = hw.get("tube_length", 24.0 if input_data.num_elements <= 2 else 22.0)
+        gamma_rod_length = 48.0 if input_data.num_elements <= 2 else 36.0
+        design_tube_length = hw.get("tube_length", 30.0 if input_data.num_elements <= 2 else 22.0)
         design_tube_id = hw.get("tube_id", 0.652)
         design_rod_od = gamma_rod_dia
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
@@ -957,7 +957,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             "gamma_rod_spacing_in": gamma_rod_spacing,
             "gamma_rod_length_in": gamma_rod_length,
             "tube_length_in": round(design_tube_length, 1),
-            "teflon_sleeve_in": 25.0 if input_data.num_elements <= 2 else 23.0,
+            "teflon_sleeve_in": 31.0 if input_data.num_elements <= 2 else 23.0,
             "capacitance_pf": design_user_cap,
             "auto_capacitance_pf": design_auto_cap_pf,
             "shorting_bar_position_in": shorting_bar_pos,
@@ -1893,7 +1893,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-    gamma_rod_length = 32.0 if num_elements <= 2 else 36.0
+    gamma_rod_length = 48.0 if num_elements <= 2 else 36.0
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
