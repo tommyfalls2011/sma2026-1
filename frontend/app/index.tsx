@@ -15,6 +15,7 @@ import {
 } from '../components';
 import { FeatureGate } from '../components/FeatureGate';
 import { GammaDesigner } from '../components/GammaDesigner';
+import { HairpinDesigner } from '../components/HairpinDesigner';
 import { PhysicsDebugPanel } from '../components/PhysicsDebugPanel';
 import type { ElementDimension, TaperSection, TaperConfig, CoronaBallConfig, StackingConfig, AntennaInput, AntennaOutput, HeightOptResult } from '../components';
 
