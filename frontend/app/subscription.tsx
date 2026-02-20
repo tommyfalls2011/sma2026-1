@@ -504,7 +504,7 @@ export default function SubscriptionScreen() {
                     <Ionicons name="logo-paypal" size={28} color="#003087" />
                     <View style={styles.paymentInfo}>
                       <Text style={styles.paymentName}>PayPal</Text>
-                      <Text style={styles.paymentEmail}>{paymentMethods?.paypal?.email} — manual verification</Text>
+                      <Text style={styles.paymentEmail}>Pay securely with PayPal — instant activation</Text>
                     </View>
                     {selectedPayment === 'paypal' && <Ionicons name="checkmark-circle" size={22} color="#4CAF50" />}
                   </View>
