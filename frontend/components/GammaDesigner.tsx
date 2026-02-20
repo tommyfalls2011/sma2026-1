@@ -89,9 +89,9 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
         if (customTubeLength) body.custom_tube_length = parseFloat(customTubeLength);
         if (customFeedpointR) body.feedpoint_impedance = parseFloat(customFeedpointR);
       } else {
-        // Auto mode: also pass current rod_dia and spacing from calculator
-        if (currentRodDia && currentRodDia > 0) body.custom_rod_od = currentRodDia;
-        if (currentRodSpacing && currentRodSpacing > 0) body.custom_rod_spacing = currentRodSpacing;
+        // Auto mode: let backend pick optimal matched hardware for this element count
+        // Do NOT send currentRodDia — it may be stale from a different element config
+        // and would mismatch with the auto-selected tube size
       }
       const res = await fetch(`${BACKEND_URL}/api/gamma-designer`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
