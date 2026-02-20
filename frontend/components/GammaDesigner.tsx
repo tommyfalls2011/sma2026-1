@@ -301,6 +301,36 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
 
                 <View style={{ height: 1, backgroundColor: '#333', marginVertical: 8 }} />
 
+                {/* Driven Element Recommendation */}
+                {recipe.driven_length_corrected && recipe.recommended_driven_length_in && (
+                  <>
+                    <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: '700', marginBottom: 6 }}>DRIVEN ELEMENT CORRECTION</Text>
+                    <View style={{ backgroundColor: '#0a2a0a', borderRadius: 6, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: '#4CAF50' }}>
+                      <Text style={{ fontSize: 11, color: '#4CAF50', fontWeight: '700', marginBottom: 4 }}>
+                        Make driven element {recipe.recommended_driven_length_in > (recipe.original_driven_length_in || 0) ? 'LONGER' : 'SHORTER'}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <View>
+                          <Text style={{ fontSize: 9, color: '#888' }}>Current</Text>
+                          <Text style={{ fontSize: 14, color: '#888', fontWeight: '600' }}>{recipe.original_driven_length_in}"</Text>
+                        </View>
+                        <Ionicons name="arrow-forward" size={16} color="#4CAF50" />
+                        <View>
+                          <Text style={{ fontSize: 9, color: '#4CAF50' }}>Recommended</Text>
+                          <Text style={{ fontSize: 14, color: '#4CAF50', fontWeight: '700' }}>{recipe.recommended_driven_length_in}"</Text>
+                        </View>
+                        <View style={{ marginLeft: 'auto' }}>
+                          <Text style={{ fontSize: 9, color: '#888' }}>Change</Text>
+                          <Text style={{ fontSize: 14, color: '#FF9800', fontWeight: '600' }}>
+                            {recipe.recommended_driven_length_in > (recipe.original_driven_length_in || 0) ? '+' : ''}{(recipe.recommended_driven_length_in - (recipe.original_driven_length_in || 0)).toFixed(2)}"
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={{ fontSize: 9, color: '#aaa', marginTop: 4 }}>This tunes the element resonance to match {frequencyMhz} MHz for optimal SWR</Text>
+                    </View>
+                  </>
+                )}
+
                 {/* Tuning Recipe */}
                 <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '700', marginBottom: 6 }}>TUNING SETTINGS</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
