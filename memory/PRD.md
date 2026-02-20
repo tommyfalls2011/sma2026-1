@@ -42,6 +42,14 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 20 2026 — Hairpin Match Physics Rewrite:
+- Replaced empirical SWR curves with physics-based L-network impedance transformation
+- New math: Q=sqrt(50/R_feed-1), X_L=50/Q (hairpin), X_C=Q*R_feed (shortened element)
+- Replaced ratio-based bar position slider (0.2-0.9) with physical hairpin length input (inches)
+- Added exact driven element shortening guidance (per-side inches + new total length)
+- Handle R >= 50 case: shows topology note recommending Gamma match instead of hiding panel
+- Backend verified: ideal length gives SWR 1.0, custom length correctly degrades SWR
+
 ### Session Feb 20 2026 — Spacing Preset Bug Fix:
 - Fixed element spacing preset buttons (V.Close/Close/Normal/Far/V.Far) resetting ALL element positions when clicking any one
 - Root cause: preset buttons triggered a full auto-tune that recalculated all positions from scratch
