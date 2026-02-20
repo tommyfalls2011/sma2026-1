@@ -2407,120 +2407,67 @@ export default function AntennaCalculator() {
                 </View>
               </View>
 
-              {/* Spacing Overrides for First Director */}
-              <View style={{ marginTop: 10 }}>
-                <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>1st Director Spacing</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir1 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }}
-                    onPress={() => { const p = closeDir1 === 'vclose' ? false : 'vclose'; setCloseDir1(p); setFarDir1(false); setDir1NudgeCount(0); applyElementPreset('dir1', p); }}
-                  >
-                    <Ionicons name="arrow-back-outline" size={12} color={closeDir1 === 'vclose' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: closeDir1 === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir1 === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }}
-                    onPress={() => { const p = closeDir1 === 'close' ? false : 'close'; setCloseDir1(p); setFarDir1(false); setDir1NudgeCount(0); applyElementPreset('dir1', p); }}
-                  >
-                    <Ionicons name="arrow-back-outline" size={12} color={closeDir1 === 'close' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: closeDir1 === 'close' ? '#fff' : '#888', marginTop: 1 }}>Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDir1 && !farDir1) ? '#4CAF50' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setCloseDir1(false); setFarDir1(false); setDir1NudgeCount(0); applyElementPreset('dir1', false); }}
-                  >
-                    <Ionicons name="remove-outline" size={12} color={(!closeDir1 && !farDir1) ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: (!closeDir1 && !farDir1) ? '#fff' : '#888', marginTop: 1 }}>Normal</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir1 === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }}
-                    onPress={() => { const p = farDir1 === 'far' ? false : 'far'; setFarDir1(p); setCloseDir1(false); setDir1NudgeCount(0); applyElementPreset('dir1', p); }}
-                  >
-                    <Ionicons name="arrow-forward-outline" size={12} color={farDir1 === 'far' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: farDir1 === 'far' ? '#fff' : '#888', marginTop: 1 }}>Far</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir1 === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }}
-                    onPress={() => { const p = farDir1 === 'vfar' ? false : 'vfar'; setFarDir1(p); setCloseDir1(false); setDir1NudgeCount(0); applyElementPreset('dir1', p); }}
-                  >
-                    <Ionicons name="arrow-forward-outline" size={12} color={farDir1 === 'vfar' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: farDir1 === 'vfar' ? '#fff' : '#888', marginTop: 1 }}>V.Far</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  {inputs.elements.some(e => e.element_type === 'director') ? (<>
-                  <TouchableOpacity
-                    onPress={() => nudgeElement('dir1', -1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount <= -90 ? '#333' : '#2196F3', opacity: dir1NudgeCount <= -90 ? 0.4 : 1 }}
-                    disabled={dir1NudgeCount <= -90}
-                  >
-                    <Ionicons name="chevron-back" size={18} color="#2196F3" />
-                    <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
-                  </TouchableOpacity>
-                  <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: dir1NudgeCount === 0 ? '#666' : '#2196F3', fontWeight: '700' }}>
-                      {dir1NudgeCount === 0 ? '0%' : `${(dir1NudgeCount * 0.5) > 0 ? '+' : ''}${(dir1NudgeCount * 0.5).toFixed(1)}%`}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => nudgeElement('dir1', 1)}
-                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir1NudgeCount >= 90 ? '#333' : '#2196F3', opacity: dir1NudgeCount >= 90 ? 0.4 : 1 }}
-                    disabled={dir1NudgeCount >= 90}
-                  >
-                    <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700', marginRight: 2 }}>Farther</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#2196F3" />
-                  </TouchableOpacity>
-                  </>) : (
-                    <Text style={{ fontSize: 10, color: '#555', fontStyle: 'italic' }}>Add 3+ elements for director nudge</Text>
-                  )}
-                </View>
-              </View>
-
-              {/* 2nd Director Spacing */}
-              <View style={{ marginTop: 10 }}>
-                <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>2nd Director Spacing</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }} onPress={() => { const p = closeDir2 === 'vclose' ? false : 'vclose'; setCloseDir2(p); setFarDir2(false); setDir2NudgeCount(0); applyElementPreset('dir2', p); }}>
-                    <Ionicons name="arrow-back-outline" size={12} color={closeDir2 === 'vclose' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: closeDir2 === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDir2 === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }} onPress={() => { const p = closeDir2 === 'close' ? false : 'close'; setCloseDir2(p); setFarDir2(false); setDir2NudgeCount(0); applyElementPreset('dir2', p); }}>
-                    <Ionicons name="arrow-back-outline" size={12} color={closeDir2 === 'close' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: closeDir2 === 'close' ? '#fff' : '#888', marginTop: 1 }}>Close</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDir2 && !farDir2) ? '#4CAF50' : '#252525', alignItems: 'center' }} onPress={() => { setCloseDir2(false); setFarDir2(false); setDir2NudgeCount(0); applyElementPreset('dir2', false); }}>
-                    <Ionicons name="remove-outline" size={12} color={(!closeDir2 && !farDir2) ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: (!closeDir2 && !farDir2) ? '#fff' : '#888', marginTop: 1 }}>Normal</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }} onPress={() => { const p = farDir2 === 'far' ? false : 'far'; setFarDir2(p); setCloseDir2(false); setDir2NudgeCount(0); applyElementPreset('dir2', p); }}>
-                    <Ionicons name="arrow-forward-outline" size={12} color={farDir2 === 'far' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: farDir2 === 'far' ? '#fff' : '#888', marginTop: 1 }}>Far</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDir2 === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }} onPress={() => { const p = farDir2 === 'vfar' ? false : 'vfar'; setFarDir2(p); setCloseDir2(false); setDir2NudgeCount(0); applyElementPreset('dir2', p); }}>
-                    <Ionicons name="arrow-forward-outline" size={12} color={farDir2 === 'vfar' ? '#fff' : '#888'} />
-                    <Text style={{ fontSize: 9, color: farDir2 === 'vfar' ? '#fff' : '#888', marginTop: 1 }}>V.Far</Text>
-                  </TouchableOpacity>
-                </View>
-                {inputs.elements.filter(e => e.element_type === 'director').length >= 2 ? (
-                <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <TouchableOpacity onPress={() => nudgeElement('dir2', -1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount <= -90 ? '#333' : '#FF9800', opacity: dir2NudgeCount <= -90 ? 0.4 : 1 }} disabled={dir2NudgeCount <= -90}>
-                    <Ionicons name="chevron-back" size={18} color="#FF9800" />
-                    <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
-                  </TouchableOpacity>
-                  <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 11, color: dir2NudgeCount === 0 ? '#666' : '#FF9800', fontWeight: '700' }}>
-                      {dir2NudgeCount === 0 ? '0%' : `${(dir2NudgeCount * 0.5) > 0 ? '+' : ''}${(dir2NudgeCount * 0.5).toFixed(1)}%`}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => nudgeElement('dir2', 1)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: dir2NudgeCount >= 90 ? '#333' : '#FF9800', opacity: dir2NudgeCount >= 90 ? 0.4 : 1 }} disabled={dir2NudgeCount >= 90}>
-                    <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700', marginRight: 2 }}>Farther</Text>
-                    <Ionicons name="chevron-forward" size={18} color="#FF9800" />
-                  </TouchableOpacity>
-                </View>
-                ) : (
-                  <Text style={{ fontSize: 10, color: '#555', fontStyle: 'italic', textAlign: 'center', marginTop: 4 }}>Add 4+ elements for 2nd director nudge</Text>
-                )}
-              </View>
+              {/* Director Spacing Overrides — dynamic for all directors */}
+              {(() => {
+                const directors = inputs.elements.filter(e => e.element_type === 'director');
+                const dirColors = ['#2196F3', '#FF9800', '#9C27B0', '#4CAF50', '#f44336', '#00BCD4', '#FF5722', '#8BC34A', '#E91E63', '#3F51B5', '#CDDC39', '#795548', '#607D8B', '#FFC107', '#009688', '#673AB7', '#FF6F00', '#1B5E20'];
+                return directors.map((_, dirIdx) => {
+                  const dirNum = dirIdx + 1;
+                  const dirKey = `dir${dirNum}`;
+                  const color = dirColors[dirIdx % dirColors.length];
+                  const preset = dirPresets[dirIdx] || false;
+                  const nudge = dirNudgeCounts[dirIdx] || 0;
+                  const presetIsClose = typeof preset === 'string' && (preset === 'vclose' || preset === 'close');
+                  const presetIsFar = typeof preset === 'string' && (preset === 'far' || preset === 'vfar');
+                  return (
+                    <View key={dirKey} style={{ marginTop: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>Dir {dirNum} Spacing</Text>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                        {(['vclose', 'close', false, 'far', 'vfar'] as const).map((p, pi) => {
+                          const labels = ['V.Close', 'Close', 'Normal', 'Far', 'V.Far'];
+                          const icons = ['arrow-back-outline', 'arrow-back-outline', 'remove-outline', 'arrow-forward-outline', 'arrow-forward-outline'] as const;
+                          const bgColors = [color, color, '#4CAF50', color, color];
+                          const isActive = p === false ? (!preset) : (preset === p);
+                          return (
+                            <TouchableOpacity key={pi} style={{ flex: 1, minWidth: 50, padding: 6, borderRadius: 6, backgroundColor: isActive ? bgColors[pi] : '#252525', alignItems: 'center' }}
+                              onPress={() => {
+                                const newPreset = p === false ? false : (preset === p ? false : p);
+                                setDirPresets(prev => ({ ...prev, [dirIdx]: newPreset }));
+                                setDirNudgeCounts(prev => ({ ...prev, [dirIdx]: 0 }));
+                                applyElementPreset(dirKey, newPreset);
+                              }}
+                            >
+                              <Ionicons name={icons[pi]} size={12} color={isActive ? '#fff' : '#888'} />
+                              <Text style={{ fontSize: 8, color: isActive ? '#fff' : '#888', marginTop: 1 }}>{labels[pi]}</Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                      {dirIdx < directors.length && (
+                        <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                          <TouchableOpacity onPress={() => nudgeElement(dirKey, -1)}
+                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: nudge <= -90 ? '#333' : color, opacity: nudge <= -90 ? 0.4 : 1 }}
+                            disabled={nudge <= -90}>
+                            <Ionicons name="chevron-back" size={16} color={color} />
+                            <Text style={{ fontSize: 11, color, fontWeight: '700', marginLeft: 2 }}>Closer</Text>
+                          </TouchableOpacity>
+                          <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, minWidth: 44, alignItems: 'center' }}>
+                            <Text style={{ fontSize: 10, color: nudge === 0 ? '#666' : color, fontWeight: '700' }}>
+                              {nudge === 0 ? '0%' : `${(nudge * 0.5) > 0 ? '+' : ''}${(nudge * 0.5).toFixed(1)}%`}
+                            </Text>
+                          </View>
+                          <TouchableOpacity onPress={() => nudgeElement(dirKey, 1)}
+                            style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: nudge >= 90 ? '#333' : color, opacity: nudge >= 90 ? 0.4 : 1 }}
+                            disabled={nudge >= 90}>
+                            <Text style={{ fontSize: 11, color, fontWeight: '700', marginRight: 2 }}>Farther</Text>
+                            <Ionicons name="chevron-forward" size={16} color={color} />
+                          </TouchableOpacity>
+                        </View>
+                      )}
+                    </View>
+                  );
+                });
+              })()}
             </View>
             )}
             {boomLockEnabled && (
