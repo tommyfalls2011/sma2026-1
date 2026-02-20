@@ -18,7 +18,7 @@ interface GammaDesignerProps {
   currentRodDia?: number;
   currentRodSpacing?: number;
   elementDiameter?: number;
-  onApply?: (barPos: number, insertion: number) => void;
+  onApply?: (barPos: number, insertion: number, recommendedDrivenLength?: number) => void;
 }
 
 interface Recipe {
