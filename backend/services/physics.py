@@ -236,12 +236,13 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         tube_length = 3.0
         teflon_sleeve_in = 4.0
 
-        # Rod insertion: actual inches into tube (0 to tube_length)
+        # Rod insertion: rod stops 0.5" before teflon end to avoid shorting
+        max_insertion = teflon_sleeve_in - 0.5  # e.g. 4.0 - 0.5 = 3.5"
         if gamma_element_gap is not None:
-            rod_insertion_in = max(0, min(gamma_element_gap, tube_length))
+            rod_insertion_in = max(0, min(gamma_element_gap, max_insertion))
         else:
             rod_insertion_in = 8.0
-        insertion_ratio = rod_insertion_in / max(tube_length, 0.1)
+        insertion_ratio = rod_insertion_in / max(max_insertion, 0.1)
 
         # Coaxial capacitor: C = 2*pi*e0*er*L / ln(D/d)
         rod_od_actual = rod_dia
@@ -1937,7 +1938,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # Hardware selection: custom or unified default
     # 2-element uses 9/16" rod for better capacitance range
     is_custom = bool(custom_tube_od or custom_rod_od)
-    auto_rod = 0.5625 if num_elements <= 2 else 0.500
+    auto_rod = 0.625  # 5/8" rod for all element counts (unified)
     auto_tube = 0.750; auto_spacing = 3.5
 
     rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
@@ -2076,7 +2077,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # Insertion sweep: use apply_matching_network for each point
     ins_sweep = []
     for i_pct in range(0, 105, 5):
-        ins = tube_length * i_pct / 100.0
+        ins = max_insertion * i_pct / 100.0
         if ins <= 0:
             ins = 0.001  # avoid zero-cap singularity
         s, info_i = _eval(bar_ideal_clamped, ins)
@@ -2100,9 +2101,9 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
     if optimized_bar != bar_ideal and null_reachable:
-        notes.append(f"Bar optimized: ideal for R was {round(bar_ideal, 2)}\" but moved to {round(optimized_bar, 2)}\" so null fits within {tube_length}\" tube.")
+        notes.append(f"Bar optimized: ideal for R was {round(bar_ideal, 2)}\" but moved to {round(optimized_bar, 2)}\" so null fits within {max_insertion}\" max insertion.")
     if not null_reachable and c_needed_pf > 0:
-        notes.append(f"NULL NOT REACHABLE at ideal bar ({round(bar_ideal, 2)}\"): needs {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but tube is {tube_length}\".")
+        notes.append(f"NULL NOT REACHABLE at ideal bar ({round(bar_ideal, 2)}\"): needs {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but max is {max_insertion}\".")
     if feedpoint_impedance:
         notes.append(f"Using user-provided feedpoint impedance: {feedpoint_impedance:.1f} ohms")
     else:
