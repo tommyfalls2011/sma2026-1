@@ -40,7 +40,7 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
 def get_gamma_hardware_defaults(num_elements: int) -> dict:
     """Unified gamma match hardware defaults for all element counts."""
     tube_length = 3.0
-    teflon_length = tube_length + 1.0
+    teflon_length = tube_length + 1.0  # extends 1" past tube open end (RF arc prevention)
     return {
         "wall": 0.049,
         "rod_od": 0.625,
@@ -48,7 +48,7 @@ def get_gamma_hardware_defaults(num_elements: int) -> dict:
         "rod_spacing": 3.5,
         "tube_length": tube_length,
         "teflon_length": teflon_length,
-        "max_insertion": teflon_length - 0.5,
+        "max_insertion": tube_length - 0.5,  # rod stops 0.5" before far end of tube
         "rod_length": 22.0 if num_elements <= 6 else 30.0,
     }
 
