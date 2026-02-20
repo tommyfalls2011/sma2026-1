@@ -540,16 +540,16 @@ export default function SubscriptionScreen() {
                   ) : (
                     <>
                       <Text style={styles.confirmBtnText}>
-                        {selectedPayment === 'stripe' ? 'Pay with Card' : 'Submit Payment Request'}
+                        {selectedPayment === 'stripe' ? 'Pay with Card' : selectedPayment === 'paypal' ? 'Pay with PayPal' : 'Submit Payment Request'}
                       </Text>
                       <Ionicons name="arrow-forward" size={18} color="#fff" />
                     </>
                   )}
                 </TouchableOpacity>
 
-                {selectedPayment && selectedPayment !== 'stripe' && (
+                {selectedPayment === 'cashapp' && (
                   <Text style={styles.manualNote}>
-                    PayPal and Cash App payments require manual verification. Your account will be upgraded once the admin confirms your payment.
+                    Cash App payments require manual verification. Your account will be upgraded once the admin confirms your payment.
                   </Text>
                 )}
               </>
