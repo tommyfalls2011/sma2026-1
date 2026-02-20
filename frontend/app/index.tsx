@@ -1720,7 +1720,7 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn.toFixed(2)}" along {rodLen.toFixed(0)}" rod</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Pressable onPress={() => setGammaBarPos(Math.max(4, parseFloat((gammaBarPos - 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.max(barMin, parseFloat((gammaBarPos - 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
