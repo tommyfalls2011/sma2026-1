@@ -1876,9 +1876,11 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     r_feed = feedpoint_impedance if feedpoint_impedance and feedpoint_impedance > 0 else _FEEDPOINT_R_TABLE.get(num_elements, max(6.0, 35 - num_elements * 1.5))
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
 
-    # Hardware selection: custom or unified default (0.500" rod / 0.750" tube / 3.5" spacing)
+    # Hardware selection: custom or unified default
+    # 2-element uses 9/16" rod for better capacitance range
     is_custom = bool(custom_tube_od or custom_rod_od)
-    auto_rod = 0.500; auto_tube = 0.750; auto_spacing = 3.5
+    auto_rod = 0.5625 if num_elements <= 2 else 0.500
+    auto_tube = 0.750; auto_spacing = 3.5
 
     rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
     tube_od = custom_tube_od if custom_tube_od and custom_tube_od > 0 else auto_tube
