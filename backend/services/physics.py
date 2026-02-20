@@ -800,9 +800,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if has_reflector_for_z and driven_el and refl_el:
         refl_gap_in = abs(driven_el.position - refl_el.position)
         refl_gap_wl = (refl_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.18
+        # Reflector LENGTH affects coupling: closer to λ/2 = stronger coupling
+        refl_len_wl = (refl_el.length * 0.0254) / wavelength if wavelength > 0 else 0.5
+        refl_resonance_factor = math.sin(math.pi * min(refl_len_wl, 1.0))  # peaks at 0.5λ
         # Closer reflector = stronger coupling = more impedance drop
         # At 0.08λ: ~44%, at 0.15λ: ~57%, at 0.25λ: ~75%
         refl_factor = max(0.35, 0.30 + refl_gap_wl * 1.8)
+        # Scale by how resonant the reflector is (length effect)
+        refl_factor = 1.0 - (1.0 - refl_factor) * refl_resonance_factor
         yagi_feedpoint_r *= refl_factor
 
     if num_directors >= 1 and driven_el and dir_els:
