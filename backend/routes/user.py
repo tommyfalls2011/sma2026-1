@@ -275,6 +275,81 @@ async def paypal_subscription_checkout(data: dict, request: Request, user: dict 
     return {"url": approve_url, "order_id": order_id}
 
 
+@router.get("/subscription/paypal-return", response_class=HTMLResponse)
+async def paypal_return(token: str = "", PayerID: str = ""):
+    """Handle PayPal redirect after payment — captures payment and shows success page."""
+    order_id = token  # PayPal passes order_id as 'token' param
+    if not order_id:
+        return HTMLResponse(_paypal_result_page("Payment Error", "No order ID received from PayPal.", False))
+
+    # Capture the payment
+    access_token = await get_paypal_token()
+    if not access_token:
+        return HTMLResponse(_paypal_result_page("Configuration Error", "PayPal is not configured. Please contact support.", False))
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{PAYPAL_API_URL}/v2/checkout/orders/{order_id}/capture",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json={},
+        )
+
+    capture_data = resp.json()
+    capture_status = capture_data.get("status", "")
+
+    if capture_status != "COMPLETED":
+        return HTMLResponse(_paypal_result_page("Payment Incomplete", f"PayPal payment status: {capture_status}. Please try again or contact support.", False))
+
+    # Find and update transaction
+    txn = await db.payment_transactions.find_one({"paypal_order_id": order_id, "type": "subscription"})
+    if not txn:
+        return HTMLResponse(_paypal_result_page("Payment Received", "Your payment was successful! Your account will be upgraded shortly. You can close this page and return to the app.", True))
+
+    if txn.get("payment_status") == "paid":
+        tier_name = txn.get("tier_name", "your plan")
+        return HTMLResponse(_paypal_result_page("Already Upgraded", f"You're already on {tier_name}! Close this page and return to the app.", True))
+
+    # Upgrade the user
+    tier_key = txn["tier"]
+    tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+    duration_days = tier_info.get("duration_days", 30)
+    expires = datetime.utcnow() + timedelta(days=duration_days)
+    tier_name = tier_info.get("name", tier_key)
+
+    await db.users.update_one(
+        {"id": txn["user_id"]},
+        {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
+    )
+    await db.payment_transactions.update_one(
+        {"paypal_order_id": order_id, "type": "subscription"},
+        {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.utcnow().isoformat()}},
+    )
+
+    return HTMLResponse(_paypal_result_page("Payment Successful!", f"You've been upgraded to {tier_name}! Close this page and return to the app.", True))
+
+
+def _paypal_result_page(title: str, message: str, success: bool) -> str:
+    color = "#4CAF50" if success else "#f44336"
+    icon = "&#10004;" if success else "&#10008;"
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title} - SMA Antenna Calc</title>
+<style>
+body{{margin:0;padding:40px 20px;background:#121212;color:#fff;font-family:-apple-system,system-ui,sans-serif;text-align:center;}}
+.card{{max-width:400px;margin:60px auto;background:#1E1E1E;border-radius:16px;padding:40px 24px;border:2px solid {color};}}
+.icon{{font-size:64px;color:{color};margin-bottom:16px;}}
+h1{{font-size:22px;color:{color};margin:0 0 12px;}}
+p{{font-size:15px;color:#aaa;line-height:1.5;margin:0 0 24px;}}
+.btn{{display:inline-block;background:{color};color:#fff;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;font-size:16px;}}
+</style></head><body>
+<div class="card">
+<div class="icon">{icon}</div>
+<h1>{title}</h1>
+<p>{message}</p>
+<a class="btn" href="javascript:window.close()">Close This Page</a>
+</div></body></html>"""
+
+
 @router.post("/subscription/paypal-capture/{order_id}")
 async def paypal_capture_order(order_id: str, user: dict = Depends(require_user)):
     """Capture a PayPal order after user approves — upgrades user if successful."""
