@@ -1,6 +1,7 @@
 """User auth, subscription, saved designs, history, and status endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.responses import HTMLResponse
 from datetime import datetime, timedelta
 from typing import List
 import uuid
