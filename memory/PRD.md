@@ -45,7 +45,7 @@ Common: Wall=0.049", Rod spacing=3.5"
 ### Session Feb 2026 — UI Fixes:
 - Fixed "Shorting Bar" display showing rod_spacing instead of actual bar position → now shows "Bar Position" with correct value
 - Designer "Apply" now passes rod_od to main calculator so per-element hardware carries through
-- Updated chart titles for clarity: "BAR POSITION SWEEP — insertion held at X" and "ROD INSERTION SWEEP — bar held at X"
+- Updated chart titles for clarity: "BAR POSITION SWEEP — insertion held at X" and "ROD INSERTION SWEEP — bar held at X" ✅ Verified Feb 20 2026
 
 ### Session Feb 2026 — P1 Refactoring:
 - Extracted shared helpers: get_gamma_hardware_defaults(), compute_feedpoint_impedance(), compute_element_resonant_freq()
