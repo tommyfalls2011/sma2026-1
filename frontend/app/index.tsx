@@ -845,6 +845,7 @@ export default function AntennaCalculator() {
     }
     
     setInputs(prev => ({ ...prev, num_elements: c, elements: newElements }));
+    setGammaRodDia(null); // Reset rod dia so new element count gets its optimal hardware
   };
 
   const updateElement = (idx: number, field: keyof ElementDimension, value: string) => {
