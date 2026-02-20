@@ -3716,6 +3716,19 @@ export default function AntennaCalculator() {
         drivenLength={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.length || '203') || 203}
         frequencyMhz={inputs.frequency_mhz}
         calculatedFeedpointR={results?.matching_info?.gamma_design?.feedpoint_impedance_ohms}
+        calculatedResonantFreq={results?.matching_info?.element_resonant_freq_mhz}
+        reflectorSpacingIn={(() => {
+          const driven = inputs.elements.find(e => e.element_type === 'driven');
+          const reflector = inputs.elements.find(e => e.element_type === 'reflector');
+          if (driven && reflector) return Math.abs(parseFloat(driven.position) - parseFloat(reflector.position));
+          return undefined;
+        })()}
+        directorSpacingsIn={(() => {
+          const driven = inputs.elements.find(e => e.element_type === 'driven');
+          const dirs = inputs.elements.filter(e => e.element_type === 'director').sort((a, b) => parseFloat(a.position) - parseFloat(b.position));
+          if (driven && dirs.length > 0) return dirs.map(d => Math.abs(parseFloat(d.position) - parseFloat(driven.position)));
+          return undefined;
+        })()}
         currentRodDia={gammaRodDia !== null ? parseFloat(gammaRodDia) || undefined : results?.matching_info?.gamma_design?.gamma_rod_diameter_in}
         currentRodSpacing={gammaRodSpacing !== null ? parseFloat(gammaRodSpacing) || undefined : results?.matching_info?.gamma_design?.gamma_rod_spacing_in}
         elementDiameter={parseFloat(inputs.elements.find(e => e.element_type === 'driven')?.diameter || '1.0') || 1.0}
