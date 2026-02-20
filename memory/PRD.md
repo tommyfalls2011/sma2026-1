@@ -23,6 +23,13 @@ Common: Wall=0.049", Rod spacing=3.5"
 
 ## What's Been Implemented
 
+### Session Feb 20 2026 — System Status Monitor:
+- Added `/api/health` endpoint that checks API server, MongoDB, and production Railway app status with latency
+- Created System Status page (`/system-status`) showing all services with green/orange/red indicators
+- Added status dot in the main page header — green when all systems operational, orange for degraded, red when down
+- Auto-refreshes every 5 minutes
+- Tapping the dot navigates to the full System Status page with service details and latency
+
 ### Session Feb 20 2026 — Payment System Fix + Stripe Integration:
 - **CRITICAL FIX**: PayPal/CashApp upgrades now create PENDING requests requiring admin approval (was instantly upgrading without payment verification)
 - Added Stripe Checkout for subscription payments via `emergentintegrations` library — instant upgrade on successful payment
@@ -71,6 +78,8 @@ Common: Wall=0.049", Rod spacing=3.5"
 - P3: iOS Version
 
 ## Key Files
+- `frontend/app/system-status.tsx` — System Status page
+- `frontend/components/StatusIndicator.tsx` — Status dot component + health hook
 - `backend/routes/user.py` — Auth, subscription (upgrade, Stripe checkout, pending)
 - `backend/routes/admin.py` — Admin panel (pricing, users, pending upgrades, designs)
 - `backend/routes/store.py` — E-commerce store (products, orders, Stripe store checkout)
