@@ -141,6 +141,45 @@ async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
     return {"success": True, "message": f"User {user['email']} deleted successfully"}
 
 
+# ── Payment Credentials ──
+
+@router.get("/admin/payment-credentials")
+async def get_payment_creds(admin: dict = Depends(require_admin)):
+    paypal = await db.payment_credentials.find_one({"provider": "paypal"}, {"_id": 0})
+    stripe_cred = await db.payment_credentials.find_one({"provider": "stripe"}, {"_id": 0})
+    return {
+        "paypal": {"client_id": paypal.get("client_id", "")[:8] + "..." if paypal else "", "has_secret": bool(paypal and paypal.get("secret")), "stored": bool(paypal)},
+        "stripe": {"api_key": stripe_cred.get("api_key", "")[:12] + "..." if stripe_cred else "", "stored": bool(stripe_cred)},
+    }
+
+
+@router.post("/admin/payment-credentials")
+async def save_payment_creds(data: dict, admin: dict = Depends(require_admin)):
+    provider = data.get("provider")
+    if provider == "paypal":
+        client_id = data.get("client_id", "")
+        secret = data.get("secret", "")
+        if not client_id or not secret:
+            raise HTTPException(status_code=400, detail="PayPal client_id and secret required")
+        await db.payment_credentials.update_one(
+            {"provider": "paypal"},
+            {"$set": {"provider": "paypal", "client_id": client_id, "secret": secret, "updated_at": datetime.utcnow().isoformat(), "updated_by": admin["email"]}},
+            upsert=True,
+        )
+        return {"success": True, "message": "PayPal credentials saved"}
+    elif provider == "stripe":
+        api_key = data.get("api_key", "")
+        if not api_key:
+            raise HTTPException(status_code=400, detail="Stripe API key required")
+        await db.payment_credentials.update_one(
+            {"provider": "stripe"},
+            {"$set": {"provider": "stripe", "api_key": api_key, "updated_at": datetime.utcnow().isoformat(), "updated_by": admin["email"]}},
+            upsert=True,
+        )
+        return {"success": True, "message": "Stripe credentials saved"}
+    raise HTTPException(status_code=400, detail="Invalid provider")
+
+
 # ── Pending Upgrades ──
 
 @router.get("/admin/pending-upgrades")
