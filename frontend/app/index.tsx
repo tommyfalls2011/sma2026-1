@@ -191,26 +191,35 @@ export default function AntennaCalculator() {
   };
 
   // Nudge element position by 0.5% per click, ±45% max
-  const nudgeElement = (type: 'driven' | 'dir1' | 'dir2', direction: number) => {
+  const nudgeElement = (type: string, direction: number) => {
     const STEP = 0.5;
     const MAX = 45;
-    const currentCount = type === 'driven' ? drivenNudgeCount : type === 'dir1' ? dir1NudgeCount : dir2NudgeCount;
+    let currentCount: number;
+    if (type === 'driven') currentCount = drivenNudgeCount;
+    else {
+      const dirIdx = parseInt(type.replace('dir', '')) - 1; // dir1 -> 0, dir2 -> 1, etc.
+      currentCount = dirNudgeCounts[dirIdx] || 0;
+    }
     const newCount = currentCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
-    if (type === 'driven') setDrivenNudgeCount(newCount);
-    else if (type === 'dir1') setDir1NudgeCount(newCount);
-    else setDir2NudgeCount(newCount);
+    if (type === 'driven') {
+      setDrivenNudgeCount(newCount);
+      setDir1NudgeCount(newCount); // keep synced for backward compat
+    } else {
+      const dirIdx = parseInt(type.replace('dir', '')) - 1;
+      setDirNudgeCounts(prev => ({ ...prev, [dirIdx]: newCount }));
+      if (dirIdx === 0) setDir1NudgeCount(newCount);
+      if (dirIdx === 1) setDir2NudgeCount(newCount);
+    }
     setInputs(prev => {
       const e = [...prev.elements];
-      let targetIdx: number;
+      let targetIdx: number = -1;
       if (type === 'driven') {
         targetIdx = e.findIndex(el => el.element_type === 'driven');
-      } else if (type === 'dir1') {
-        targetIdx = e.findIndex(el => el.element_type === 'director');
       } else {
-        // dir2: find the second director
-        const firstDir = e.findIndex(el => el.element_type === 'director');
-        targetIdx = firstDir >= 0 ? e.findIndex((el, i) => i > firstDir && el.element_type === 'director') : -1;
+        const dirIdx = parseInt(type.replace('dir', '')) - 1;
+        const directors = e.map((el, i) => ({ el, i })).filter(x => x.el.element_type === 'director');
+        if (dirIdx < directors.length) targetIdx = directors[dirIdx].i;
       }
       if (targetIdx >= 0) {
         const pos = parseFloat(e[targetIdx].position) || 1;
@@ -221,10 +230,10 @@ export default function AntennaCalculator() {
     });
   };
 
-  // Nudge ALL element spacing by 0.5% per click, ±45% max
+  // Nudge ALL element spacing by 1.5% per click, ±30% max
   const nudgeSpacing = (direction: number) => {
-    const STEP = 0.5;
-    const MAX = 45;
+    const STEP = 1.5;
+    const MAX = 30;
     const newCount = spacingNudgeCount + direction;
     if (newCount * STEP > MAX || newCount * STEP < -MAX) return;
     setSpacingNudgeCount(newCount);
