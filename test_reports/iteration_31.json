@@ -1,0 +1,105 @@
+{
+  "summary": "Backend-only testing of corrected max_insertion constraint (tube_length - 0.5 = 2.5\", NOT teflon - 0.5 = 3.5\"). All 17 tests passed. The physical constraint is correctly implemented: rod slides into the 3\" tube and must stop 0.5\" before the far end. Teflon (4\") extends 1\" past tube open end for RF arc prevention.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_max_insertion_corrected.py",
+    "/app/test_reports/pytest/pytest_max_insertion_corrected.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_max_insertion_corrected.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None - Uses public API endpoints without authentication",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Max insertion constraint corrected from 3.5\" (teflon-0.5, WRONG) to 2.5\" (tube-0.5, CORRECT). Physical explanation: rod physically slides into the 3\" tube and must stop 0.5\" before the far end. The teflon sleeve (4\") extends 1\" past the tube open end for RF arcing prevention - this does NOT affect max insertion. Hardware defaults verified: tube_length=3.0, teflon_length=4.0, rod_od=0.625 for all element counts.",
+  "verified_features": {
+    "max_insertion_correction": {
+      "status": "VERIFIED",
+      "old_formula": "teflon_length - 0.5 = 3.5\" (WRONG - iteration_30)",
+      "new_formula": "tube_length - 0.5 = 2.5\" (CORRECT)",
+      "physical_constraint": "Rod slides into 3\" tube, stops 0.5\" before far end",
+      "teflon_purpose": "Extends 1\" past tube open end for RF arc prevention (does NOT affect max insertion)"
+    },
+    "hardware_defaults": {
+      "tube_length": "3.0 inches",
+      "teflon_length": "4.0 inches (tube + 1.0)",
+      "max_insertion": "2.5 inches (tube - 0.5)",
+      "rod_od": "0.625 inches (unified for all element counts)"
+    },
+    "SWR_behavior_by_element_count": {
+      "2_element": {
+        "null_reachable": false,
+        "swr_at_null": "~1.23 (needs more cap than max allows)",
+        "optimal_insertion": "2.5 (maxed out)"
+      },
+      "3_element": {
+        "null_reachable": false,
+        "swr_at_null": "~1.09 (needs more cap than max allows)",
+        "optimal_insertion": "2.5 (maxed out)"
+      },
+      "4_element": {
+        "null_reachable": true,
+        "swr_at_null": "~1.01 (barely reaches null)",
+        "optimal_insertion": "~2.49 (just within max)"
+      },
+      "6_element": {
+        "null_reachable": true,
+        "swr_at_null": "1.0",
+        "optimal_insertion": "~1.76 (null found before max)"
+      },
+      "8_element": {
+        "null_reachable": true,
+        "swr_at_null": "1.0"
+      },
+      "20_element": {
+        "null_reachable": true,
+        "swr_at_null": "1.0"
+      }
+    },
+    "insertion_capping": {
+      "status": "VERIFIED",
+      "behavior": "Requested insertion of 3.5\" is capped to 2.5\" in /api/calculate",
+      "insertion_sweep_max": "2.5 inches (not 3.0 or 3.5)"
+    }
+  },
+  "api_verification": {
+    "gamma_designer_endpoint": {
+      "url": "POST /api/gamma-designer",
+      "tests_passed": 11,
+      "key_outputs_verified": [
+        "recipe.tube_length = 3.0",
+        "recipe.teflon_length = 4.0",
+        "recipe.rod_od = 0.625",
+        "insertion_sweep max = 2.5",
+        "2-el: null_reachable=false, swr~1.23",
+        "3-el: null_reachable=false, swr~1.09",
+        "4-el: null_reachable=true, swr~1.01, insertion~2.49",
+        "6-20-el: null_reachable=true, swr=1.0"
+      ]
+    },
+    "calculate_endpoint": {
+      "url": "POST /api/calculate",
+      "tests_passed": 3,
+      "key_outputs_verified": [
+        "hardware.tube_length = 3.0",
+        "hardware.teflon_length = 4.0",
+        "hardware.rod_od = 0.625",
+        "rod_insertion_inches capped at 2.5"
+      ]
+    }
+  }
+}
