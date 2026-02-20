@@ -1725,13 +1725,10 @@ export default function AntennaCalculator() {
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
                             {(() => {
-                              const teflonLen = results?.matching_info?.teflon_sleeve_inches || 23;
-                              const teflonPct = ((teflonLen - 4) / Math.max(rodLen - 4, 1)) * 100;
-                              return teflonLen < rodLen ? (
-                                <View style={{ position: 'absolute', left: `${teflonPct}%`, top: -2, bottom: -2, width: 2, backgroundColor: '#4CAF50', zIndex: 2 }} />
-                              ) : null;
+                              const teflonPct = 0; // bar range starts at teflon end, so 0% is the minimum
+                              return null;
                             })()}
-                            <View style={{ width: `${((barPosIn - 4) / Math.max(rodLen - 4, 1)) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
+                            <View style={{ width: `${((barPosIn - barMin) / Math.max(rodLen - barMin, 1)) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
                           </View>
                           <Pressable onPress={() => setGammaBarPos(Math.min(Math.floor(rodLen), parseFloat((gammaBarPos + 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>+</Text>
