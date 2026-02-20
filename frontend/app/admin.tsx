@@ -1686,6 +1686,34 @@ export default function AdminScreen() {
                 The build date must be NEWER than what's in the installed APK. The "NOW" button sets it to the current time, which is always newer.
               </Text>
             </View>
+
+            {/* Railway Redeploy */}
+            <View style={{ marginTop: 20, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 16 }}>
+              <Text style={styles.sectionTitle}>Railway Deployment</Text>
+              <Text style={{ color: '#888', fontSize: 11, marginBottom: 12 }}>
+                Trigger a fresh redeployment of your production server on Railway. Use this after pushing new code to GitHub.
+              </Text>
+              <TouchableOpacity
+                style={{ backgroundColor: '#1a1a2e', borderRadius: 12, padding: 16, borderWidth: 2, borderColor: '#6C63FF', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 10, opacity: redeploying ? 0.6 : 1 }}
+                onPress={triggerRedeploy}
+                disabled={redeploying}
+                data-testid="redeploy-railway-btn"
+              >
+                {redeploying ? (
+                  <ActivityIndicator size="small" color="#6C63FF" />
+                ) : (
+                  <Ionicons name="rocket-outline" size={22} color="#6C63FF" />
+                )}
+                <Text style={{ color: '#6C63FF', fontSize: 16, fontWeight: '700' }}>
+                  {redeploying ? 'Deploying...' : 'Redeploy to Railway'}
+                </Text>
+              </TouchableOpacity>
+              {redeployResult ? (
+                <Text style={{ color: redeployResult.includes('Error') ? '#f44336' : '#4CAF50', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+                  {redeployResult}
+                </Text>
+              ) : null}
+            </View>
           </>
         )}
       </ScrollView>
