@@ -249,6 +249,19 @@ class CalculationRecord(BaseModel):
     outputs: dict
 
 
+class HairpinDesignerRequest(BaseModel):
+    num_elements: int = Field(..., ge=2, le=20)
+    frequency_mhz: float
+    driven_element_length_in: float
+    reflector_spacing_in: Optional[float] = None
+    director_spacings_in: Optional[List[float]] = None
+    feedpoint_impedance: Optional[float] = None
+    element_resonant_freq_mhz: Optional[float] = None
+    custom_rod_dia: Optional[float] = None
+    custom_rod_spacing: Optional[float] = None
+    element_diameter: Optional[float] = 0.5
+
+
 # ── Optimizer Models ──
 class StackingOptimizeRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
