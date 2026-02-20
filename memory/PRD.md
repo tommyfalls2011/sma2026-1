@@ -42,6 +42,15 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 20 2026 — Hairpin Physics Finalization:
+- Switched Z0 formula to natural log form: `Z_hp = 120 * ln(2s/d)` per user's physics reference
+- Added tuning_instructions block to both /api/calculate and /api/hairpin-designer responses
+  - Step 1: Prune (shorten driven element, target -jXa)
+  - Step 2: Set Bar (shorting bar position in inches, provides +jXhp)
+  - Step 3: Result (predicted SWR center at target frequency)
+- Added target_element_reactance field to hairpin_design output
+- Frontend HairpinDesigner.tsx displays tuning instructions table
+
 ### Session Feb 20 2026 — Hairpin Match Designer + Reflection Coefficient Physics:
 - Built full Hairpin Match Designer modal (mirroring Gamma Designer UX)
   - Auto-selects optimal rod dia + spacing from candidate matrix for best SWR
