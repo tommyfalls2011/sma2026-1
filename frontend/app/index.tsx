@@ -2329,7 +2329,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
                 <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
                   <Text style={{ fontSize: 11, color: spacingNudgeCount === 0 ? '#666' : '#9C27B0', fontWeight: '700' }}>
-                    {spacingNudgeCount === 0 ? '0%' : `${(spacingNudgeCount * 0.5) > 0 ? '+' : ''}${(spacingNudgeCount * 0.5).toFixed(1)}%`}
+                    {spacingNudgeCount === 0 ? '0%' : `${(spacingNudgeCount * 1.5) > 0 ? '+' : ''}${(spacingNudgeCount * 1.5).toFixed(1)}%`}
                   </Text>
                 </View>
                 <TouchableOpacity
