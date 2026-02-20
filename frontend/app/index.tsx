@@ -605,7 +605,7 @@ export default function AntennaCalculator() {
           ...(inputs.feed_type === 'hairpin' ? {
             hairpin_rod_dia: parseFloat(hairpinRodDia) || undefined,
             hairpin_rod_spacing: parseFloat(hairpinRodSpacing) || undefined,
-            hairpin_bar_pos: hairpinBarPos,
+            hairpin_length_in: parseFloat(hairpinLengthIn) || undefined,
             hairpin_boom_gap: hairpinBoomGap,
           } : {}),
           dual_active: inputs.dual_active,
