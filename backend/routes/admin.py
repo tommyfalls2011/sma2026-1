@@ -139,6 +139,52 @@ async def admin_delete_user(user_id: str, admin: dict = Depends(require_admin)):
     return {"success": True, "message": f"User {user['email']} deleted successfully"}
 
 
+# ── Pending Upgrades ──
+
+@router.get("/admin/pending-upgrades")
+async def get_pending_upgrades(admin: dict = Depends(require_admin)):
+    pending = await db.pending_upgrades.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return {"upgrades": pending}
+
+
+@router.post("/admin/pending-upgrades/{request_id}/approve")
+async def approve_upgrade(request_id: str, admin: dict = Depends(require_admin)):
+    req = await db.pending_upgrades.find_one({"id": request_id}, {"_id": 0})
+    if not req:
+        raise HTTPException(status_code=404, detail="Upgrade request not found")
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail=f"Request already {req['status']}")
+    tier_key = req["tier"]
+    tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+    duration_days = tier_info.get("duration_days", 30)
+    expires = datetime.utcnow() + timedelta(days=duration_days)
+    # Upgrade the user
+    await db.users.update_one(
+        {"id": req["user_id"]},
+        {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
+    )
+    # Mark request as approved
+    await db.pending_upgrades.update_one(
+        {"id": request_id},
+        {"$set": {"status": "approved", "approved_by": admin["email"], "approved_at": datetime.utcnow().isoformat()}},
+    )
+    return {"success": True, "message": f"Approved {req['user_email']} for {req['tier_name']}"}
+
+
+@router.post("/admin/pending-upgrades/{request_id}/reject")
+async def reject_upgrade(request_id: str, admin: dict = Depends(require_admin)):
+    req = await db.pending_upgrades.find_one({"id": request_id}, {"_id": 0})
+    if not req:
+        raise HTTPException(status_code=404, detail="Upgrade request not found")
+    if req["status"] != "pending":
+        raise HTTPException(status_code=400, detail=f"Request already {req['status']}")
+    await db.pending_upgrades.update_one(
+        {"id": request_id},
+        {"$set": {"status": "rejected", "rejected_by": admin["email"], "rejected_at": datetime.utcnow().isoformat()}},
+    )
+    return {"success": True, "message": f"Rejected upgrade request from {req['user_email']}"}
+
+
 # ── Subscription Management ──
 
 @router.post("/admin/subscription/manage")
