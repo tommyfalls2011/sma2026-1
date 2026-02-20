@@ -38,18 +38,25 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
 # ── Shared Physics Helpers (used by both calculate and design_gamma_match) ──
 
 def get_gamma_hardware_defaults(num_elements: int) -> dict:
-    """Unified gamma match hardware defaults with per-element tube sizing."""
+    """Unified gamma match hardware defaults with per-element tube/rod sizing."""
     if num_elements <= 2:
+        rod_od = 0.875
+        tube_od = 1.0
         tube_length = 4.0
     elif num_elements <= 3:
+        rod_od = 0.750
+        tube_od = 0.875
         tube_length = 3.5
     else:
+        rod_od = 0.625
+        tube_od = 0.750
         tube_length = 3.0
+    wall = 0.049
     teflon_length = tube_length + 1.0  # extends 1" past tube open end (RF arc prevention)
     return {
-        "wall": 0.049,
-        "rod_od": 0.625,
-        "tube_od": 0.750,
+        "wall": wall,
+        "rod_od": rod_od,
+        "tube_od": tube_od,
         "rod_spacing": 3.5,
         "tube_length": tube_length,
         "teflon_length": teflon_length,
