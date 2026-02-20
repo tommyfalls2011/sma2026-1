@@ -42,6 +42,12 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 20 2026 — Spacing Preset Bug Fix:
+- Fixed element spacing preset buttons (V.Close/Close/Normal/Far/V.Far) resetting ALL element positions when clicking any one
+- Root cause: preset buttons triggered a full auto-tune that recalculated all positions from scratch
+- Fix: replaced `triggerSpacingAutoTune()` with `applyElementPreset()` that calculates position locally for only the targeted element using wavelength fractions
+- Cleaned up dead auto-tune trigger code
+
 ### Session Feb 20 2026 — Rod/Tube Mismatch Bug Fix:
 - Fixed frontend GammaDesigner sending stale `custom_rod_od` from previous element count in auto mode
 - Reset `gammaRodDia` to null when element count changes in index.tsx
