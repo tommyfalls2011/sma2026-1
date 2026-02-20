@@ -210,7 +210,7 @@ async def paypal_subscription_checkout(data: dict, request: Request, user: dict 
             "description": f"SMA Antenna Calc — {tier_info['name']} Subscription",
         }],
         "application_context": {
-            "return_url": f"{origin_url}/subscription?paypal_order_id={{order_id}}&payment=paypal_success",
+            "return_url": f"{origin_url}/subscription?payment=paypal_success",
             "cancel_url": f"{origin_url}/subscription?payment=cancelled",
             "brand_name": "SMA Antenna Calculator",
             "user_action": "PAY_NOW",
