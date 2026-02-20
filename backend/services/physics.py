@@ -1882,7 +1882,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-    gamma_rod_length = 36.0
+    gamma_rod_length = 32.0 if num_elements <= 2 else 36.0
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
