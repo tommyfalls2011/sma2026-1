@@ -1859,7 +1859,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (8.0 if num_elements <= 2 else 10.0 if num_elements <= 6 else 8.0)
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (11.0 if num_elements <= 2 else 10.0 if num_elements <= 6 else 8.0)
 
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
 
