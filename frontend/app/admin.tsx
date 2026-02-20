@@ -865,6 +865,10 @@ export default function AdminScreen() {
           <Ionicons name="pricetag" size={14} color={activeTab === 'pricing' ? '#fff' : '#888'} />
           <Text style={[styles.tabPillText, activeTab === 'pricing' && styles.tabPillTextActive]}>Pricing</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabPill, activeTab === 'upgrades' && styles.tabPillActive]} onPress={() => { setActiveTab('upgrades'); loadPendingUpgrades(); }}>
+          <Ionicons name="card" size={14} color={activeTab === 'upgrades' ? '#fff' : '#888'} />
+          <Text style={[styles.tabPillText, activeTab === 'upgrades' && styles.tabPillTextActive]}>Payments</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={[styles.tabPill, activeTab === 'users' && styles.tabPillActive]} onPress={() => setActiveTab('users')}>
           <Ionicons name="people" size={14} color={activeTab === 'users' ? '#fff' : '#888'} />
           <Text style={[styles.tabPillText, activeTab === 'users' && styles.tabPillTextActive]}>Users</Text>
