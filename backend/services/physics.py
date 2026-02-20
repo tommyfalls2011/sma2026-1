@@ -2398,6 +2398,7 @@ def design_hairpin_match(num_elements: int, frequency_mhz: float,
         "feedpoint_r": round(r_feed, 1),
         "shorten_per_side_in": round(shorten_per_side, 2),
         "shortened_total_length_in": round(shortened_total, 2),
+        "target_element_reactance": round(-xc_needed, 2),
         "original_driven_length_in": round(original_driven_length, 2),
         "recommended_driven_length_in": round(recommended_driven_length, 2) if length_was_corrected else None,
         "driven_length_corrected": length_was_corrected,
@@ -2411,12 +2412,19 @@ def design_hairpin_match(num_elements: int, frequency_mhz: float,
     notes.append(f"Shorten each half of driven by {round(shorten_per_side, 2)}\" for {round(xc_needed, 1)} ohms X_C")
     notes.append(f"New driven element total: {round(shortened_total, 2)}\"")
 
+    tuning_instructions = [
+        {"step": "1. Prune", "action": f"Shorten driven element by {round(shorten_per_side * 2, 2)}\" total ({round(shorten_per_side, 2)}\" each side)", "value": f"Target -j{round(xc_needed, 1)} ohms"},
+        {"step": "2. Set Bar", "action": f"Slide shorting bar to {round(best_length, 2)}\" from feedpoint", "value": f"Provides +j{round(xl_needed, 1)} ohms"},
+        {"step": "3. Result", "action": f"Predicted SWR center at {frequency_mhz} MHz", "value": f"{round(max(1.0, best_swr), 3)}:1 SWR"},
+    ]
+
     return {
         "recipe": recipe,
         "feedpoint_impedance": round(r_feed, 1),
         "hardware_source": hw_source,
         "auto_hardware": {"rod_dia": best["rod_dia"], "rod_spacing": best["rod_spacing"], "z0": z0_best},
         "length_sweep": length_sweep,
+        "tuning_instructions": tuning_instructions,
         "notes": notes,
         "error": None,
     }
