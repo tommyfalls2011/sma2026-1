@@ -546,38 +546,98 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         ]
         return matched_swr, info
     elif feed_type == "hairpin":
-        if swr <= 1.2: matched_swr = 1.03 + (swr - 1.0) * 0.20
-        elif swr <= 2.0: matched_swr = 1.07 + (swr - 1.2) * 0.10
-        elif swr <= 3.0: matched_swr = 1.15 + (swr - 2.0) * 0.12
-        else: matched_swr = 1.27 + (swr - 3.0) * 0.18
-        # Hairpin stub tuning: rod dimensions + bar position affect match
-        h_rod_dia = hairpin_rod_dia if hairpin_rod_dia and hairpin_rod_dia > 0 else None
-        h_rod_spacing = hairpin_rod_spacing if hairpin_rod_spacing and hairpin_rod_spacing > 0 else None
-        bar_pos = hairpin_bar_pos if hairpin_bar_pos is not None else 0.5
+        # Physics-based hairpin (beta) match: L-network impedance transformation
+        # Topology: shortened driven element (series X_C) + shorted stub (shunt X_L)
+        h_rod_dia = hairpin_rod_dia if hairpin_rod_dia and hairpin_rod_dia > 0 else 0.25
+        h_rod_spacing = hairpin_rod_spacing if hairpin_rod_spacing and hairpin_rod_spacing > 0 else 1.0
         boom_gap = hairpin_boom_gap if hairpin_boom_gap is not None else 1.0
-        tuning_factor = 1.0
-        if h_rod_dia and h_rod_spacing and h_rod_spacing > h_rod_dia / 2:
+
+        # Hairpin Z0 (balanced twin-lead)
+        if h_rod_spacing > h_rod_dia / 2:
             hairpin_z0 = 276.0 * math.log10(2.0 * h_rod_spacing / h_rod_dia)
-            if feedpoint_r < 50.0:
-                xl_required = math.sqrt(max(feedpoint_r, 12.0) * (50.0 - feedpoint_r))
+        else:
+            hairpin_z0 = 200.0
+
+        freq_hz = operating_freq_mhz * 1e6
+        wl_m = 299792458.0 / freq_hz if freq_hz > 0 else 11.0
+        wl_in = wl_m * 39.3701
+
+        if feedpoint_r < 50.0 and feedpoint_r > 5.0:
+            # L-network: step up R_feed to 50 ohms
+            q_match = math.sqrt(50.0 / feedpoint_r - 1.0)
+            xl_needed = 50.0 / q_match
+            xc_needed = q_match * feedpoint_r
+
+            # Ideal hairpin length for perfect match
+            ideal_length_in = (math.atan(xl_needed / hairpin_z0) / (2.0 * math.pi)) * wl_in
+
+            # Actual hairpin length (user-provided or ideal)
+            actual_length = hairpin_length_in if hairpin_length_in and hairpin_length_in > 0 else ideal_length_in
+
+            # Actual X_L from hairpin at this length
+            beta_l = (2.0 * math.pi * actual_length) / wl_in
+            if abs(beta_l) < math.pi / 2.0 - 0.01:
+                xl_actual = hairpin_z0 * math.tan(beta_l)
             else:
-                xl_required = 10.0
-            # Bar position: 0.5 = ideal, deviation increases SWR
-            bar_deviation = abs(bar_pos - 0.5) / 0.5  # 0 at center, 1 at extremes
-            bar_penalty = bar_deviation * 0.20
-            # Z0: optimal range is 200-600 ohms for HF Yagi hairpin stubs
-            optimal_z0 = 400.0  # center of 200-600 range
-            z0_deviation = abs(hairpin_z0 - optimal_z0) / optimal_z0
-            # Gentle penalty within 200-600, steeper outside
-            if 200.0 <= hairpin_z0 <= 600.0:
-                z0_penalty = z0_deviation * 0.08
-            else:
-                z0_penalty = min(0.15, z0_deviation * 0.15)
-            # Boom gap: closer than 0.5" adds parasitic coupling
-            boom_gap_penalty = max(0, (0.5 - boom_gap) * 0.20) if boom_gap < 0.5 else 0
-            tuning_factor = 1.0 + min(0.35, bar_penalty + z0_penalty + boom_gap_penalty)
-        matched_swr *= tuning_factor
-        info = {"type": "Hairpin Match", "description": "Shorted stub adds inductance to cancel capacitive reactance at feedpoint", "original_swr": round(swr, 3), "matched_swr": round(matched_swr, 3), "tuning_quality": round(1.0 / tuning_factor, 3), "bandwidth_effect": "Broadband (minimal effect)", "bandwidth_mult": 1.0, "technical_notes": {"mechanism": "Shorted transmission line stub", "asymmetry": "Symmetrical design \u2014 no beam skew", "advantage": "Simple construction, broadband", "tuning": "Adjust hairpin length and spacing", "tradeoff": "Requires split driven element", "balun_note": "Use current choke balun alongside"}}
+                xl_actual = xl_needed
+
+            # SWR from impedance mismatch
+            xl_ratio = xl_actual / xl_needed if xl_needed > 0 else 1.0
+            residual_x = (xl_ratio - 1.0) * xl_needed * 0.5
+            z_r = 50.0 * (1.0 + residual_x ** 2 / (50.0 ** 2) * 0.2)
+            z_x = residual_x * 0.3
+            z_mag = math.sqrt(z_r ** 2 + z_x ** 2)
+            gamma_c = abs(z_mag - 50.0) / (z_mag + 50.0) if (z_mag + 50.0) > 0 else 0
+            matched_swr = (1.0 + gamma_c) / (1.0 - gamma_c) if gamma_c < 1.0 else 10.0
+
+            if boom_gap < 0.5:
+                matched_swr *= (1.0 + max(0, (0.5 - boom_gap) * 0.15))
+
+            # Driven element shortening: X_C from element reactance slope
+            driven_half_len = driven_element_half_length_in
+            driven_dia = driven_element_dia_in
+            z_char = 120.0 * (math.log(2.0 * driven_half_len / (driven_dia / 2.0)) - 1.0) if driven_dia > 0 else 600.0
+            shorten_per_side = xc_needed * wl_in / (4.0 * math.pi * z_char) if z_char > 0 else 0
+            new_total_length = (driven_half_len - shorten_per_side) * 2.0
+
+            info = {
+                "type": "Hairpin Match",
+                "description": "L-network: shortened driven element (series C) + shorted stub (shunt L) transforms feedpoint to 50\u03a9",
+                "original_swr": round(swr, 3),
+                "matched_swr": round(max(1.0, matched_swr), 3),
+                "q_match": round(q_match, 3),
+                "xl_needed": round(xl_needed, 2),
+                "xc_needed": round(xc_needed, 2),
+                "xl_actual": round(xl_actual, 2),
+                "ideal_hairpin_length_in": round(ideal_length_in, 2),
+                "actual_hairpin_length_in": round(actual_length, 2),
+                "hairpin_z0": round(hairpin_z0, 1),
+                "shorten_per_side_in": round(shorten_per_side, 2),
+                "shortened_total_length_in": round(new_total_length, 2),
+                "bandwidth_effect": "Broadband (minimal effect)",
+                "bandwidth_mult": 1.0,
+                "technical_notes": {
+                    "mechanism": "Shorted transmission line stub (L-network)",
+                    "asymmetry": "Symmetrical design \u2014 no beam skew",
+                    "advantage": "Simple construction, broadband",
+                    "tuning": "Adjust hairpin length to set inductive reactance",
+                    "tradeoff": "Requires split driven element",
+                    "balun_note": "Use current choke balun alongside",
+                },
+            }
+        else:
+            matched_swr = swr
+            note = "Feedpoint R \u2265 50\u03a9. Standard hairpin (shunt L) cannot step down impedance. Use Gamma match or series capacitor." if feedpoint_r >= 50.0 else "Feedpoint R too low for reliable hairpin match."
+            info = {
+                "type": "Hairpin Match",
+                "description": note,
+                "original_swr": round(swr, 3),
+                "matched_swr": round(swr, 3),
+                "topology_note": note,
+                "bandwidth_effect": "N/A",
+                "bandwidth_mult": 1.0,
+                "technical_notes": {"mechanism": "Hairpin not applicable", "suggestion": "Use Gamma match for this impedance"},
+            }
         return round(max(1.0, matched_swr), 3), info
     else:
         return swr, {"type": "Direct Feed", "description": "Direct 50\u03a9 coax connection to driven element", "original_swr": round(swr, 3), "matched_swr": round(swr, 3), "bandwidth_effect": "No effect", "bandwidth_mult": 1.0}
