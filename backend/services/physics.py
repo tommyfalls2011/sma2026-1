@@ -924,8 +924,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hw = matching_info.get("hardware", {})
         gamma_rod_dia = hw.get("rod_od", 0.500)
         gamma_rod_spacing = hw.get("rod_spacing", 3.5)
-        gamma_rod_length = 36.0
-        design_tube_length = hw.get("tube_length", 22.0)
+        gamma_rod_length = 32.0 if input_data.num_elements <= 2 else 36.0
+        design_tube_length = hw.get("tube_length", 24.0 if input_data.num_elements <= 2 else 22.0)
         design_tube_id = hw.get("tube_id", 0.652)
         design_rod_od = gamma_rod_dia
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
@@ -1842,7 +1842,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else 22.0
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (24.0 if num_elements <= 2 else 22.0)
 
     # Element resonant frequency from driven element length
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
