@@ -626,6 +626,12 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "hairpin_z0": round(hairpin_z0, 1),
                 "shorten_per_side_in": round(shorten_per_side, 2),
                 "shortened_total_length_in": round(new_total_length, 2),
+                "target_element_reactance": round(-xc_needed, 2),
+                "tuning_instructions": [
+                    {"step": "Prune", "action": f"Shorten driven element by {round(shorten_per_side * 2, 2)}\" total ({round(shorten_per_side, 2)}\" each side)", "value": f"-j{round(xc_needed, 1)} ohms"},
+                    {"step": "Set Bar", "action": f"Slide shorting bar to {round(actual_length, 2)}\" from feedpoint", "value": f"+j{round(xl_actual, 1)} ohms"},
+                    {"step": "Result", "action": f"Predicted SWR center at {round(operating_freq_mhz, 3)} MHz", "value": f"{round(max(1.0, matched_swr), 3)}:1"},
+                ],
                 "z_in_r": round(z_in.real, 2),
                 "z_in_x": round(z_in.imag, 2),
                 "gamma_mag": round(gamma_mag, 4),
