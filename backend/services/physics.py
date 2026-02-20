@@ -1984,6 +1984,9 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     x_stub_val = stub_info.get("x_stub", 0)
     x_ant_k = x_antenna_at_center * k_ideal  # antenna X transformed by K
 
+    # Max rod insertion: rod stops 0.5" before teflon end to avoid shorting on tube
+    max_insertion = teflon_sleeve - 0.5
+
     # Null: cap must cancel both antenna reactance and stub inductance
     omega = 2.0 * math.pi * frequency_mhz * 1e6
     null_reachable = True
@@ -1991,23 +1994,23 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     if positive_x_total > 0:
         c_needed_pf = 1e12 / (omega * positive_x_total)
         optimal_insertion = c_needed_pf / cap_per_inch
-        if optimal_insertion > tube_length or optimal_insertion < 0:
+        if optimal_insertion > max_insertion or optimal_insertion < 0:
             null_reachable = False
-            optimal_insertion = tube_length
+            optimal_insertion = max_insertion
     else:
         optimal_insertion = 0.0
         c_needed_pf = 0.0
         null_reachable = False
 
     # If null not reachable at ideal bar, OPTIMIZE: sweep bar positions to find
-    # the best achievable SWR within the tube length. A longer bar increases
+    # the best achievable SWR within the insertion range. A longer bar increases
     # X_stub (needs less cap = less insertion) but overshoots R_matched > 50Ω.
     # The optimizer finds the sweet spot.
     optimized_bar = bar_ideal_clamped
     if not null_reachable:
         best_swr_opt = 999.0
         best_bar_opt = bar_ideal_clamped
-        best_ins_opt = tube_length
+        best_ins_opt = max_insertion
         # Sweep from ideal bar out to rod length in fine steps
         steps = 60
         for i in range(steps + 1):
@@ -2025,10 +2028,10 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             # Analytical null insertion for this bar
             c_need = 1e12 / (omega * total_pos_x)
             ins_need = c_need / cap_per_inch
-            if ins_need <= tube_length:
+            if ins_need <= max_insertion:
                 test_ins = ins_need
             else:
-                test_ins = tube_length
+                test_ins = max_insertion
             s, _ = _eval(test_bar, test_ins)
             if s < best_swr_opt:
                 best_swr_opt = s
@@ -2043,7 +2046,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         if xs_opt > 0:
             c_opt = 1e12 / (omega * xs_opt)
             ins_opt = c_opt / cap_per_inch
-            null_reachable = ins_opt <= tube_length
+            null_reachable = ins_opt <= max_insertion
             if null_reachable:
                 optimal_insertion = ins_opt
                 c_needed_pf = c_opt
