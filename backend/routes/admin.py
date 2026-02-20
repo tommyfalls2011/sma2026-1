@@ -409,6 +409,31 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
 
 RAILWAY_API_URL = "https://backboard.railway.app/graphql/v2"
 
+
+@router.post("/admin/system-notification")
+async def create_system_notification(data: dict, admin: dict = Depends(require_admin)):
+    message = data.get("message", "System is back online! You can now login and use the app.")
+    notif_type = data.get("type", "back_online")
+    # Clear any existing active notification
+    await db.system_notifications.update_many({"active": True}, {"$set": {"active": False}})
+    notif = {
+        "id": str(uuid.uuid4()),
+        "message": message,
+        "type": notif_type,
+        "active": True,
+        "created_by": admin["email"],
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    await db.system_notifications.insert_one(notif)
+    return {"success": True, "message": "Notification sent to all users"}
+
+
+@router.delete("/admin/system-notification")
+async def clear_system_notification(admin: dict = Depends(require_admin)):
+    await db.system_notifications.update_many({"active": True}, {"$set": {"active": False}})
+    return {"success": True, "message": "Notification cleared"}
+
+
 @router.post("/admin/railway/redeploy")
 async def railway_redeploy(admin: dict = Depends(require_admin)):
     token = os.environ.get("RAILWAY_API_TOKEN", "")
