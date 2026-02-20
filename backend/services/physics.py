@@ -1971,7 +1971,8 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     x_ant_k = x_antenna_at_center * k_ideal  # antenna X transformed by K
 
     # Max rod insertion: rod stops 0.5" before teflon end to avoid shorting on tube
-    max_insertion = teflon_sleeve - 0.5
+    # Max rod insertion: rod stops 0.5" before far end of tube
+    max_insertion = tube_length - 0.5
 
     # Null: cap must cancel both antenna reactance and stub inductance
     omega = 2.0 * math.pi * frequency_mhz * 1e6
