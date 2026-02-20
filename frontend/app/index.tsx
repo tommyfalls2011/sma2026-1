@@ -1721,7 +1721,14 @@ export default function AntennaCalculator() {
                           <Pressable onPress={() => setGammaBarPos(Math.max(4, gammaBarPos - 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
-                          <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
+                          <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
+                            {(() => {
+                              const teflonLen = results?.matching_info?.teflon_sleeve_inches || 23;
+                              const teflonPct = ((teflonLen - 4) / Math.max(rodLen - 4, 1)) * 100;
+                              return teflonLen < rodLen ? (
+                                <View style={{ position: 'absolute', left: `${teflonPct}%`, top: -2, bottom: -2, width: 2, backgroundColor: '#4CAF50', zIndex: 2 }} />
+                              ) : null;
+                            })()}
                             <View style={{ width: `${((barPosIn - 4) / Math.max(rodLen - 4, 1)) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
                           </View>
                           <Pressable onPress={() => setGammaBarPos(Math.min(Math.floor(rodLen), gammaBarPos + 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
@@ -1730,8 +1737,11 @@ export default function AntennaCalculator() {
                         </View>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
                           <Text style={{ fontSize: 9, color: '#555' }}>Toward feedpoint (higher freq)</Text>
-                          <Text style={{ fontSize: 9, color: barInductanceNh > 0 ? '#FF9800' : '#555' }}>L: {barInductanceNh.toFixed(0)} nH | {netX >= 0 ? '+' : ''}{netX.toFixed(1)}j ohms</Text>
+                          <Text style={{ fontSize: 9, color: '#4CAF50' }}>Teflon ends @ {(results?.matching_info?.teflon_sleeve_inches || 23).toFixed(0)}" | Bar range: {(results?.matching_info?.teflon_sleeve_inches || 23).toFixed(0)}"–{rodLen.toFixed(0)}"</Text>
                           <Text style={{ fontSize: 9, color: '#555' }}>Toward tip (lower freq)</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 1 }}>
+                          <Text style={{ fontSize: 9, color: barInductanceNh > 0 ? '#FF9800' : '#555' }}>L: {barInductanceNh.toFixed(0)} nH | {netX >= 0 ? '+' : ''}{netX.toFixed(1)}j ohms</Text>
                         </View>
                       </View>
 
