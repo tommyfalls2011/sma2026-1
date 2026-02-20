@@ -210,7 +210,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         # Gamma match hardware — unified for all element counts
         # 2-element uses 9/16" rod for better capacitance range
         wall = 0.049  # standard aluminum tube wall thickness
-        default_rod_od = 0.5625 if num_elements <= 2 else 0.500
+        default_rod_od = 0.625
         default_tube_od = 0.750  # 3/4" tube — ID 0.652"
         default_spacing = 3.5
         default_tube_id = default_tube_od - 2 * wall
