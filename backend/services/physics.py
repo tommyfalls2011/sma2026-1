@@ -1868,7 +1868,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         refl_coupling = 0.067 * math.exp(-4.0 * max(refl_gap_wl, 0.02))
         element_res_freq *= (1.0 - refl_coupling)
     for d_idx in range(num_elements - 2):  # directors
-        d_gap_m = (48 + d_idx * 64) * 0.0254  # driven-to-director distance
+        d_gap_m = ((d_idx + 1) * 64) * 0.0254  # driven-to-director distance: 64", 128", 192"...
         d_gap_wl = d_gap_m / wavelength_m
         dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
         element_res_freq *= (1.0 - dir_coupling)
