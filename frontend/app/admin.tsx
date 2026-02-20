@@ -1776,6 +1776,49 @@ export default function AdminScreen() {
                 </Text>
               ) : null}
             </View>
+
+            {/* System Notification */}
+            <View style={{ marginTop: 20, borderTopWidth: 1, borderTopColor: '#333', paddingTop: 16 }}>
+              <Text style={styles.sectionTitle}>User Notification</Text>
+              <Text style={{ color: '#888', fontSize: 11, marginBottom: 12 }}>
+                Push a banner to all users when the system is back online. Users will see it the next time they open the app.
+              </Text>
+              <TextInput
+                style={{ backgroundColor: '#1a1a1a', color: '#fff', borderRadius: 8, padding: 12, fontSize: 13, borderWidth: 1, borderColor: '#333', marginBottom: 12 }}
+                value={notifMessage}
+                onChangeText={setNotifMessage}
+                placeholder="Notification message..."
+                placeholderTextColor="#555"
+                multiline
+              />
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: '#1a2a1a', borderRadius: 12, padding: 14, borderWidth: 2, borderColor: '#4CAF50', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, opacity: sendingNotif ? 0.6 : 1 }}
+                  onPress={sendSystemNotification}
+                  disabled={sendingNotif}
+                  data-testid="send-notification-btn"
+                >
+                  {sendingNotif ? (
+                    <ActivityIndicator size="small" color="#4CAF50" />
+                  ) : (
+                    <Ionicons name="megaphone-outline" size={18} color="#4CAF50" />
+                  )}
+                  <Text style={{ color: '#4CAF50', fontSize: 14, fontWeight: '600' }}>Send to All Users</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}
+                  onPress={clearSystemNotification}
+                  data-testid="clear-notification-btn"
+                >
+                  <Ionicons name="close-circle-outline" size={18} color="#888" />
+                </TouchableOpacity>
+              </View>
+              {notifResult ? (
+                <Text style={{ color: notifResult.includes('Error') ? '#f44336' : '#4CAF50', fontSize: 12, textAlign: 'center', marginTop: 8 }}>
+                  {notifResult}
+                </Text>
+              ) : null}
+            </View>
           </>
         )}
       </ScrollView>
