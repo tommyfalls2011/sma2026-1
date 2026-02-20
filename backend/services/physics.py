@@ -228,15 +228,23 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             tube_id = default_tube_id
 
         wavelength_in = 11802.71 / operating_freq_mhz
-        # 2-element needs longer tube/teflon for proper match
+        # Per-element-count hardware: tube must be short enough for bar to reach ideal position
         if num_elements <= 2:
-            gamma_rod_length = 48.0
-            tube_length = 30.0
-            teflon_sleeve_in = 31.0
-        else:
-            gamma_rod_length = 36.0
-            tube_length = 22.0
-            teflon_sleeve_in = 23.0
+            gamma_rod_length = 18.0
+            tube_length = 8.0
+            teflon_sleeve_in = 9.0
+        elif num_elements <= 4:
+            gamma_rod_length = 22.0
+            tube_length = 10.0
+            teflon_sleeve_in = 11.0
+        elif num_elements <= 6:
+            gamma_rod_length = 22.0
+            tube_length = 10.0
+            teflon_sleeve_in = 11.0
+        else:  # 7+
+            gamma_rod_length = 22.0
+            tube_length = 8.0
+            teflon_sleeve_in = 9.0
 
         # Rod insertion: actual inches into tube (0 to tube_length)
         if gamma_element_gap is not None:
