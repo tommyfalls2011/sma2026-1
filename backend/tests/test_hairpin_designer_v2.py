@@ -310,7 +310,16 @@ class TestHairpinDrivenElementShortening:
         assert "shorten_per_side_in" in recipe
         assert "shortened_total_length_in" in recipe
         assert recipe["shorten_per_side_in"] > 0
-        assert recipe["shortened_total_length_in"] < 198  # Should be shorter than original
+        
+        # Note: shortened_total_length_in is based on the CORRECTED driven length (recommended_driven_length)
+        # If element was corrected LONGER first, then shortened for X_C, the final could be > or < original
+        # The important thing is that shorten_per_side_in is > 0 (element shortening is needed)
+        if recipe.get("driven_length_corrected") and recipe.get("recommended_driven_length_in"):
+            # Shortened total should be less than recommended (after length correction)
+            assert recipe["shortened_total_length_in"] < recipe["recommended_driven_length_in"]
+        else:
+            # No length correction - shortened total should be less than original
+            assert recipe["shortened_total_length_in"] < recipe.get("original_driven_length_in", 198)
         
         # Verify notes contain shortening info
         assert "notes" in data
@@ -319,6 +328,8 @@ class TestHairpinDrivenElementShortening:
         
         print(f"✓ Shorten per side: {recipe['shorten_per_side_in']}\"")
         print(f"✓ New total length: {recipe['shortened_total_length_in']}\"")
+        print(f"✓ Driven length corrected: {recipe.get('driven_length_corrected')}")
+        print(f"✓ Recommended driven: {recipe.get('recommended_driven_length_in')}\"")
         print(f"✓ Notes: {shortening_notes[0]}")
 
 
