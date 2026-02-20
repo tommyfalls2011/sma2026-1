@@ -596,6 +596,37 @@ export default function AdminScreen() {
     });
   };
 
+  // === SYSTEM NOTIFICATION ===
+  const sendSystemNotification = async () => {
+    setSendingNotif(true);
+    setNotifResult('');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/system-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ message: notifMessage, type: 'back_online' }),
+      });
+      if (res.ok) {
+        setNotifResult('Notification sent to all users!');
+      } else {
+        const err = await res.json();
+        setNotifResult('Error: ' + (err.detail || 'Failed'));
+      }
+    } catch (e) {
+      setNotifResult('Error: Network error');
+    }
+    setSendingNotif(false);
+  };
+
+  const clearSystemNotification = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/api/admin/system-notification`, {
+        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` },
+      });
+      setNotifResult('Notification cleared');
+    } catch (e) {}
+  };
+
   const sendUpdateEmail = async () => {
     setSendingEmail(true); setEmailResult('');
     try {
