@@ -34,6 +34,101 @@ def convert_spacing_to_meters(value: float, unit: str) -> float:
     return value
 
 
+
+# ── Shared Physics Helpers (used by both calculate and design_gamma_match) ──
+
+def get_gamma_hardware_defaults(num_elements: int) -> dict:
+    """Unified gamma match hardware defaults for all element counts."""
+    tube_length = 3.0
+    teflon_length = tube_length + 1.0
+    return {
+        "wall": 0.049,
+        "rod_od": 0.625,
+        "tube_od": 0.750,
+        "rod_spacing": 3.5,
+        "tube_length": tube_length,
+        "teflon_length": teflon_length,
+        "max_insertion": teflon_length - 0.5,
+        "rod_length": 22.0 if num_elements <= 6 else 30.0,
+    }
+
+
+def compute_feedpoint_impedance(num_elements: int, wavelength_m: float,
+                                reflector_spacing_in: float = 48.0,
+                                director_spacings_in: list = None,
+                                reflector_length_in: float = 214.0) -> float:
+    """Yagi feedpoint impedance from mutual coupling model.
+
+    Args:
+        director_spacings_in: cumulative distances from driven element to each director (inches).
+    Returns:
+        R_feed in ohms, clamped to [12, 73].
+    """
+    r_feed = 73.0
+    if num_elements >= 2 and reflector_spacing_in > 0:
+        refl_gap_wl = (reflector_spacing_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.18
+        refl_len_m = reflector_length_in * 0.0254
+        half_wave_m = wavelength_m / 2.0
+        refl_detuning = (refl_len_m - half_wave_m) / half_wave_m if half_wave_m > 0 else 0
+        refl_q = 12.0
+        refl_coupling_strength = 1.0 / math.sqrt(1.0 + (refl_q * refl_detuning * 2) ** 2)
+        refl_factor = max(0.35, 0.30 + refl_gap_wl * 1.8)
+        refl_factor = 1.0 - (1.0 - refl_factor) * refl_coupling_strength
+        r_feed *= refl_factor
+
+    num_directors = max(0, num_elements - 2)
+    if num_directors >= 1:
+        d1_gap_in = director_spacings_in[0] if director_spacings_in and len(director_spacings_in) >= 1 else 48.0
+        d1_gap_wl = (d1_gap_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.13
+        d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
+        r_feed *= d1_factor
+
+    for i in range(1, num_directors):
+        if director_spacings_in and i < len(director_spacings_in) and i - 1 < len(director_spacings_in):
+            gap_in = director_spacings_in[i] - director_spacings_in[i - 1]
+        else:
+            gap_in = 48.0
+        gap_wl = (gap_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.15
+        factor = max(0.85, 0.85 + gap_wl * 0.5)
+        r_feed *= factor
+
+    return round(max(12.0, min(73.0, r_feed)), 1)
+
+
+def compute_element_resonant_freq(driven_length_in: float, frequency_mhz: float,
+                                  wavelength_m: float, num_elements: int,
+                                  reflector_spacing_in: float = 48.0,
+                                  director_spacings_in: list = None) -> float:
+    """Element resonant frequency accounting for mutual coupling.
+
+    Args:
+        director_spacings_in: cumulative distances from driven element to each director (inches).
+    """
+    ideal_half_wave_m = wavelength_m / 2.0
+    driven_len_m = driven_length_in * 0.0254
+    if ideal_half_wave_m <= 0 or driven_len_m <= 0:
+        return frequency_mhz
+    length_ratio = driven_len_m / ideal_half_wave_m
+    res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
+
+    if num_elements >= 2 and reflector_spacing_in > 0:
+        refl_gap_wl = (reflector_spacing_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.2
+        refl_coupling = 0.067 * math.exp(-4.0 * max(refl_gap_wl, 0.02))
+        res_freq *= (1.0 - refl_coupling)
+
+    for d_idx in range(max(0, num_elements - 2)):
+        if director_spacings_in and d_idx < len(director_spacings_in):
+            d_gap_in = director_spacings_in[d_idx]
+        else:
+            d_gap_in = (d_idx + 1) * 48.0
+        d_gap_wl = (d_gap_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.15
+        dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
+        res_freq *= (1.0 - dir_coupling)
+
+    return round(res_freq, 3)
+
+
+
 # ── Gain Model ──
 
 def get_free_space_gain(n: int) -> float:
