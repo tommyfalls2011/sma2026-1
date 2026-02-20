@@ -193,6 +193,11 @@ export default function AdminScreen() {
   const [redeploying, setRedeploying] = useState(false);
   const [redeployResult, setRedeployResult] = useState('');
 
+  // System Notification state
+  const [notifMessage, setNotifMessage] = useState('System is back online! You can now login and use the app.');
+  const [sendingNotif, setSendingNotif] = useState(false);
+  const [notifResult, setNotifResult] = useState('');
+
   useEffect(() => {
     checkAdminAndLoad();
   }, [token]);
