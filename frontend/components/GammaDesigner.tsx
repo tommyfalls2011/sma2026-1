@@ -68,6 +68,17 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
       if (calculatedFeedpointR && calculatedFeedpointR > 0) {
         body.feedpoint_impedance = calculatedFeedpointR;
       }
+      // Pass resonant freq from main calculator for consistent antenna reactance
+      if (calculatedResonantFreq && calculatedResonantFreq > 0) {
+        body.element_resonant_freq_mhz = calculatedResonantFreq;
+      }
+      // Pass element spacings from main calculator for consistent fallback physics
+      if (reflectorSpacingIn && reflectorSpacingIn > 0) {
+        body.reflector_spacing_in = reflectorSpacingIn;
+      }
+      if (directorSpacingsIn && directorSpacingsIn.length > 0) {
+        body.director_spacings_in = directorSpacingsIn;
+      }
       if (useCustom) {
         if (customTubeOd) body.custom_tube_od = parseFloat(customTubeOd);
         if (customRodOd) body.custom_rod_od = parseFloat(customRodOd);
