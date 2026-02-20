@@ -21,7 +21,7 @@ import os
 # Base URL from environment - MUST NOT have default value per guidelines
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL')
 if not BASE_URL:
-    BASE_URL = 'https://gamma-designer-fix.preview.emergentagent.com'
+    BASE_URL = 'https://match-model.preview.emergentagent.com'
 
 
 @pytest.fixture(scope="module")
