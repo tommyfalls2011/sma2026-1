@@ -1843,6 +1843,9 @@ _FEEDPOINT_R_TABLE = {
 def design_gamma_match(num_elements: int, driven_element_length_in: float,
                        frequency_mhz: float = 27.185,
                        feedpoint_impedance: float = None,
+                       element_resonant_freq_mhz: float = None,
+                       reflector_spacing_in: float = None,
+                       director_spacings_in: list = None,
                        custom_tube_od: float = None, custom_rod_od: float = None,
                        custom_rod_spacing: float = None,
                        custom_teflon_length: float = None,
@@ -1854,37 +1857,44 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wavelength_in = 11802.71 / frequency_mhz
     tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (30.0 if num_elements <= 2 else 22.0)
 
-    # Element resonant frequency from driven element length
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
-    ideal_half_wave_m = wavelength_m / 2.0
-    driven_len_m = driven_element_length_in * 0.0254
-    length_ratio = driven_len_m / ideal_half_wave_m if ideal_half_wave_m > 0 else 1.0
-    element_res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
 
-    # Apply mutual coupling corrections (same constants as main calculator)
-    # Reflector pulls resonance down (mutual capacitance), directors pull further
-    if num_elements >= 2:
-        refl_gap_wl = 48 * 0.0254 / wavelength_m  # assume standard reflector gap
-        refl_coupling = 0.067 * math.exp(-4.0 * max(refl_gap_wl, 0.02))
-        element_res_freq *= (1.0 - refl_coupling)
-    for d_idx in range(num_elements - 2):  # directors
-        d_gap_m = ((d_idx + 1) * 64) * 0.0254  # driven-to-director distance: 64", 128", 192"...
-        d_gap_wl = d_gap_m / wavelength_m
-        dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
-        element_res_freq *= (1.0 - dir_coupling)
+    # Use element_resonant_freq from main calculator if provided, otherwise compute
+    if element_resonant_freq_mhz and element_resonant_freq_mhz > 0:
+        element_res_freq = element_resonant_freq_mhz
+    else:
+        # Fallback: compute from driven element length and default spacings
+        ideal_half_wave_m = wavelength_m / 2.0
+        driven_len_m = driven_element_length_in * 0.0254
+        length_ratio = driven_len_m / ideal_half_wave_m if ideal_half_wave_m > 0 else 1.0
+        element_res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
+
+        # Use actual spacings if provided, else default layout (refl at 0, driven at 48, dirs at 96, 144, ...)
+        refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
+        if num_elements >= 2:
+            refl_gap_wl = refl_gap_in * 0.0254 / wavelength_m
+            refl_coupling = 0.067 * math.exp(-4.0 * max(refl_gap_wl, 0.02))
+            element_res_freq *= (1.0 - refl_coupling)
+        for d_idx in range(num_elements - 2):
+            if director_spacings_in and d_idx < len(director_spacings_in):
+                d_gap_in = director_spacings_in[d_idx]
+            else:
+                # Default layout: first director at 48" from driven, subsequent +48" each
+                d_gap_in = (d_idx + 1) * 48.0
+            d_gap_wl = d_gap_in * 0.0254 / wavelength_m
+            dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
+            element_res_freq *= (1.0 - dir_coupling)
 
     # Feedpoint impedance: user-provided or dynamically calculated (same as main calc)
     if feedpoint_impedance and feedpoint_impedance > 0:
         r_feed = feedpoint_impedance
     else:
-        # Replicate main calculator's dynamic feedpoint R computation EXACTLY
+        # Replicate main calculator's dynamic feedpoint R computation
         r_feed = 73.0  # half-wave dipole in free space
-        # Standard geometry: reflector at 0", driven at 48", directors at 112", 176", 240"...
+        refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
         if num_elements >= 2:
-            # Reflector coupling (same formula as main calc)
-            refl_gap_wl = 48 * 0.0254 / wavelength_m
+            refl_gap_wl = refl_gap_in * 0.0254 / wavelength_m
             refl_factor_base = max(0.35, 0.30 + refl_gap_wl * 1.8)
-            # Reflector length effect (assume 214" reflector)
             refl_len_m = 214 * 0.0254
             refl_detuning = (refl_len_m - wavelength_m / 2.0) / (wavelength_m / 2.0)
             refl_q = 12.0
@@ -1893,13 +1903,21 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             r_feed *= refl_factor
         num_directors = max(0, num_elements - 2)
         if num_directors >= 1:
-            # First director: driven(48") to dir1(112") = 64" gap
-            d1_gap_wl = (64 * 0.0254) / wavelength_m
+            # First director gap: use actual or default (48")
+            if director_spacings_in and len(director_spacings_in) >= 1:
+                d1_gap_in = director_spacings_in[0]
+            else:
+                d1_gap_in = 48.0  # default layout: driven at 48, dir1 at 96
+            d1_gap_wl = (d1_gap_in * 0.0254) / wavelength_m
             d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
             r_feed *= d1_factor
-        # Subsequent directors: inter-director gap = 64" each
+        # Subsequent directors: use actual inter-director gaps or default 48"
         for i in range(1, num_directors):
-            gap_wl = (64 * 0.0254) / wavelength_m
+            if director_spacings_in and i < len(director_spacings_in) and i - 1 < len(director_spacings_in):
+                gap_in = director_spacings_in[i] - director_spacings_in[i - 1]
+            else:
+                gap_in = 48.0
+            gap_wl = (gap_in * 0.0254) / wavelength_m
             factor = max(0.85, 0.85 + gap_wl * 0.5)
             r_feed *= factor
         r_feed = round(max(12.0, min(73.0, r_feed)), 1)
