@@ -1269,14 +1269,10 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         z_r = matching_info["z_matched_r"]
         z_x = matching_info["z_matched_x"]
     elif feed_type == "hairpin":
-        # Use L-network transformed impedance from matching_info
-        if matching_info and "xl_actual" in matching_info:
-            xl_actual = matching_info["xl_actual"]
-            xl_needed = matching_info.get("xl_needed", xl_actual)
-            xl_ratio = xl_actual / xl_needed if xl_needed > 0 else 1.0
-            residual = (xl_ratio - 1.0) * xl_needed * 0.5
-            z_r = 50.0 * (1.0 + residual ** 2 / (50.0 ** 2) * 0.2)
-            z_x = residual * 0.3
+        # Use complex impedance from matching_info
+        if matching_info and "xl_actual" in matching_info and "xc_needed" in matching_info:
+            z_r = matching_info.get("z_in_r", 50.0)
+            z_x = matching_info.get("z_in_x", 0.0)
         else:
             z_r = 50.0
             z_x = 0.0
