@@ -800,14 +800,18 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     if has_reflector_for_z and driven_el and refl_el:
         refl_gap_in = abs(driven_el.position - refl_el.position)
         refl_gap_wl = (refl_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.18
-        # Reflector LENGTH affects coupling: closer to λ/2 = stronger coupling
-        refl_len_wl = (refl_el.length * 0.0254) / wavelength if wavelength > 0 else 0.5
-        refl_resonance_factor = math.sin(math.pi * min(refl_len_wl, 1.0))  # peaks at 0.5λ
+        # Reflector LENGTH affects coupling via self-impedance:
+        # Near resonance (λ/2): low self-Z → high induced current → strong coupling
+        # Off resonance: high self-Z (reactance) → less current → weaker coupling
+        refl_len_m = refl_el.length * 0.0254
+        half_wave_m = wavelength / 2.0
+        refl_detuning = (refl_len_m - half_wave_m) / half_wave_m if half_wave_m > 0 else 0
+        refl_q = 12.0  # typical aluminum element Q
+        refl_coupling_strength = 1.0 / math.sqrt(1.0 + (refl_q * refl_detuning * 2) ** 2)
         # Closer reflector = stronger coupling = more impedance drop
-        # At 0.08λ: ~44%, at 0.15λ: ~57%, at 0.25λ: ~75%
         refl_factor = max(0.35, 0.30 + refl_gap_wl * 1.8)
-        # Scale by how resonant the reflector is (length effect)
-        refl_factor = 1.0 - (1.0 - refl_factor) * refl_resonance_factor
+        # Scale coupling by how resonant the reflector is
+        refl_factor = 1.0 - (1.0 - refl_factor) * refl_coupling_strength
         yagi_feedpoint_r *= refl_factor
 
     if num_directors >= 1 and driven_el and dir_els:
