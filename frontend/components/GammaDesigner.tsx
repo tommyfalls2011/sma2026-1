@@ -12,6 +12,9 @@ interface GammaDesignerProps {
   drivenLength: number;
   frequencyMhz: number;
   calculatedFeedpointR?: number;
+  calculatedResonantFreq?: number;
+  reflectorSpacingIn?: number;
+  directorSpacingsIn?: number[];
   currentRodDia?: number;
   currentRodSpacing?: number;
   elementDiameter?: number;
