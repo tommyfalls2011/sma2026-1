@@ -413,11 +413,12 @@ class TestHairpinRodDiaAndSpacing:
             "feed_type": "hairpin"
         }
         
+        # Z0 = 276 * log10(2*D/d) -- ratio matters, so vary the ratio!
         configs = [
-            {"hairpin_rod_dia": 0.125, "hairpin_rod_spacing": 0.5},   # Thin, close
-            {"hairpin_rod_dia": 0.25, "hairpin_rod_spacing": 1.0},    # Default
-            {"hairpin_rod_dia": 0.375, "hairpin_rod_spacing": 1.5},   # Thicker, wider
-            {"hairpin_rod_dia": 0.5, "hairpin_rod_spacing": 2.0},     # Thick, wide
+            {"hairpin_rod_dia": 0.25, "hairpin_rod_spacing": 0.5},   # Close spacing, low Z0
+            {"hairpin_rod_dia": 0.25, "hairpin_rod_spacing": 1.0},   # Default
+            {"hairpin_rod_dia": 0.25, "hairpin_rod_spacing": 2.0},   # Wide spacing, high Z0
+            {"hairpin_rod_dia": 0.5, "hairpin_rod_spacing": 1.0},    # Thick rod, low Z0
         ]
         
         results = []
