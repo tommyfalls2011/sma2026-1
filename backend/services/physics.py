@@ -302,37 +302,25 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            driven_element_dia_in: float = 0.5,
                            element_resonant_freq_mhz: float = 27.185) -> tuple:
     if feed_type == "gamma":
-        # Gamma match hardware — unified for all element counts
-        # 2-element uses 9/16" rod for better capacitance range
-        wall = 0.049  # standard aluminum tube wall thickness
-        default_rod_od = 0.625
-        default_tube_od = 0.750  # 3/4" tube — ID 0.652"
-        default_spacing = 3.5
-        default_tube_id = default_tube_od - 2 * wall
-
-        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else default_rod_od
-        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else default_spacing
+        hw = get_gamma_hardware_defaults(num_elements)
+        wall = hw["wall"]
+        rod_dia = gamma_rod_dia if gamma_rod_dia and gamma_rod_dia > 0 else hw["rod_od"]
+        rod_spacing = gamma_rod_spacing if gamma_rod_spacing and gamma_rod_spacing > 0 else hw["rod_spacing"]
         bar_inches = gamma_bar_pos if gamma_bar_pos is not None else 18.0
 
-        # Allow custom tube OD override
         if gamma_tube_od and gamma_tube_od > 0:
             actual_tube_od = gamma_tube_od
             tube_id = actual_tube_od - 2 * wall
         else:
-            actual_tube_od = default_tube_od
-            tube_id = default_tube_id
+            actual_tube_od = hw["tube_od"]
+            tube_id = actual_tube_od - 2 * wall
 
         wavelength_in = 11802.71 / operating_freq_mhz
-        # Per-element-count hardware: 5/8" rod, tube=3", teflon=4" for all
-        if num_elements <= 6:
-            gamma_rod_length = 22.0
-        else:  # 7+
-            gamma_rod_length = 30.0
-        tube_length = 3.0
-        teflon_sleeve_in = 4.0
+        gamma_rod_length = hw["rod_length"]
+        tube_length = hw["tube_length"]
+        teflon_sleeve_in = hw["teflon_length"]
+        max_insertion = hw["max_insertion"]
 
-        # Rod insertion: rod stops 0.5" before teflon end to avoid shorting
-        max_insertion = teflon_sleeve_in - 0.5  # e.g. 4.0 - 0.5 = 3.5"
         if gamma_element_gap is not None:
             rod_insertion_in = max(0, min(gamma_element_gap, max_insertion))
         else:
