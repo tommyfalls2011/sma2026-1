@@ -2084,6 +2084,10 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     # Notes
     notes = []
+    if length_was_corrected:
+        direction = "longer" if recommended_driven_length > original_driven_length else "shorter"
+        delta = abs(recommended_driven_length - original_driven_length)
+        notes.append(f"DRIVEN ELEMENT: Make {direction} to {recommended_driven_length:.2f}\" (was {original_driven_length:.1f}\", change {delta:.2f}\") to match resonance to {frequency_mhz} MHz")
     if is_custom:
         notes.append(f"Custom hardware: {tube_od:.3f}\" tube / {rod_od:.3f}\" rod")
         if id_rod_ratio > 2.0:
