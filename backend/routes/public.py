@@ -3,16 +3,51 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials
 from datetime import datetime
+import httpx
 
 from config import db, BAND_DEFINITIONS
 from auth import security
 
 router = APIRouter()
 
+PRODUCTION_URL = "https://helpful-adaptation-production.up.railway.app"
+
 
 @router.get("/")
 async def root():
     return {"message": "Antenna Calculator API"}
+
+
+@router.get("/health")
+async def health_check():
+    """Check API, database, and production Railway status."""
+    result = {"api": "up", "database": "down", "production": "down", "db_latency_ms": None, "prod_latency_ms": None}
+
+    # Check MongoDB
+    try:
+        import time
+        t0 = time.monotonic()
+        await db.command("ping")
+        result["database"] = "up"
+        result["db_latency_ms"] = round((time.monotonic() - t0) * 1000)
+    except Exception:
+        result["database"] = "down"
+
+    # Check production Railway app
+    try:
+        import time
+        t0 = time.monotonic()
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{PRODUCTION_URL}/api/")
+            result["production"] = "up" if resp.status_code == 200 else "degraded"
+            result["prod_latency_ms"] = round((time.monotonic() - t0) * 1000)
+    except Exception:
+        result["production"] = "down"
+
+    overall = "up" if result["database"] == "up" and result["production"] == "up" else "degraded" if result["database"] == "up" or result["production"] == "up" else "down"
+    result["overall"] = overall
+    result["checked_at"] = datetime.utcnow().isoformat()
+    return result
 
 
 @router.get("/bands")
