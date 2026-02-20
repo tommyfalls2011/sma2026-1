@@ -331,3 +331,20 @@ async def gamma_designer_endpoint(req: GammaDesignerRequest):
     )
     return result
 
+
+@router.post("/hairpin-designer")
+async def hairpin_designer_endpoint(req: HairpinDesignerRequest):
+    result = design_hairpin_match(
+        num_elements=req.num_elements,
+        frequency_mhz=req.frequency_mhz,
+        driven_element_length_in=req.driven_element_length_in,
+        reflector_spacing_in=req.reflector_spacing_in,
+        director_spacings_in=req.director_spacings_in,
+        feedpoint_impedance=req.feedpoint_impedance,
+        element_resonant_freq_mhz=req.element_resonant_freq_mhz,
+        custom_rod_dia=req.custom_rod_dia,
+        custom_rod_spacing=req.custom_rod_spacing,
+        element_diameter=req.element_diameter or 0.5,
+    )
+    return result
+
