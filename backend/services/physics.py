@@ -230,9 +230,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         wavelength_in = 11802.71 / operating_freq_mhz
         # Per-element-count hardware: tube must be short enough for bar to reach ideal position
         if num_elements <= 2:
-            gamma_rod_length = 18.0
-            tube_length = 8.0
-            teflon_sleeve_in = 9.0
+            gamma_rod_length = 22.0
+            tube_length = 11.0
+            teflon_sleeve_in = 12.0
         elif num_elements <= 6:
             gamma_rod_length = 22.0
             tube_length = 10.0
