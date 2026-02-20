@@ -42,11 +42,20 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 2026 — UI Fixes:
+- Fixed "Shorting Bar" display showing rod_spacing instead of actual bar position → now shows "Bar Position" with correct value
+- Designer "Apply" now passes rod_od to main calculator so per-element hardware carries through
+- Updated chart titles for clarity: "BAR POSITION SWEEP — insertion held at X" and "ROD INSERTION SWEEP — bar held at X"
+
 ### Session Feb 2026 — P1 Refactoring:
 - Extracted shared helpers: get_gamma_hardware_defaults(), compute_feedpoint_impedance(), compute_element_resonant_freq()
 
 ### Prior Session Work:
 - Physics Unification, Driven Element Correction, Frontend 0.01" step controls
+
+## Pending/Known Issues
+- **Frontend initial gammaBarPos=18**: When page loads, bar defaults to 18" which is far from optimal. User must use Designer to get correct values. Consider auto-running designer on element count change.
+- **Frontend gammaRodDia state**: Initial value is null (uses backend default), but if user manually edits rod dia then switches elements, the manual value persists. Consider resetting rod dia on element count change.
 
 ## Prioritized Backlog
 - P2: Air gap dielectric model
@@ -62,3 +71,7 @@ Common: Wall=0.049", Rod spacing=3.5"
 ## Key API Endpoints
 - `POST /api/calculate` — Main calculation
 - `POST /api/gamma-designer` — Auto-tune designer
+
+## Credentials
+- Store Admin: fallstommy@gmail.com / admin123
+- Bronze Test: bronze@test.com / password123
