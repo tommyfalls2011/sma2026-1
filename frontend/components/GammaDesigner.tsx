@@ -372,12 +372,16 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
               {/* Apply button */}
               {recipe.swr_at_null <= 2.0 && onApply && (
                 <TouchableOpacity
-                  onPress={() => { onApply(recipe.ideal_bar_position, recipe.optimal_insertion); onClose(); }}
+                  onPress={() => { onApply(recipe.ideal_bar_position, recipe.optimal_insertion, recipe.driven_length_corrected ? recipe.recommended_driven_length_in : undefined); onClose(); }}
                   style={{ backgroundColor: recipe.null_reachable ? '#4CAF50' : '#FF9800', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 20 }}
                   data-testid="apply-recipe-btn"
                 >
                   <Text style={{ fontSize: 14, color: '#fff', fontWeight: '700' }}>Apply Recipe to Calculator</Text>
-                  <Text style={{ fontSize: 10, color: recipe.null_reachable ? '#c8e6c9' : '#ffe0b2', marginTop: 2 }}>Set bar to {recipe.ideal_bar_position}" and insertion to {recipe.optimal_insertion}"</Text>
+                  <Text style={{ fontSize: 10, color: recipe.null_reachable ? '#c8e6c9' : '#ffe0b2', marginTop: 2 }}>
+                    {recipe.driven_length_corrected
+                      ? `Set driven to ${recipe.recommended_driven_length_in}", bar to ${recipe.ideal_bar_position}" and insertion to ${recipe.optimal_insertion}"`
+                      : `Set bar to ${recipe.ideal_bar_position}" and insertion to ${recipe.optimal_insertion}"`}
+                  </Text>
                 </TouchableOpacity>
               )}
             </>
