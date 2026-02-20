@@ -626,6 +626,14 @@ export default function AntennaCalculator() {
   // Initial calculation on mount
   useEffect(() => { calculateAntenna(); }, []);
 
+  // Fetch system notification on mount
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/system-notification`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.notification) setSystemNotification(d.notification); })
+      .catch(() => {});
+  }, []);
+
   // Spacing override state is now handled locally by applyElementPreset()
   // No auto-tune trigger needed — presets move only the targeted element
 
