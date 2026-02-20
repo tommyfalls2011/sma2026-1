@@ -41,9 +41,7 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB rad
 - Unified hardware across 3-20 elements (same rod/tube/spacing)
 - 2-element gets special hardware (0.5625" rod, 48" rod, 30" tube)
 - Dynamic feedpoint R based on reflector LENGTH (Q-based coupling model)
-- Feedpoint R no longer hardcoded — varies with element length, spacing, and count
 - Designer now passes driven_element_dia for consistent Z0 calculation
-- Designer now computes dynamic feedpoint R (same formula as main calculator)
 - Fixed floating point display on bar position (.toFixed(2))
 - Added teflon end marker and bar range display on slider
 - Rod length now reads from backend (not hardcoded 36")
@@ -52,15 +50,13 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB rad
 - **FIXED P0: Designer/Calculator Physics Consistency** — Designer now accepts `element_resonant_freq_mhz`, `reflector_spacing_in`, `director_spacings_in` from the main calculator for identical physics computations
 - **FIXED P0: Corrected Default Director Spacing** — Changed designer fallback from hardcoded 64" to correct 48" inter-director spacing (matching the frontend default layout)
 - **VERIFIED P0: 2-Element Hardware Isolation** — Confirmed `if num_elements <= 2` conditional properly isolates special hardware; 3-20 elements use standard hardware
-- **Full Round-Trip Verified** — 2-element, 3-element, and 4-element Yagis all produce identical SWR between designer and main calculator when full data is passed through
-- All 11 backend tests passed (test_gamma_hardware_isolation.py)
+- **NEW FEATURE: Driven Element Length Correction** — Designer now calculates and recommends corrected driven element length to match resonance to center frequency. Formula: `L_new = L_current * (f_res / f_target)`. Higher f_res = element too short → make LONGER. Shows green "DRIVEN ELEMENT CORRECTION" card with current/recommended lengths. Apply button also sets the corrected driven length.
+- All 20 backend tests passed (11 hardware isolation + 9 driven length correction)
 
 ## Known Issues
-- 4-element SWR 1.19 (X_net = -8.44 ohm) — antenna reactance from 204" driven not fully cancelled
-- This could be improved by optimizing 4-element driven length (like 208" for 2-element)
+- None critical. All physics consistency issues resolved.
 
 ## Prioritized Backlog
-- P1: Optimize driven element length per element count for better default match
 - P1: Refactor physics.py to extract shared logic into helper functions (reduce duplication)
 - P2: Air gap dielectric model for series capacitor
 - P2: PayPal/CashApp Payments
@@ -77,4 +73,4 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB rad
 
 ## Key API Endpoints
 - `POST /api/calculate` — Main calculation
-- `POST /api/gamma-designer` — Auto-tune designer
+- `POST /api/gamma-designer` — Auto-tune designer (now with driven length correction)
