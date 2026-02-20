@@ -50,6 +50,12 @@ async def health_check():
     return result
 
 
+@router.get("/system-notification")
+async def get_system_notification():
+    notif = await db.system_notifications.find_one({"active": True}, {"_id": 0})
+    return {"notification": notif}
+
+
 @router.get("/bands")
 async def get_bands():
     return BAND_DEFINITIONS
