@@ -1877,25 +1877,32 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     if feedpoint_impedance and feedpoint_impedance > 0:
         r_feed = feedpoint_impedance
     else:
-        # Replicate main calculator's dynamic feedpoint R computation
+        # Replicate main calculator's dynamic feedpoint R computation EXACTLY
         r_feed = 73.0  # half-wave dipole in free space
+        # Standard geometry: reflector at 0", driven at 48", directors at 112", 176", 240"...
         if num_elements >= 2:
-            # Reflector coupling (assume standard 214" reflector at 48" gap)
+            # Reflector coupling (same formula as main calc)
             refl_gap_wl = 48 * 0.0254 / wavelength_m
             refl_factor_base = max(0.35, 0.30 + refl_gap_wl * 1.8)
-            # Reflector length effect (assume 214" reflector near resonance)
+            # Reflector length effect (assume 214" reflector)
             refl_len_m = 214 * 0.0254
             refl_detuning = (refl_len_m - wavelength_m / 2.0) / (wavelength_m / 2.0)
             refl_q = 12.0
             refl_coupling_strength = 1.0 / math.sqrt(1.0 + (refl_q * refl_detuning * 2) ** 2)
             refl_factor = 1.0 - (1.0 - refl_factor_base) * refl_coupling_strength
             r_feed *= refl_factor
-        # Director coupling
-        for d_idx in range(max(0, num_elements - 2)):
-            d_gap_in = 64 + d_idx * 64
-            d_gap_wl = (d_gap_in * 0.0254) / wavelength_m
-            dir_coupling = 0.12 * math.exp(-3.0 * max(d_gap_wl, 0.02))
-            r_feed *= max(0.75, 1.0 - dir_coupling)
+        num_directors = max(0, num_elements - 2)
+        if num_directors >= 1:
+            # First director: driven(48") to dir1(112") = 64" gap
+            d1_gap_wl = (64 * 0.0254) / wavelength_m
+            d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
+            r_feed *= d1_factor
+        # Subsequent directors: inter-director gap = 64" each
+        for i in range(1, num_directors):
+            gap_wl = (64 * 0.0254) / wavelength_m
+            factor = max(0.85, 0.85 + gap_wl * 0.5)
+            r_feed *= factor
+        r_feed = round(max(12.0, min(73.0, r_feed)), 1)
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
 
     # Hardware selection: custom or unified default
