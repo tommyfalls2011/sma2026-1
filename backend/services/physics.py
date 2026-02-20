@@ -987,7 +987,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         gamma_tube_od=input_data.gamma_tube_od,
         hairpin_rod_dia=input_data.hairpin_rod_dia,
         hairpin_rod_spacing=input_data.hairpin_rod_spacing,
-        hairpin_bar_pos=input_data.hairpin_bar_pos,
+        hairpin_length_in=input_data.hairpin_length_in,
         hairpin_boom_gap=input_data.hairpin_boom_gap,
         operating_freq_mhz=center_freq,
         num_elements=input_data.num_elements,
