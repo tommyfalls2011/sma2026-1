@@ -185,6 +185,10 @@ export default function AdminScreen() {
   const [emailResult, setEmailResult] = useState('');
   const [userEmails, setUserEmails] = useState<any[]>([]);
 
+  // Pending Upgrades state
+  const [pendingUpgrades, setPendingUpgrades] = useState<any[]>([]);
+  const [processingUpgrade, setProcessingUpgrade] = useState<string | null>(null);
+
   useEffect(() => {
     checkAdminAndLoad();
   }, [token]);
