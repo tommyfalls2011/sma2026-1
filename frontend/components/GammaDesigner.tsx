@@ -346,14 +346,14 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
 
               {/* Sweep Charts */}
               <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333' }}>
-                <Text style={{ fontSize: 10, color: '#FF9800', fontWeight: '700', marginBottom: 6 }}>BAR POSITION vs SWR (at {recipe.optimal_insertion}" insertion)</Text>
+                <Text style={{ fontSize: 10, color: '#FF9800', fontWeight: '700', marginBottom: 6 }}>BAR POSITION SWEEP — insertion held at {recipe.optimal_insertion}" (Best bar: {recipe.ideal_bar_position}")</Text>
                 <View style={{ alignItems: 'center' }}>
                   {renderSwrChart(result.bar_sweep, 'bar_inches', 'Bar Position (inches)')}
                 </View>
               </View>
 
               <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333' }}>
-                <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '700', marginBottom: 6 }}>ROD INSERTION vs SWR (at {recipe.ideal_bar_position}" bar)</Text>
+                <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '700', marginBottom: 6 }}>ROD INSERTION SWEEP — bar held at {recipe.ideal_bar_position}" (Best insertion: {recipe.optimal_insertion}")</Text>
                 <View style={{ alignItems: 'center' }}>
                   {renderSwrChart(result.insertion_sweep, 'insertion_inches', 'Insertion (inches)')}
                 </View>
