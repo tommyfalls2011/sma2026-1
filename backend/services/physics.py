@@ -1992,51 +1992,54 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # If null not reachable at ideal bar, OPTIMIZE: sweep bar positions to find
     # the best achievable SWR within the insertion range. A longer bar increases
     # X_stub (needs less cap = less insertion) but overshoots R_matched > 50Ω.
-    # The optimizer finds the sweet spot.
-    optimized_bar = bar_ideal_clamped
-    if not null_reachable:
-        best_swr_opt = 999.0
-        best_bar_opt = bar_ideal_clamped
-        best_ins_opt = max_insertion
-        # Sweep from ideal bar out to rod length in fine steps
-        steps = 60
-        for i in range(steps + 1):
-            test_bar = bar_ideal_clamped + (gamma_rod_length - bar_ideal_clamped) * i / steps
-            if test_bar <= 0:
-                continue
-            # Get stub + antenna reactance at this bar
-            _, ti = _eval(test_bar, 0.001)
-            xs = ti.get("x_stub", 0)
-            xa = ti.get("x_antenna", 0)
-            k_at_bar = ti.get("step_up_ratio", 1.0)
-            total_pos_x = xa * k_at_bar + xs  # antenna X * K + stub
-            if total_pos_x <= 0:
-                continue
-            # Analytical null insertion for this bar
-            c_need = 1e12 / (omega * total_pos_x)
-            ins_need = c_need / cap_per_inch
-            if ins_need <= max_insertion:
-                test_ins = ins_need
-            else:
-                test_ins = max_insertion
-            s, _ = _eval(test_bar, test_ins)
-            if s < best_swr_opt:
-                best_swr_opt = s
-                best_bar_opt = test_bar
-                best_ins_opt = test_ins
-        optimized_bar = best_bar_opt
-        optimal_insertion = best_ins_opt
-        bar_ideal_clamped = optimized_bar
-        # Re-check null reachability at optimized bar
-        _, stub_opt = _eval(optimized_bar, 0.001)
-        xs_opt = stub_opt.get("x_stub", 0)
-        if xs_opt > 0:
-            c_opt = 1e12 / (omega * xs_opt)
-            ins_opt = c_opt / cap_per_inch
-            null_reachable = ins_opt <= max_insertion
-            if null_reachable:
-                optimal_insertion = ins_opt
-                c_needed_pf = c_opt
+    # ALWAYS sweep to find the global best — the R-ideal bar is not always SWR-optimal.
+    best_swr_opt = 999.0
+    best_bar_opt = bar_ideal_clamped
+    best_ins_opt = optimal_insertion if null_reachable else max_insertion
+    # Sweep from bar_min out to rod length in fine steps
+    steps = 80
+    for i in range(steps + 1):
+        test_bar = bar_min + (gamma_rod_length - bar_min) * i / steps
+        if test_bar <= 0:
+            continue
+        # Get stub + antenna reactance at this bar
+        _, ti = _eval(test_bar, 0.001)
+        xs = ti.get("x_stub", 0)
+        xa = ti.get("x_antenna", 0)
+        k_at_bar = ti.get("step_up_ratio", 1.0)
+        total_pos_x = xa * k_at_bar + xs  # antenna X * K + stub
+        if total_pos_x <= 0:
+            continue
+        # Analytical null insertion for this bar
+        c_need = 1e12 / (omega * total_pos_x)
+        ins_need = c_need / cap_per_inch
+        if ins_need <= max_insertion:
+            test_ins = ins_need
+        else:
+            test_ins = max_insertion
+        s, _ = _eval(test_bar, test_ins)
+        if s < best_swr_opt:
+            best_swr_opt = s
+            best_bar_opt = test_bar
+            best_ins_opt = test_ins
+    optimized_bar = best_bar_opt
+    optimal_insertion = best_ins_opt
+    bar_ideal_clamped = optimized_bar
+    # Re-check null reachability at optimized bar
+    _, stub_opt = _eval(optimized_bar, 0.001)
+    xs_opt = stub_opt.get("x_stub", 0)
+    xa_opt = stub_opt.get("x_antenna", 0)
+    k_opt = stub_opt.get("step_up_ratio", 1.0)
+    total_x_opt = xa_opt * k_opt + xs_opt
+    if total_x_opt > 0:
+        c_opt = 1e12 / (omega * total_x_opt)
+        ins_opt = c_opt / cap_per_inch
+        null_reachable = ins_opt <= max_insertion
+        if null_reachable:
+            optimal_insertion = ins_opt
+            c_needed_pf = c_opt
+    else:
+        null_reachable = False
 
     # Get authoritative values at the design point
     matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
