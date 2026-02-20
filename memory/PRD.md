@@ -23,6 +23,15 @@ Common: Wall=0.049", Rod spacing=3.5"
 
 ## What's Been Implemented
 
+### Session Feb 20 2026 — Real PayPal Checkout Integration:
+- **PayPal checkout is now REAL** — customers are redirected to PayPal.com to pay, money goes directly to your account, upgrade only happens after payment is captured
+- New endpoints: `POST /api/subscription/paypal-checkout` (creates PayPal order), `POST /api/subscription/paypal-capture/{order_id}` (captures payment + upgrades)
+- Uses PayPal Orders API v2 with LIVE credentials (api-m.paypal.com)
+- Frontend updated: PayPal button now says "Pay with PayPal — instant activation"
+- CashApp remains manual with admin approval
+- Dockerfile updated with `--extra-index-url` for emergentintegrations package
+- All 15 backend tests passed (100% success rate)
+
 ### Session Feb 20 2026 — System Status Monitor + Railway Remote Redeploy:
 - Added `/api/health` endpoint that checks API server, MongoDB, and production Railway app status with latency
 - Created System Status page (`/system-status`) showing all services with green/orange/red indicators
@@ -105,6 +114,8 @@ Common: Wall=0.049", Rod spacing=3.5"
 - `POST /api/gamma-designer` — Auto-tune gamma designer
 - `POST /api/hairpin-designer` — Hairpin match designer
 - `POST /api/subscription/upgrade` — Submit upgrade request (pending for PayPal/CashApp)
+- `POST /api/subscription/paypal-checkout` — Create PayPal order, redirect user to PayPal
+- `POST /api/subscription/paypal-capture/{order_id}` — Capture PayPal payment + auto-upgrade
 - `POST /api/subscription/stripe-checkout` — Start Stripe Checkout session
 - `GET /api/subscription/stripe-status/{session_id}` — Check Stripe payment
 - `GET /api/admin/pending-upgrades` — List pending upgrade requests
