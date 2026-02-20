@@ -1653,8 +1653,8 @@ export default function AntennaCalculator() {
                           />
                         </View>
                         <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                          <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar</Text>
-                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{barLength.toFixed(1)}"</Text>
+                          <Text style={{ fontSize: 10, color: '#888' }}>Bar Position</Text>
+                          <Text style={{ fontSize: 16, color: '#4CAF50', fontWeight: '700' }}>{barPosIn.toFixed(1)}"</Text>
                         </View>
                       </View>
 
