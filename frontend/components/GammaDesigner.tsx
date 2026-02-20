@@ -364,7 +364,7 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
                 <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333' }}>
                   <Text style={{ fontSize: 10, color: '#888', fontWeight: '700', marginBottom: 4 }}>NOTES</Text>
                   {result.notes.map((note, i) => (
-                    <Text key={i} style={{ fontSize: 10, color: note.includes('WARNING') || note.includes('NOT REACHABLE') ? '#f44336' : '#aaa', marginBottom: 2 }}>{note}</Text>
+                    <Text key={i} style={{ fontSize: 10, color: note.includes('WARNING') || note.includes('NOT REACHABLE') ? '#f44336' : note.includes('DRIVEN ELEMENT') ? '#4CAF50' : '#aaa', marginBottom: 2 }}>{note}</Text>
                   ))}
                 </View>
               )}
