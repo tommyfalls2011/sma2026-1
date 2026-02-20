@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="11" skipped="0" tests="13" time="2.527" timestamp="2026-02-20T04:43:50.192757+00:00" hostname="agent-env-97c826aa-5e53-434b-a739-b5892b5e9e3f"><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_2_element_tube_4_inches" time="0.210"><failure message="AssertionError: 2-el max_insertion should be 3.5, got None&#10;assert None == 3.5&#10; +  where None = &lt;built-in method get of dict object at 0xff280e828540&gt;('max_insertion')&#10; +    where &lt;built-in method get of dict object at 0xff280e828540&gt; = {'bar_min': 5.0, 'cap_per_inch': 70.161, 'capacitance_at_null': 245.6, 'coupling_multiplier': 3.581, ...}.get">backend/tests/test_per_element_tube_sizing.py:81: in test_2_element_tube_4_inches
+    assert recipe.get("max_insertion") == expected["max_insertion"], \
+E   AssertionError: 2-el max_insertion should be 3.5, got None
+E   assert None == 3.5
+E    +  where None = &lt;built-in method get of dict object at 0xff280e828540&gt;('max_insertion')
+E    +    where &lt;built-in method get of dict object at 0xff280e828540&gt; = {'bar_min': 5.0, 'cap_per_inch': 70.161, 'capacitance_at_null': 245.6, 'coupling_multiplier': 3.581, ...}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_3_element_tube_3_5_inches" time="0.145"><failure message="AssertionError: 3-el max_insertion should be 3.0, got None&#10;assert None == 3.0&#10; +  where None = &lt;built-in method get of dict object at 0xff280e5a3780&gt;('max_insertion')&#10; +    where &lt;built-in method get of dict object at 0xff280e5a3780&gt; = {'bar_min': 4.5, 'cap_per_inch': 70.161, 'capacitance_at_null': 210.5, 'coupling_multiplier': 3.581, ...}.get">backend/tests/test_per_element_tube_sizing.py:107: in test_3_element_tube_3_5_inches
+    assert recipe.get("max_insertion") == expected["max_insertion"], \
+E   AssertionError: 3-el max_insertion should be 3.0, got None
+E   assert None == 3.0
+E    +  where None = &lt;built-in method get of dict object at 0xff280e5a3780&gt;('max_insertion')
+E    +    where &lt;built-in method get of dict object at 0xff280e5a3780&gt; = {'bar_min': 4.5, 'cap_per_inch': 70.161, 'capacitance_at_null': 210.5, 'coupling_multiplier': 3.581, ...}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_4_element_tube_3_inches" time="0.126"><failure message="AssertionError: 4-el max_insertion should be 2.5, got None&#10;assert None == 2.5&#10; +  where None = &lt;built-in method get of dict object at 0xff280e5a8740&gt;('max_insertion')&#10; +    where &lt;built-in method get of dict object at 0xff280e5a8740&gt; = {'bar_min': 4.0, 'cap_per_inch': 70.161, 'capacitance_at_null': 175.4, 'coupling_multiplier': 3.581, ...}.get">backend/tests/test_per_element_tube_sizing.py:133: in test_4_element_tube_3_inches
+    assert recipe.get("max_insertion") == expected["max_insertion"], \
+E   AssertionError: 4-el max_insertion should be 2.5, got None
+E   assert None == 2.5
+E    +  where None = &lt;built-in method get of dict object at 0xff280e5a8740&gt;('max_insertion')
+E    +    where &lt;built-in method get of dict object at 0xff280e5a8740&gt; = {'bar_min': 4.0, 'cap_per_inch': 70.161, 'capacitance_at_null': 175.4, 'coupling_multiplier': 3.581, ...}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_6_element_tube_3_inches" time="0.139"><failure message="AssertionError: 6-el SWR should be ≈1.0, got 99&#10;assert 99 &lt;= 1.03">backend/tests/test_per_element_tube_sizing.py:163: in test_6_element_tube_3_inches
+    assert 1.0 &lt;= swr &lt;= 1.03, f"6-el SWR should be ≈1.0, got {swr}"
+E   AssertionError: 6-el SWR should be ≈1.0, got 99
+E   assert 99 &lt;= 1.03</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_8_element_tube_3_inches" time="0.114"><failure message="AssertionError: 8-el SWR should be ≈1.0, got 99&#10;assert 99 &lt;= 1.02">backend/tests/test_per_element_tube_sizing.py:185: in test_8_element_tube_3_inches
+    assert 1.0 &lt;= swr &lt;= 1.02, f"8-el SWR should be ≈1.0, got {swr}"
+E   AssertionError: 8-el SWR should be ≈1.0, got 99
+E   assert 99 &lt;= 1.02</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestGammaDesignerPerElementTubeSizing" name="test_20_element_tube_3_inches" time="0.148"><failure message="AssertionError: 20-el SWR should be ≈1.0, got 99&#10;assert 99 &lt;= 1.02">backend/tests/test_per_element_tube_sizing.py:207: in test_20_element_tube_3_inches
+    assert 1.0 &lt;= swr &lt;= 1.02, f"20-el SWR should be ≈1.0, got {swr}"
+E   AssertionError: 20-el SWR should be ≈1.0, got 99
+E   assert 99 &lt;= 1.02</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestCalculateEndpointPerElementTubeSizing" name="test_calculate_2_element_hardware" time="0.132"><failure message="AssertionError: 2-el hardware.tube_length should be 4.0, got None&#10;assert None == 4.0&#10; +  where None = &lt;built-in method get of dict object at 0xff280e5dad00&gt;('tube_length')&#10; +    where &lt;built-in method get of dict object at 0xff280e5dad00&gt; = {}.get">backend/tests/test_per_element_tube_sizing.py:236: in test_calculate_2_element_hardware
+    assert hardware.get("tube_length") == expected["tube"], \
+E   AssertionError: 2-el hardware.tube_length should be 4.0, got None
+E   assert None == 4.0
+E    +  where None = &lt;built-in method get of dict object at 0xff280e5dad00&gt;('tube_length')
+E    +    where &lt;built-in method get of dict object at 0xff280e5dad00&gt; = {}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestCalculateEndpointPerElementTubeSizing" name="test_calculate_3_element_hardware" time="0.112"><failure message="AssertionError: 3-el hardware.tube_length should be 3.5, got None&#10;assert None == 3.5&#10; +  where None = &lt;built-in method get of dict object at 0xff280e40d240&gt;('tube_length')&#10; +    where &lt;built-in method get of dict object at 0xff280e40d240&gt; = {}.get">backend/tests/test_per_element_tube_sizing.py:262: in test_calculate_3_element_hardware
+    assert hardware.get("tube_length") == expected["tube"], \
+E   AssertionError: 3-el hardware.tube_length should be 3.5, got None
+E   assert None == 3.5
+E    +  where None = &lt;built-in method get of dict object at 0xff280e40d240&gt;('tube_length')
+E    +    where &lt;built-in method get of dict object at 0xff280e40d240&gt; = {}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestCalculateEndpointPerElementTubeSizing" name="test_calculate_6_element_hardware" time="0.118"><failure message="AssertionError: 6-el hardware.tube_length should be 3.0, got None&#10;assert None == 3.0&#10; +  where None = &lt;built-in method get of dict object at 0xff280e421c40&gt;('tube_length')&#10; +    where &lt;built-in method get of dict object at 0xff280e421c40&gt; = {}.get">backend/tests/test_per_element_tube_sizing.py:288: in test_calculate_6_element_hardware
+    assert hardware.get("tube_length") == expected["tube"], \
+E   AssertionError: 6-el hardware.tube_length should be 3.0, got None
+E   assert None == 3.0
+E    +  where None = &lt;built-in method get of dict object at 0xff280e421c40&gt;('tube_length')
+E    +    where &lt;built-in method get of dict object at 0xff280e421c40&gt; = {}.get</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestCustomTubeLengthOverride" name="test_custom_tube_matches_default_for_2_el" time="0.234" /><testcase classname="tests.test_per_element_tube_sizing.TestOptimizerSweepConsistency" name="test_optimizer_finds_best_swr_2_element" time="0.121"><failure message="AssertionError: 2-el SWR should be ≤1.2, got 99&#10;assert 99 &lt;= 1.2">backend/tests/test_per_element_tube_sizing.py:356: in test_optimizer_finds_best_swr_2_element
+    assert swr &lt;= 1.2, f"2-el SWR should be ≤1.2, got {swr}"
+E   AssertionError: 2-el SWR should be ≤1.2, got 99
+E   assert 99 &lt;= 1.2</failure></testcase><testcase classname="tests.test_per_element_tube_sizing.TestOptimizerSweepConsistency" name="test_no_swr_jumps_when_tube_changes" time="0.655" /><testcase classname="tests.test_per_element_tube_sizing.TestExpectedSWRValues" name="test_expected_swr_ranges" time="0.112"><failure message="AssertionError: 2-el SWR=99 not in expected range [1.05, 1.15]&#10;assert 99 &lt;= 1.15">backend/tests/test_per_element_tube_sizing.py:424: in test_expected_swr_ranges
+    assert min_swr &lt;= swr &lt;= max_swr, \
+E   AssertionError: 2-el SWR=99 not in expected range [1.05, 1.15]
+E   assert 99 &lt;= 1.15</failure></testcase></testsuite></testsuites>
