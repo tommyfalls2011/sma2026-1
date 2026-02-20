@@ -4,6 +4,8 @@ from fastapi.security import HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 import uuid
 import asyncio
+import os
+import httpx
 
 from config import db, ADMIN_EMAIL, SUBSCRIPTION_TIERS, PAYMENT_CONFIG, RESEND_API_KEY
 from models import (
