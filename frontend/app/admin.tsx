@@ -521,6 +521,50 @@ export default function AdminScreen() {
     } catch (e) { Alert.alert('Error', 'Failed to save settings'); }
   };
 
+  // === PENDING UPGRADES FUNCTIONS ===
+  const loadPendingUpgrades = async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/pending-upgrades`, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { const d = await res.json(); setPendingUpgrades(d.upgrades || []); }
+    } catch (e) { console.error('Load pending upgrades error:', e); }
+  };
+
+  const approveUpgrade = async (requestId: string) => {
+    setProcessingUpgrade(requestId);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/pending-upgrades/${requestId}/approve`, {
+        method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        Alert.alert('Success', 'Upgrade approved!');
+        loadPendingUpgrades();
+      } else {
+        const err = await res.json();
+        Alert.alert('Error', err.detail || 'Failed to approve');
+      }
+    } catch (e) { Alert.alert('Error', 'Network error'); }
+    setProcessingUpgrade(null);
+  };
+
+  const rejectUpgrade = async (requestId: string) => {
+    confirmAction('Reject Upgrade', 'Are you sure you want to reject this upgrade request?', async () => {
+      setProcessingUpgrade(requestId);
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/pending-upgrades/${requestId}/reject`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.ok) {
+          Alert.alert('Success', 'Upgrade rejected.');
+          loadPendingUpgrades();
+        } else {
+          const err = await res.json();
+          Alert.alert('Error', err.detail || 'Failed to reject');
+        }
+      } catch (e) { Alert.alert('Error', 'Network error'); }
+      setProcessingUpgrade(null);
+    });
+  };
+
   const sendUpdateEmail = async () => {
     setSendingEmail(true); setEmailResult('');
     try {
