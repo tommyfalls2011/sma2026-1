@@ -93,6 +93,10 @@ export default function AntennaCalculator() {
   const [farDir1, setFarDir1] = useState<string | false>(false);
   const [closeDir2, setCloseDir2] = useState<string | false>(false);
   const [farDir2, setFarDir2] = useState<string | false>(false);
+
+  // Director presets & nudges — supports up to 18 directors (Dir1–Dir18)
+  const [dirPresets, setDirPresets] = useState<Record<number, string | false>>({});
+  const [dirNudgeCounts, setDirNudgeCounts] = useState<Record<number, number>>({});
   
   // Fine-tune nudge for element positions (±10% total range, 0.5% per step)
   const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
