@@ -1953,7 +1953,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     id_rod_ratio = tube_id / rod_od
     gamma_rod_length = 22.0 if num_elements <= 6 else 30.0
     teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
-    bar_min = teflon_sleeve + 2.0  # bar must stay 2" past teflon end
+    bar_min = teflon_sleeve + 0.5  # bar clamps on exposed rod just past teflon end
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
