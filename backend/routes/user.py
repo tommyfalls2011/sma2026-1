@@ -219,6 +219,8 @@ async def paypal_subscription_checkout(data: dict, request: Request, user: dict 
     if not access_token:
         raise HTTPException(status_code=500, detail="PayPal not configured")
 
+    # Use backend route as return URL so it works for both mobile and web
+    host_url = str(request.base_url).rstrip("/")
     order_data = {
         "intent": "CAPTURE",
         "purchase_units": [{
@@ -226,7 +228,7 @@ async def paypal_subscription_checkout(data: dict, request: Request, user: dict 
             "description": f"SMA Antenna Calc — {tier_info['name']} Subscription",
         }],
         "application_context": {
-            "return_url": f"{origin_url}/subscription?payment=paypal_success",
+            "return_url": f"{host_url}/api/subscription/paypal-return",
             "cancel_url": f"{origin_url}/subscription?payment=cancelled",
             "brand_name": "SMA Antenna Calculator",
             "user_action": "PAY_NOW",
