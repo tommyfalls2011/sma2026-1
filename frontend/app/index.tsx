@@ -1807,6 +1807,19 @@ export default function AntennaCalculator() {
                 </View>
               )}
 
+              {/* Hairpin Designer Button */}
+              {inputs.feed_type === 'hairpin' && (
+                <TouchableOpacity
+                  onPress={() => setShowHairpinDesigner(true)}
+                  style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a1a2e', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#2196F3', gap: 6 }}
+                  data-testid="open-hairpin-designer-btn"
+                >
+                  <Ionicons name="hardware-chip-outline" size={16} color="#2196F3" />
+                  <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>Hairpin Match Designer</Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>- One-click recipe</Text>
+                </TouchableOpacity>
+              )}
+
               {/* Hairpin Design Panel */}
               {inputs.feed_type === 'hairpin' && results && results.matching_info?.hairpin_design && (
                 <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#2196F3' }}>
