@@ -2300,35 +2300,35 @@ export default function AntennaCalculator() {
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
                   <TouchableOpacity
                     style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDriven === 'vclose' ? '#9C27B0' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setCloseDriven(closeDriven === 'vclose' ? false : 'vclose'); setFarDriven(false); setDrivenNudgeCount(0); triggerSpacingAutoTune(); }}
+                    onPress={() => { const p = closeDriven === 'vclose' ? false : 'vclose'; setCloseDriven(p); setFarDriven(false); setDrivenNudgeCount(0); applyElementPreset('driven', p); }}
                   >
                     <Ionicons name="arrow-back-outline" size={12} color={closeDriven === 'vclose' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: closeDriven === 'vclose' ? '#fff' : '#888', marginTop: 1 }}>V.Close (0.08)</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: closeDriven === 'close' ? '#2196F3' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setCloseDriven(closeDriven === 'close' ? false : 'close'); setFarDriven(false); setDrivenNudgeCount(0); triggerSpacingAutoTune(); }}
+                    onPress={() => { const p = closeDriven === 'close' ? false : 'close'; setCloseDriven(p); setFarDriven(false); setDrivenNudgeCount(0); applyElementPreset('driven', p); }}
                   >
                     <Ionicons name="arrow-back-outline" size={12} color={closeDriven === 'close' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: closeDriven === 'close' ? '#fff' : '#888', marginTop: 1 }}>Close (0.12)</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: (!closeDriven && !farDriven) ? '#4CAF50' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setCloseDriven(false); setFarDriven(false); setDrivenNudgeCount(0); triggerSpacingAutoTune(); }}
+                    onPress={() => { setCloseDriven(false); setFarDriven(false); setDrivenNudgeCount(0); applyElementPreset('driven', false); }}
                   >
                     <Ionicons name="remove-outline" size={12} color={(!closeDriven && !farDriven) ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: (!closeDriven && !farDriven) ? '#fff' : '#888', marginTop: 1 }}>Normal (0.18)</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDriven === 'far' ? '#FF9800' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setFarDriven(farDriven === 'far' ? false : 'far'); setCloseDriven(false); setDrivenNudgeCount(0); triggerSpacingAutoTune(); }}
+                    onPress={() => { const p = farDriven === 'far' ? false : 'far'; setFarDriven(p); setCloseDriven(false); setDrivenNudgeCount(0); applyElementPreset('driven', p); }}
                   >
                     <Ionicons name="arrow-forward-outline" size={12} color={farDriven === 'far' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: farDriven === 'far' ? '#fff' : '#888', marginTop: 1 }}>Far (0.22)</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={{ flex: 1, minWidth: 60, padding: 6, borderRadius: 6, backgroundColor: farDriven === 'vfar' ? '#f44336' : '#252525', alignItems: 'center' }}
-                    onPress={() => { setFarDriven(farDriven === 'vfar' ? false : 'vfar'); setCloseDriven(false); setDrivenNudgeCount(0); triggerSpacingAutoTune(); }}
+                    onPress={() => { const p = farDriven === 'vfar' ? false : 'vfar'; setFarDriven(p); setCloseDriven(false); setDrivenNudgeCount(0); applyElementPreset('driven', p); }}
                   >
                     <Ionicons name="arrow-forward-outline" size={12} color={farDriven === 'vfar' ? '#fff' : '#888'} />
                     <Text style={{ fontSize: 9, color: farDriven === 'vfar' ? '#fff' : '#888', marginTop: 1 }}>V.Far (0.28)</Text>
