@@ -9,6 +9,12 @@ Physical constraint explanation:
 
 Previous iteration_30 used max_insertion = teflon_length - 0.5 = 3.5" (WRONG)
 Now corrected to max_insertion = tube_length - 0.5 = 2.5" (CORRECT)
+
+Expected behavior:
+- 2-element: null NOT reachable, SWR ~1.23, optimal_insertion = 2.5 (maxed)
+- 3-element: null NOT reachable, SWR ~1.09, optimal_insertion = 2.5 (maxed)
+- 4-element: null BARELY reachable, SWR ~1.01, optimal_insertion ~2.49
+- 6,8,20-element: null reachable, SWR = 1.0
 """
 
 import pytest
@@ -43,9 +49,10 @@ class TestMaxInsertionCorrection:
         max_insertion_in_sweep = max(p.get("insertion_inches", 0) for p in ins_sweep)
         # The sweep goes from 0% to 100% of max_insertion, so max should be 2.5
         assert 2.4 <= max_insertion_in_sweep <= 2.6, f"max insertion in sweep should be ~2.5, got {max_insertion_in_sweep}"
+        print(f"✓ Insertion sweep max: {max_insertion_in_sweep}")
         
-    def test_2_element_null_not_reachable_insertion_maxed(self):
-        """2-element: null not reachable, optimal_insertion should be at max (2.5)"""
+    def test_2_element_null_not_reachable_swr_approx_1_23(self):
+        """2-element: null NOT reachable, SWR ~1.23, optimal_insertion maxed at 2.5"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 2,
             "driven_element_length_in": 208.0,
@@ -55,21 +62,20 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", True)
-        optimal_insertion = recipe.get("rod_insertion")
+        null_reachable = recipe.get("null_reachable", True)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
         # 2-element: R_feed is higher (~36Ω), null not reachable with standard hardware
-        # Since null not reachable, optimal_insertion should be maxed at 2.5
         assert null_reachable == False, f"2-element should have null_reachable=False, got {null_reachable}"
+        # Since null not reachable, optimal_insertion should be maxed at 2.5
         assert 2.4 <= optimal_insertion <= 2.5, f"optimal_insertion should be ~2.5 (maxed), got {optimal_insertion}"
-        
-        # SWR should be > 1.0 since null not reachable
-        swr = data.get("swr_at_null", 1.0)
-        assert swr > 1.0, f"2-element SWR should be > 1.0, got {swr}"
-        print(f"2-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
+        # SWR should be > 1.0 since null not reachable (expect ~1.23)
+        assert 1.1 <= swr <= 1.4, f"2-element SWR should be ~1.23, got {swr}"
+        print(f"✓ 2-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
 
-    def test_3_element_null_not_reachable_insertion_maxed(self):
-        """3-element: null should be NOT reachable with max 2.5, optimal_insertion maxed"""
+    def test_3_element_null_not_reachable_swr_approx_1_09(self):
+        """3-element: null NOT reachable, SWR ~1.09, optimal_insertion maxed at 2.5"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 3,
             "driven_element_length_in": 204.0,
@@ -79,19 +85,20 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", True)
-        optimal_insertion = recipe.get("rod_insertion")
-        swr = data.get("swr_at_null", 99.0)
+        null_reachable = recipe.get("null_reachable", True)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
-        # With max_insertion=2.5, 3-element may not reach null
-        # Check that insertion is at or near max (2.5)
-        print(f"3-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
-        
-        # Should be maxed or near max
-        assert optimal_insertion <= 2.5, f"insertion should be <= 2.5, got {optimal_insertion}"
-        
-    def test_4_element_barely_reaches_null(self):
-        """4-element: should barely reach null with insertion ~2.49-2.5"""
+        # 3-element should NOT reach null with max 2.5" insertion
+        assert null_reachable == False, f"3-element should have null_reachable=False, got {null_reachable}"
+        # Insertion should be maxed at 2.5
+        assert 2.4 <= optimal_insertion <= 2.5, f"optimal_insertion should be ~2.5 (maxed), got {optimal_insertion}"
+        # SWR should be close to 1.0 but not exactly (expect ~1.09)
+        assert 1.0 <= swr <= 1.2, f"3-element SWR should be ~1.09, got {swr}"
+        print(f"✓ 3-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
+
+    def test_4_element_barely_reaches_null_swr_1_01(self):
+        """4-element: null BARELY reachable, SWR ~1.01, optimal_insertion ~2.49"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 4,
             "driven_element_length_in": 203.0,
@@ -101,18 +108,20 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", False)
-        optimal_insertion = recipe.get("rod_insertion")
-        swr = data.get("swr_at_null", 99.0)
+        null_reachable = recipe.get("null_reachable", False)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
-        print(f"4-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
-        
-        # 4-element should either reach null or be very close
-        # optimal_insertion should be near the max limit
-        assert optimal_insertion <= 2.5, f"insertion should be <= 2.5, got {optimal_insertion}"
+        # 4-element should BARELY reach null
+        assert null_reachable == True, f"4-element should have null_reachable=True (barely), got {null_reachable}"
+        # Insertion should be very close to max (2.49 or 2.5)
+        assert 2.4 <= optimal_insertion <= 2.5, f"optimal_insertion should be ~2.49, got {optimal_insertion}"
+        # SWR should be very close to 1.0 (expect ~1.01)
+        assert 1.0 <= swr <= 1.05, f"4-element SWR should be ~1.01, got {swr}"
+        print(f"✓ 4-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
 
     def test_6_element_null_reachable_swr_1_0(self):
-        """6-element: null should be reachable with SWR=1.0"""
+        """6-element: null reachable, SWR = 1.0"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 6,
             "driven_element_length_in": 203.0,
@@ -122,19 +131,19 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", False)
-        optimal_insertion = recipe.get("rod_insertion")
-        swr = data.get("swr_at_null", 99.0)
-        
-        print(f"6-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
+        null_reachable = recipe.get("null_reachable", False)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
         # 6-element has lower R_feed, should reach null within 2.5" insertion
         assert null_reachable == True, f"6-element should have null_reachable=True, got {null_reachable}"
         assert swr == 1.0, f"6-element SWR should be 1.0, got {swr}"
+        # Insertion should be < 2.5 (null found before max)
         assert optimal_insertion < 2.5, f"6-element insertion should be < 2.5 (null found before max), got {optimal_insertion}"
+        print(f"✓ 6-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
 
     def test_8_element_null_reachable_swr_1_0(self):
-        """8-element: null should be reachable with SWR=1.0"""
+        """8-element: null reachable, SWR = 1.0"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 8,
             "driven_element_length_in": 203.0,
@@ -144,17 +153,16 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", False)
-        optimal_insertion = recipe.get("rod_insertion")
-        swr = data.get("swr_at_null", 99.0)
-        
-        print(f"8-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
+        null_reachable = recipe.get("null_reachable", False)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
         assert null_reachable == True, f"8-element should have null_reachable=True, got {null_reachable}"
         assert swr == 1.0, f"8-element SWR should be 1.0, got {swr}"
+        print(f"✓ 8-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
 
     def test_20_element_null_reachable_swr_1_0(self):
-        """20-element: null should be reachable with SWR=1.0"""
+        """20-element: null reachable, SWR = 1.0"""
         response = requests.post(f"{BASE_URL}/api/gamma-designer", json={
             "num_elements": 20,
             "driven_element_length_in": 203.0,
@@ -164,14 +172,13 @@ class TestMaxInsertionCorrection:
         data = response.json()
         
         recipe = data.get("recipe", {})
-        null_reachable = data.get("null_reachable", False)
-        optimal_insertion = recipe.get("rod_insertion")
-        swr = data.get("swr_at_null", 99.0)
-        
-        print(f"20-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
+        null_reachable = recipe.get("null_reachable", False)
+        optimal_insertion = recipe.get("optimal_insertion", 0)
+        swr = recipe.get("swr_at_null", 99.0)
         
         assert null_reachable == True, f"20-element should have null_reachable=True, got {null_reachable}"
         assert swr == 1.0, f"20-element SWR should be 1.0, got {swr}"
+        print(f"✓ 20-element: SWR={swr}, null_reachable={null_reachable}, optimal_insertion={optimal_insertion}")
 
 
 class TestCalculateInsertionCapping:
@@ -191,7 +198,7 @@ class TestCalculateInsertionCapping:
             "boom_grounded": True,
             "boom_mount": "bonded",
             "feed_type": "gamma",
-            "gamma_element_gap": 3.5,  # Request 3.5" insertion
+            "gamma_element_gap": 3.5,  # Request 3.5" insertion (beyond max)
             "elements": [
                 {"element_type": "reflector", "position": 0, "length": 214.0, "diameter": 0.75},
                 {"element_type": "driven", "position": 48, "length": 204.0, "diameter": 0.75},
@@ -206,7 +213,7 @@ class TestCalculateInsertionCapping:
         
         # rod_insertion should be capped at 2.5, not 3.5
         assert rod_insertion <= 2.5, f"rod_insertion should be capped to 2.5, got {rod_insertion}"
-        print(f"Requested insertion=3.5, actual capped to: {rod_insertion}")
+        print(f"✓ Requested insertion=3.5, actual capped to: {rod_insertion}")
         
         # Verify hardware shows correct values
         hardware = matching_info.get("hardware", {})
@@ -243,7 +250,7 @@ class TestCalculateInsertionCapping:
         
         # rod_insertion should be 2.0 (not capped since within limit)
         assert rod_insertion == 2.0, f"rod_insertion should be 2.0, got {rod_insertion}"
-        print(f"Requested insertion=2.0, actual: {rod_insertion}")
+        print(f"✓ Requested insertion=2.0, actual: {rod_insertion}")
 
 
 class TestInsertionSweepRange:
@@ -296,7 +303,57 @@ class TestAutoHardwareRodOd:
         rod_od = recipe.get("rod_od")
         
         assert rod_od == 0.625, f"{num_elements}-element: rod_od should be 0.625, got {rod_od}"
-        print(f"{num_elements}-element: rod_od={rod_od} ✓")
+        print(f"✓ {num_elements}-element: rod_od={rod_od}")
+
+
+class TestHardwareConsistency:
+    """Verify hardware defaults are consistent between designer and calculator"""
+
+    def test_hardware_tube_3_teflon_4_rod_0625(self):
+        """Both APIs should use tube=3.0, teflon=4.0, rod_od=0.625"""
+        # Test designer
+        designer_resp = requests.post(f"{BASE_URL}/api/gamma-designer", json={
+            "num_elements": 3,
+            "driven_element_length_in": 204.0,
+            "frequency_mhz": 27.185
+        })
+        assert designer_resp.status_code == 200
+        designer_data = designer_resp.json()
+        recipe = designer_data.get("recipe", {})
+        
+        # Test calculator
+        calc_resp = requests.post(f"{BASE_URL}/api/calculate", json={
+            "num_elements": 3,
+            "band": "11m_cb",
+            "frequency_mhz": 27.185,
+            "height_from_ground": 30,
+            "height_unit": "ft",
+            "boom_diameter": 2.0,
+            "boom_unit": "inches",
+            "antenna_orientation": "horizontal",
+            "boom_grounded": True,
+            "boom_mount": "bonded",
+            "feed_type": "gamma",
+            "elements": [
+                {"element_type": "reflector", "position": 0, "length": 214.0, "diameter": 0.75},
+                {"element_type": "driven", "position": 48, "length": 204.0, "diameter": 0.75},
+                {"element_type": "director", "position": 96, "length": 194.0, "diameter": 0.75}
+            ]
+        })
+        assert calc_resp.status_code == 200
+        calc_data = calc_resp.json()
+        hardware = calc_data.get("matching_info", {}).get("hardware", {})
+        
+        # Verify both use the same values
+        assert recipe.get("tube_length") == 3.0, f"Designer tube_length should be 3.0, got {recipe.get('tube_length')}"
+        assert recipe.get("teflon_length") == 4.0, f"Designer teflon_length should be 4.0, got {recipe.get('teflon_length')}"
+        assert recipe.get("rod_od") == 0.625, f"Designer rod_od should be 0.625, got {recipe.get('rod_od')}"
+        
+        assert hardware.get("tube_length") == 3.0, f"Calculator tube_length should be 3.0, got {hardware.get('tube_length')}"
+        assert hardware.get("teflon_length") == 4.0, f"Calculator teflon_length should be 4.0, got {hardware.get('teflon_length')}"
+        assert hardware.get("rod_od") == 0.625, f"Calculator rod_od should be 0.625, got {hardware.get('rod_od')}"
+        
+        print("✓ Hardware consistency verified: tube=3.0, teflon=4.0, rod_od=0.625")
 
 
 if __name__ == "__main__":
