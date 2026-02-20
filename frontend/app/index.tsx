@@ -1718,7 +1718,7 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn.toFixed(2)}" along {rodLen.toFixed(0)}" rod</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Pressable onPress={() => setGammaBarPos(Math.max(4, gammaBarPos - 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.max(4, parseFloat((gammaBarPos - 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
@@ -1731,7 +1731,7 @@ export default function AntennaCalculator() {
                             })()}
                             <View style={{ width: `${((barPosIn - 4) / Math.max(rodLen - 4, 1)) * 100}%`, height: '100%', backgroundColor: '#FF9800', borderRadius: 4 }} />
                           </View>
-                          <Pressable onPress={() => setGammaBarPos(Math.min(Math.floor(rodLen), gammaBarPos + 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
+                          <Pressable onPress={() => setGammaBarPos(Math.min(Math.floor(rodLen), parseFloat((gammaBarPos + 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginLeft: 6 }}>
                             <Text style={{ color: '#FF9800', fontWeight: '700', fontSize: 16 }}>+</Text>
                           </Pressable>
                         </View>
@@ -1751,13 +1751,13 @@ export default function AntennaCalculator() {
                           <Text style={{ fontSize: 12, color: '#2196F3', fontWeight: '700' }}>{gammaRodInsertion.toFixed(1)}" into {results?.matching_info?.tube_length_inches?.toFixed(1) || '22'}" tube</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                          <Pressable onPress={() => setGammaRodInsertion(Math.max(0, gammaRodInsertion - 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginRight: 6 }}>
+                          <Pressable onPress={() => setGammaRodInsertion(Math.max(0, parseFloat((gammaRodInsertion - 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginRight: 6 }}>
                             <Text style={{ color: '#2196F3', fontWeight: '700', fontSize: 16 }}>-</Text>
                           </Pressable>
                           <View style={{ flex: 1, height: 8, backgroundColor: '#333', borderRadius: 4, overflow: 'hidden' }}>
                             <View style={{ width: `${(gammaRodInsertion / (results?.matching_info?.tube_length_inches || 22)) * 100}%`, height: '100%', backgroundColor: '#2196F3', borderRadius: 4 }} />
                           </View>
-                          <Pressable onPress={() => setGammaRodInsertion(Math.min(results?.matching_info?.tube_length_inches || 22, gammaRodInsertion + 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginLeft: 6 }}>
+                          <Pressable onPress={() => setGammaRodInsertion(Math.min(results?.matching_info?.tube_length_inches || 22, parseFloat((gammaRodInsertion + 0.01).toFixed(2))))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#2196F3', marginLeft: 6 }}>
                             <Text style={{ color: '#2196F3', fontWeight: '700', fontSize: 16 }}>+</Text>
                           </Pressable>
                         </View>
