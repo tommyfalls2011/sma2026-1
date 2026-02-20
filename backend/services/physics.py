@@ -1881,110 +1881,65 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                        custom_tube_length: float = None,
                        driven_element_dia: float = 1.0) -> dict:
     """Design a gamma match recipe using the SAME physics as apply_matching_network()."""
-    wall = 0.049
+    hw = get_gamma_hardware_defaults(num_elements)
+    wall = hw["wall"]
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else 3.0
-
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else hw["tube_length"]
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
+    refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
 
-    # Use element_resonant_freq from main calculator if provided, otherwise compute
+    # Element resonant frequency: use provided value or compute via shared helper
     if element_resonant_freq_mhz and element_resonant_freq_mhz > 0:
         element_res_freq = element_resonant_freq_mhz
     else:
-        # Fallback: compute from driven element length and default spacings
-        ideal_half_wave_m = wavelength_m / 2.0
-        driven_len_m = driven_element_length_in * 0.0254
-        length_ratio = driven_len_m / ideal_half_wave_m if ideal_half_wave_m > 0 else 1.0
-        element_res_freq = frequency_mhz / length_ratio if length_ratio > 0 else frequency_mhz
-
-        # Use actual spacings if provided, else default layout (refl at 0, driven at 48, dirs at 96, 144, ...)
-        refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
-        if num_elements >= 2:
-            refl_gap_wl = refl_gap_in * 0.0254 / wavelength_m
-            refl_coupling = 0.067 * math.exp(-4.0 * max(refl_gap_wl, 0.02))
-            element_res_freq *= (1.0 - refl_coupling)
-        for d_idx in range(num_elements - 2):
-            if director_spacings_in and d_idx < len(director_spacings_in):
-                d_gap_in = director_spacings_in[d_idx]
-            else:
-                # Default layout: first director at 48" from driven, subsequent +48" each
-                d_gap_in = (d_idx + 1) * 48.0
-            d_gap_wl = d_gap_in * 0.0254 / wavelength_m
-            dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
-            element_res_freq *= (1.0 - dir_coupling)
+        element_res_freq = compute_element_resonant_freq(
+            driven_length_in=driven_element_length_in, frequency_mhz=frequency_mhz,
+            wavelength_m=wavelength_m, num_elements=num_elements,
+            reflector_spacing_in=refl_gap_in,
+            director_spacings_in=director_spacings_in,
+        )
 
     # Correct driven element length so resonance matches operating frequency
-    # f_res ∝ 1/L, so L_new = L_current * (f_res / f_target)
     original_driven_length = driven_element_length_in
     recommended_driven_length = driven_element_length_in
     length_was_corrected = False
     if element_res_freq > 0 and abs(element_res_freq - frequency_mhz) > 0.01:
         recommended_driven_length = round(driven_element_length_in * (element_res_freq / frequency_mhz), 2)
-        # Use corrected length for the optimization
         driven_element_length_in = recommended_driven_length
         half_len = driven_element_length_in / 2.0
-        element_res_freq = frequency_mhz  # now resonant at center freq
+        element_res_freq = frequency_mhz
         length_was_corrected = True
 
-    # Feedpoint impedance: user-provided or dynamically calculated (same as main calc)
+    # Feedpoint impedance: user-provided or via shared mutual coupling model
     if feedpoint_impedance and feedpoint_impedance > 0:
         r_feed = feedpoint_impedance
     else:
-        # Replicate main calculator's dynamic feedpoint R computation
-        r_feed = 73.0  # half-wave dipole in free space
-        refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
-        if num_elements >= 2:
-            refl_gap_wl = refl_gap_in * 0.0254 / wavelength_m
-            refl_factor_base = max(0.35, 0.30 + refl_gap_wl * 1.8)
-            refl_len_m = 214 * 0.0254
-            refl_detuning = (refl_len_m - wavelength_m / 2.0) / (wavelength_m / 2.0)
-            refl_q = 12.0
-            refl_coupling_strength = 1.0 / math.sqrt(1.0 + (refl_q * refl_detuning * 2) ** 2)
-            refl_factor = 1.0 - (1.0 - refl_factor_base) * refl_coupling_strength
-            r_feed *= refl_factor
-        num_directors = max(0, num_elements - 2)
-        if num_directors >= 1:
-            # First director gap: use actual or default (48")
-            if director_spacings_in and len(director_spacings_in) >= 1:
-                d1_gap_in = director_spacings_in[0]
-            else:
-                d1_gap_in = 48.0  # default layout: driven at 48, dir1 at 96
-            d1_gap_wl = (d1_gap_in * 0.0254) / wavelength_m
-            d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
-            r_feed *= d1_factor
-        # Subsequent directors: use actual inter-director gaps or default 48"
-        for i in range(1, num_directors):
-            if director_spacings_in and i < len(director_spacings_in) and i - 1 < len(director_spacings_in):
-                gap_in = director_spacings_in[i] - director_spacings_in[i - 1]
-            else:
-                gap_in = 48.0
-            gap_wl = (gap_in * 0.0254) / wavelength_m
-            factor = max(0.85, 0.85 + gap_wl * 0.5)
-            r_feed *= factor
-        r_feed = round(max(12.0, min(73.0, r_feed)), 1)
+        r_feed = compute_feedpoint_impedance(
+            num_elements=num_elements, wavelength_m=wavelength_m,
+            reflector_spacing_in=refl_gap_in,
+            director_spacings_in=director_spacings_in,
+        )
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
 
-    # Hardware selection: custom or unified default
-    # 2-element uses 9/16" rod for better capacitance range
+    # Hardware selection: custom overrides or unified defaults
     is_custom = bool(custom_tube_od or custom_rod_od)
-    auto_rod = 0.625  # 5/8" rod for all element counts (unified)
-    auto_tube = 0.750; auto_spacing = 3.5
-
+    auto_rod = hw["rod_od"]
+    auto_tube = hw["tube_od"]
+    auto_spacing = hw["rod_spacing"]
     rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
     tube_od = custom_tube_od if custom_tube_od and custom_tube_od > 0 else auto_tube
     rod_spacing = custom_rod_spacing if custom_rod_spacing and custom_rod_spacing > 0 else auto_spacing
     tube_id = tube_od - 2 * wall
 
-    # Validate geometry
     if tube_id <= rod_od:
         return {"error": f"Tube ID ({tube_id:.3f}\") must be larger than rod OD ({rod_od:.3f}\"). Increase tube OD or decrease rod OD."}
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
-    gamma_rod_length = 22.0 if num_elements <= 6 else 30.0
+    gamma_rod_length = hw["rod_length"]
     teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
-    bar_min = teflon_sleeve  # bar clamps right where teflon ends
+    bar_min = teflon_sleeve
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
