@@ -402,3 +402,57 @@ async def delete_changelog_entry(change_id: str, admin: dict = Depends(require_a
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Entry not found")
     return {"message": "Deleted"}
+
+
+
+# ── Railway Deployment ──
+
+RAILWAY_API_URL = "https://backboard.railway.app/graphql/v2"
+
+@router.post("/admin/railway/redeploy")
+async def railway_redeploy(admin: dict = Depends(require_admin)):
+    token = os.environ.get("RAILWAY_API_TOKEN", "")
+    service_id = os.environ.get("RAILWAY_SERVICE_ID", "")
+    env_id = os.environ.get("RAILWAY_ENVIRONMENT_ID", "")
+    if not all([token, service_id, env_id]):
+        raise HTTPException(status_code=500, detail="Railway deployment not configured")
+    query = 'mutation { serviceInstanceRedeploy(serviceId: "%s", environmentId: "%s") }' % (service_id, env_id)
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            RAILWAY_API_URL,
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={"query": query},
+        )
+    data = resp.json()
+    if data.get("data", {}).get("serviceInstanceRedeploy"):
+        await db.deploy_log.insert_one({
+            "id": str(uuid.uuid4()), "triggered_by": admin["email"],
+            "status": "triggered", "created_at": datetime.utcnow().isoformat(),
+        })
+        return {"success": True, "message": "Redeployment triggered on Railway!"}
+    raise HTTPException(status_code=500, detail=f"Railway API error: {data.get('errors', 'Unknown')}")
+
+
+@router.get("/admin/railway/status")
+async def railway_deploy_status(admin: dict = Depends(require_admin)):
+    token = os.environ.get("RAILWAY_API_TOKEN", "")
+    service_id = os.environ.get("RAILWAY_SERVICE_ID", "")
+    env_id = os.environ.get("RAILWAY_ENVIRONMENT_ID", "")
+    if not all([token, service_id, env_id]):
+        return {"configured": False}
+    # Get latest deploys
+    query = '''{ deployments(first: 3, input: { serviceId: "%s", environmentId: "%s" }) { edges { node { id status createdAt } } } }''' % (service_id, env_id)
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                RAILWAY_API_URL,
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json={"query": query},
+            )
+        data = resp.json()
+        deploys = [e["node"] for e in data.get("data", {}).get("deployments", {}).get("edges", [])]
+        # Get last local trigger
+        last_trigger = await db.deploy_log.find_one({}, {"_id": 0}, sort=[("created_at", -1)])
+        return {"configured": True, "deployments": deploys, "last_trigger": last_trigger}
+    except Exception as e:
+        return {"configured": True, "error": str(e)}
