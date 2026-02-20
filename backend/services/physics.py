@@ -1250,23 +1250,17 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         z_r = matching_info["z_matched_r"]
         z_x = matching_info["z_matched_x"]
     elif feed_type == "hairpin":
-        z_r = yagi_feedpoint_r
-        if matching_info and "resonant_freq_mhz" in matching_info:
-            res_freq = matching_info["resonant_freq_mhz"]
-            if res_freq > 0:
-                freq_ratio = center_freq / res_freq
-                z_x = antenna_q * z_r * (freq_ratio - 1.0 / freq_ratio)
-            else:
-                z_x = 0.0
+        # Use L-network transformed impedance from matching_info
+        if matching_info and "xl_actual" in matching_info:
+            xl_actual = matching_info["xl_actual"]
+            xl_needed = matching_info.get("xl_needed", xl_actual)
+            xl_ratio = xl_actual / xl_needed if xl_needed > 0 else 1.0
+            residual = (xl_ratio - 1.0) * xl_needed * 0.5
+            z_r = 50.0 * (1.0 + residual ** 2 / (50.0 ** 2) * 0.2)
+            z_x = residual * 0.3
         else:
+            z_r = 50.0
             z_x = 0.0
-        z_x *= 0.10  # hairpin cancels ~90% of reactance
-        if matching_info and "tuning_quality" in matching_info:
-            tq = matching_info["tuning_quality"]
-            residual = (1.0 - tq) * 0.25
-            z_r = 50.0 * (1.0 + residual)
-        else:
-            z_r = 50.0 * 1.05
     else:
         # Direct feed: reactance from element resonance vs operating freq
         z_r = yagi_feedpoint_r
