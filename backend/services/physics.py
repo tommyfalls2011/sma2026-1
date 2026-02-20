@@ -1846,7 +1846,8 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                        custom_tube_od: float = None, custom_rod_od: float = None,
                        custom_rod_spacing: float = None,
                        custom_teflon_length: float = None,
-                       custom_tube_length: float = None) -> dict:
+                       custom_tube_length: float = None,
+                       driven_element_dia: float = 1.0) -> dict:
     """Design a gamma match recipe using the SAME physics as apply_matching_network()."""
     wall = 0.049
     half_len = driven_element_length_in / 2.0
@@ -1905,6 +1906,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             operating_freq_mhz=frequency_mhz,
             num_elements=num_elements,
             driven_element_half_length_in=half_len,
+            driven_element_dia_in=driven_element_dia,
             element_resonant_freq_mhz=element_res_freq,
         )
         return matched_swr, info
