@@ -1,9 +1,10 @@
 """User auth, subscription, saved designs, history, and status endpoints."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials
 from datetime import datetime, timedelta
 from typing import List
 import uuid
+import os
 
 from config import db, ADMIN_EMAIL, SUBSCRIPTION_TIERS, PAYMENT_CONFIG
 from models import (
@@ -17,6 +18,7 @@ from auth import (
     require_user, check_subscription_active,
 )
 from services.email_service import send_email, email_wrapper
+from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
 
 router = APIRouter()
 
