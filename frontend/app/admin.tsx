@@ -1183,6 +1183,80 @@ export default function AdminScreen() {
           </>
         ) : null}
         
+        {activeTab === 'upgrades' && (
+          <>
+            <Text style={styles.sectionTitle}>Payment Verification</Text>
+            <Text style={styles.hint}>
+              Review and approve/reject subscription upgrade requests from users who paid via PayPal or Cash App.
+            </Text>
+            
+            {pendingUpgrades.filter(u => u.status === 'pending').length === 0 ? (
+              <View style={{ backgroundColor: '#1a1a1a', borderRadius: 12, padding: 24, alignItems: 'center', marginTop: 12 }}>
+                <Ionicons name="checkmark-circle-outline" size={48} color="#444" />
+                <Text style={{ color: '#888', fontSize: 14, marginTop: 12 }}>No pending payment requests</Text>
+              </View>
+            ) : (
+              pendingUpgrades.filter(u => u.status === 'pending').map((req: any) => (
+                <View key={req.id} style={{ backgroundColor: '#1E1E1E', borderRadius: 12, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: '#FF9800' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                    <Ionicons name="person" size={18} color="#FF9800" />
+                    <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14, marginLeft: 8, flex: 1 }}>{req.user_name || req.user_email}</Text>
+                    <View style={{ backgroundColor: '#FF9800', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ color: '#000', fontSize: 10, fontWeight: 'bold' }}>PENDING</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: '#888', fontSize: 12 }}>Email: {req.user_email}</Text>
+                  <Text style={{ color: '#888', fontSize: 12 }}>Tier: <Text style={{ color: TIER_COLORS[req.tier?.split('_')[0]] || '#fff', fontWeight: '600' }}>{req.tier_name}</Text></Text>
+                  <Text style={{ color: '#888', fontSize: 12 }}>Amount: <Text style={{ color: '#4CAF50', fontWeight: '600' }}>${req.amount}</Text></Text>
+                  <Text style={{ color: '#888', fontSize: 12 }}>Method: {req.payment_method === 'paypal' ? 'PayPal' : 'Cash App'}</Text>
+                  <Text style={{ color: '#555', fontSize: 11, marginTop: 4 }}>Requested: {req.created_at ? new Date(req.created_at).toLocaleString() : 'Unknown'}</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: '#4CAF50', borderRadius: 8, padding: 10, alignItems: 'center', opacity: processingUpgrade === req.id ? 0.6 : 1 }}
+                      onPress={() => approveUpgrade(req.id)}
+                      disabled={processingUpgrade === req.id}
+                    >
+                      {processingUpgrade === req.id ? <ActivityIndicator size="small" color="#fff" /> : (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>Approve</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: '#333', borderRadius: 8, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#f44336' }}
+                      onPress={() => rejectUpgrade(req.id)}
+                      disabled={processingUpgrade === req.id}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Ionicons name="close" size={16} color="#f44336" />
+                        <Text style={{ color: '#f44336', fontWeight: '600', fontSize: 13 }}>Reject</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+
+            {/* Past Upgrade Requests */}
+            {pendingUpgrades.filter(u => u.status !== 'pending').length > 0 && (
+              <>
+                <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Past Requests</Text>
+                {pendingUpgrades.filter(u => u.status !== 'pending').map((req: any) => (
+                  <View key={req.id} style={{ backgroundColor: '#1a1a1a', borderRadius: 8, padding: 12, marginBottom: 8, borderLeftWidth: 3, borderLeftColor: req.status === 'approved' ? '#4CAF50' : '#f44336' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Ionicons name={req.status === 'approved' ? 'checkmark-circle' : 'close-circle'} size={16} color={req.status === 'approved' ? '#4CAF50' : '#f44336'} />
+                      <Text style={{ color: '#aaa', fontSize: 13, marginLeft: 6, flex: 1 }}>{req.user_email} — {req.tier_name}</Text>
+                      <Text style={{ color: req.status === 'approved' ? '#4CAF50' : '#f44336', fontSize: 11, fontWeight: '600' }}>{req.status.toUpperCase()}</Text>
+                    </View>
+                    <Text style={{ color: '#555', fontSize: 10, marginTop: 4 }}>{req.payment_method} — ${req.amount}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </>
+        )}
+
         {activeTab === 'designs' && (
           <>
             {/* Designs Section */}
