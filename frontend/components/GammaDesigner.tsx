@@ -14,6 +14,7 @@ interface GammaDesignerProps {
   calculatedFeedpointR?: number;
   currentRodDia?: number;
   currentRodSpacing?: number;
+  elementDiameter?: number;
   onApply?: (barPos: number, insertion: number) => void;
 }
 
