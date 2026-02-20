@@ -1962,6 +1962,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
     gamma_rod_length = 48.0 if num_elements <= 2 else 36.0
+    gamma_rod_length = 18.0 if num_elements <= 2 else 22.0
     teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
     bar_min = teflon_sleeve  # bar must be beyond teflon sleeve (physically can't clamp inside tube)
 
