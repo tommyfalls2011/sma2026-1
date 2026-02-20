@@ -18,7 +18,7 @@ interface GammaDesignerProps {
   currentRodDia?: number;
   currentRodSpacing?: number;
   elementDiameter?: number;
-  onApply?: (barPos: number, insertion: number, recommendedDrivenLength?: number) => void;
+  onApply?: (barPos: number, insertion: number, recommendedDrivenLength?: number, rodOd?: number) => void;
 }
 
 interface Recipe {
@@ -372,7 +372,7 @@ export function GammaDesigner({ visible, onClose, numElements, drivenLength, fre
               {/* Apply button */}
               {recipe.swr_at_null <= 2.0 && onApply && (
                 <TouchableOpacity
-                  onPress={() => { onApply(recipe.ideal_bar_position, recipe.optimal_insertion, recipe.driven_length_corrected ? recipe.recommended_driven_length_in : undefined); onClose(); }}
+                  onPress={() => { onApply(recipe.ideal_bar_position, recipe.optimal_insertion, recipe.driven_length_corrected ? recipe.recommended_driven_length_in : undefined, recipe.rod_od); onClose(); }}
                   style={{ backgroundColor: recipe.null_reachable ? '#4CAF50' : '#FF9800', borderRadius: 8, padding: 14, alignItems: 'center', marginBottom: 20 }}
                   data-testid="apply-recipe-btn"
                 >
