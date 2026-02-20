@@ -189,6 +189,10 @@ export default function AdminScreen() {
   const [pendingUpgrades, setPendingUpgrades] = useState<any[]>([]);
   const [processingUpgrade, setProcessingUpgrade] = useState<string | null>(null);
 
+  // Railway Redeploy state
+  const [redeploying, setRedeploying] = useState(false);
+  const [redeployResult, setRedeployResult] = useState('');
+
   useEffect(() => {
     checkAdminAndLoad();
   }, [token]);
