@@ -103,12 +103,45 @@ export default function SubscriptionScreen() {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
     const paymentStatus = params.get('payment');
+
+    // Handle Stripe return
     if (sessionId && paymentStatus === 'success') {
       setStripePolling(true);
       await pollStripeStatus(sessionId, 0);
-      // Clean URL
       window.history.replaceState({}, '', window.location.pathname);
+      return;
     }
+
+    // Handle PayPal return
+    if (paymentStatus === 'paypal_success') {
+      const ppToken = params.get('token'); // PayPal appends token=ORDER_ID
+      if (ppToken) {
+        setStripePolling(true); // reuse the processing UI
+        await capturePayPalOrder(ppToken);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  };
+
+  const capturePayPalOrder = async (orderId: string) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/subscription/paypal-capture/${orderId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setStripePolling(false);
+          setStripeSuccess(true);
+          await refreshUser();
+          showAlert('PayPal Payment Successful!', `You've been upgraded to ${data.tier_name || 'your new plan'}!`);
+          return;
+        }
+      }
+    } catch (e) {}
+    setStripePolling(false);
+    showAlert('Payment Processing', 'Your PayPal payment is being verified. If your account is not upgraded shortly, please contact support.');
   };
 
   const pollStripeStatus = async (sessionId: string, attempt: number) => {
