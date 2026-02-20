@@ -34,7 +34,8 @@ class TestGammaDesignerHardware:
         recipe = data.get("recipe", {})
         
         # Verify 2-element special hardware
-        assert recipe.get("rod_od") == 0.5625, f"2-element rod_od should be 0.5625, got {recipe.get('rod_od')}"
+        # Note: rod_od is rounded to 3 decimal places (0.5625 -> 0.562)
+        assert abs(recipe.get("rod_od", 0) - 0.5625) < 0.001, f"2-element rod_od should be ~0.5625, got {recipe.get('rod_od')}"
         assert recipe.get("gamma_rod_length") == 48.0, f"2-element rod_length should be 48, got {recipe.get('gamma_rod_length')}"
         assert recipe.get("tube_length") == 30.0, f"2-element tube_length should be 30, got {recipe.get('tube_length')}"
         assert recipe.get("teflon_length") == 31.0, f"2-element teflon_length should be 31, got {recipe.get('teflon_length')}"
@@ -382,8 +383,8 @@ class TestSWRConsistencyRoundTrip:
         
         print(f"2-element designer: bar={optimal_bar}, insertion={optimal_insertion}, SWR={designer_swr}")
         
-        # Verify 2-element hardware is correct
-        assert recipe.get("rod_od") == 0.5625, f"2-element should use rod_od=0.5625, got {recipe.get('rod_od')}"
+        # Verify 2-element hardware is correct (rounded to 3 decimal places)
+        assert abs(recipe.get("rod_od", 0) - 0.5625) < 0.001, f"2-element should use rod_od~0.5625, got {recipe.get('rod_od')}"
         assert recipe.get("tube_length") == 30.0, f"2-element should use tube_length=30, got {recipe.get('tube_length')}"
         
         # Call calculate with designer values
