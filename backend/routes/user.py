@@ -139,12 +139,31 @@ async def get_subscription_tiers():
     return {"tiers": tiers, "payment_methods": PAYMENT_CONFIG}
 
 
+PAYPAL_API_URL = "https://api-m.paypal.com"
+
+
+async def get_paypal_token():
+    client_id = os.environ.get("PAYPAL_CLIENT_ID", "")
+    secret = os.environ.get("PAYPAL_SECRET", "")
+    if not client_id or not secret:
+        return None
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{PAYPAL_API_URL}/v1/oauth2/token",
+            auth=(client_id, secret),
+            data={"grant_type": "client_credentials"},
+        )
+        if resp.status_code == 200:
+            return resp.json().get("access_token")
+    return None
+
+
 @router.post("/subscription/upgrade")
 async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends(require_user)):
+    """Legacy endpoint for manual payment methods — creates pending request."""
     if upgrade.tier not in SUBSCRIPTION_TIERS:
         raise HTTPException(status_code=400, detail="Invalid tier")
     tier_info = SUBSCRIPTION_TIERS[upgrade.tier]
-    # For PayPal/CashApp: create a PENDING request (admin must approve)
     pending_request = {
         "id": str(uuid.uuid4()),
         "user_id": user["id"],
@@ -165,6 +184,127 @@ async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends
         "status": "pending",
         "request_id": pending_request["id"],
     }
+
+
+@router.post("/subscription/paypal-checkout")
+async def paypal_subscription_checkout(data: dict, request: Request, user: dict = Depends(require_user)):
+    """Create a PayPal order — user gets redirected to PayPal to pay."""
+    tier_key = data.get("tier")
+    if not tier_key or tier_key not in SUBSCRIPTION_TIERS:
+        raise HTTPException(status_code=400, detail="Invalid tier")
+    origin_url = data.get("origin_url", "")
+    if not origin_url:
+        raise HTTPException(status_code=400, detail="origin_url required")
+
+    tier_info = SUBSCRIPTION_TIERS[tier_key]
+    amount = str(tier_info["price"])
+
+    access_token = await get_paypal_token()
+    if not access_token:
+        raise HTTPException(status_code=500, detail="PayPal not configured")
+
+    order_data = {
+        "intent": "CAPTURE",
+        "purchase_units": [{
+            "amount": {"currency_code": "USD", "value": amount},
+            "description": f"SMA Antenna Calc — {tier_info['name']} Subscription",
+        }],
+        "application_context": {
+            "return_url": f"{origin_url}/subscription?paypal_order_id={{order_id}}&payment=paypal_success",
+            "cancel_url": f"{origin_url}/subscription?payment=cancelled",
+            "brand_name": "SMA Antenna Calculator",
+            "user_action": "PAY_NOW",
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{PAYPAL_API_URL}/v2/checkout/orders",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json=order_data,
+        )
+
+    if resp.status_code not in (200, 201):
+        raise HTTPException(status_code=500, detail=f"PayPal error: {resp.text}")
+
+    pp_order = resp.json()
+    order_id = pp_order["id"]
+    approve_url = next((l["href"] for l in pp_order.get("links", []) if l["rel"] == "approve"), None)
+    if not approve_url:
+        raise HTTPException(status_code=500, detail="No PayPal approval URL")
+
+    # Fix return URL with actual order ID
+    return_url = f"{origin_url}/subscription?paypal_order_id={order_id}&payment=paypal_success"
+
+    # Store transaction
+    txn = {
+        "id": str(uuid.uuid4()),
+        "paypal_order_id": order_id,
+        "user_id": user["id"],
+        "user_email": user["email"],
+        "tier": tier_key,
+        "tier_name": tier_info["name"],
+        "amount": float(amount),
+        "payment_method": "paypal",
+        "payment_status": "created",
+        "status": "initiated",
+        "type": "subscription",
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    await db.payment_transactions.insert_one(txn)
+
+    return {"url": approve_url, "order_id": order_id}
+
+
+@router.post("/subscription/paypal-capture/{order_id}")
+async def paypal_capture_order(order_id: str, user: dict = Depends(require_user)):
+    """Capture a PayPal order after user approves — upgrades user if successful."""
+    access_token = await get_paypal_token()
+    if not access_token:
+        raise HTTPException(status_code=500, detail="PayPal not configured")
+
+    # Capture the payment
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(
+            f"{PAYPAL_API_URL}/v2/checkout/orders/{order_id}/capture",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json={},
+        )
+
+    capture_data = resp.json()
+    capture_status = capture_data.get("status", "")
+
+    if capture_status != "COMPLETED":
+        return {"success": False, "status": capture_status, "message": "Payment not completed"}
+
+    # Find the transaction
+    txn = await db.payment_transactions.find_one(
+        {"paypal_order_id": order_id, "type": "subscription"}, {"_id": 0}
+    )
+    if not txn:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    if txn.get("payment_status") == "paid":
+        return {"success": True, "status": "already_upgraded", "tier_name": txn.get("tier_name")}
+
+    # Upgrade the user
+    tier_key = txn["tier"]
+    tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+    duration_days = tier_info.get("duration_days", 30)
+    expires = datetime.utcnow() + timedelta(days=duration_days)
+
+    await db.users.update_one(
+        {"id": txn["user_id"]},
+        {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
+    )
+
+    # Mark transaction as paid
+    await db.payment_transactions.update_one(
+        {"paypal_order_id": order_id, "type": "subscription"},
+        {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.utcnow().isoformat()}},
+    )
+
+    return {"success": True, "status": "completed", "tier_name": txn.get("tier_name")}
 
 
 @router.get("/subscription/pending")
