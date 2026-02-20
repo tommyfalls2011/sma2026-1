@@ -17,6 +17,7 @@ import { FeatureGate } from '../components/FeatureGate';
 import { GammaDesigner } from '../components/GammaDesigner';
 import { HairpinDesigner } from '../components/HairpinDesigner';
 import { PhysicsDebugPanel } from '../components/PhysicsDebugPanel';
+import { StatusDot } from '../components/StatusIndicator';
 import type { ElementDimension, TaperSection, TaperConfig, CoronaBallConfig, StackingConfig, AntennaInput, AntennaOutput, HeightOptResult } from '../components';
 
 // Lazy-load native-only modules to avoid SSR crash
@@ -1386,6 +1387,8 @@ export default function AntennaCalculator() {
               </View>
             </TouchableOpacity>
             
+            <StatusDot onPress={() => router.push('/status')} />
+
             {user ? (
               <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/subscription')}>
                 <View style={[styles.tierDot, { backgroundColor: TIER_COLORS[user.subscription_tier] || '#888' }]} />
