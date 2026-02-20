@@ -42,6 +42,11 @@ Common: Wall=0.049", Rod spacing=3.5"
 - Frontend barMin = teflonEnd (removed +0.5 offset)
 - Frontend insertion max = tube_length - 0.5
 
+### Session Feb 20 2026 — Rod/Tube Mismatch Bug Fix:
+- Fixed frontend GammaDesigner sending stale `custom_rod_od` from previous element count in auto mode
+- Reset `gammaRodDia` to null when element count changes in index.tsx
+- Added backend safety net: auto-bumps tube_od when custom rod is too large for default tube
+
 ### Session Feb 2026 — UI Fixes:
 - Fixed "Shorting Bar" display showing rod_spacing instead of actual bar position → now shows "Bar Position" with correct value
 - Designer "Apply" now passes rod_od to main calculator so per-element hardware carries through
