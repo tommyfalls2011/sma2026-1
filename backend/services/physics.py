@@ -1944,6 +1944,11 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     rod_spacing = custom_rod_spacing if custom_rod_spacing and custom_rod_spacing > 0 else auto_spacing
     tube_id = tube_od - 2 * wall
 
+    # Auto-fix: if custom rod is too big for the tube and tube wasn't custom, bump tube
+    if tube_id <= rod_od and not (custom_tube_od and custom_tube_od > 0):
+        tube_od = rod_od + 2 * wall + 0.025  # ensure clearance
+        tube_id = tube_od - 2 * wall
+
     if tube_id <= rod_od:
         return {"error": f"Tube ID ({tube_id:.3f}\") must be larger than rod OD ({rod_od:.3f}\"). Increase tube OD or decrease rod OD."}
 
