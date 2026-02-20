@@ -341,7 +341,8 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
         raise HTTPException(status_code=400, detail="origin_url required")
     tier_info = SUBSCRIPTION_TIERS[tier_key]
     amount = float(tier_info["price"])
-    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    stripe_cred = await get_payment_credentials("stripe")
+    stripe_key = stripe_cred.get("api_key", "") if stripe_cred else ""
     if not stripe_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     host_url = str(request.base_url).rstrip("/")
