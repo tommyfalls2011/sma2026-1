@@ -142,13 +142,121 @@ async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends
     if upgrade.tier not in SUBSCRIPTION_TIERS:
         raise HTTPException(status_code=400, detail="Invalid tier")
     tier_info = SUBSCRIPTION_TIERS[upgrade.tier]
-    payment = PaymentRecord(user_id=user["id"], amount=tier_info["price"], tier=upgrade.tier, payment_method=upgrade.payment_method, payment_reference=upgrade.payment_reference, status="pending")
-    await db.payments.insert_one(payment.dict())
-    duration_days = tier_info.get("duration_days", 30)
-    expires = datetime.utcnow() + timedelta(days=duration_days)
-    await db.users.update_one({"id": user["id"]}, {"$set": {"subscription_tier": upgrade.tier, "subscription_expires": expires, "is_trial": False}})
-    await db.payments.update_one({"id": payment.id}, {"$set": {"status": "completed"}})
-    return {"success": True, "message": f"Upgraded to {tier_info['name']}", "subscription_tier": upgrade.tier, "subscription_expires": expires, "max_elements": tier_info["max_elements"]}
+    # For PayPal/CashApp: create a PENDING request (admin must approve)
+    pending_request = {
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "user_email": user["email"],
+        "user_name": user.get("name", ""),
+        "tier": upgrade.tier,
+        "tier_name": tier_info["name"],
+        "amount": tier_info["price"],
+        "payment_method": upgrade.payment_method,
+        "payment_reference": upgrade.payment_reference,
+        "status": "pending",
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    await db.pending_upgrades.insert_one(pending_request)
+    return {
+        "success": True,
+        "message": f"Upgrade request submitted for {tier_info['name']}. Your account will be upgraded once payment is verified by admin.",
+        "status": "pending",
+        "request_id": pending_request["id"],
+    }
+
+
+@router.get("/subscription/pending")
+async def get_pending_upgrade(user: dict = Depends(require_user)):
+    pending = await db.pending_upgrades.find_one(
+        {"user_id": user["id"], "status": "pending"}, {"_id": 0}
+    )
+    return {"pending": pending}
+
+
+@router.post("/subscription/stripe-checkout")
+async def stripe_subscription_checkout(data: dict, request: Request, user: dict = Depends(require_user)):
+    tier_key = data.get("tier")
+    if not tier_key or tier_key not in SUBSCRIPTION_TIERS:
+        raise HTTPException(status_code=400, detail="Invalid tier")
+    origin_url = data.get("origin_url", "")
+    if not origin_url:
+        raise HTTPException(status_code=400, detail="origin_url required")
+    tier_info = SUBSCRIPTION_TIERS[tier_key]
+    amount = float(tier_info["price"])
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    if not stripe_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+    success_url = f"{origin_url}/subscription?session_id={{CHECKOUT_SESSION_ID}}&payment=success"
+    cancel_url = f"{origin_url}/subscription?payment=cancelled"
+    session_request = CheckoutSessionRequest(
+        amount=amount,
+        currency="usd",
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata={
+            "user_id": user["id"],
+            "user_email": user["email"],
+            "tier": tier_key,
+            "tier_name": tier_info["name"],
+            "type": "subscription",
+        },
+    )
+    session = await stripe_checkout.create_checkout_session(session_request)
+    # Record the pending transaction
+    txn = {
+        "id": str(uuid.uuid4()),
+        "session_id": session.session_id,
+        "user_id": user["id"],
+        "user_email": user["email"],
+        "tier": tier_key,
+        "tier_name": tier_info["name"],
+        "amount": amount,
+        "payment_method": "stripe",
+        "payment_status": "pending",
+        "status": "initiated",
+        "type": "subscription",
+        "created_at": datetime.utcnow().isoformat(),
+    }
+    await db.payment_transactions.insert_one(txn)
+    return {"url": session.url, "session_id": session.session_id}
+
+
+@router.get("/subscription/stripe-status/{session_id}")
+async def stripe_subscription_status(session_id: str, user: dict = Depends(require_user)):
+    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    if not stripe_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    stripe_checkout = StripeCheckout(api_key=stripe_key)
+    try:
+        status = await stripe_checkout.get_checkout_status(session_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Session not found")
+    txn = await db.payment_transactions.find_one({"session_id": session_id, "type": "subscription"}, {"_id": 0})
+    if status.payment_status == "paid" and txn and txn.get("payment_status") != "paid":
+        tier_key = txn.get("tier", "")
+        tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+        duration_days = tier_info.get("duration_days", 30)
+        expires = datetime.utcnow() + timedelta(days=duration_days)
+        # Upgrade the user
+        await db.users.update_one(
+            {"id": txn["user_id"]},
+            {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
+        )
+        # Mark transaction as paid
+        await db.payment_transactions.update_one(
+            {"session_id": session_id, "type": "subscription"},
+            {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.utcnow().isoformat()}},
+        )
+    return {
+        "status": "complete" if status.payment_status == "paid" else "pending",
+        "payment_status": status.payment_status,
+        "amount_total": status.amount_total / 100 if status.amount_total else 0,
+        "tier": txn.get("tier") if txn else None,
+        "tier_name": txn.get("tier_name") if txn else None,
+    }
 
 
 @router.post("/subscription/cancel")
