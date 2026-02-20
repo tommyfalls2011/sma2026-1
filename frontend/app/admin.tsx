@@ -569,6 +569,28 @@ export default function AdminScreen() {
     });
   };
 
+  // === RAILWAY REDEPLOY ===
+  const triggerRedeploy = async () => {
+    confirmAction('Redeploy to Railway', 'This will trigger a fresh deployment of your production server. Continue?', async () => {
+      setRedeploying(true);
+      setRedeployResult('');
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/admin/railway/redeploy`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setRedeployResult(data.message || 'Deployment triggered!');
+        } else {
+          setRedeployResult('Error: ' + (data.detail || 'Failed to trigger'));
+        }
+      } catch (e) {
+        setRedeployResult('Error: Network error');
+      }
+      setRedeploying(false);
+    });
+  };
+
   const sendUpdateEmail = async () => {
     setSendingEmail(true); setEmailResult('');
     try {
