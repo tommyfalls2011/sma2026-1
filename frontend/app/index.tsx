@@ -334,6 +334,8 @@ export default function AntennaCalculator() {
         setDrivenNudgeCount(0);
         setDir1NudgeCount(0);
         setSpacingNudgeCount(0);
+        setDirPresets({});
+        setDirNudgeCounts({});
       }
     } catch (err) {
       console.error('RL tune error:', err);
@@ -354,6 +356,8 @@ export default function AntennaCalculator() {
     setDrivenNudgeCount(0);
     setDir1NudgeCount(0);
     setSpacingNudgeCount(0);
+    setDirPresets({});
+    setDirNudgeCounts({});
   };
 
   const [savingDesign, setSavingDesign] = useState(false);
