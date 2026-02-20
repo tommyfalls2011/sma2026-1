@@ -622,19 +622,8 @@ export default function AntennaCalculator() {
   // Initial calculation on mount
   useEffect(() => { calculateAntenna(); }, []);
 
-  // Track whether spacing override changes should trigger auto-tune
-  const spacingOverrideTriggered = useRef(false);
-  const triggerSpacingAutoTune = () => { 
-    spacingOverrideTriggered.current = true;
-  };
-  useEffect(() => {
-    if (spacingOverrideTriggered.current) {
-      spacingOverrideTriggered.current = false;
-      // Small delay to ensure all batched state updates are applied
-      const timer = setTimeout(() => autoTune(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2]);
+  // Spacing override state is now handled locally by applyElementPreset()
+  // No auto-tune trigger needed — presets move only the targeted element
 
   // Single debounced auto-recalculate on any input change
   useEffect(() => {
