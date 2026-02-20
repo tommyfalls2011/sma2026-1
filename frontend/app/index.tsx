@@ -1387,7 +1387,7 @@ export default function AntennaCalculator() {
               </View>
             </TouchableOpacity>
             
-            <StatusDot onPress={() => router.push('/status')} />
+            <StatusDot onPress={() => router.push('/system-status')} />
 
             {user ? (
               <TouchableOpacity style={styles.userBadge} onPress={() => router.push('/subscription')}>

@@ -13,7 +13,7 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
           <Stack.Screen name="subscription" />
-          <Stack.Screen name="status" />
+          <Stack.Screen name="system-status" />
         </Stack>
         <InstallPrompt />
       </View>
