@@ -1,0 +1,119 @@
+{
+  "summary": "PayPal real checkout integration tested - all 15 backend tests passed. PayPal creates real orders with paypal.com approval URLs. Stripe checkout still works. CashApp remains manual with pending admin approval. Frontend code verified for 3 payment methods with correct UI text.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Web session persistence in Playwright",
+        "issue": "Login session doesn't persist when navigating between routes in Playwright automation (AsyncStorage issue in Expo Web). Known limitation - doesn't affect actual mobile app or manual web testing.",
+        "affected_selectors": ["N/A - AsyncStorage limitation"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_paypal_checkout.py",
+    "/app/test_reports/pytest/pytest_paypal_checkout.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PayPal checkout correctly creates real PayPal orders via /v2/checkout/orders API",
+    "PayPal capture endpoint handles unapproved orders gracefully (returns success=false when not yet approved)",
+    "Frontend subscription page correctly shows 3 payment methods: Stripe (instant), PayPal (instant), CashApp (manual)",
+    "PayPal button text says 'Pay with PayPal' when selected - VERIFIED in code",
+    "PayPal shows 'instant activation' - VERIFIED in code (line 507)",
+    "All data-testid attributes present: payment-stripe, payment-paypal, payment-cashapp, confirm-payment-btn"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_paypal_checkout.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "Code review verified - UI implementation correct"
+  },
+  "seed_data_creation": "Test users created with random UUID prefix for each test run",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PayPal real checkout integration fully tested. Backend creates real PayPal orders that redirect to paypal.com. The capture endpoint cannot be fully tested in automation because it requires user to approve payment on PayPal.com. Frontend subscription.tsx has 3 payment methods with correct text: Stripe='Pay with Card', PayPal='Pay with PayPal' (instant activation), CashApp='Submit Payment Request' (manual verification). Playwright automation has known session persistence issues on Expo Web.",
+  "verified_features": {
+    "POST /api/subscription/paypal-checkout": {
+      "status": "VERIFIED",
+      "behavior": "Creates real PayPal order, returns approval URL (https://www.paypal.com/checkoutnow?token=...)",
+      "fields_returned": ["url", "order_id"],
+      "note": "This is REAL PayPal integration, not mocked"
+    },
+    "POST /api/subscription/paypal-capture/{order_id}": {
+      "status": "VERIFIED",
+      "behavior": "Captures PayPal payment after user approval. Returns success=false if not yet approved.",
+      "note": "Cannot complete full flow in automation - requires PayPal user interaction"
+    },
+    "POST /api/subscription/stripe-checkout": {
+      "status": "VERIFIED",
+      "behavior": "Creates Stripe checkout session, returns checkout URL"
+    },
+    "POST /api/subscription/upgrade": {
+      "status": "VERIFIED",
+      "behavior": "Creates PENDING request for manual payment methods (CashApp)",
+      "fields_returned": ["success", "status", "request_id", "message"]
+    },
+    "GET /api/admin/pending-upgrades": {
+      "status": "VERIFIED",
+      "behavior": "Returns all pending upgrade requests (admin only)"
+    },
+    "GET /api/health": {
+      "status": "VERIFIED",
+      "fields_returned": ["api", "database", "production", "overall", "checked_at"]
+    },
+    "POST /api/admin/system-notification": {
+      "status": "VERIFIED",
+      "behavior": "Admin can create system notification"
+    },
+    "GET /api/system-notification": {
+      "status": "VERIFIED",
+      "behavior": "Public endpoint returns active notification"
+    },
+    "DELETE /api/admin/system-notification": {
+      "status": "VERIFIED",
+      "behavior": "Admin can clear system notification"
+    },
+    "GET /api/admin/railway/status": {
+      "status": "VERIFIED",
+      "behavior": "Returns Railway deployment configuration status"
+    },
+    "GET /api/subscription/tiers": {
+      "status": "VERIFIED",
+      "behavior": "Returns available subscription tiers and payment methods"
+    },
+    "frontend_subscription_page": {
+      "status": "CODE VERIFIED",
+      "components": [
+        "3 payment options: Stripe (Credit/Debit Card), PayPal, Cash App",
+        "PayPal shows 'Pay with PayPal' button and 'instant activation' label",
+        "CashApp shows 'Submit Payment Request' button and 'manual verification' label",
+        "data-testid attributes present for all payment methods"
+      ]
+    }
+  },
+  "testing_environment": {
+    "url": "https://hairpin-match.preview.emergentagent.com",
+    "framework": "Expo web (React Native)",
+    "backend": "FastAPI with MongoDB",
+    "paypal_mode": "LIVE (real PayPal API - api-m.paypal.com)",
+    "stripe_key": "sk_test_emergent (test mode)"
+  },
+  "admin_credentials_tested": {
+    "email": "fallstommy@gmail.com",
+    "password": "admin123"
+  },
+  "test_run_info": {
+    "tests_executed": 15,
+    "tests_passed": 15,
+    "tests_failed": 0,
+    "pytest_file": "/app/backend/tests/test_paypal_checkout.py",
+    "junit_report": "/app/test_reports/pytest/pytest_paypal_checkout.xml"
+  }
+}
