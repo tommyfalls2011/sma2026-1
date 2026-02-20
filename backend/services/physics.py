@@ -1851,7 +1851,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     wall = 0.049
     half_len = driven_element_length_in / 2.0
     wavelength_in = 11802.71 / frequency_mhz
-    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (24.0 if num_elements <= 2 else 22.0)
+    tube_length = custom_tube_length if custom_tube_length and custom_tube_length > 0 else (30.0 if num_elements <= 2 else 22.0)
 
     # Element resonant frequency from driven element length
     wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
