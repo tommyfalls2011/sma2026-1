@@ -218,6 +218,20 @@ export const HairpinDesigner: React.FC<HairpinDesignerProps> = ({
                 </Text>
               </View>
 
+              {/* Tuning Instructions */}
+              {result.tuning_instructions && (
+                <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#4CAF50' }}>
+                  <Text style={{ fontSize: 10, color: '#4CAF50', fontWeight: '700', marginBottom: 6 }}>TUNING INSTRUCTIONS</Text>
+                  {result.tuning_instructions.map((inst: any, i: number) => (
+                    <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6, borderBottomWidth: i < result.tuning_instructions.length - 1 ? 1 : 0, borderBottomColor: '#222' }}>
+                      <Text style={{ fontSize: 11, color: '#4CAF50', fontWeight: '700', width: 70 }}>{inst.step}</Text>
+                      <Text style={{ fontSize: 11, color: '#ccc', flex: 1 }}>{inst.action}</Text>
+                      <Text style={{ fontSize: 11, color: '#FF9800', fontWeight: '700' }}>{inst.value}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               {/* SWR Sweep Chart */}
               <View style={{ backgroundColor: '#151530', borderRadius: 8, padding: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333' }}>
                 <Text style={{ fontSize: 10, color: '#2196F3', fontWeight: '700', marginBottom: 6 }}>
