@@ -941,8 +941,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         hw = matching_info.get("hardware", {})
         gamma_rod_dia = hw.get("rod_od", 0.500)
         gamma_rod_spacing = hw.get("rod_spacing", 3.5)
-        gamma_rod_length = 48.0 if input_data.num_elements <= 2 else 36.0
-        design_tube_length = hw.get("tube_length", 30.0 if input_data.num_elements <= 2 else 22.0)
+        gamma_rod_length = 18.0 if input_data.num_elements <= 2 else 22.0
+        design_tube_length = hw.get("tube_length", 8.0 if input_data.num_elements <= 2 else 10.0 if input_data.num_elements <= 6 else 8.0)
         design_tube_id = hw.get("tube_id", 0.652)
         design_rod_od = gamma_rod_dia
         # Series capacitance: from actual coaxial geometry (rod insertion into tube)
