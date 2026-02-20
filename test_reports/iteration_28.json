@@ -1,0 +1,144 @@
+{
+  "summary": "Verified Gamma Designer hardware isolation and SWR consistency fixes. All 11 backend tests passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_gamma_hardware_isolation.py",
+    "/app/test_reports/pytest/pytest_hardware_isolation.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_gamma_hardware_isolation.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Hardware isolation and SWR consistency fixes verified. 2-element antennas use special hardware (rod_od=0.5625, rod_length=48, tube=30, teflon=31). 3-20 element antennas use standard hardware (rod_od=0.5, rod_length=36, tube=22, teflon=23). Designer accepts new optional fields for physics consistency.",
+  "verified_features": {
+    "2_element_special_hardware": {
+      "endpoint": "/api/gamma-designer",
+      "rod_od": 0.562,
+      "gamma_rod_length": 48,
+      "tube_length": 30,
+      "teflon_length": 31,
+      "status": "VERIFIED"
+    },
+    "3_element_standard_hardware": {
+      "endpoint": "/api/gamma-designer",
+      "rod_od": 0.5,
+      "gamma_rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "status": "VERIFIED"
+    },
+    "5_element_standard_hardware": {
+      "endpoint": "/api/gamma-designer",
+      "rod_od": 0.5,
+      "gamma_rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "status": "VERIFIED"
+    },
+    "2_element_calculate_hardware": {
+      "endpoint": "/api/calculate",
+      "rod_od": 0.562,
+      "rod_length": 48,
+      "tube_length": 30,
+      "teflon_length": 31,
+      "status": "VERIFIED"
+    },
+    "3_element_calculate_hardware": {
+      "endpoint": "/api/calculate",
+      "rod_od": 0.5,
+      "rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "status": "VERIFIED"
+    },
+    "designer_new_fields": {
+      "element_resonant_freq_mhz": "ACCEPTED",
+      "reflector_spacing_in": "ACCEPTED",
+      "director_spacings_in": "ACCEPTED",
+      "status": "VERIFIED"
+    },
+    "round_trip_swr_consistency": {
+      "4_element": {
+        "designer_swr": "~1.0",
+        "consistency": "Within tolerance",
+        "status": "VERIFIED"
+      },
+      "2_element": {
+        "designer_swr": "~1.0",
+        "special_hardware_used": true,
+        "status": "VERIFIED"
+      }
+    }
+  },
+  "api_test_results": {
+    "gamma_designer_2_element": {
+      "rod_od": 0.562,
+      "gamma_rod_length": 48,
+      "tube_length": 30,
+      "teflon_length": 31,
+      "swr_at_null": 1.0,
+      "feedpoint_impedance": 38.4
+    },
+    "gamma_designer_3_element": {
+      "rod_od": 0.5,
+      "gamma_rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "swr_at_null": 1.351,
+      "feedpoint_impedance": 32.7
+    },
+    "gamma_designer_5_element": {
+      "rod_od": 0.5,
+      "gamma_rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "swr_at_null": 1.0,
+      "feedpoint_impedance": 26.8
+    },
+    "calculate_2_element_gamma": {
+      "rod_od": 0.562,
+      "rod_length": 48,
+      "tube_length": 30,
+      "teflon_length": 31,
+      "swr": 2.09
+    },
+    "calculate_3_element_gamma": {
+      "rod_od": 0.5,
+      "rod_length": 36,
+      "tube_length": 22,
+      "teflon_length": 23,
+      "swr": 1.86
+    }
+  },
+  "hardware_rules": {
+    "2_element_special": {
+      "rod_od_inches": 0.5625,
+      "rod_length_inches": 48,
+      "tube_length_inches": 30,
+      "teflon_length_inches": 31,
+      "reason": "Better capacitance range for 2-element Yagi"
+    },
+    "3_to_20_element_standard": {
+      "rod_od_inches": 0.5,
+      "rod_length_inches": 36,
+      "tube_length_inches": 22,
+      "teflon_length_inches": 23,
+      "reason": "Standard hardware for 3+ element Yagis"
+    }
+  }
+}
