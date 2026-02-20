@@ -391,7 +391,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             ]},
             {"step": 3, "label": "ROD INSERTION & CAPACITANCE", "items": [
                 {"var": "rod_insertion", "val": round(rod_insertion_in, 2), "unit": "in"},
-                {"var": "insertion_ratio", "val": round(insertion_ratio, 3), "unit": "", "formula": f"{round(rod_insertion_in,1)} / {round(tube_length,1)}"},
+                {"var": "insertion_ratio", "val": round(insertion_ratio, 3), "unit": "", "formula": f"{round(rod_insertion_in,1)} / {round(max_insertion,1)}"},
                 {"var": "cap_per_inch", "val": round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 3) if tube_id > rod_od_actual else 0, "unit": "pF/in", "formula": f"1.413×2.1 / ln({round(tube_id,3)}/{round(rod_od_actual,3)})"},
                 {"var": "insertion_cap", "val": insertion_cap_pf, "unit": "pF", "formula": f"{round(1.413 * 2.1 / math.log(tube_id / rod_od_actual), 2) if tube_id > rod_od_actual else 0} × {round(rod_insertion_in,1)}"},
                 {"var": "user_cap", "val": round(user_cap, 1), "unit": "pF"},
