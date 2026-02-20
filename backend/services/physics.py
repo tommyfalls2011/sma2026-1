@@ -1979,7 +1979,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
     bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
-    bar_ideal_clamped = min(bar_ideal, gamma_rod_length)
+    bar_ideal_clamped = max(bar_min, min(bar_ideal, gamma_rod_length))
 
     # Find null ANALYTICALLY: X_antenna*K + X_stub + X_cap = 0
     _, stub_info = _eval(bar_ideal_clamped, 0.001)
