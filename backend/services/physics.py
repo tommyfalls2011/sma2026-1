@@ -233,16 +233,12 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
             gamma_rod_length = 18.0
             tube_length = 8.0
             teflon_sleeve_in = 9.0
-        elif num_elements <= 4:
-            gamma_rod_length = 22.0
-            tube_length = 10.0
-            teflon_sleeve_in = 11.0
         elif num_elements <= 6:
             gamma_rod_length = 22.0
             tube_length = 10.0
             teflon_sleeve_in = 11.0
         else:  # 7+
-            gamma_rod_length = 22.0
+            gamma_rod_length = 30.0
             tube_length = 8.0
             teflon_sleeve_in = 9.0
 
