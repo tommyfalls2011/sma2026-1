@@ -626,6 +626,13 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "hairpin_z0": round(hairpin_z0, 1),
                 "shorten_per_side_in": round(shorten_per_side, 2),
                 "shortened_total_length_in": round(new_total_length, 2),
+                "z_in_r": round(z_in.real, 2),
+                "z_in_x": round(z_in.imag, 2),
+                "gamma_mag": round(gamma_mag, 4),
+                "p_forward_w": round(p_forward, 2),
+                "p_reflected_w": round(p_reflected, 3),
+                "p_net_w": round(p_net, 2),
+                "v_forward_v": round(v_forward, 2),
                 "bandwidth_effect": "Broadband (minimal effect)",
                 "bandwidth_mult": 1.0,
                 "technical_notes": {
