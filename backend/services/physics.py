@@ -1991,6 +1991,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     x_ant_k = x_antenna_at_center * k_ideal  # antenna X transformed by K
 
     # Null: cap must cancel both antenna reactance and stub inductance
+    omega = 2.0 * math.pi * frequency_mhz * 1e6
     null_reachable = True
     positive_x_total = x_ant_k + x_stub_val  # total reactance to cancel with cap
     if positive_x_total > 0:
