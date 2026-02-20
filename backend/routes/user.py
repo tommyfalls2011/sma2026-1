@@ -385,7 +385,8 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
 
 @router.get("/subscription/stripe-status/{session_id}")
 async def stripe_subscription_status(session_id: str, user: dict = Depends(require_user)):
-    stripe_key = os.environ.get("STRIPE_API_KEY", "")
+    stripe_cred = await get_payment_credentials("stripe")
+    stripe_key = stripe_cred.get("api_key", "") if stripe_cred else ""
     if not stripe_key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
     stripe_checkout = StripeCheckout(api_key=stripe_key)
