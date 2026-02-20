@@ -230,9 +230,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         wavelength_in = 11802.71 / operating_freq_mhz
         # 2-element needs longer tube/teflon for proper match
         if num_elements <= 2:
-            gamma_rod_length = 32.0
-            tube_length = 24.0
-            teflon_sleeve_in = 25.0
+            gamma_rod_length = 48.0
+            tube_length = 30.0
+            teflon_sleeve_in = 31.0
         else:
             gamma_rod_length = 36.0
             tube_length = 22.0
