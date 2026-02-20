@@ -2023,9 +2023,9 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     if positive_x_total > 0:
         c_needed_pf = 1e12 / (omega * positive_x_total)
         optimal_insertion = c_needed_pf / cap_per_inch
-        if optimal_insertion > tube_length_final or optimal_insertion < 0:
+        if optimal_insertion > tube_length or optimal_insertion < 0:
             null_reachable = False
-            optimal_insertion = tube_length_final
+            optimal_insertion = tube_length
     else:
         optimal_insertion = 0.0
         c_needed_pf = 0.0
