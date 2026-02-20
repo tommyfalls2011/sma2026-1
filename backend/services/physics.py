@@ -2057,10 +2057,10 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     actual_cap = null_info.get("insertion_cap_pf", 0)
     k_at_ideal = null_info.get("step_up_ratio", 1.0)
 
-    # Bar sweep: use apply_matching_network for each point
+    # Bar sweep: from bar_min to rod length (bar can't go below teflon end)
     bar_sweep = []
     for b_pct in range(0, 105, 5):
-        b = gamma_rod_length * b_pct / 100.0
+        b = bar_min + (gamma_rod_length - bar_min) * b_pct / 100.0
         s, info_b = _eval(b, optimal_insertion)
         bar_sweep.append({
             "bar_inches": round(b, 2), "k": info_b.get("step_up_ratio", 1.0),

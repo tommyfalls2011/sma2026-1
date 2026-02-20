@@ -1621,7 +1621,7 @@ export default function AntennaCalculator() {
                     // Shorting bar position in inches from feedpoint center
                     const barPosIn = gammaBarPos;
                     const teflonEnd = results?.matching_info?.teflon_sleeve_inches || 23;
-                    const barMin = teflonEnd + 0.5;
+                    const barMin = teflonEnd;
                     // Inductance: L(nH) ≈ 5.08 * length * (ln(2*length/dia) - 1)
                     const barInductanceNh = barPosIn > 0 && rodDia > 0 ? (5.08 * barPosIn * (Math.log(2.0 * barPosIn / rodDia) - 1.0 + rodDia / (2.0 * barPosIn))) : 0;
                     // Reactance from bar inductance: XL = 2πfL
