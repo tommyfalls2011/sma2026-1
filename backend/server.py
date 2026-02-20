@@ -56,7 +56,13 @@ async def stripe_webhook(request: Request):
                 if isinstance(session_data, dict)
                 else session_data.payment_status
             )
+            metadata = (
+                session_data.get("metadata", {})
+                if isinstance(session_data, dict)
+                else (session_data.metadata or {})
+            )
             if payment_status == "paid" and session_id:
+                # Handle store payments
                 await store_db.payment_transactions.update_one(
                     {"session_id": session_id, "payment_status": {"$ne": "paid"}},
                     {
@@ -67,6 +73,23 @@ async def stripe_webhook(request: Request):
                         }
                     },
                 )
+                # Handle subscription payments
+                sub_txn = await db.payment_transactions.find_one(
+                    {"session_id": session_id, "type": "subscription", "payment_status": {"$ne": "paid"}}
+                )
+                if sub_txn:
+                    tier_key = metadata.get("tier") or sub_txn.get("tier", "")
+                    tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+                    duration_days = tier_info.get("duration_days", 30)
+                    expires = datetime.now(timezone.utc) + timedelta(days=duration_days)
+                    await db.users.update_one(
+                        {"id": sub_txn["user_id"]},
+                        {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
+                    )
+                    await db.payment_transactions.update_one(
+                        {"session_id": session_id, "type": "subscription"},
+                        {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.now(timezone.utc).isoformat()}},
+                    )
         return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
