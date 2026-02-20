@@ -251,15 +251,15 @@ export default function AntennaCalculator() {
   };
 
   // Apply a spacing preset to ONE element without resetting others
-  const applyElementPreset = (elementType: 'driven' | 'dir1' | 'dir2', preset: string | false) => {
+  const applyElementPreset = (elementType: string, preset: string | false) => {
     const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
     const wavelengthIn = (299792458 / (freqMhz * 1e6)) * 39.3701;
     const lambdaMap: Record<string, Record<string, number>> = {
       driven: { vclose: 0.08, close: 0.12, normal: 0.18, far: 0.22, vfar: 0.28 },
-      dir1: { vclose: 0.06, close: 0.10, normal: 0.13, far: 0.18, vfar: 0.22 },
-      dir2: { vclose: 0.08, close: 0.12, normal: 0.16, far: 0.22, vfar: 0.28 },
+      dir: { vclose: 0.06, close: 0.10, normal: 0.13, far: 0.18, vfar: 0.22 },
     };
-    const lambda = preset ? lambdaMap[elementType][preset] : lambdaMap[elementType].normal;
+    const baseType = elementType.startsWith('dir') ? 'dir' : elementType;
+    const lambda = preset ? lambdaMap[baseType][preset] : lambdaMap[baseType].normal;
     const gap = Math.round(lambda * wavelengthIn * 10) / 10;
     setInputs(prev => {
       const els = prev.elements.map(e => ({ ...e }));
@@ -268,13 +268,15 @@ export default function AntennaCalculator() {
         refIdx = els.findIndex(e => e.element_type === 'reflector');
         tgtIdx = els.findIndex(e => e.element_type === 'driven');
         if (refIdx < 0) return prev;
-      } else if (elementType === 'dir1') {
-        refIdx = els.findIndex(e => e.element_type === 'driven');
-        tgtIdx = els.findIndex(e => e.element_type === 'director');
       } else {
-        const d1 = els.findIndex(e => e.element_type === 'director');
-        refIdx = d1;
-        tgtIdx = d1 >= 0 ? els.findIndex((e, i) => i > d1 && e.element_type === 'director') : -1;
+        // dir1, dir2, dir3, ... dir18
+        const dirIdx = parseInt(elementType.replace('dir', '')) - 1;
+        const directors = els.map((e, i) => ({ el: e, i })).filter(x => x.el.element_type === 'director');
+        if (dirIdx < directors.length) {
+          tgtIdx = directors[dirIdx].i;
+          // Reference is the previous element (driven for dir1, previous director for dir2+)
+          refIdx = dirIdx === 0 ? els.findIndex(e => e.element_type === 'driven') : (dirIdx > 0 && dirIdx - 1 < directors.length ? directors[dirIdx - 1].i : -1);
+        }
       }
       if (tgtIdx >= 0 && refIdx >= 0) {
         const refPos = parseFloat(els[refIdx].position) || 0;
