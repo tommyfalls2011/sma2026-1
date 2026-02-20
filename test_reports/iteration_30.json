@@ -1,0 +1,108 @@
+{
+  "summary": "Backend-only testing of P0 (max_insertion constraint) and P1 (physics refactoring) changes. All 15 tests passed. Verified: unified rod_od=0.625 for all element counts, tube_length=3.0\", teflon_length=4.0\", bar_min=4.0\", max_insertion=3.5\" (teflon-0.5). SWR: 2-element ~1.1 (null not reachable), 3-20 element = 1.0 (null reachable). Corrected driven element (205.94\") produces SWR=1.0 in main calculator.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p0_p1_gamma_physics.py",
+    "/app/test_reports/pytest/pytest_p0_p1_physics.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_p0_p1_gamma_physics.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None - Uses public API endpoints without authentication",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P0 and P1 changes verified. Key constraints: tube=3.0\", teflon=4.0\", max_insertion=3.5\" (teflon-0.5), bar_min=4.0\" (teflon end). rod_od=0.625 unified for all element counts. Designer and calculator share physics via get_gamma_hardware_defaults(), compute_feedpoint_impedance(), and compute_element_resonant_freq(). When corrected driven element (from designer's recommended_driven_length_in) is used in main calculator with optimal settings, SWR=1.0 is achieved.",
+  "verified_features": {
+    "P0_max_insertion_constraint": {
+      "status": "VERIFIED",
+      "tube_length": "3.0 inches",
+      "teflon_length": "4.0 inches (tube + 1.0)",
+      "max_insertion": "3.5 inches (teflon - 0.5)",
+      "bar_min": "4.0 inches (equals teflon_length)",
+      "insertion_sweep_max": "3.5 inches (goes to max_insertion, not tube_length)"
+    },
+    "P1_physics_refactoring": {
+      "status": "VERIFIED",
+      "shared_helpers": [
+        "get_gamma_hardware_defaults(num_elements) - unified rod_od=0.625, tube=3.0, teflon=4.0",
+        "compute_feedpoint_impedance() - mutual coupling model",
+        "compute_element_resonant_freq() - resonance with coupling correction"
+      ],
+      "designer_calculator_consistency": "Both use same hardware defaults"
+    },
+    "SWR_by_element_count": {
+      "2_element": {
+        "swr": 1.107,
+        "null_reachable": false,
+        "notes": "Higher R_feed (~36Ω), null not reachable with standard hardware"
+      },
+      "3_element": {
+        "swr": 1.0,
+        "null_reachable": true,
+        "recommended_driven": "205.94 inches"
+      },
+      "4_element": {
+        "swr": 1.0,
+        "null_reachable": true
+      },
+      "6_element": {
+        "swr": 1.0,
+        "null_reachable": true
+      },
+      "8_element": {
+        "swr": 1.0,
+        "null_reachable": true
+      },
+      "20_element": {
+        "swr": 1.0,
+        "null_reachable": true
+      }
+    },
+    "rod_od_unified": {
+      "status": "VERIFIED",
+      "value": "0.625 inches for all element counts (2-20)"
+    },
+    "corrected_driven_element": {
+      "status": "VERIFIED",
+      "example": "3-element: 204.0\" -> 205.94\" correction produces SWR=1.0 in main calculator"
+    }
+  },
+  "api_verification": {
+    "gamma_designer_endpoint": {
+      "url": "POST /api/gamma-designer",
+      "tests_passed": 10,
+      "key_outputs_verified": [
+        "recipe.rod_od = 0.625",
+        "recipe.tube_length = 3.0",
+        "recipe.teflon_length = 4.0",
+        "recipe.bar_min = 4.0",
+        "insertion_sweep max = 3.5",
+        "swr_at_null = 1.0 (for 3+ elements)"
+      ]
+    },
+    "calculate_endpoint": {
+      "url": "POST /api/calculate",
+      "tests_passed": 3,
+      "key_outputs_verified": [
+        "hardware.rod_od = 0.625",
+        "hardware.tube_length = 3.0",
+        "hardware.teflon_length = 4.0",
+        "rod_insertion_inches capped at 3.5"
+      ]
+    }
+  }
+}
