@@ -869,94 +869,41 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
 
     feed_type = input_data.feed_type
 
-    # Feedpoint impedance estimate for Yagi (mutual coupling reduces it)
+    # Feedpoint impedance via shared mutual coupling model
     num_directors = len([e for e in input_data.elements if e.element_type == "director"])
     has_reflector_for_z = any(e.element_type == "reflector" for e in input_data.elements)
-    # Feedpoint impedance: starts at 73Ω (free-space half-wave dipole)
-    # Mutual coupling reduces it — CLOSER spacing = STRONGER coupling = LOWER impedance
-    yagi_feedpoint_r = 73.0
     driven_el = next((e for e in input_data.elements if e.element_type == "driven"), None)
     refl_el = next((e for e in input_data.elements if e.element_type == "reflector"), None)
     dir_els = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
 
-    if has_reflector_for_z and driven_el and refl_el:
-        refl_gap_in = abs(driven_el.position - refl_el.position)
-        refl_gap_wl = (refl_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.18
-        # Reflector LENGTH affects coupling via self-impedance:
-        # Near resonance (λ/2): low self-Z → high induced current → strong coupling
-        # Off resonance: high self-Z (reactance) → less current → weaker coupling
-        refl_len_m = refl_el.length * 0.0254
-        half_wave_m = wavelength / 2.0
-        refl_detuning = (refl_len_m - half_wave_m) / half_wave_m if half_wave_m > 0 else 0
-        refl_q = 12.0  # typical aluminum element Q
-        refl_coupling_strength = 1.0 / math.sqrt(1.0 + (refl_q * refl_detuning * 2) ** 2)
-        # Closer reflector = stronger coupling = more impedance drop
-        refl_factor = max(0.35, 0.30 + refl_gap_wl * 1.8)
-        # Scale coupling by how resonant the reflector is
-        refl_factor = 1.0 - (1.0 - refl_factor) * refl_coupling_strength
-        yagi_feedpoint_r *= refl_factor
+    refl_spacing_in = abs(driven_el.position - refl_el.position) if driven_el and refl_el else 48.0
+    dir_spacings_in = [abs(d.position - driven_el.position) for d in dir_els] if driven_el and dir_els else None
+    refl_length_in = refl_el.length if refl_el else 214.0
 
-    if num_directors >= 1 and driven_el and dir_els:
-        d1_gap_in = abs(dir_els[0].position - driven_el.position)
-        d1_gap_wl = (d1_gap_in * 0.0254) / wavelength if wavelength > 0 else 0.13
-        # 1st director: moderate coupling, ~15-25% drop
-        # At 0.08λ: ~79%, at 0.13λ: ~88%, at 0.2λ: ~96%
-        d1_factor = max(0.70, 0.72 + d1_gap_wl * 1.2)
-        yagi_feedpoint_r *= d1_factor
+    yagi_feedpoint_r = compute_feedpoint_impedance(
+        num_elements=n, wavelength_m=wavelength,
+        reflector_spacing_in=refl_spacing_in,
+        director_spacings_in=dir_spacings_in,
+        reflector_length_in=refl_length_in,
+    )
 
-    # Subsequent directors have progressively weaker effect (~5-15% drop each)
-    for i in range(1, min(num_directors, len(dir_els))):
-        if i < len(dir_els) and i - 1 < len(dir_els):
-            gap_in = abs(dir_els[i].position - dir_els[i - 1].position) if i > 0 else 60
-            gap_wl = (gap_in * 0.0254) / wavelength if wavelength > 0 else 0.15
-            factor = max(0.85, 0.85 + gap_wl * 0.5)
-        else:
-            factor = 0.92
-        yagi_feedpoint_r *= factor
-
-    yagi_feedpoint_r = round(max(12.0, min(73.0, yagi_feedpoint_r)), 1)
-
-    # Apply impedance mismatch to SWR: SWR = max(Z/50, 50/Z) for direct feed
-    # For matched feeds, the matching network compensates later
+    # Apply impedance mismatch to SWR
     impedance_swr = max(yagi_feedpoint_r / 50.0, 50.0 / yagi_feedpoint_r)
-    # Blend element-based SWR with impedance-based SWR
     swr = round(max(1.0, min(swr * 0.3 + impedance_swr * 0.7, 10.0)), 2)
 
-    # Element-based resonant frequency: driven element length determines natural resonance
-    # Mutual coupling from ALL neighboring elements LOWERS resonant freq (mutual capacitance)
-    # Closer spacing = more capacitive loading = lower freq. Wider = less loading = higher freq.
-    driven_for_freq = next((e for e in input_data.elements if e.element_type == "driven"), None)
-    reflector_for_freq = next((e for e in input_data.elements if e.element_type == "reflector"), None)
-    directors_for_freq = sorted([e for e in input_data.elements if e.element_type == "director"], key=lambda e: e.position)
-    element_resonant_freq = center_freq  # default to operating freq
-    if driven_for_freq:
-        driven_len_m = convert_element_to_meters(driven_for_freq.length, "inches")
-        ideal_half_wave = wavelength / 2
-        if driven_len_m > 0 and ideal_half_wave > 0:
-            # Longer driven = lower freq, shorter = higher freq
-            length_ratio = driven_len_m / ideal_half_wave
-            element_resonant_freq = round(center_freq / length_ratio, 3)
-            # Reflector mutual capacitance: closer = stronger pull-down
-            if has_reflector_for_z and reflector_for_freq:
-                refl_spacing_m = abs(convert_element_to_meters(driven_for_freq.position - reflector_for_freq.position, "inches"))
-                refl_spacing_wl = refl_spacing_m / wavelength if wavelength > 0 else 0.2
-                # Exponential: at 0.1λ ~4.3%, 0.15λ ~3.5%, 0.2λ ~3%, 0.3λ ~2%
-                refl_coupling = 0.067 * math.exp(-4.0 * max(refl_spacing_wl, 0.02))
-                element_resonant_freq *= (1.0 - refl_coupling)
-            # Director mutual capacitance: closer = also pulls resonance DOWN
-            # Same principle — mutual capacitance increases with proximity
-            for i, d in enumerate(directors_for_freq):
-                dir_spacing_m = abs(convert_element_to_meters(d.position - driven_for_freq.position, "inches"))
-                dir_spacing_wl = dir_spacing_m / wavelength if wavelength > 0 else 0.15
-                # Weaker than reflector (shorter elements = less coupling surface)
-                dir_coupling = 0.015 * math.exp(-5.0 * max(dir_spacing_wl, 0.02)) * (0.7 ** i)
-                element_resonant_freq *= (1.0 - dir_coupling)
-            element_resonant_freq = round(element_resonant_freq, 3)
+    # Element resonant frequency via shared coupling model
+    element_resonant_freq = center_freq
+    if driven_el:
+        element_resonant_freq = compute_element_resonant_freq(
+            driven_length_in=driven_el.length, frequency_mhz=center_freq,
+            wavelength_m=wavelength, num_elements=n,
+            reflector_spacing_in=refl_spacing_in,
+            director_spacings_in=dir_spacings_in,
+        )
 
     # Get driven element half-length and diameter for geometric K calculation
-    driven_for_k = next((e for e in input_data.elements if e.element_type == "driven"), None)
-    driven_half_length_in = driven_for_k.length / 2.0 if driven_for_k else 101.5
-    driven_dia_in = driven_for_k.diameter if driven_for_k else 0.5
+    driven_half_length_in = driven_el.length / 2.0 if driven_el else 101.5
+    driven_dia_in = driven_el.diameter if driven_el else 0.5
 
     matched_swr, matching_info = apply_matching_network(
         swr, feed_type, feedpoint_r=yagi_feedpoint_r,
