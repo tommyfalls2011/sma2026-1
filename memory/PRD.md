@@ -32,6 +32,12 @@ Common: Wall=0.049", Rod spacing=3.5"
   - `POST /api/admin/railway/redeploy` — triggers fresh deployment via Railway GraphQL API
   - `GET /api/admin/railway/status` — shows latest deployment status
   - Confirmation dialog before triggering, with success/error feedback
+- Added **System Notification** feature for "back online" in-app banners
+  - Admin Panel → Updates tab → "Send to All Users" button with custom message
+  - Users see a green dismissible banner at the top of the main page when they open the app
+  - `POST /api/admin/system-notification` — create notification
+  - `DELETE /api/admin/system-notification` — clear notification
+  - `GET /api/system-notification` — public endpoint for users to check
 
 ### Session Feb 20 2026 — Payment System Fix + Stripe Integration:
 - **CRITICAL FIX**: PayPal/CashApp upgrades now create PENDING requests requiring admin approval (was instantly upgrading without payment verification)
