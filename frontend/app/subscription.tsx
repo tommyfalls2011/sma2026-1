@@ -185,17 +185,6 @@ export default function SubscriptionScreen() {
 
   const handlePaymentSelect = (method: string) => {
     setSelectedPayment(method);
-    if (method === 'paypal' && paymentMethods?.paypal?.email) {
-      showAlert(
-        'PayPal Payment',
-        `Send payment to:\n\n${paymentMethods.paypal.email}\n\nInclude your email (${user?.email}) in the payment note.\n\nYour account will be upgraded once payment is verified.`
-      );
-    } else if (method === 'cashapp' && paymentMethods?.cashapp?.tag) {
-      showAlert(
-        'Cash App Payment',
-        `Send payment to:\n\n${paymentMethods.cashapp.tag}\n\nInclude your email (${user?.email}) in the payment note.\n\nYour account will be upgraded once payment is verified.`
-      );
-    }
   };
 
   const handleUpgrade = async () => {
@@ -231,7 +220,37 @@ export default function SubscriptionScreen() {
       return;
     }
 
-    // PayPal / CashApp: submit pending request
+    if (selectedPayment === 'paypal') {
+      // PayPal: redirect to PayPal Checkout
+      setLoading(true);
+      try {
+        const originUrl = Platform.OS === 'web' ? window.location.origin : BACKEND_URL;
+        const res = await fetch(`${BACKEND_URL}/api/subscription/paypal-checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ tier: selectedTier, origin_url: originUrl }),
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          if (Platform.OS === 'web') {
+            window.location.href = data.url;
+          } else {
+            Linking.openURL(data.url);
+          }
+        } else {
+          showAlert('Error', data.detail || 'Failed to start PayPal checkout');
+        }
+      } catch (e) {
+        showAlert('Error', 'Network error. Please try again.');
+      }
+      setLoading(false);
+      return;
+    }
+
+    // CashApp: still manual (pending admin approval)
     setLoading(true);
     try {
       const result = await upgradeSubscription(selectedTier, selectedPayment);
