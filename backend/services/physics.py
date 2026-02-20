@@ -552,9 +552,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         h_rod_spacing = hairpin_rod_spacing if hairpin_rod_spacing and hairpin_rod_spacing > 0 else 1.0
         boom_gap = hairpin_boom_gap if hairpin_boom_gap is not None else 1.0
 
-        # Hairpin Z0 (balanced twin-lead)
+        # Hairpin Z0 (balanced twin-lead, natural log form)
         if h_rod_spacing > h_rod_dia / 2:
-            hairpin_z0 = 276.0 * math.log10(2.0 * h_rod_spacing / h_rod_dia)
+            hairpin_z0 = 120.0 * math.log(2.0 * h_rod_spacing / h_rod_dia)
         else:
             hairpin_z0 = 200.0
 
