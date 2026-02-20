@@ -1957,6 +1957,9 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
     id_rod_ratio = tube_id / rod_od
+    gamma_rod_length = 22.0 if num_elements <= 6 else 30.0
+    teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
+    bar_min = teflon_sleeve + 2.0  # bar must stay 2" past teflon end
 
     # Helper: call apply_matching_network() for a given bar + insertion
     def _eval(bar: float, insertion: float) -> tuple:
@@ -1979,38 +1982,8 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     x_antenna_at_center = probe_info.get("x_antenna", 0)  # antenna reactance at operating freq
 
     k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
-    bar_ideal_unconstrained = half_len * (k_ideal - 1.0) / coupling_multiplier
-
-    # Calculate required insertion at ideal bar (unconstrained)
-    _, stub_info_unc = _eval(bar_ideal_unconstrained, 0.001)
-    x_stub_unc = stub_info_unc.get("x_stub", 0)
-    x_ant_k_unc = x_antenna_at_center * k_ideal
-    omega = 2.0 * math.pi * frequency_mhz * 1e6
-    positive_x_unc = x_ant_k_unc + x_stub_unc
-    if positive_x_unc > 0:
-        c_needed_unc = 1e12 / (omega * positive_x_unc)
-        insertion_needed = c_needed_unc / cap_per_inch
-    else:
-        insertion_needed = 1.0
-
-    # Auto-size hardware: tube must fit insertion, bar must be 2" past teflon
-    # tube >= insertion_needed + 1" headroom
-    # teflon = tube + 1"
-    # bar_min = teflon + 2" (can't clamp within 2" of teflon end)
-    # rod >= bar_ideal + 4" margin
-    auto_tube = max(math.ceil(insertion_needed + 1), 4)
-    auto_teflon = auto_tube + 1.0
-    auto_bar_min = auto_teflon + 2.0
-    auto_rod = max(math.ceil(bar_ideal_unconstrained + 4), auto_tube + 6)
-
-    # Apply custom overrides or use auto-sized values
-    if not (custom_tube_length and custom_tube_length > 0):
-        tube_length = auto_tube
-    teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
-    bar_min = teflon_sleeve + 2.0  # bar must stay 2" past teflon end
-    gamma_rod_length = auto_rod
-
-    bar_ideal_clamped = max(bar_min, min(bar_ideal_unconstrained, gamma_rod_length))
+    bar_ideal = half_len * (k_ideal - 1.0) / coupling_multiplier
+    bar_ideal_clamped = max(bar_min, min(bar_ideal, gamma_rod_length))
 
     # Find null ANALYTICALLY: X_antenna*K + X_stub + X_cap = 0
     _, stub_info = _eval(bar_ideal_clamped, 0.001)
