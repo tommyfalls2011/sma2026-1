@@ -1412,6 +1412,17 @@ export default function AntennaCalculator() {
             )}
           </View>
           
+          {/* System Notification Banner */}
+          {systemNotification && (
+            <View style={{ marginHorizontal: 12, marginBottom: 8, backgroundColor: '#1a2a1a', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#4CAF50', flexDirection: 'row', alignItems: 'center', gap: 10 }} data-testid="system-notification-banner">
+              <Ionicons name="checkmark-circle" size={22} color="#4CAF50" />
+              <Text style={{ color: '#4CAF50', fontSize: 13, fontWeight: '600', flex: 1 }}>{systemNotification.message}</Text>
+              <TouchableOpacity onPress={() => setSystemNotification(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={18} color="#666" />
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Update Available Banner */}
           {updateAvailable && !updateDismissed && (
             <View style={{ marginHorizontal: 12, marginBottom: 8, backgroundColor: '#1a3a1a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#4CAF50' }}>
