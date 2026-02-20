@@ -1885,6 +1885,19 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             dir_coupling = 0.015 * math.exp(-5.0 * max(d_gap_wl, 0.02)) * (0.7 ** d_idx)
             element_res_freq *= (1.0 - dir_coupling)
 
+    # Correct driven element length so resonance matches operating frequency
+    # f_res ∝ 1/L, so L_new = L_current * (f_res / f_target)
+    original_driven_length = driven_element_length_in
+    recommended_driven_length = driven_element_length_in
+    length_was_corrected = False
+    if element_res_freq > 0 and abs(element_res_freq - frequency_mhz) > 0.01:
+        recommended_driven_length = round(driven_element_length_in * (element_res_freq / frequency_mhz), 2)
+        # Use corrected length for the optimization
+        driven_element_length_in = recommended_driven_length
+        half_len = driven_element_length_in / 2.0
+        element_res_freq = frequency_mhz  # now resonant at center freq
+        length_was_corrected = True
+
     # Feedpoint impedance: user-provided or dynamically calculated (same as main calc)
     if feedpoint_impedance and feedpoint_impedance > 0:
         r_feed = feedpoint_impedance
