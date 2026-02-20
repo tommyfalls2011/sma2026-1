@@ -2222,3 +2222,196 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         "notes": notes,
     }
 
+
+def design_hairpin_match(num_elements: int, frequency_mhz: float,
+                          driven_element_length_in: float,
+                          reflector_spacing_in: float = None,
+                          director_spacings_in: list = None,
+                          feedpoint_impedance: float = None,
+                          element_resonant_freq_mhz: float = None,
+                          custom_rod_dia: float = None,
+                          custom_rod_spacing: float = None,
+                          element_diameter: float = 0.5) -> dict:
+    """Design a hairpin (beta) match using complex impedance + reflection coefficient."""
+    wavelength_m = 299792458.0 / (frequency_mhz * 1e6)
+    wl_in = wavelength_m * 39.3701
+    half_len = driven_element_length_in / 2.0
+    refl_gap_in = reflector_spacing_in if reflector_spacing_in and reflector_spacing_in > 0 else 48.0
+
+    # Element resonant frequency
+    if element_resonant_freq_mhz and element_resonant_freq_mhz > 0:
+        element_res_freq = element_resonant_freq_mhz
+    else:
+        element_res_freq = compute_element_resonant_freq(
+            driven_length_in=driven_element_length_in, frequency_mhz=frequency_mhz,
+            wavelength_m=wavelength_m, num_elements=num_elements,
+            reflector_spacing_in=refl_gap_in, director_spacings_in=director_spacings_in,
+        )
+
+    # Driven element length correction for resonance
+    original_driven_length = driven_element_length_in
+    recommended_driven_length = driven_element_length_in
+    length_was_corrected = False
+    if element_res_freq > 0 and abs(element_res_freq - frequency_mhz) > 0.01:
+        recommended_driven_length = round(driven_element_length_in * (element_res_freq / frequency_mhz), 2)
+        driven_element_length_in = recommended_driven_length
+        half_len = driven_element_length_in / 2.0
+        element_res_freq = frequency_mhz
+        length_was_corrected = True
+
+    # Feedpoint impedance
+    if feedpoint_impedance and feedpoint_impedance > 0:
+        r_feed = feedpoint_impedance
+    else:
+        r_feed = compute_feedpoint_impedance(
+            num_elements=num_elements, wavelength_m=wavelength_m,
+            reflector_spacing_in=refl_gap_in, director_spacings_in=director_spacings_in,
+        )
+
+    if r_feed >= 50.0:
+        return {
+            "error": None,
+            "topology_note": f"Feedpoint R = {round(r_feed, 1)} ohms (>= 50). Hairpin cannot step down. Use Gamma match.",
+            "feedpoint_impedance": round(r_feed, 1),
+        }
+
+    # L-network design
+    q_match = math.sqrt(50.0 / r_feed - 1.0)
+    xl_needed = 50.0 / q_match
+    xc_needed = q_match * r_feed
+
+    # Driven element shortening
+    z_char = 120.0 * (math.log(2.0 * half_len / (element_diameter / 2.0)) - 1.0) if element_diameter > 0 else 600.0
+    shorten_per_side = xc_needed * wl_in / (4.0 * math.pi * z_char) if z_char > 0 else 0
+    shortened_total = (half_len - shorten_per_side) * 2.0
+
+    # Hardware candidates: try different rod dia + spacing combos
+    rod_dias = [0.125, 0.1875, 0.25, 0.3125, 0.375]
+    rod_spacings = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+    candidates = []
+
+    for rd in rod_dias:
+        for rs in rod_spacings:
+            if rs <= rd / 2:
+                continue
+            z0 = 276.0 * math.log10(2.0 * rs / rd)
+            ideal_len = (math.atan(xl_needed / z0) / (2.0 * math.pi)) * wl_in
+            # Score: prefer practical lengths (8-36"), reasonable Z0
+            if ideal_len < 2 or ideal_len > wl_in / 4:
+                continue
+            # Practical score: closer to 12-24" is better
+            center = 18.0
+            length_score = abs(ideal_len - center) / center
+            candidates.append({
+                "rod_dia": rd, "rod_spacing": rs, "z0": round(z0, 1),
+                "ideal_length_in": round(ideal_len, 2), "score": length_score,
+            })
+
+    if not candidates:
+        # Fallback to defaults
+        rd = custom_rod_dia if custom_rod_dia and custom_rod_dia > 0 else 0.25
+        rs = custom_rod_spacing if custom_rod_spacing and custom_rod_spacing > 0 else 1.0
+        z0 = 276.0 * math.log10(2.0 * rs / rd) if rs > rd / 2 else 200.0
+        ideal_len = (math.atan(xl_needed / z0) / (2.0 * math.pi)) * wl_in
+        candidates = [{"rod_dia": rd, "rod_spacing": rs, "z0": round(z0, 1),
+                        "ideal_length_in": round(ideal_len, 2), "score": 0}]
+
+    # If user specified custom hardware, use it; otherwise pick best candidate
+    if custom_rod_dia and custom_rod_dia > 0 and custom_rod_spacing and custom_rod_spacing > 0:
+        rd = custom_rod_dia
+        rs = custom_rod_spacing
+        z0 = 276.0 * math.log10(2.0 * rs / rd) if rs > rd / 2 else 200.0
+        ideal_len = (math.atan(xl_needed / z0) / (2.0 * math.pi)) * wl_in
+        best = {"rod_dia": rd, "rod_spacing": rs, "z0": round(z0, 1), "ideal_length_in": round(ideal_len, 2)}
+        hw_source = "custom"
+    else:
+        candidates.sort(key=lambda c: c["score"])
+        best = candidates[0]
+        hw_source = "auto"
+
+    z0_best = best["z0"]
+    ideal_length = best["ideal_length_in"]
+
+    # SWR sweep: vary hairpin length
+    length_sweep = []
+    sweep_min = max(2.0, ideal_length * 0.3)
+    sweep_max = min(wl_in / 4.0 - 1.0, ideal_length * 2.5)
+    sweep_steps = 60
+    step_size = (sweep_max - sweep_min) / sweep_steps if sweep_steps > 0 else 1.0
+
+    best_swr = 999.0
+    best_length = ideal_length
+
+    for i in range(sweep_steps + 1):
+        length = sweep_min + i * step_size
+        beta_l = (2.0 * math.pi * length) / wl_in
+        if abs(beta_l) >= math.pi / 2.0 - 0.01:
+            continue
+        xl_act = z0_best * math.tan(beta_l)
+
+        # Complex impedance calculation
+        z_feed = complex(r_feed, -xc_needed)
+        z_hp = complex(0, xl_act)
+        z_sum = z_feed + z_hp
+        if abs(z_sum) < 0.001:
+            continue
+        z_in = (z_feed * z_hp) / z_sum
+
+        gamma_c = (z_in - 50.0) / (z_in + 50.0)
+        gamma_m = abs(gamma_c)
+        swr_val = (1.0 + gamma_m) / (1.0 - gamma_m) if gamma_m < 0.99 else 99.0
+
+        # Power (5W reference)
+        p_refl = 5.0 * gamma_m ** 2
+
+        pt = {
+            "length_in": round(length, 2),
+            "swr": round(swr_val, 3),
+            "xl_actual": round(xl_act, 2),
+            "z_in_r": round(z_in.real, 2),
+            "z_in_x": round(z_in.imag, 2),
+            "gamma": round(gamma_m, 4),
+            "p_reflected_w": round(p_refl, 3),
+        }
+        length_sweep.append(pt)
+
+        if swr_val < best_swr:
+            best_swr = swr_val
+            best_length = length
+
+    # Build recipe
+    recipe = {
+        "rod_dia": best["rod_dia"],
+        "rod_spacing": best["rod_spacing"],
+        "z0": z0_best,
+        "ideal_hairpin_length_in": round(best_length, 2),
+        "xl_needed": round(xl_needed, 2),
+        "xc_needed": round(xc_needed, 2),
+        "q_match": round(q_match, 3),
+        "swr_at_best": round(max(1.0, best_swr), 3),
+        "feedpoint_r": round(r_feed, 1),
+        "shorten_per_side_in": round(shorten_per_side, 2),
+        "shortened_total_length_in": round(shortened_total, 2),
+        "original_driven_length_in": round(original_driven_length, 2),
+        "recommended_driven_length_in": round(recommended_driven_length, 2) if length_was_corrected else None,
+        "driven_length_corrected": length_was_corrected,
+    }
+
+    notes = []
+    if length_was_corrected:
+        delta = round(recommended_driven_length - original_driven_length, 2)
+        direction = "LONGER" if delta > 0 else "SHORTER"
+        notes.append(f"Driven element should be {abs(delta)}\" {direction} for resonance at {frequency_mhz} MHz")
+    notes.append(f"Shorten each half of driven by {round(shorten_per_side, 2)}\" for {round(xc_needed, 1)} ohms X_C")
+    notes.append(f"New driven element total: {round(shortened_total, 2)}\"")
+
+    return {
+        "recipe": recipe,
+        "feedpoint_impedance": round(r_feed, 1),
+        "hardware_source": hw_source,
+        "auto_hardware": {"rod_dia": best["rod_dia"], "rod_spacing": best["rod_spacing"], "z0": z0_best},
+        "length_sweep": length_sweep,
+        "notes": notes,
+        "error": None,
+    }
+
