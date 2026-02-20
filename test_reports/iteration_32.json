@@ -1,0 +1,129 @@
+{
+  "summary": "Backend-only testing of per-element tube sizing in get_gamma_hardware_defaults() and improved global optimizer sweep. All 13 tests passed. Verified: 2-el tube=4.0\" (teflon=5.0\", SWR=1.106), 3-el tube=3.5\" (teflon=4.5\", SWR=1.024), 4+ el tube=3.0\" (teflon=4.0\", SWR≈1.0). Optimizer always sweeps full bar range from bar_min to rod_length to find global best SWR.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_per_element_tube_sizing.py",
+    "/app/test_reports/pytest/pytest_per_element_tube_sizing.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_per_element_tube_sizing.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "N/A - Backend only testing"
+  },
+  "seed_data_creation": "None - Uses public API endpoints without authentication",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Per-element tube sizing verified. get_gamma_hardware_defaults() returns: 2-el→tube=4.0/teflon=5.0/max_ins=3.5, 3-el→tube=3.5/teflon=4.5/max_ins=3.0, 4+ el→tube=3.0/teflon=4.0/max_ins=2.5. Optimizer always sweeps full bar range. SWR values: 2-el=1.106 (null=false), 3-el=1.024, 4-el=1.008, 5-el=1.003 (null=true), 6-el=1.005 (null=true). Formula: max_insertion = tube_length - 0.5.",
+  "verified_features": {
+    "per_element_tube_sizing": {
+      "status": "VERIFIED",
+      "2_element": {
+        "tube_length": "4.0 inches",
+        "teflon_length": "5.0 inches",
+        "max_insertion": "3.5 inches",
+        "swr_at_null": 1.106,
+        "null_reachable": false,
+        "notes": "Higher R_feed (~38Ω), requires max cap insertion"
+      },
+      "3_element": {
+        "tube_length": "3.5 inches",
+        "teflon_length": "4.5 inches",
+        "max_insertion": "3.0 inches",
+        "swr_at_null": 1.024,
+        "null_reachable": false,
+        "notes": "Better match, close to null"
+      },
+      "4_element": {
+        "tube_length": "3.0 inches",
+        "teflon_length": "4.0 inches",
+        "max_insertion": "2.5 inches",
+        "swr_at_null": 1.008,
+        "null_reachable": false,
+        "notes": "Near-perfect match"
+      },
+      "5_element": {
+        "tube_length": "3.0 inches",
+        "teflon_length": "4.0 inches",
+        "max_insertion": "2.5 inches",
+        "swr_at_null": 1.003,
+        "null_reachable": true
+      },
+      "6_element": {
+        "tube_length": "3.0 inches",
+        "teflon_length": "4.0 inches",
+        "max_insertion": "2.5 inches",
+        "swr_at_null": 1.005,
+        "null_reachable": true
+      },
+      "8_element": {
+        "tube_length": "3.0 inches",
+        "teflon_length": "4.0 inches",
+        "swr_at_null": 1.002,
+        "null_reachable": true
+      },
+      "20_element": {
+        "tube_length": "3.0 inches",
+        "teflon_length": "4.0 inches",
+        "swr_at_null": 1.003,
+        "null_reachable": true
+      }
+    },
+    "global_optimizer_sweep": {
+      "status": "VERIFIED",
+      "behavior": "Optimizer ALWAYS sweeps full bar range from bar_min to rod_length (80 steps)",
+      "sweep_results": {
+        "bar_sweep": "21 points (0-100% of rod length)",
+        "insertion_sweep": "21 points (0-100% of max_insertion)"
+      },
+      "notes": "Finds global best SWR considering both R and X components, not just X=0 (null)"
+    },
+    "swr_consistency": {
+      "status": "VERIFIED",
+      "no_jumps": "SWR transitions smoothly: 2-el(1.106) → 3-el(1.024) → 4-el(1.008) → 5-el(1.003) → 6-el(1.005)",
+      "max_delta_between_adjacent": "0.082 (between 2-el and 3-el)"
+    },
+    "custom_tube_override": {
+      "status": "VERIFIED",
+      "test": "custom_tube_length=4.0 for 2-el produces identical SWR (1.106) as auto-default"
+    }
+  },
+  "api_verification": {
+    "gamma_designer_endpoint": {
+      "url": "POST /api/gamma-designer",
+      "tests_passed": 8,
+      "key_outputs_verified": [
+        "recipe.tube_length scales per element count",
+        "recipe.teflon_length = tube + 1.0",
+        "recipe.swr_at_null matches expected ranges",
+        "recipe.null_reachable correct for element count",
+        "bar_sweep populated with 21 points",
+        "insertion_sweep populated with 21 points"
+      ]
+    },
+    "calculate_endpoint": {
+      "url": "POST /api/calculate",
+      "tests_passed": 3,
+      "key_outputs_verified": [
+        "matching_info.hardware.tube_length matches per-element sizing",
+        "matching_info.hardware.teflon_length matches per-element sizing"
+      ]
+    }
+  },
+  "physics_notes": {
+    "why_2el_swr_not_perfect": "2-element Yagi has higher feedpoint impedance (~38Ω). Even with max cap insertion (3.5\"), the optimizer finds best balance at SWR=1.106. NOT reaching X=0 (null) gives better overall SWR because it optimizes for both R and X together.",
+    "per_element_tube_rationale": "Fewer elements → higher R → need more stub inductance → longer tube allows more insertion range. More elements → lower R → less cap needed → shorter tube sufficient.",
+    "formula": "max_insertion = tube_length - 0.5 (rod stops 0.5\" before tube far end)"
+  }
+}
