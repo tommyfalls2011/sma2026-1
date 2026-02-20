@@ -1715,7 +1715,7 @@ export default function AntennaCalculator() {
                       <View style={{ marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                           <Text style={{ fontSize: 10, color: '#888' }}>Shorting Bar Position (from feedpoint center)</Text>
-                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn}" along {rodLen.toFixed(0)}" rod</Text>
+                          <Text style={{ fontSize: 12, color: '#FF9800', fontWeight: '700' }}>{barPosIn.toFixed(2)}" along {rodLen.toFixed(0)}" rod</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                           <Pressable onPress={() => setGammaBarPos(Math.max(4, gammaBarPos - 0.25))} style={{ paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#252525', borderRadius: 4, borderWidth: 1, borderColor: '#FF9800', marginRight: 6 }}>
