@@ -2066,7 +2066,13 @@ export default function AntennaCalculator() {
               </TouchableOpacity>
             </View>
             <View style={{ zIndex: 1 }}>
-              {inputs.elements.map((elem, idx) => <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} unit={elementUnit} taperEnabled={inputs.taper.enabled} taperConfig={inputs.taper} />)}
+              {inputs.elements.map((elem, idx) => {
+                let dirNum: number | undefined;
+                if (elem.element_type === 'director') {
+                  dirNum = inputs.elements.slice(0, idx).filter(e => e.element_type === 'director').length + 1;
+                }
+                return <ElementInput key={`${elem.element_type}-${idx}`} element={elem} index={idx} onChange={updateElement} unit={elementUnit} taperEnabled={inputs.taper.enabled} taperConfig={inputs.taper} directorNum={dirNum} />;
+              })}
             </View>
           </View>
 
