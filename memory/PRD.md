@@ -58,6 +58,11 @@ Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB rad
 - User auth, subscription tiers, admin panel
 - Email system via Resend, App update system
 
+### Session Feb 21 2026 — Dynamic Director Adjustments:
+- Director spacing controls now only appear when element count >= 5 (3+ directors)
+- Hides unused director adjustments — e.g., 8 elements shows exactly 6 director controls
+- Added safety check: if directors.length < 3, returns null even if num_elements >= 5
+
 ## IN PROGRESS / NEXT PRIORITY
 
 ### Auto-Recurring Monthly Billing (P0 — User Requested)
