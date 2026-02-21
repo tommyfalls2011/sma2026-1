@@ -943,6 +943,12 @@ export default function AntennaCalculator() {
             spacingMode, spacingLevel, spacingNudgeCount,
             closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2,
             drivenNudgeCount, dir1NudgeCount, dir2NudgeCount,
+            dirPresets, dirNudgeCounts,
+            boomLockEnabled, maxBoomLength, spacingLockEnabled,
+            elementUnit, gainMode,
+            coaxType, coaxLengthFt, transmitPowerWatts,
+            gammaRodDia, gammaRodSpacing, gammaCapPf, gammaBarPos, gammaRodInsertion,
+            hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap,
           }
         })
       });
