@@ -20,7 +20,7 @@ export const ElementInput = ({ element, index, onChange, unit, taperEnabled, tap
   }
   return (
     <View style={[styles.elementCard, { borderLeftColor: color }]}>
-      <Text style={[styles.elementTitle, { color }]}>{element.element_type.charAt(0).toUpperCase() + element.element_type.slice(1)} {element.element_type === 'director' ? `#${index}` : ''}</Text>
+      <Text style={[styles.elementTitle, { color }]}>{element.element_type.charAt(0).toUpperCase() + element.element_type.slice(1)} {element.element_type === 'director' ? `#${index - (index > 0 ? (element.element_type === 'director' ? index - Array.from({length: index}).filter((_, i) => true).length + 1 : 0) : 0)}` : ''}</Text>
       <View style={styles.elementRow}>
         <View style={styles.elementField}><Text style={styles.elementLabel}>Length{unitLabel}</Text><TextInput style={styles.elementInput} value={element.length} onChangeText={v => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
         <View style={styles.elementField}>
