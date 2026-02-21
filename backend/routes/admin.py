@@ -294,6 +294,42 @@ async def admin_delete_user_designs(user_id: str, admin: dict = Depends(require_
     return {"success": True, "message": f"Deleted {result.deleted_count} designs from {user.get('email', 'Unknown')}"}
 
 
+@router.post("/admin/designs/copy")
+async def admin_copy_design(request: dict, admin: dict = Depends(require_admin)):
+    """Copy a design from one user to another. Used for admin tune service ($15)."""
+    design_id = request.get("design_id")
+    target_user_id = request.get("target_user_id")
+    append_mod = request.get("append_mod", False)
+    if not design_id or not target_user_id:
+        raise HTTPException(status_code=400, detail="design_id and target_user_id required")
+    design = await db.saved_designs.find_one({"id": design_id})
+    if not design:
+        raise HTTPException(status_code=404, detail="Design not found")
+    target_user = await db.users.find_one({"id": target_user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Target user not found")
+    new_name = design["name"] + " (mod)" if append_mod else design["name"]
+    new_design = {
+        "id": str(uuid.uuid4()),
+        "user_id": target_user_id,
+        "name": new_name,
+        "description": design.get("description", ""),
+        "design_data": design["design_data"],
+        "spacing_state": design.get("spacing_state"),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+    await db.saved_designs.insert_one(new_design)
+    source_user = await db.users.find_one({"id": design.get("user_id")})
+    return {
+        "success": True,
+        "new_design_id": new_design["id"],
+        "message": f"Copied \"{design['name']}\" → \"{new_name}\" to {target_user.get('email', 'Unknown')}",
+        "source_user": source_user.get("email", "Unknown") if source_user else "Unknown",
+        "target_user": target_user.get("email", "Unknown"),
+    }
+
+
 # ── Tutorial & Designer Info ──
 
 @router.put("/admin/tutorial")
