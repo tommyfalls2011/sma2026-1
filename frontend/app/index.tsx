@@ -1011,6 +1011,31 @@ export default function AntennaCalculator() {
           setDrivenNudgeCount(s.drivenNudgeCount ?? 0);
           setDir1NudgeCount(s.dir1NudgeCount ?? 0);
           setDir2NudgeCount(s.dir2NudgeCount ?? 0);
+          // Dynamic director presets
+          if (s.dirPresets) setDirPresets(s.dirPresets);
+          if (s.dirNudgeCounts) setDirNudgeCounts(s.dirNudgeCounts);
+          // Tuning locks
+          if (s.boomLockEnabled !== undefined) setBoomLockEnabled(s.boomLockEnabled);
+          if (s.maxBoomLength !== undefined) setMaxBoomLength(s.maxBoomLength);
+          if (s.spacingLockEnabled !== undefined) setSpacingLockEnabled(s.spacingLockEnabled);
+          // Units & gain mode
+          if (s.elementUnit) setElementUnit(s.elementUnit);
+          if (s.gainMode) setGainMode(s.gainMode);
+          // Coax / Feedline
+          if (s.coaxType) setCoaxType(s.coaxType);
+          if (s.coaxLengthFt) setCoaxLengthFt(s.coaxLengthFt);
+          if (s.transmitPowerWatts) setTransmitPowerWatts(s.transmitPowerWatts);
+          // Gamma match settings
+          if (s.gammaRodDia !== undefined) setGammaRodDia(s.gammaRodDia);
+          if (s.gammaRodSpacing !== undefined) setGammaRodSpacing(s.gammaRodSpacing);
+          if (s.gammaCapPf !== undefined) setGammaCapPf(s.gammaCapPf);
+          if (s.gammaBarPos !== undefined) setGammaBarPos(s.gammaBarPos);
+          if (s.gammaRodInsertion !== undefined) setGammaRodInsertion(s.gammaRodInsertion);
+          // Hairpin match settings
+          if (s.hairpinRodDia !== undefined) setHairpinRodDia(s.hairpinRodDia);
+          if (s.hairpinRodSpacing !== undefined) setHairpinRodSpacing(s.hairpinRodSpacing);
+          if (s.hairpinLengthIn !== undefined) setHairpinLengthIn(s.hairpinLengthIn);
+          if (s.hairpinBoomGap !== undefined) setHairpinBoomGap(s.hairpinBoomGap);
         }
         setShowLoadModal(false);
         Alert.alert('Loaded', `Design "${data.name}" loaded successfully`);
