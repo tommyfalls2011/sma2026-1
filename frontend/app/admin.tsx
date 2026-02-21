@@ -878,6 +878,55 @@ export default function AdminScreen() {
     );
   };
 
+  // Copy design to admin's account (for tuning)
+  const copyDesignToMe = async (designId: string, designName: string) => {
+    if (!user) return;
+    setCopyingDesignId(designId);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/designs/copy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ design_id: designId, target_user_id: user.id, append_mod: false }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        Alert.alert('Copied!', `"${designName}" copied to your account. Go to the main page to load & tune it.`);
+        await loadData();
+      } else {
+        const err = await res.json();
+        Alert.alert('Error', err.detail || 'Copy failed');
+      }
+    } catch { Alert.alert('Error', 'Network error'); }
+    finally { setCopyingDesignId(null); }
+  };
+
+  // Send modified design back to original user with (mod) suffix
+  const sendDesignBack = async (designId: string, designName: string, originalUserId: string, originalUserEmail: string) => {
+    confirmAction(
+      'Send Back (mod)',
+      `Send "${designName} (mod)" back to ${originalUserEmail}?\n\nThis is a $15 tune service.`,
+      async () => {
+        setCopyingDesignId(designId);
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/admin/designs/copy`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ design_id: designId, target_user_id: originalUserId, append_mod: true }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            Alert.alert('Sent!', data.message);
+            await loadData();
+          } else {
+            const err = await res.json();
+            Alert.alert('Error', err.detail || 'Send failed');
+          }
+        } catch { Alert.alert('Error', 'Network error'); }
+        finally { setCopyingDesignId(null); }
+      }
+    );
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
