@@ -90,6 +90,8 @@ export default function AdminScreen() {
   // Designs state
   const [designs, setDesigns] = useState<any[]>([]);
   const [deletingDesignId, setDeletingDesignId] = useState<string | null>(null);
+  const [copyingDesignId, setCopyingDesignId] = useState<string | null>(null);
+  const [designFilter, setDesignFilter] = useState<string>('all'); // 'all' or a user_id
   
   // Add User Modal state
   const [showAddUserModal, setShowAddUserModal] = useState(false);
