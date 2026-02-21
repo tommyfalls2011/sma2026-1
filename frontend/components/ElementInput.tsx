@@ -3,13 +3,14 @@ import { View, Text, TextInput } from 'react-native';
 import { styles } from './styles';
 import type { ElementDimension, TaperConfig } from './types';
 
-export const ElementInput = ({ element, index, onChange, unit, taperEnabled, taperConfig }: {
+export const ElementInput = ({ element, index, onChange, unit, taperEnabled, taperConfig, directorNum }: {
   element: ElementDimension;
   index: number;
   onChange: (index: number, field: keyof ElementDimension, value: string) => void;
   unit: string;
   taperEnabled: boolean;
   taperConfig: TaperConfig;
+  directorNum?: number;
 }) => {
   const color = element.element_type === 'reflector' ? '#FF9800' : element.element_type === 'driven' ? '#4CAF50' : '#2196F3';
   const unitLabel = unit === 'meters' ? ' (m)' : ' (in)';
@@ -18,9 +19,12 @@ export const ElementInput = ({ element, index, onChange, unit, taperEnabled, tap
     const lastSection = taperConfig.sections[taperConfig.sections.length - 1];
     tipDiameter = lastSection?.end_diameter || element.diameter;
   }
+  const label = element.element_type === 'director'
+    ? `Director #${directorNum ?? index}`
+    : element.element_type.charAt(0).toUpperCase() + element.element_type.slice(1);
   return (
     <View style={[styles.elementCard, { borderLeftColor: color }]}>
-      <Text style={[styles.elementTitle, { color }]}>{element.element_type.charAt(0).toUpperCase() + element.element_type.slice(1)} {element.element_type === 'director' ? `#${index - (index > 0 ? (element.element_type === 'director' ? index - Array.from({length: index}).filter((_, i) => true).length + 1 : 0) : 0)}` : ''}</Text>
+      <Text style={[styles.elementTitle, { color }]}>{label}</Text>
       <View style={styles.elementRow}>
         <View style={styles.elementField}><Text style={styles.elementLabel}>Length{unitLabel}</Text><TextInput style={styles.elementInput} value={element.length} onChangeText={v => onChange(index, 'length', v)} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#555" /></View>
         <View style={styles.elementField}>
