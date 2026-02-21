@@ -2474,7 +2474,6 @@ export default function AntennaCalculator() {
                 });
               })()}
             </View>
-            )}
             {boomLockEnabled && (
               <View style={{ marginTop: 12, backgroundColor: '#1a1a1a', borderRadius: 8, padding: 10, borderLeftWidth: 3, borderLeftColor: '#FF9800' }}>
                 <Text style={{ fontSize: 11, color: '#888' }}>
