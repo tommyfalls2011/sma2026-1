@@ -1382,38 +1382,110 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               )}
             </View>
-            <Text style={styles.hint}>Manage all user-saved antenna designs. Tap delete icon to remove individual designs.</Text>
+            <Text style={styles.hint}>Browse user designs. Copy to your account to tune, then send back with (mod) tag. Tune service: $15.</Text>
             
+            {/* User filter */}
+            {designs.length > 0 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  <TouchableOpacity
+                    style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: designFilter === 'all' ? '#2196F3' : '#252525' }}
+                    onPress={() => setDesignFilter('all')}
+                  >
+                    <Text style={{ color: designFilter === 'all' ? '#fff' : '#888', fontSize: 11, fontWeight: '600' }}>All Users</Text>
+                  </TouchableOpacity>
+                  {[...new Map(designs.map(d => [d.user_id, { id: d.user_id, email: d.user_email }])).values()].map(u => (
+                    <TouchableOpacity
+                      key={u.id}
+                      style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: designFilter === u.id ? '#2196F3' : '#252525' }}
+                      onPress={() => setDesignFilter(designFilter === u.id ? 'all' : u.id)}
+                    >
+                      <Text style={{ color: designFilter === u.id ? '#fff' : '#888', fontSize: 11, fontWeight: '600' }}>{u.email}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+
             {designs.length === 0 ? (
               <View style={styles.emptyDesigns}>
                 <Ionicons name="folder-open-outline" size={48} color="#444" />
                 <Text style={styles.emptyDesignsText}>No saved designs found</Text>
               </View>
             ) : (
-              designs.map(design => (
-                <View key={design.id} style={styles.designCard}>
-                  <View style={styles.designInfo}>
+              designs.filter(d => designFilter === 'all' || d.user_id === designFilter).map(design => {
+                const isMyDesign = design.user_id === user?.id;
+                const isCopying = copyingDesignId === design.id;
+                return (
+                <View key={design.id} style={[styles.designCard, isMyDesign && { borderLeftWidth: 3, borderLeftColor: '#4CAF50' }]}>
+                  <View style={[styles.designInfo, { flex: 1 }]}>
                     <Text style={styles.designName}>{design.name || 'Unnamed Design'}</Text>
                     <Text style={styles.designMeta}>
-                      {design.element_count} elements • By: {design.user_name || design.user_email}
+                      {design.element_count} elements  {isMyDesign ? '(yours)' : `By: ${design.user_name || design.user_email}`}
                     </Text>
                     <Text style={styles.designDate}>
                       {design.created_at ? new Date(design.created_at).toLocaleDateString() : 'Unknown date'}
                     </Text>
                   </View>
-                  <TouchableOpacity 
-                    onPress={() => deleteDesign(design.id, design.name)} 
-                    style={styles.deleteDesignBtn}
-                    disabled={deletingDesignId === design.id}
-                  >
-                    {deletingDesignId === design.id ? (
-                      <ActivityIndicator size="small" color="#f44336" />
-                    ) : (
-                      <Ionicons name="trash-outline" size={20} color="#f44336" />
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {/* Copy to my account — only for other users' designs */}
+                    {!isMyDesign && (
+                      <TouchableOpacity
+                        onPress={() => copyDesignToMe(design.id, design.name)}
+                        style={{ backgroundColor: '#1a3a2a', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#4CAF50' }}
+                        disabled={isCopying}
+                        data-testid={`copy-design-${design.id}`}
+                      >
+                        {isCopying ? <ActivityIndicator size="small" color="#4CAF50" /> : (
+                          <View style={{ alignItems: 'center' }}>
+                            <Ionicons name="copy-outline" size={16} color="#4CAF50" />
+                            <Text style={{ color: '#4CAF50', fontSize: 8, fontWeight: '700', marginTop: 2 }}>Copy</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                    {/* Send back to original user — only for MY designs that I tuned */}
+                    {isMyDesign && designs.some(d => d.user_id !== user?.id) && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          // Show picker for which user to send to
+                          const otherUsers = [...new Map(designs.filter(d => d.user_id !== user?.id).map(d => [d.user_id, { id: d.user_id, email: d.user_email }])).values()];
+                          if (otherUsers.length === 1) {
+                            sendDesignBack(design.id, design.name, otherUsers[0].id, otherUsers[0].email);
+                          } else {
+                            Alert.alert('Send To', 'Select user to send this tuned design to:', 
+                              otherUsers.map(u => ({ text: u.email, onPress: () => sendDesignBack(design.id, design.name, u.id, u.email) })).concat([{ text: 'Cancel', style: 'cancel' } as any])
+                            );
+                          }
+                        }}
+                        style={{ backgroundColor: '#1a2a3a', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#FF9800' }}
+                        disabled={isCopying}
+                        data-testid={`send-back-${design.id}`}
+                      >
+                        {isCopying ? <ActivityIndicator size="small" color="#FF9800" /> : (
+                          <View style={{ alignItems: 'center' }}>
+                            <Ionicons name="send-outline" size={16} color="#FF9800" />
+                            <Text style={{ color: '#FF9800', fontSize: 8, fontWeight: '700', marginTop: 2 }}>Send</Text>
+                            <Text style={{ color: '#FF9800', fontSize: 7 }}>(mod)</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                    <TouchableOpacity 
+                      onPress={() => deleteDesign(design.id, design.name)} 
+                      style={styles.deleteDesignBtn}
+                      disabled={deletingDesignId === design.id}
+                    >
+                      {deletingDesignId === design.id ? (
+                        <ActivityIndicator size="small" color="#f44336" />
+                      ) : (
+                        <Ionicons name="trash-outline" size={20} color="#f44336" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              ))
+                );
+              })
             )}
           </>
         )}
