@@ -89,7 +89,7 @@
     }
   },
   "testing_environment": {
-    "url": "https://hairpin-match.preview.emergentagent.com",
+    "url": "https://monthly-billing-5.preview.emergentagent.com",
     "framework": "Expo web (React Native)",
     "backend": "FastAPI with Python physics engine",
     "element_config_tested": "2-element and 3-element Yagi",
