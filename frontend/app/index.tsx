@@ -2411,9 +2411,10 @@ export default function AntennaCalculator() {
                 </View>
               </View>
 
-              {/* Director Spacing Overrides — dynamic for all directors */}
-              {(() => {
+              {/* Director Spacing Overrides — only shown for 5+ elements (3+ directors) */}
+              {inputs.num_elements >= 5 && (() => {
                 const directors = inputs.elements.filter(e => e.element_type === 'director');
+                if (directors.length < 3) return null;
                 const dirColors = ['#2196F3', '#FF9800', '#9C27B0', '#4CAF50', '#f44336', '#00BCD4', '#FF5722', '#8BC34A', '#E91E63', '#3F51B5', '#CDDC39', '#795548', '#607D8B', '#FFC107', '#009688', '#673AB7', '#FF6F00', '#1B5E20'];
                 return directors.map((_, dirIdx) => {
                   const dirNum = dirIdx + 1;
