@@ -278,6 +278,7 @@ export default function AntennaCalculator() {
     const freqMhz = parseFloat(inputs.frequency_mhz) || 27.185;
     const wavelengthIn = (299792458 / (freqMhz * 1e6)) * 39.3701;
     const lambdaMap: Record<string, Record<string, number>> = {
+      reflector: { vclose: 0.10, close: 0.14, normal: 0.18, far: 0.22, vfar: 0.28 },
       driven: { vclose: 0.08, close: 0.12, normal: 0.18, far: 0.22, vfar: 0.28 },
       dir: { vclose: 0.06, close: 0.10, normal: 0.13, far: 0.18, vfar: 0.22 },
     };
