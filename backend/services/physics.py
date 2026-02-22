@@ -1751,32 +1751,34 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
 
     # Build style spacing profiles (in wavelengths)
+    # D1 is always tight (0.08-0.12λ) per real-world Yagi design — even in "far" builds
+    # Outer directors gradually increase toward 0.30-0.40λ for long booms
     STYLE_PROFILES = {
         'tight': {
             'refl_driven': 0.12,         # Closer reflector for lower Z
-            'dir_base': 0.08,            # First director very close
-            'dir_increment': 0.015,      # Gradual director spacing increase
+            'dir_base': 0.08,            # D1 very tight
+            'dir_increment': 0.01,       # Slow increase
             'driven_taper': 0.03,        # 3% shorter per director
             'notes': 'Tight build: close spacing, max gain, narrower bandwidth',
         },
         'normal': {
             'refl_driven': 0.18,
-            'dir_base': 0.13,
+            'dir_base': 0.10,            # D1 tight for good impedance
             'dir_increment': 0.02,
             'driven_taper': 0.02,
             'notes': 'Standard build: balanced gain, pattern, and bandwidth',
         },
         'far': {
             'refl_driven': 0.20,         # DL6WU standard
-            'dir_base': 0.20,            # Wider first director
-            'dir_increment': 0.02,       # Consistent wide spacing
-            'driven_taper': 0.015,       # Less taper
-            'notes': 'DL6WU far build: wide spacing, clean pattern, good bandwidth',
+            'dir_base': 0.10,            # D1 still tight (critical for gain + Z)
+            'dir_increment': 0.035,      # Outer dirs spread to 0.30-0.40λ
+            'driven_taper': 0.015,       # Less taper for long booms
+            'notes': 'DL6WU far build: tight D1, graduated outer dirs, clean pattern',
         },
         'broadband': {
             'refl_driven': 0.18,
-            'dir_base': 0.16,            # Moderate start
-            'dir_increment': 0.025,      # Increasing spacing for broadband
+            'dir_base': 0.12,            # Slightly wider D1 for bandwidth
+            'dir_increment': 0.025,      # Moderate increase
             'driven_taper': 0.015,       # Gentle taper
             'notes': 'Broadband build: stable across entire band, rain/snow tolerant',
         },
