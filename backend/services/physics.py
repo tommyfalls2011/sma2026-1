@@ -1717,6 +1717,11 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         elif getattr(request, 'far_driven', False) == 'vfar': refl_driven_lambda = 0.28
         elif getattr(request, 'far_driven', False) == 'far' or getattr(request, 'far_driven', False) is True: refl_driven_lambda = 0.22
         else: refl_driven_lambda = 0.18
+        # For gamma/hairpin with low element counts, tighten reflector spacing to lower Z
+        if feed_type == 'gamma' and n <= 4 and refl_driven_lambda == 0.18:
+            refl_driven_lambda = 0.12 if n <= 2 else 0.14 if n <= 3 else 0.15
+        elif feed_type == 'hairpin' and n <= 3 and refl_driven_lambda == 0.18:
+            refl_driven_lambda = 0.14
         refl_driven_gap = round(refl_driven_lambda * wavelength_in, 1)
         if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
             max_boom = request.max_boom_length
