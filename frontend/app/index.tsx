@@ -288,7 +288,12 @@ export default function AntennaCalculator() {
     setInputs(prev => {
       const els = prev.elements.map(e => ({ ...e }));
       let refIdx = -1, tgtIdx = -1;
-      if (elementType === 'driven') {
+      if (elementType === 'reflector') {
+        // Reflector spacing: move driven element relative to reflector
+        refIdx = els.findIndex(e => e.element_type === 'reflector');
+        tgtIdx = els.findIndex(e => e.element_type === 'driven');
+        if (refIdx < 0) return prev;
+      } else if (elementType === 'driven') {
         refIdx = els.findIndex(e => e.element_type === 'reflector');
         tgtIdx = els.findIndex(e => e.element_type === 'driven');
         if (refIdx < 0) return prev;
