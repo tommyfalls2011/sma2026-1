@@ -131,6 +131,7 @@ class AntennaInput(BaseModel):
     gamma_element_gap: Optional[float] = Field(default=None)
     gamma_cap_pf: Optional[float] = Field(default=None)
     gamma_tube_od: Optional[float] = Field(default=None)
+    gamma_tube_length: Optional[float] = Field(default=None)
     hairpin_rod_dia: Optional[float] = Field(default=None)
     hairpin_rod_spacing: Optional[float] = Field(default=None)
     hairpin_length_in: Optional[float] = Field(default=None)
