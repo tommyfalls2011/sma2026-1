@@ -778,6 +778,7 @@ export default function AntennaCalculator() {
           far_dir2: farDir2,
           dir_presets: dirPresets,
           dir_nudge_counts: dirNudgeCounts,
+          build_style: buildStyle,
         }),
       });
       if (response.ok) {
