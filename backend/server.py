@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from config import client, store_db, db, UPLOAD_DIR, SUBSCRIPTION_TIERS
 from auth import load_settings_from_db
 from routes.antenna import router as antenna_router
-from routes.user import router as user_router, ensure_stripe_prices
+from routes.user import router as user_router, ensure_stripe_prices, ensure_paypal_plans
 from routes.admin import router as admin_router
 from routes.public import router as public_router
 from routes.store import router as store_router, seed_store_products
@@ -237,6 +237,12 @@ async def startup_load_settings():
         logger.info("Stripe recurring prices initialized")
     except Exception as e:
         logger.warning(f"Failed to initialize Stripe prices (non-fatal): {e}")
+    # Initialize PayPal billing plans for subscription billing
+    try:
+        await ensure_paypal_plans()
+        logger.info("PayPal billing plans initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize PayPal plans (non-fatal): {e}")
 
 
 @app.on_event("shutdown")
