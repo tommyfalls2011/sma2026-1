@@ -361,6 +361,8 @@ export default function AntennaCalculator() {
         }));
         setInputs((p: any) => ({ ...p, elements: newElements }));
         setDrivenNudgeCount(0);
+        setReflectorNudgeCount(0);
+        setReflectorPreset(false);
         setDir1NudgeCount(0);
         setSpacingNudgeCount(0);
         setDirPresets({});
@@ -383,6 +385,8 @@ export default function AntennaCalculator() {
     setInputs((p: any) => ({ ...p, elements: newElements }));
     setRlResult(null);
     setDrivenNudgeCount(0);
+    setReflectorNudgeCount(0);
+    setReflectorPreset(false);
     setDir1NudgeCount(0);
     setSpacingNudgeCount(0);
     setDirPresets({});
