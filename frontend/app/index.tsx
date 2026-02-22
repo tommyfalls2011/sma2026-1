@@ -367,6 +367,17 @@ export default function AntennaCalculator() {
         setSpacingNudgeCount(0);
         setDirPresets({});
         setDirNudgeCounts({});
+        // Apply gamma recipe from RL tune if available
+        const recipe = data.gamma_recipe;
+        if (recipe) {
+          if (recipe.ideal_bar_position) setGammaBarPos(recipe.ideal_bar_position);
+          if (recipe.optimal_insertion) setGammaRodInsertion(recipe.optimal_insertion);
+          if (recipe.rod_od) setGammaRodDia(String(recipe.rod_od));
+          const tubeOd = recipe.tube_od;
+          if (tubeOd) setGammaTubeOd(String(tubeOd));
+          const tubeLength = recipe.tube_length;
+          if (tubeLength) setGammaTubeLength(String(tubeLength));
+        }
       }
     } catch (err) {
       console.error('RL tune error:', err);
