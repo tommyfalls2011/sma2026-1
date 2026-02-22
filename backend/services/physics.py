@@ -1010,6 +1010,37 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
             director_spacings_in=dir_spacings_in,
         )
 
+    # Matching recommendation engine based on impedance
+    matching_recommendation = {}
+    z = yagi_feedpoint_r
+    if z < 35:
+        matching_recommendation = {
+            "best": "hairpin",
+            "best_reason": f"Z={z}Ω — Hairpin is ideal. High efficiency, easy to build, steps R up to 50Ω.",
+            "alt": "gamma",
+            "alt_reason": "Gamma will also work but Hairpin is simpler for low-Z antennas.",
+            "avoid": "direct",
+            "avoid_reason": f"Direct feed would give SWR {round(max(50/max(z,1), z/50), 1)}:1 — too high.",
+        }
+    elif z <= 55:
+        matching_recommendation = {
+            "best": "direct",
+            "best_reason": f"Z={z}Ω — Near 50Ω, direct feed with 1:1 choke balun is simplest.",
+            "alt": "gamma",
+            "alt_reason": "Gamma can fine-tune the match if needed.",
+            "avoid": "hairpin" if z > 50 else None,
+            "avoid_reason": "Hairpin cannot step impedance down from above 50Ω." if z > 50 else None,
+        }
+    else:
+        matching_recommendation = {
+            "best": "gamma",
+            "best_reason": f"Z={z}Ω — Gamma is the only option. Tapped-transformer design can match any R.",
+            "alt": "direct",
+            "alt_reason": f"Direct feed gives SWR {round(z/50, 1)}:1 — usable if tolerable.",
+            "avoid": "hairpin",
+            "avoid_reason": f"Hairpin CANNOT match Z={z}Ω (above 50Ω). No solution on Smith Chart.",
+        }
+
     # Get driven element half-length and diameter for geometric K calculation
     driven_half_length_in = driven_el.length / 2.0 if driven_el else 101.5
     driven_dia_in = driven_el.diameter if driven_el else 0.5
