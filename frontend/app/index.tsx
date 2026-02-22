@@ -1068,6 +1068,8 @@ export default function AntennaCalculator() {
           if (s.hairpinRodSpacing !== undefined) setHairpinRodSpacing(s.hairpinRodSpacing);
           if (s.hairpinLengthIn !== undefined) setHairpinLengthIn(s.hairpinLengthIn);
           if (s.hairpinBoomGap !== undefined) setHairpinBoomGap(s.hairpinBoomGap);
+          // Build style
+          if (s.buildStyle) setBuildStyle(s.buildStyle);
         }
         setShowLoadModal(false);
         Alert.alert('Loaded', `Design "${data.name}" loaded successfully`);
