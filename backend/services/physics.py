@@ -1752,70 +1752,62 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         notes.append("Spacing Lock: Positions preserved, only lengths optimized")
     else:
         if num_directors > 0:
-            # Determine first director spacing override
+            # Per-director spacing from dir_presets (dynamic for all directors)
+            dir_presets = getattr(request, 'dir_presets', None) or {}
+            dir_nudge_counts = getattr(request, 'dir_nudge_counts', None) or {}
+            
+            # Preset-to-lambda mapping
+            preset_lambda = {
+                'vclose': 0.06, 'close': 0.10, 'normal': 0.13,
+                'far': 0.18, 'vfar': 0.22
+            }
+            
+            # Legacy dir1/dir2 overrides as fallback
             close_d1 = getattr(request, 'close_dir1', False)
             far_d1 = getattr(request, 'far_dir1', False)
-            if close_d1 == 'vclose':
-                dir1_lambda = 0.06
-            elif close_d1 == 'close' or close_d1 is True:
-                dir1_lambda = 0.10
-            elif far_d1 == 'vfar':
-                dir1_lambda = 0.22
-            elif far_d1 == 'far' or far_d1 is True:
-                dir1_lambda = 0.18
-            else:
-                dir1_lambda = 0.13  # default
-
-            # Determine second director spacing override
             close_d2 = getattr(request, 'close_dir2', False)
             far_d2 = getattr(request, 'far_dir2', False)
-            if close_d2 == 'vclose':
-                dir2_lambda = 0.08
-            elif close_d2 == 'close' or close_d2 is True:
-                dir2_lambda = 0.12
-            elif far_d2 == 'vfar':
-                dir2_lambda = 0.28
-            elif far_d2 == 'far' or far_d2 is True:
-                dir2_lambda = 0.22
-            else:
-                dir2_lambda = 0.16  # default (slightly wider than dir1)
+            
+            def get_dir_lambda(dir_idx):
+                """Get spacing lambda for a director index (0-based)."""
+                # Check dir_presets first
+                preset = dir_presets.get(str(dir_idx)) or dir_presets.get(dir_idx)
+                if preset and preset in preset_lambda:
+                    return preset_lambda[preset]
+                # Legacy fallbacks for dir1 and dir2
+                if dir_idx == 0:
+                    if close_d1 == 'vclose': return 0.06
+                    elif close_d1 == 'close' or close_d1 is True: return 0.10
+                    elif far_d1 == 'vfar': return 0.22
+                    elif far_d1 == 'far' or far_d1 is True: return 0.18
+                    return 0.13
+                elif dir_idx == 1:
+                    if close_d2 == 'vclose': return 0.08
+                    elif close_d2 == 'close' or close_d2 is True: return 0.12
+                    elif far_d2 == 'vfar': return 0.28
+                    elif far_d2 == 'far' or far_d2 is True: return 0.22
+                    return 0.16
+                # Directors 3+ use graduated default spacing
+                return 0.16 + (dir_idx - 2) * 0.02
 
             for i in range(num_directors):
-                if i == 0:
-                    # First director uses the override spacing
-                    director_spacing = round(dir1_lambda * wavelength_in, 1)
-                    if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
-                        max_dir1 = (request.max_boom_length - current_position) * 0.5
-                        if director_spacing > max_dir1:
-                            director_spacing = round(max_dir1, 1)
-                    current_position += director_spacing
-                    director_length = round(driven_length * (0.95 - i * 0.02), 1)
-                    elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
-                    dir1_label = f"({dir1_lambda}\u03bb)" if (getattr(request, 'close_dir1', False) or getattr(request, 'far_dir1', False)) else ""
-                    notes.append(f"Director 1: {director_length}\" at {round(current_position, 1)}\" {dir1_label}")
-                else:
-                    if i == 1:
-                        # Second director uses the dir2 override spacing
-                        director_spacing = round(dir2_lambda * wavelength_in, 1)
-                        if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
-                            max_dir2 = (request.max_boom_length - current_position) * 0.5
-                            if director_spacing > max_dir2:
-                                director_spacing = round(max_dir2, 1)
-                        current_position += director_spacing
-                        director_length = round(driven_length * (0.95 - i * 0.02), 1)
-                        elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
-                        dir2_label = f"({dir2_lambda}\u03bb)" if (getattr(request, 'close_dir2', False) or getattr(request, 'far_dir2', False)) else ""
-                        notes.append(f"Director 2: {director_length}\" at {round(current_position, 1)}\" {dir2_label}")
-                    else:
-                        remaining_after = target_boom - current_position
-                        remaining_dirs = num_directors - i
-                        weight = 0.8 + (0.4 * (i - 2) / max(remaining_dirs - 1, 1)) if remaining_dirs > 1 else 1.0
-                        total_weight = sum(0.8 + (0.4 * j / max(remaining_dirs - 1, 1)) if remaining_dirs > 1 else 1.0 for j in range(remaining_dirs))
-                        director_spacing = round(remaining_after * weight / total_weight, 1)
-                        current_position += director_spacing
-                        director_length = round(driven_length * (0.95 - i * 0.02), 1)
-                        elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
-                        notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\"")
+                dir_lambda = get_dir_lambda(i)
+                # Apply nudge adjustments (each nudge = ~0.5" which is ~0.001λ)
+                nudge_count = dir_nudge_counts.get(str(i), 0) or dir_nudge_counts.get(i, 0) or 0
+                if nudge_count:
+                    nudge_lambda = nudge_count * 0.001
+                    dir_lambda += nudge_lambda
+
+                director_spacing = round(dir_lambda * wavelength_in, 1)
+                if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
+                    max_dir = (request.max_boom_length - current_position) * (0.5 if i < 2 else 0.3)
+                    if director_spacing > max_dir:
+                        director_spacing = round(max_dir, 1)
+                current_position += director_spacing
+                director_length = round(driven_length * (0.95 - i * 0.02), 1)
+                elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
+                preset_label = dir_presets.get(str(i), '') or ''
+                notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\" ({dir_lambda:.3f}\u03bb{' ' + preset_label if preset_label else ''})")
 
     notes.append(f"")
     notes.append(f"Wavelength at {center_freq} MHz: {round(wavelength_in, 1)}\"")
