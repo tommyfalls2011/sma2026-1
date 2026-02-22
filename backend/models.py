@@ -241,6 +241,7 @@ class AntennaOutput(BaseModel):
     resonant_freq_mhz: Optional[float] = None
     elevation_pattern: Optional[list] = None
     smith_chart_data: Optional[list] = None
+    element_q_info: Optional[dict] = None
 
 class AutoTuneOutput(BaseModel):
     optimized_elements: List[dict]
