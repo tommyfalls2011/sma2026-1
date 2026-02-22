@@ -691,7 +691,28 @@ async def get_subscription_status(user: dict = Depends(require_user)):
         elapsed = datetime.utcnow() - trial_started.replace(tzinfo=None)
         remaining = timedelta(hours=1) - elapsed
         trial_remaining = max(0, remaining.total_seconds())
-    return {"is_active": is_active, "status_message": status_msg, "tier": user["subscription_tier"], "tier_info": tier_info, "expires": user.get("subscription_expires"), "trial_remaining_seconds": trial_remaining, "max_elements": tier_info["max_elements"] if tier_info else 3}
+
+    auto_renew = user.get("auto_renew", False)
+    billing_method = user.get("billing_method", "")
+    next_billing_date = None
+    if auto_renew and user.get("subscription_expires"):
+        expires = user.get("subscription_expires")
+        if isinstance(expires, str):
+            expires = datetime.fromisoformat(expires.replace('Z', '+00:00'))
+        next_billing_date = expires.isoformat() if expires else None
+
+    return {
+        "is_active": is_active,
+        "status_message": status_msg,
+        "tier": user["subscription_tier"],
+        "tier_info": tier_info,
+        "expires": user.get("subscription_expires"),
+        "trial_remaining_seconds": trial_remaining,
+        "max_elements": tier_info["max_elements"] if tier_info else 3,
+        "auto_renew": auto_renew,
+        "billing_method": billing_method,
+        "next_billing_date": next_billing_date,
+    }
 
 
 # ── Saved Designs ──
