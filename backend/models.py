@@ -268,6 +268,8 @@ class GammaFineTuneOutput(BaseModel):
     optimized_elements: List[dict]
     original_swr: float
     optimized_swr: float
+    original_gain: Optional[float] = None
+    optimized_gain: Optional[float] = None
     feedpoint_impedance: float
     optimization_steps: List[str]
     hardware: dict
