@@ -418,6 +418,21 @@ export default function SubscriptionScreen() {
             )}
           </View>
           <Text style={styles.maxElements}>Max Elements: {getMaxElements()}</Text>
+          {!user.is_trial && user.subscription_expires && userTierBase !== '' && user.subscription_tier !== 'admin' && (
+            <View style={styles.renewalInfo} data-testid="renewal-info">
+              {user.auto_renew ? (
+                <View style={styles.autoRenewBadge}>
+                  <Ionicons name="refresh-circle" size={16} color="#4CAF50" />
+                  <Text style={styles.autoRenewText}>Auto-renewing {formatExpiryDate(user.subscription_expires)}</Text>
+                </View>
+              ) : (
+                <View style={styles.autoRenewBadge}>
+                  <Ionicons name="time-outline" size={16} color="#FF9800" />
+                  <Text style={[styles.autoRenewText, { color: '#FF9800' }]}>Expires {formatExpiryDate(user.subscription_expires)}</Text>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Upgrade Plans */}
