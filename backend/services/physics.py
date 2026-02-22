@@ -68,14 +68,26 @@ def get_gamma_hardware_defaults(num_elements: int) -> dict:
 def compute_feedpoint_impedance(num_elements: int, wavelength_m: float,
                                 reflector_spacing_in: float = 48.0,
                                 director_spacings_in: list = None,
-                                reflector_length_in: float = 214.0) -> float:
+                                reflector_length_in: float = 214.0,
+                                cumulative: bool = True) -> float:
     """Yagi feedpoint impedance from mutual coupling model.
 
     Args:
-        director_spacings_in: cumulative distances from driven element to each director (inches).
+        director_spacings_in: distances from driven element to each director (inches).
+            If cumulative=True (default), each value is distance from driven to that director.
+            If cumulative=False, each value is gap between consecutive elements.
     Returns:
         R_feed in ohms, clamped to [12, 73].
     """
+    # Convert individual gaps to cumulative if needed
+    if director_spacings_in and not cumulative:
+        cum = []
+        total = 0
+        for g in director_spacings_in:
+            total += g
+            cum.append(total)
+        director_spacings_in = cum
+
     r_feed = 73.0
     if num_elements >= 2 and reflector_spacing_in > 0:
         refl_gap_wl = (reflector_spacing_in * 0.0254) / wavelength_m if wavelength_m > 0 else 0.18
