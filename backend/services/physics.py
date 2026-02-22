@@ -1703,8 +1703,43 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     elif feed_type == 'hairpin':
         driven_length = round(driven_length * 0.96, 1)  # 4% shorter for hairpin
     use_reflector = getattr(request, 'use_reflector', True)
+    build_style = getattr(request, 'build_style', 'normal')
     scale_factor = wavelength_in / REF_WAVELENGTH_11M_IN
     target_boom = STANDARD_BOOM_11M_IN.get(n, 150 + (n - 3) * 60) * scale_factor
+
+    # Build style spacing profiles (in wavelengths)
+    STYLE_PROFILES = {
+        'tight': {
+            'refl_driven': 0.12,         # Closer reflector for lower Z
+            'dir_base': 0.08,            # First director very close
+            'dir_increment': 0.015,      # Gradual director spacing increase
+            'driven_taper': 0.03,        # 3% shorter per director
+            'notes': 'Tight build: close spacing, max gain, narrower bandwidth',
+        },
+        'normal': {
+            'refl_driven': 0.18,
+            'dir_base': 0.13,
+            'dir_increment': 0.02,
+            'driven_taper': 0.02,
+            'notes': 'Standard build: balanced gain, pattern, and bandwidth',
+        },
+        'far': {
+            'refl_driven': 0.20,         # DL6WU standard
+            'dir_base': 0.20,            # Wider first director
+            'dir_increment': 0.02,       # Consistent wide spacing
+            'driven_taper': 0.015,       # Less taper
+            'notes': 'DL6WU far build: wide spacing, clean pattern, good bandwidth',
+        },
+        'broadband': {
+            'refl_driven': 0.18,
+            'dir_base': 0.16,            # Moderate start
+            'dir_increment': 0.025,      # Increasing spacing for broadband
+            'driven_taper': 0.015,       # Gentle taper
+            'notes': 'Broadband build: stable across entire band, rain/snow tolerant',
+        },
+    }
+    profile = STYLE_PROFILES.get(build_style, STYLE_PROFILES['normal'])
+    notes.append(profile['notes'])
 
     if use_reflector:
         driven_override = getattr(request, 'close_driven', False) or getattr(request, 'far_driven', False)
@@ -1716,11 +1751,11 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
         elif getattr(request, 'close_driven', False) == 'close' or getattr(request, 'close_driven', False) is True: refl_driven_lambda = 0.12
         elif getattr(request, 'far_driven', False) == 'vfar': refl_driven_lambda = 0.28
         elif getattr(request, 'far_driven', False) == 'far' or getattr(request, 'far_driven', False) is True: refl_driven_lambda = 0.22
-        else: refl_driven_lambda = 0.18
+        else: refl_driven_lambda = profile['refl_driven']  # Use build style default
         # For gamma/hairpin with low element counts, tighten reflector spacing to lower Z
-        if feed_type == 'gamma' and n <= 4 and refl_driven_lambda == 0.18:
+        if feed_type == 'gamma' and n <= 4 and refl_driven_lambda >= 0.18:
             refl_driven_lambda = 0.12 if n <= 2 else 0.14 if n <= 3 else 0.15
-        elif feed_type == 'hairpin' and n <= 3 and refl_driven_lambda == 0.18:
+        elif feed_type == 'hairpin' and n <= 3 and refl_driven_lambda >= 0.18:
             refl_driven_lambda = 0.14
         refl_driven_gap = round(refl_driven_lambda * wavelength_in, 1)
         if getattr(request, 'boom_lock_enabled', False) and getattr(request, 'max_boom_length', None):
