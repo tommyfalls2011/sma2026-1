@@ -2587,6 +2587,57 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </View>
 
+              {/* Reflector-to-Driven Spacing */}
+              <View style={{ marginTop: 10 }}>
+                <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>Reflector Spacing</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
+                  {(['vclose', 'close', false, 'far', 'vfar'] as const).map((p, pi) => {
+                    const labels = ['V.Close', 'Close', 'Normal', 'Far', 'V.Far'];
+                    const lambdas = ['0.10', '0.14', '0.18', '0.22', '0.28'];
+                    const icons = ['arrow-back-outline', 'arrow-back-outline', 'remove-outline', 'arrow-forward-outline', 'arrow-forward-outline'] as const;
+                    const isActive = p === false ? (!reflectorPreset) : (reflectorPreset === p);
+                    return (
+                      <TouchableOpacity key={pi} style={{ flex: 1, minWidth: 55, padding: 6, borderRadius: 6, backgroundColor: isActive ? '#E91E63' : '#252525', alignItems: 'center' }}
+                        onPress={() => {
+                          const newPreset = p === false ? false : (reflectorPreset === p ? false : p);
+                          setReflectorPreset(newPreset);
+                          setReflectorNudgeCount(0);
+                          applyElementPreset('reflector', newPreset);
+                        }}
+                      >
+                        <Ionicons name={icons[pi]} size={12} color={isActive ? '#fff' : '#888'} />
+                        <Text style={{ fontSize: 8, color: isActive ? '#fff' : '#888', marginTop: 1 }}>{labels[pi]} ({lambdas[pi]})</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <View style={{ flexDirection: 'row', marginTop: 6, alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => nudgeElement('reflector', -1)}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: reflectorNudgeCount <= -90 ? '#333' : '#E91E63', opacity: reflectorNudgeCount <= -90 ? 0.4 : 1 }}
+                    disabled={reflectorNudgeCount <= -90}
+                    data-testid="reflector-nudge-closer"
+                  >
+                    <Ionicons name="chevron-back" size={18} color="#E91E63" />
+                    <Text style={{ fontSize: 12, color: '#E91E63', fontWeight: '700', marginLeft: 2 }}>Closer</Text>
+                  </TouchableOpacity>
+                  <View style={{ backgroundColor: '#333', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, minWidth: 50, alignItems: 'center' }}>
+                    <Text style={{ fontSize: 11, color: reflectorNudgeCount === 0 ? '#666' : '#E91E63', fontWeight: '700' }}>
+                      {reflectorNudgeCount === 0 ? '0%' : `${(reflectorNudgeCount * 0.5) > 0 ? '+' : ''}${(reflectorNudgeCount * 0.5).toFixed(1)}%`}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => nudgeElement('reflector', 1)}
+                    style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 6, backgroundColor: '#252525', borderWidth: 1, borderColor: reflectorNudgeCount >= 90 ? '#333' : '#E91E63', opacity: reflectorNudgeCount >= 90 ? 0.4 : 1 }}
+                    disabled={reflectorNudgeCount >= 90}
+                    data-testid="reflector-nudge-farther"
+                  >
+                    <Text style={{ fontSize: 12, color: '#E91E63', fontWeight: '700', marginRight: 2 }}>Farther</Text>
+                    <Ionicons name="chevron-forward" size={18} color="#E91E63" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               {/* Spacing Overrides for Driven Element */}
               <View style={{ marginTop: 10 }}>
                 <Text style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>Driven Element Spacing</Text>
