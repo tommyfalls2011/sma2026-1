@@ -2734,7 +2734,7 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             "reachable": recipe.get("null_reachable", False),
             "z": fz,
             "gain": calc_out.gain_dbi,
-            "fb": calc_out.front_to_back_db,
+            "fb": calc_out.fb_ratio,
             "rec_driven": recipe.get("recommended_driven_length_in", None),
             "rod": recipe.get("rod_od", 0),
             "tube": recipe.get("tube_od", 0),
