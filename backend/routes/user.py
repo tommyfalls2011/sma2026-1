@@ -68,7 +68,7 @@ async def login_user(credentials: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_token(user["id"], user["email"])
     is_active, tier_info, status_msg = check_subscription_active(user)
-    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"], "subscription_tier": user["subscription_tier"], "subscription_expires": user.get("subscription_expires"), "is_trial": user.get("is_trial", False), "trial_started": user.get("trial_started"), "is_active": is_active, "status_message": status_msg}}
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"], "subscription_tier": user["subscription_tier"], "subscription_expires": user.get("subscription_expires"), "is_trial": user.get("is_trial", False), "trial_started": user.get("trial_started"), "is_active": is_active, "status_message": status_msg, "auto_renew": user.get("auto_renew", False), "billing_method": user.get("billing_method", "")}}
 
 
 @router.post("/auth/forgot-password")
@@ -133,7 +133,7 @@ async def send_subscription_receipt(user: dict = Depends(require_user)):
 @router.get("/auth/me")
 async def get_current_user_info(user: dict = Depends(require_user)):
     is_active, tier_info, status_msg = check_subscription_active(user)
-    return {"id": user["id"], "email": user["email"], "name": user["name"], "subscription_tier": user["subscription_tier"], "subscription_expires": user.get("subscription_expires"), "is_trial": user.get("is_trial", False), "trial_started": user.get("trial_started"), "is_active": is_active, "status_message": status_msg, "tier_info": tier_info, "max_elements": tier_info["max_elements"] if tier_info else 3}
+    return {"id": user["id"], "email": user["email"], "name": user["name"], "subscription_tier": user["subscription_tier"], "subscription_expires": user.get("subscription_expires"), "is_trial": user.get("is_trial", False), "trial_started": user.get("trial_started"), "is_active": is_active, "status_message": status_msg, "tier_info": tier_info, "max_elements": tier_info["max_elements"] if tier_info else 3, "auto_renew": user.get("auto_renew", False), "billing_method": user.get("billing_method", "")}
 
 
 # ── Subscription ──
