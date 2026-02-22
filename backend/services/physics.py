@@ -1713,7 +1713,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         height_performance=height_perf, ground_radials_info=ground_radials_info,
         noise_level="Moderate" if input_data.antenna_orientation in ("dual", "angle45") else ("High" if input_data.antenna_orientation == "vertical" else "Low"),
         noise_description="Dual polarity receives both H and V — moderate noise, excellent for fading/skip" if input_data.antenna_orientation == "dual" else ("Vertical polarization picks up more man-made noise (QRN)" if input_data.antenna_orientation == "vertical" else ("45\u00b0 slant receives both polarizations — moderate noise" if input_data.antenna_orientation == "angle45" else "Horizontal polarization has a quieter receive noise floor")),
-        feed_type=feed_type, matching_info=matching_info, dual_polarity_info=dual_info,
+        feed_type=feed_type, matching_info=matching_info, matching_recommendation=matching_recommendation, dual_polarity_info=dual_info,
         wind_load=wind_load_info,
         boom_correction_info=boom_correction if boom_correction.get("enabled") else boom_correction,
         resonant_freq_mhz=curve_resonant_freq,
