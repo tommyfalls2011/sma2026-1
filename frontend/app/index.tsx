@@ -832,6 +832,8 @@ export default function AntennaCalculator() {
         alertMsg += `\n\n${data.optimization_notes.slice(0, 3).join('\n')}`;
         
         Alert.alert('Auto-Tune Complete', alertMsg);
+        // Trigger recalculation so gamma/hairpin designers get updated impedance
+        setTimeout(() => calculateAntenna(), 100);
       }
     } catch (err) { Alert.alert('Error', 'Auto-tune failed'); }
     setTuning(false);
