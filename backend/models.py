@@ -233,6 +233,7 @@ class AntennaOutput(BaseModel):
     noise_description: Optional[str] = None
     feed_type: Optional[str] = None
     matching_info: Optional[dict] = None
+    matching_recommendation: Optional[dict] = None
     dual_polarity_info: Optional[dict] = None
     wind_load: Optional[dict] = None
     boom_correction_info: Optional[dict] = None
