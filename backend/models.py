@@ -271,6 +271,7 @@ class GammaFineTuneOutput(BaseModel):
     feedpoint_impedance: float
     optimization_steps: List[str]
     hardware: dict
+    gamma_recipe: Optional[dict] = None
 
 class CalculationRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
