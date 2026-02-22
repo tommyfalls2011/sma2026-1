@@ -192,7 +192,7 @@ export default function SubscriptionScreen() {
     if (!selectedTier || !selectedPayment) return;
 
     if (selectedPayment === 'stripe') {
-      // Stripe: redirect to Stripe Checkout
+      // Stripe: redirect to Stripe Checkout (subscription mode — auto-recurring)
       setLoading(true);
       try {
         const originUrl = Platform.OS === 'web' ? window.location.origin : BACKEND_URL;
