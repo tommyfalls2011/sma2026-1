@@ -2266,19 +2266,163 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
 
     # Notes
     notes = []
+    hardware_upgraded = False
     if length_was_corrected:
         direction = "longer" if recommended_driven_length > original_driven_length else "shorter"
         delta = abs(recommended_driven_length - original_driven_length)
         notes.append(f"DRIVEN ELEMENT: Make {direction} to {recommended_driven_length:.2f}\" (was {original_driven_length:.1f}\", change {delta:.2f}\") to match resonance to {frequency_mhz} MHz")
+
+    # Auto-hardware escalation: if null not reachable with current hardware,
+    # try larger hardware from the ladder (only for auto-selected, not custom)
+    if not null_reachable and not is_custom:
+        current_rod = rod_od
+        for upgrade in HARDWARE_LADDER:
+            if upgrade["rod_od"] <= current_rod:
+                continue  # Skip same or smaller
+            # Try this larger hardware
+            up_rod = upgrade["rod_od"]
+            up_tube_od = upgrade["tube_od"]
+            up_tube_len = upgrade["tube_length"]
+            up_tube_id = up_tube_od - 2 * wall
+            up_max_ins = up_tube_len - 0.5
+            up_cap_per_inch = 1.413 * 2.1 / math.log(up_tube_id / up_rod)
+            up_teflon = up_tube_len + 1.0
+
+            def _eval_up(bar_u: float, ins_u: float) -> tuple:
+                return apply_matching_network(
+                    swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+                    gamma_rod_dia=up_rod, gamma_rod_spacing=rod_spacing,
+                    gamma_bar_pos=bar_u, gamma_element_gap=ins_u,
+                    gamma_cap_pf=None, gamma_tube_od=up_tube_od,
+                    operating_freq_mhz=frequency_mhz,
+                    num_elements=num_elements,
+                    driven_element_half_length_in=half_len,
+                    driven_element_dia_in=driven_element_dia,
+                    element_resonant_freq_mhz=element_res_freq,
+                )
+
+            # Sweep bar positions to find best SWR
+            up_best_swr = 999.0
+            up_best_bar = 6.0
+            up_best_ins = 0.0
+            up_bar_min = max(1.0, up_tube_len * 0.6) if r_feed > 30 else up_teflon
+            up_rod_len = hw["rod_length"]
+            _, up_probe = _eval_up(13.0, 8.0)
+            up_coupling = up_probe.get("coupling_multiplier", 4.5)
+            up_x_ant = up_probe.get("x_antenna", 0)
+            omega_up = 2.0 * math.pi * frequency_mhz * 1e6
+
+            for i in range(201):
+                test_bar = up_bar_min + (up_rod_len - up_bar_min) * i / 200
+                if test_bar <= 0:
+                    continue
+                _, ti = _eval_up(test_bar, 0.001)
+                xs = ti.get("x_stub", 0)
+                xa = ti.get("x_antenna", 0)
+                k_b = ti.get("step_up_ratio", 1.0)
+                total_x = xa * k_b + xs
+                if total_x <= 0:
+                    continue
+                c_need = 1e12 / (omega_up * total_x)
+                ins_need = c_need / up_cap_per_inch
+                test_ins = ins_need if ins_need <= up_max_ins else up_max_ins
+                s, _ = _eval_up(test_bar, test_ins)
+                if s < up_best_swr:
+                    up_best_swr = s
+                    up_best_bar = test_bar
+                    up_best_ins = test_ins
+
+            # Check if this upgrade reaches the null
+            _, up_check = _eval_up(up_best_bar, 0.001)
+            up_xs = up_check.get("x_stub", 0)
+            up_xa = up_check.get("x_antenna", 0)
+            up_k = up_check.get("step_up_ratio", 1.0)
+            up_total_x = up_xa * up_k + up_xs
+            up_null_ok = False
+            if up_total_x > 0:
+                up_c = 1e12 / (omega_up * up_total_x)
+                up_ins_need = up_c / up_cap_per_inch
+                up_null_ok = up_ins_need <= up_max_ins
+
+            if up_null_ok or up_best_swr < swr_val * 0.8:
+                # Upgrade accepted: redo the entire design with new hardware
+                rod_od = up_rod
+                tube_od = up_tube_od
+                tube_id = up_tube_id
+                tube_length = up_tube_len
+                cap_per_inch = up_cap_per_inch
+                id_rod_ratio = up_tube_id / up_rod
+                max_insertion = up_max_ins
+                teflon_sleeve = up_teflon
+                bar_min = max(1.0, up_tube_len * 0.6) if r_feed > 30 else up_teflon
+
+                # Redo _eval with new hardware
+                def _eval(bar: float, insertion: float) -> tuple:
+                    return apply_matching_network(
+                        swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+                        gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+                        gamma_bar_pos=bar, gamma_element_gap=insertion,
+                        gamma_cap_pf=None, gamma_tube_od=tube_od,
+                        operating_freq_mhz=frequency_mhz,
+                        num_elements=num_elements,
+                        driven_element_half_length_in=half_len,
+                        driven_element_dia_in=driven_element_dia,
+                        element_resonant_freq_mhz=element_res_freq,
+                    )
+
+                bar_ideal_clamped = up_best_bar
+                optimal_insertion = up_best_ins
+                null_reachable = up_null_ok
+                if up_null_ok:
+                    optimal_insertion = up_ins_need
+                    c_needed_pf = up_c
+
+                # Get final values
+                matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
+                swr_val = matched_swr
+                rl_val = round(-20 * math.log10(max(null_info.get("reflection_coefficient", 0.001), 1e-8)), 2)
+                rl_val = min(rl_val, 80.0)
+                z_r = null_info.get("z_matched_r", 50.0)
+                z_x = null_info.get("z_matched_x", 0.0)
+                actual_cap = null_info.get("insertion_cap_pf", 0)
+                k_at_ideal = null_info.get("step_up_ratio", 1.0)
+
+                # Redo sweeps
+                bar_sweep = []
+                for b_pct in range(0, 105, 5):
+                    b = bar_min + (gamma_rod_length - bar_min) * b_pct / 100.0
+                    s, info_b = _eval(b, optimal_insertion)
+                    bar_sweep.append({
+                        "bar_inches": round(b, 2), "k": info_b.get("step_up_ratio", 1.0),
+                        "r_matched": info_b.get("z_matched_r", 0), "x_net": info_b.get("net_reactance", 0),
+                        "swr": max(1.0, s),
+                    })
+                ins_sweep = []
+                for i_pct in range(0, 105, 5):
+                    ins = max_insertion * i_pct / 100.0
+                    if ins <= 0:
+                        ins = 0.001
+                    s, info_i = _eval(bar_ideal_clamped, ins)
+                    ins_sweep.append({
+                        "insertion_inches": round(ins, 2), "cap_pf": info_i.get("insertion_cap_pf", 0),
+                        "x_net": info_i.get("net_reactance", 0), "swr": max(1.0, s),
+                    })
+
+                hardware_upgraded = True
+                notes.append(f"Auto-upgraded hardware: {upgrade['label']} (standard hardware couldn't reach null at this impedance)")
+                auto_rod = up_rod
+                auto_tube = up_tube_od
+                break  # Found working hardware
+
     if is_custom:
         notes.append(f"Custom hardware: {tube_od:.3f}\" tube / {rod_od:.3f}\" rod")
         if id_rod_ratio > 2.0:
             notes.append(f"WARNING: ID/rod ratio {id_rod_ratio:.2f}:1 exceeds optimal 1.3-1.6x. Low cap/inch may prevent null.")
         elif id_rod_ratio < 1.2:
             notes.append(f"WARNING: ID/rod ratio {id_rod_ratio:.2f}:1 is very tight. Assembly may be difficult.")
-    else:
+    elif not hardware_upgraded:
         notes.append(f"Auto-selected hardware for {num_elements}-element Yagi")
-    if optimized_bar != bar_ideal and null_reachable:
+    if optimized_bar != bar_ideal and null_reachable and not hardware_upgraded:
         notes.append(f"Bar optimized: ideal for R was {round(bar_ideal, 2)}\" but moved to {round(optimized_bar, 2)}\" so null fits within {max_insertion}\" max insertion.")
     if not null_reachable and c_needed_pf > 0:
         notes.append(f"NULL NOT REACHABLE at ideal bar ({round(bar_ideal, 2)}\"): needs {c_needed_pf:.1f} pF ({c_needed_pf/cap_per_inch:.1f}\" insertion) but max is {max_insertion}\".")
