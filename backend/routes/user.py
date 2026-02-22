@@ -179,6 +179,98 @@ async def get_paypal_token():
     return None
 
 
+# ── PayPal Recurring Subscription Helpers ──
+
+async def ensure_paypal_plans():
+    """Create or retrieve PayPal billing plans for each tier. Cache in DB."""
+    access_token = await get_paypal_token()
+    if not access_token:
+        logger.warning("PayPal not configured, skipping plan creation")
+        return {}
+
+    cached = await db.paypal_plans.find_one({"type": "recurring_plans"}, {"_id": 0})
+    if cached and cached.get("plans"):
+        return cached["plans"]
+
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+
+    # Step 1: Create a PayPal Product
+    product_data = {
+        "name": "SMA Antenna Calculator Subscription",
+        "description": "Professional RF Design Tool subscription",
+        "type": "SERVICE",
+        "category": "SOFTWARE",
+    }
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(f"{PAYPAL_API_URL}/v1/catalogs/products", headers=headers, json=product_data)
+    if resp.status_code not in (200, 201):
+        logger.error(f"Failed to create PayPal product: {resp.text}")
+        return {}
+    product_id = resp.json()["id"]
+    logger.info(f"Created PayPal product: {product_id}")
+
+    # Step 2: Create billing plans for each tier
+    plan_configs = {
+        "bronze_monthly": {"amount": "39.99", "interval": "MONTH", "name": "Bronze Monthly"},
+        "bronze_yearly": {"amount": "400.00", "interval": "YEAR", "name": "Bronze Yearly"},
+        "silver_monthly": {"amount": "59.99", "interval": "MONTH", "name": "Silver Monthly"},
+        "silver_yearly": {"amount": "675.00", "interval": "YEAR", "name": "Silver Yearly"},
+        "gold_monthly": {"amount": "99.99", "interval": "MONTH", "name": "Gold Monthly"},
+        "gold_yearly": {"amount": "1050.00", "interval": "YEAR", "name": "Gold Yearly"},
+    }
+
+    plans = {}
+    for tier_key, cfg in plan_configs.items():
+        tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+        amount = str(tier_info.get("price", cfg["amount"]))
+
+        plan_data = {
+            "product_id": product_id,
+            "name": f"SMA Antenna Calc - {cfg['name']}",
+            "description": f"{cfg['name']} subscription for SMA Antenna Calculator",
+            "billing_cycles": [
+                {
+                    "frequency": {"interval_unit": cfg["interval"], "interval_count": 1},
+                    "tenure_type": "REGULAR",
+                    "sequence": 1,
+                    "total_cycles": 0,
+                    "pricing_scheme": {
+                        "fixed_price": {"value": amount, "currency_code": "USD"}
+                    },
+                }
+            ],
+            "payment_preferences": {
+                "auto_bill_outstanding": True,
+                "payment_failure_threshold": 3,
+            },
+        }
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(f"{PAYPAL_API_URL}/v1/billing/plans", headers=headers, json=plan_data)
+        if resp.status_code in (200, 201):
+            plan_id = resp.json()["id"]
+            plans[tier_key] = plan_id
+            logger.info(f"Created PayPal billing plan for {tier_key}: {plan_id}")
+        else:
+            logger.error(f"Failed to create PayPal plan for {tier_key}: {resp.text}")
+
+    if plans:
+        await db.paypal_plans.update_one(
+            {"type": "recurring_plans"},
+            {"$set": {"type": "recurring_plans", "plans": plans, "product_id": product_id, "updated_at": datetime.utcnow().isoformat()}},
+            upsert=True,
+        )
+    return plans
+
+
+async def get_paypal_plan_id(tier_key: str) -> str:
+    """Get the PayPal Plan ID for a given tier."""
+    cached = await db.paypal_plans.find_one({"type": "recurring_plans"}, {"_id": 0})
+    if cached and cached.get("plans", {}).get(tier_key):
+        return cached["plans"][tier_key]
+    plans = await ensure_paypal_plans()
+    return plans.get(tier_key, "")
+
+
 # ── Stripe Recurring Subscription Helpers ──
 
 def _init_stripe():
