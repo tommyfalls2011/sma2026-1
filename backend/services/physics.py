@@ -1693,10 +1693,13 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
     elements = []
     notes = []
     driven_length = round(wavelength_in * 0.473, 1)
-    # Apply feed type shortening to driven element
+    # Apply feed type shortening to driven element — dynamic based on element count
     feed_type = getattr(request, 'feed_type', 'direct')
     if feed_type == 'gamma':
-        driven_length = round(driven_length * 0.97, 1)  # 3% shorter for gamma
+        # Low element counts have Z near 50Ω, less shortening needed
+        # High element counts have low Z, more shortening helps gamma transform
+        gamma_shorten = {2: 1.0, 3: 0.995, 4: 0.985, 5: 0.975}.get(n, 0.97)
+        driven_length = round(driven_length * gamma_shorten, 1)
     elif feed_type == 'hairpin':
         driven_length = round(driven_length * 0.96, 1)  # 4% shorter for hairpin
     use_reflector = getattr(request, 'use_reflector', True)
