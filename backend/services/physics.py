@@ -2694,7 +2694,7 @@ def _fast_gamma_swr(test_elems, n, freq, dia, hw):
     r_feed = compute_feedpoint_impedance(
         num_elements=n, wavelength_m=wavelength_m,
         reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
-        reflector_length_in=refl["length"], cumulative=False,
+        reflector_length_in=refl["length"], cumulative=True,
     )
     res_freq = compute_element_resonant_freq(
         driven_length_in=driven["length"], frequency_mhz=freq,
