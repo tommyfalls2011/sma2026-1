@@ -764,12 +764,13 @@ def calculate_dual_polarity_gain(n_per_pol: int, gain_h_single: float) -> dict:
     return {"elements_per_polarization": n_per_pol, "total_elements": n_total, "gain_per_polarization_dbi": round(gain_per_pol + coupling_bonus, 2), "coupling_bonus_db": round(coupling_bonus, 2), "fb_bonus_db": round(fb_bonus, 1), "description": f"{n_per_pol}H + {n_per_pol}V = {n_total} total elements on shared boom"}
 
 
-def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float, min_swr: float = 1.0) -> float:
+def calculate_swr_at_frequency(freq: float, center_freq: float, bandwidth: float, min_swr: float = 1.0, swr_curve_exponent: float = 1.6) -> float:
     freq_offset = abs(freq - center_freq)
     half_bandwidth = bandwidth / 2
     if freq_offset == 0: return min_swr
     normalized_offset = freq_offset / half_bandwidth if half_bandwidth > 0 else 0
-    swr = min_swr + (normalized_offset ** 1.6) * (4.0 - min_swr)
+    # Exponent controls curve shape: lower = flat U (fat elements), higher = sharp V (thin)
+    swr = min_swr + (normalized_offset ** swr_curve_exponent) * (4.0 - min_swr)
     return min(swr, 10.0)
 
 
