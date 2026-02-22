@@ -3027,5 +3027,6 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
         feedpoint_impedance=final["z"],
         optimization_steps=steps,
         hardware={"rod_od": final["rod"], "tube_od": final["tube"]},
+        gamma_recipe=final.get("recipe"),
     )
 
