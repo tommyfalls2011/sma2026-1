@@ -121,23 +121,31 @@ async def admin_create_user(user_data: AdminCreateUser, admin: dict = Depends(re
     existing = await db.users.find_one({"email": email})
     if existing:
         raise HTTPException(status_code=400, detail="User with this email already exists")
-    valid_tiers = ["trial", "bronze", "silver", "gold", "subadmin"]
+    valid_tiers = ["trial", "bronze_monthly", "bronze_yearly", "silver_monthly", "silver_yearly", "gold_monthly", "gold_yearly", "bronze", "silver", "gold", "subadmin"]
     if user_data.subscription_tier not in valid_tiers:
         raise HTTPException(status_code=400, detail=f"Invalid tier. Must be one of: {valid_tiers}")
+
+    # Normalize short tier names to full keys
+    tier = user_data.subscription_tier
+    if tier in ["bronze", "silver", "gold"]:
+        tier = f"{tier}_monthly"
+
     password_hashed = hash_password(user_data.password)
     expires = None
     is_trial = False
     trial_started = None
-    if user_data.subscription_tier == "trial":
+    if tier == "trial":
         is_trial = True
         trial_started = datetime.utcnow()
         trial_days = user_data.trial_days if user_data.trial_days else 7
         expires = datetime.utcnow() + timedelta(days=trial_days)
-    elif user_data.subscription_tier == "subadmin":
+    elif tier == "subadmin":
         expires = datetime.utcnow() + timedelta(days=36500)
-    elif user_data.subscription_tier in ["bronze", "silver", "gold"]:
+    elif tier.endswith("_yearly"):
+        expires = datetime.utcnow() + timedelta(days=365)
+    else:
         expires = datetime.utcnow() + timedelta(days=30)
-    new_user = {"id": str(uuid.uuid4()), "email": email, "name": user_data.name.strip(), "password": password_hashed, "subscription_tier": user_data.subscription_tier, "subscription_expires": expires, "is_trial": is_trial, "trial_started": trial_started, "created_at": datetime.utcnow(), "created_by_admin": admin["email"]}
+    new_user = {"id": str(uuid.uuid4()), "email": email, "name": user_data.name.strip(), "password": password_hashed, "subscription_tier": tier, "subscription_expires": expires, "is_trial": is_trial, "trial_started": trial_started, "created_at": datetime.utcnow(), "created_by_admin": admin["email"]}
     await db.users.insert_one(new_user)
     return {"success": True, "message": f"User {email} created successfully", "user": {"id": new_user["id"], "email": new_user["email"], "name": new_user["name"], "subscription_tier": new_user["subscription_tier"]}}
 
