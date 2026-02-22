@@ -7,42 +7,44 @@ Full-stack antenna calculator app with payment processing (Stripe/PayPal), admin
 app.json: 4.3.3, versionCode: 22
 
 ## Completed This Session (Feb 2026)
-1. **Fine-Tune Gamma backend** — Replaced brute-force algorithm with fast analytical estimator (`_fast_gamma_swr`). <0.2s for all element counts. Works for 3-5 element detuned antennas (e.g., 1.135→1.004, 1.096→1.003).
-2. **Custom tube length bug** — `apply_matching_network()` was clamping insertion to 2.5" (default 3" tube) even with custom hardware. Fixed by adding `gamma_tube_length` parameter. High-power combos now work: 1" tube + 5/8" rod gets SWR 1.03 for 8+ elements.
-3. **Gamma Designer → Main Page SWR sync** — Added `tube_od` and `tube_length` passthrough from GammaDesigner onApply → index.tsx state → calculate endpoint. Added `gamma_tube_length` to AntennaInput model.
-4. **Fine-tune returns gamma recipe** — Backend now returns full gamma_recipe in GammaFineTuneOutput. Frontend applies bar_pos, insertion, rod_od, tube_od, tube_length, and driven correction after fine-tune.
-5. **Auto-recalc dependency fix** — Added `gammaTubeOd` and `gammaTubeLength` to both useCallback and useEffect dependency arrays. Removed race-condition setTimeout.
+1. **Fine-Tune Gamma FIXED** - Root cause: optimizer used gamma-matched SWR as sole metric, but gamma match always achieves ~1.0 regardless of elements. Fix: multi-objective `_perf_score()` scoring function that optimizes impedance (target Z=22 ohms), SWR, and boom length. Elements now MOVE on all antenna configurations (3-20 elements).
+2. **Impedance bug fix** - `_fast_gamma_swr` was using `cumulative=False` for director spacings (should be True). Fixed to match full evaluator's impedance calculation.
+3. **Director length optimization** - Added Pass 5 to sweep director lengths for better impedance.
+4. **Gain tracking** - Added `original_gain` and `optimized_gain` fields to GammaFineTuneOutput. Frontend alert now shows gain changes.
+5. **Removed early exit** - Removed `if original_swr <= 1.02: no tuning needed` guard that prevented ALL optimization on well-tuned antennas.
 
-## Known Issue: Fine-Tune Doesn't Move Elements for 6+ Element Antennas
-- For 6+ elements, the gamma designer with auto-hardware escalation already achieves SWR ~1.0, so fine-tune says "already near-perfect" and doesn't adjust elements.
-- Elements DO move for 3-5 element detuned antennas where gamma match struggles.
-- The fine-tune still applies gamma recipe settings even when elements don't move, so the main page SWR updates correctly.
-- **TODO**: Consider making fine-tune optimize for a broader goal (e.g., maximize gain while maintaining matchable impedance) so elements move even when gamma match is already perfect.
+## Previous Session Completions
+- Fine-Tune Gamma backend - fast analytical estimator
+- Custom tube length bug fix
+- Gamma Designer to Main Page SWR sync
+- Fine-tune returns gamma recipe
+- Auto-recalc dependency fix
+- Live recurring subscriptions (Stripe/PayPal)
+- Admin panel
+- Build styles with auto-tune
 
 ## Architecture
 ```
 backend/
-  routes/server.py      - Stripe/PayPal recurring logic, webhooks (LIVE - DO NOT TOUCH)
-  routes/user.py        - Auth, subscription, designs, gamma designer
+  routes/server.py      - Stripe/PayPal recurring logic, webhooks (LIVE)
+  routes/user.py        - Auth, subscription, designs
   routes/antenna.py     - Calculator, auto-tune, fine-tune, gamma/hairpin designers
-  services/physics.py   - Core physics: _fast_gamma_swr, gamma_fine_tune,
-                          apply_matching_network (now accepts gamma_tube_length)
-  models.py             - GammaFineTuneOutput now includes gamma_recipe field
+  services/physics.py   - Core physics: _perf_score, _fast_gamma_swr (fixed cumulative),
+                          gamma_fine_tune (multi-objective), apply_matching_network
+  models.py             - GammaFineTuneOutput with original_gain/optimized_gain
 frontend/
-  app/index.tsx         - Fine-Tune button, gammaTubeOd/gammaTubeLength state,
-                          fineTuneGamma applies gamma recipe on response
-  components/GammaDesigner.tsx - onApply now passes tubeOd + tubeLength
+  app/index.tsx         - Fine-Tune button, updated alert with gain info
+  components/GammaDesigner.tsx - onApply passes tubeOd + tubeLength
 ```
 
 ## Key API Endpoints
-- POST /api/gamma-fine-tune — Optimize elements + return gamma recipe
-- POST /api/gamma-designer — Full gamma match designer with auto-hardware escalation
-- POST /api/calculate — Full antenna calculation (now accepts gamma_tube_length)
-- POST /api/auto-tune — Auto-tune antenna geometry by build style
+- POST /api/gamma-fine-tune - Multi-objective optimizer, always moves elements
+- POST /api/gamma-designer - Full gamma match designer with auto-hardware escalation
+- POST /api/calculate - Full antenna calculation (accepts gamma_tube_length)
+- POST /api/auto-tune - Auto-tune antenna geometry by build style
 
 ## Backlog
-- P1: Make fine-tune more aggressive for 6+ elements (optimize beyond gamma-matched SWR)
-- P2: Add power-aware hardware selector (auto-size tube/rod gap based on transmit power)
+- P1: Add power-aware hardware selector (auto-size tube/rod gap based on transmit power)
 - P2: More accurate series-capacitor dielectric model
 - P2: Refactor subscription.tsx and admin.tsx into smaller components
 - P3: Build iOS version
