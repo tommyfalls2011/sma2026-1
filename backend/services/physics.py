@@ -2746,96 +2746,88 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
     best_swr = original_swr
     steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}Ω, Gain={baseline['gain']}dBi")
     
-    # Pass 1: Sweep reflector length (±4" in 0.5" steps)
-    refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
-    orig_refl_len = elems[refl_idx]["length"]
-    best_refl_len = orig_refl_len
-    for delta in [x * 0.5 for x in range(-8, 9)]:
-        if delta == 0:
-            continue
-        test = copy.deepcopy(elems)
-        test[refl_idx]["length"] = round(orig_refl_len + delta, 1)
-        r = _calc_and_gamma(test)
-        if r["reachable"] and r["swr"] < best_swr:
-            best_swr = r["swr"]
-            best_refl_len = test[refl_idx]["length"]
-    if best_refl_len != orig_refl_len:
-        elems[refl_idx]["length"] = best_refl_len
-        steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.1f}\" (SWR: {best_swr})")
-    
-    # Pass 2: Sweep driven position (±5" in 1" steps)
-    driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
-    orig_driven_pos = elems[driven_idx]["position"]
-    best_driven_pos = orig_driven_pos
-    for delta in range(-5, 6):
-        if delta == 0:
-            continue
-        test = copy.deepcopy(elems)
-        test[driven_idx]["position"] = round(orig_driven_pos + delta, 1)
-        # Don't let driven go past reflector or dir1
-        if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
-            continue
-        r = _calc_and_gamma(test)
-        if r["reachable"] and r["swr"] < best_swr:
-            best_swr = r["swr"]
-            best_driven_pos = test[driven_idx]["position"]
-    if best_driven_pos != orig_driven_pos:
-        elems[driven_idx]["position"] = best_driven_pos
-        steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.1f}\" (SWR: {best_swr})")
-    
-    # Pass 3: Sweep dir1 position (±5" in 1" steps)
-    dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
-    if dirs_sorted:
-        dir1_idx = dirs_sorted[0][0]
-        orig_dir1_pos = elems[dir1_idx]["position"]
-        best_dir1_pos = orig_dir1_pos
-        for delta in range(-5, 6):
-            if delta == 0:
-                continue
+    if best_swr <= 1.02:
+        steps.append("Already near-perfect — no tuning needed.")
+        final = baseline
+    else:
+        refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
+        driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
+        
+        # Pass 1: Coarse reflector length sweep (±4" in 2" steps)
+        orig_refl_len = elems[refl_idx]["length"]
+        best_refl_len = orig_refl_len
+        for delta in [-4, -2, 2, 4]:
             test = copy.deepcopy(elems)
-            test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 1)
-            if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
-                continue
+            test[refl_idx]["length"] = round(orig_refl_len + delta, 1)
             r = _calc_and_gamma(test)
             if r["reachable"] and r["swr"] < best_swr:
                 best_swr = r["swr"]
-                best_dir1_pos = test[dir1_idx]["position"]
-        if best_dir1_pos != orig_dir1_pos:
-            elems[dir1_idx]["position"] = best_dir1_pos
-            steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.1f}\" (SWR: {best_swr})")
+                best_refl_len = test[refl_idx]["length"]
+        # Fine reflector sweep around best (±1" in 0.5" steps)
+        center = best_refl_len
+        for delta in [-1, -0.5, 0.5, 1]:
+            test = copy.deepcopy(elems)
+            test[refl_idx]["length"] = round(center + delta, 1)
+            r = _calc_and_gamma(test)
+            if r["reachable"] and r["swr"] < best_swr:
+                best_swr = r["swr"]
+                best_refl_len = test[refl_idx]["length"]
+        if best_refl_len != orig_refl_len:
+            elems[refl_idx]["length"] = best_refl_len
+            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.1f}\" (SWR: {best_swr})")
+        
+        # Pass 2: Driven position sweep (±4" in 2" steps, then ±1")
+        if best_swr > 1.02:
+            orig_driven_pos = elems[driven_idx]["position"]
+            best_driven_pos = orig_driven_pos
+            for delta in [-4, -2, 2, 4, -1, 1]:
+                test = copy.deepcopy(elems)
+                test[driven_idx]["position"] = round(orig_driven_pos + delta, 1)
+                if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
+                    continue
+                r = _calc_and_gamma(test)
+                if r["reachable"] and r["swr"] < best_swr:
+                    best_swr = r["swr"]
+                    best_driven_pos = test[driven_idx]["position"]
+            if best_driven_pos != orig_driven_pos:
+                elems[driven_idx]["position"] = best_driven_pos
+                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.1f}\" (SWR: {best_swr})")
+        
+        # Pass 3: Dir1 position sweep (±4" in 2" steps, then ±1")
+        dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
+        if dirs_sorted and best_swr > 1.02:
+            dir1_idx = dirs_sorted[0][0]
+            orig_dir1_pos = elems[dir1_idx]["position"]
+            best_dir1_pos = orig_dir1_pos
+            for delta in [-4, -2, 2, 4, -1, 1]:
+                test = copy.deepcopy(elems)
+                test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 1)
+                if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
+                    continue
+                r = _calc_and_gamma(test)
+                if r["reachable"] and r["swr"] < best_swr:
+                    best_swr = r["swr"]
+                    best_dir1_pos = test[dir1_idx]["position"]
+            if best_dir1_pos != orig_dir1_pos:
+                elems[dir1_idx]["position"] = best_dir1_pos
+                steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.1f}\" (SWR: {best_swr})")
+        
+        # Pass 4: Apply driven length correction
+        current = _calc_and_gamma(elems)
+        if current["rec_driven"] and abs(current["rec_driven"] - elems[driven_idx]["length"]) > 0.1:
+            orig_driven_len = elems[driven_idx]["length"]
+            test = copy.deepcopy(elems)
+            test[driven_idx]["length"] = current["rec_driven"]
+            r = _calc_and_gamma(test)
+            if r["reachable"] and r["swr"] <= best_swr + 0.05:
+                elems[driven_idx]["length"] = current["rec_driven"]
+                best_swr = r["swr"]
+                steps.append(f"Driven length: {orig_driven_len:.1f}\" -> {current['rec_driven']:.1f}\" (resonance correction, SWR: {best_swr})")
+        
+        # Final result
+        final = _calc_and_gamma(elems)
     
-    # Pass 4: Apply driven length correction from gamma designer
-    current = _calc_and_gamma(elems)
-    if current["rec_driven"] and abs(current["rec_driven"] - elems[driven_idx]["length"]) > 0.1:
-        orig_driven_len = elems[driven_idx]["length"]
-        test = copy.deepcopy(elems)
-        test[driven_idx]["length"] = current["rec_driven"]
-        r = _calc_and_gamma(test)
-        if r["reachable"] and r["swr"] <= best_swr + 0.05:
-            elems[driven_idx]["length"] = current["rec_driven"]
-            best_swr = r["swr"]
-            steps.append(f"Driven length: {orig_driven_len:.1f}\" -> {current['rec_driven']:.1f}\" (resonance correction, SWR: {best_swr})")
-    
-    # Pass 5: Fine sweep reflector length again with smaller steps (±1" in 0.25" steps)
-    orig_refl_len2 = elems[refl_idx]["length"]
-    best_refl_len2 = orig_refl_len2
-    for delta_q in range(-4, 5):
-        delta = delta_q * 0.25
-        if delta == 0:
-            continue
-        test = copy.deepcopy(elems)
-        test[refl_idx]["length"] = round(orig_refl_len2 + delta, 2)
-        r = _calc_and_gamma(test)
-        if r["reachable"] and r["swr"] < best_swr:
-            best_swr = r["swr"]
-            best_refl_len2 = test[refl_idx]["length"]
-    if best_refl_len2 != orig_refl_len2:
-        elems[refl_idx]["length"] = best_refl_len2
-        steps.append(f"Reflector fine-tune: {orig_refl_len2:.1f}\" -> {best_refl_len2:.2f}\" (SWR: {best_swr})")
-    
-    # Final result
-    final = _calc_and_gamma(elems)
-    if not steps or len(steps) == 1:
+    if len(steps) == 1:
         steps.append("No improvements found — antenna is already well-tuned for gamma match.")
     
     steps.append(f"Final: SWR={final['swr']}, Z={final['z']:.1f}Ω, Gain={final['gain']}dBi, F/B={final['fb']}dB")
