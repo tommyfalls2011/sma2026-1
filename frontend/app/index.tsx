@@ -390,21 +390,30 @@ export default function AntennaCalculator() {
 
   // Long-press repeat helper: fires action on press, then repeats while held
   const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const clearRepeat = useCallback(() => {
+    if (repeatTimerRef.current) {
+      clearInterval(repeatTimerRef.current);
+      repeatTimerRef.current = null;
+    }
+  }, []);
   const repeatPress = useCallback((action: () => void) => ({
     onPressIn: () => {
+      clearRepeat();
       action();
       const startTime = Date.now();
       repeatTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        // Speed up after 500ms held
         if (elapsed > 500) action();
-        if (elapsed > 1500) action(); // Double speed after 1.5s
+        if (elapsed > 1500) action();
       }, 80);
     },
-    onPressOut: () => {
-      if (repeatTimerRef.current) { clearInterval(repeatTimerRef.current); repeatTimerRef.current = null; }
-    },
-  }), []);
+    onPressOut: clearRepeat,
+    onTouchEnd: clearRepeat,
+    onTouchCancel: clearRepeat,
+    onMouseUp: clearRepeat,
+    onMouseLeave: clearRepeat,
+  }), [clearRepeat]);
+  useEffect(() => { return clearRepeat; }, [clearRepeat]);
   useEffect(() => {
     const compareVersions = (local: string, remote: string): boolean => {
       // Returns true if remote > local (e.g. "3.3.0" > "3.2.5")
