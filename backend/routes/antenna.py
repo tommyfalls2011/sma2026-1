@@ -353,7 +353,7 @@ async def optimize_return_loss(input_data: AntennaInput):
     gamma_recipe = None
     if best_elements and original_feed == "gamma":
         try:
-            from services.physics import compute_feedpoint_impedance, estimate_resonant_freq
+            from services.physics import compute_feedpoint_impedance, compute_element_resonant_freq
             best_drv_el = next(e for e in best_elements if e["element_type"] == "driven")
             best_refl_el = next((e for e in best_elements if e["element_type"] == "reflector"), None)
             best_dir_els = sorted([e for e in best_elements if e["element_type"] == "director"], key=lambda x: x["position"])
@@ -365,7 +365,7 @@ async def optimize_return_loss(input_data: AntennaInput):
                 reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
                 reflector_length_in=best_refl_el["length"] if best_refl_el else 213.5,
             )
-            res_freq = estimate_resonant_freq(driven_length_in=best_drv_el["length"], frequency_mhz=center_freq)
+            res_freq = compute_element_resonant_freq(driven_length_in=best_drv_el["length"], frequency_mhz=center_freq)
             gd = design_gamma_match(
                 num_elements=len(best_elements),
                 driven_element_length_in=best_drv_el["length"],
