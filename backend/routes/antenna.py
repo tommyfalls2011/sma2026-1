@@ -314,7 +314,7 @@ async def optimize_return_loss(input_data: AntennaInput):
             for dd in range(-3, 4):
                 if rd == 0 and dd == 0:
                     continue
-                rp = round(best_refl + rd * fine_step, 1)
+                rp = max(0, round(best_refl + rd * fine_step, 1))
                 dp = round(best_drv + dd * fine_step, 1)
                 if dp <= rp:
                     continue
