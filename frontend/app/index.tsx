@@ -901,10 +901,12 @@ export default function AntennaCalculator() {
           }
         }
 
-        const stepsText = data.optimization_steps.slice(0, 5).join('\n');
+        const stepsText = data.optimization_steps.slice(1, -1).join('\n');
+        const gainText = data.original_gain && data.optimized_gain
+          ? `Gain: ${data.original_gain} -> ${data.optimized_gain} dBi\n` : '';
         Alert.alert(
           'Fine-Tune Complete',
-          `SWR: ${data.original_swr} -> ${data.optimized_swr}\nZ: ${data.feedpoint_impedance}\u03a9\n\n${stepsText}`
+          `SWR: ${data.original_swr} -> ${data.optimized_swr}\n${gainText}Z: ${data.feedpoint_impedance}\u03a9\n\n${stepsText}`
         );
         // useEffect auto-recalculates when state updates commit
       } else {
