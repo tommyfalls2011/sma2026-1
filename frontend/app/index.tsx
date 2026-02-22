@@ -82,6 +82,9 @@ export default function AntennaCalculator() {
   const [maxBoomLength, setMaxBoomLength] = useState('120');  // Default 10 feet in inches
   const [spacingLockEnabled, setSpacingLockEnabled] = useState(false);
   
+  // Build Style for Auto-Tune
+  const [buildStyle, setBuildStyle] = useState<'tight' | 'normal' | 'far' | 'broadband'>('normal');
+  
   // Element Spacing Mode
   const [spacingMode, setSpacingMode] = useState<'normal' | 'tight' | 'long'>('normal');
   const [spacingLevel, setSpacingLevel] = useState('1.0');
