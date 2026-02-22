@@ -79,7 +79,7 @@ async def get_all_users(admin: dict = Depends(require_admin)):
 
 @router.put("/admin/users/{user_id}/role")
 async def update_user_role(user_id: str, role_update: UserRoleUpdate, admin: dict = Depends(require_admin)):
-    valid_roles = ["trial", "bronze", "silver", "gold", "subadmin"]
+    valid_roles = ["trial", "bronze_monthly", "bronze_yearly", "silver_monthly", "silver_yearly", "gold_monthly", "gold_yearly", "bronze", "silver", "gold", "subadmin"]
     if role_update.role not in valid_roles:
         raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {valid_roles}")
     user = await db.users.find_one({"id": user_id})
@@ -87,13 +87,25 @@ async def update_user_role(user_id: str, role_update: UserRoleUpdate, admin: dic
         raise HTTPException(status_code=404, detail="User not found")
     if user.get("email", "").lower() == ADMIN_EMAIL.lower():
         raise HTTPException(status_code=403, detail="Cannot modify main admin account")
+
+    # Normalize short tier names to full keys
+    role = role_update.role
+    if role in ["bronze", "silver", "gold"]:
+        role = f"{role}_monthly"
+
     expires = None
     is_trial = False
-    if role_update.role == "subadmin": expires = datetime.utcnow() + timedelta(days=36500)
-    elif role_update.role == "trial": is_trial = True
-    elif role_update.role in ["bronze", "silver", "gold"]: expires = datetime.utcnow() + timedelta(days=30)
-    await db.users.update_one({"id": user_id}, {"$set": {"subscription_tier": role_update.role, "subscription_expires": expires, "is_trial": is_trial}})
-    return {"success": True, "message": f"User role updated to {role_update.role}"}
+    if role == "subadmin":
+        expires = datetime.utcnow() + timedelta(days=36500)
+    elif role == "trial":
+        is_trial = True
+    elif role.endswith("_yearly"):
+        expires = datetime.utcnow() + timedelta(days=365)
+    else:
+        expires = datetime.utcnow() + timedelta(days=30)
+
+    await db.users.update_one({"id": user_id}, {"$set": {"subscription_tier": role, "subscription_expires": expires, "is_trial": is_trial}})
+    return {"success": True, "message": f"User role updated to {role}"}
 
 @router.get("/admin/check")
 async def check_admin_status(user: dict = Depends(require_user)):
