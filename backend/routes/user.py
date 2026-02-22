@@ -619,8 +619,65 @@ async def stripe_subscription_status(session_id: str, user: dict = Depends(requi
 
 @router.post("/subscription/cancel")
 async def cancel_subscription(user: dict = Depends(require_user)):
-    await db.users.update_one({"id": user["id"]}, {"$set": {"subscription_tier": "trial", "subscription_expires": None, "is_trial": False, "cancelled_at": datetime.utcnow()}})
+    # Cancel Stripe subscription if exists
+    stripe_sub_id = user.get("stripe_subscription_id")
+    if stripe_sub_id:
+        try:
+            _init_stripe()
+            stripe.Subscription.cancel(stripe_sub_id)
+        except Exception as e:
+            logger.warning(f"Failed to cancel Stripe subscription {stripe_sub_id}: {e}")
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "subscription_tier": "trial",
+            "subscription_expires": None,
+            "is_trial": False,
+            "auto_renew": False,
+            "stripe_subscription_id": None,
+            "cancelled_at": datetime.utcnow(),
+        }},
+    )
     return {"success": True, "message": "Subscription cancelled. You can renew anytime."}
+
+
+@router.post("/subscription/cancel-auto-renew")
+async def cancel_auto_renew(user: dict = Depends(require_user)):
+    """Cancel auto-renewal but keep the subscription active until expiration."""
+    stripe_sub_id = user.get("stripe_subscription_id")
+    if stripe_sub_id:
+        try:
+            _init_stripe()
+            # Cancel at period end (keeps active until expiration)
+            stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=True)
+        except Exception as e:
+            logger.warning(f"Failed to modify Stripe subscription {stripe_sub_id}: {e}")
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"auto_renew": False}},
+    )
+    return {"success": True, "message": "Auto-renewal cancelled. Your subscription remains active until the current period ends."}
+
+
+@router.post("/subscription/resume-auto-renew")
+async def resume_auto_renew(user: dict = Depends(require_user)):
+    """Re-enable auto-renewal for a subscription set to cancel at period end."""
+    stripe_sub_id = user.get("stripe_subscription_id")
+    if stripe_sub_id:
+        try:
+            _init_stripe()
+            stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=False)
+        except Exception as e:
+            logger.warning(f"Failed to resume Stripe subscription {stripe_sub_id}: {e}")
+            raise HTTPException(status_code=500, detail="Failed to resume auto-renewal")
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"auto_renew": True}},
+    )
+    return {"success": True, "message": "Auto-renewal has been re-enabled."}
 
 
 @router.get("/subscription/status")
