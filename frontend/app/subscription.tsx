@@ -779,4 +779,17 @@ const styles = StyleSheet.create({
   maxTierCard: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 24, alignItems: 'center', marginTop: 20 },
   maxTierTitle: { fontSize: 20, fontWeight: 'bold', color: '#FFD700', marginTop: 12 },
   maxTierDesc: { fontSize: 14, color: '#888', textAlign: 'center', marginTop: 8 },
+
+  renewalInfo: { marginTop: 8 },
+  autoRenewBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  autoRenewText: { fontSize: 12, color: '#4CAF50' },
+
+  billingManagement: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#333', width: '100%' },
+  billingManagementStandalone: { backgroundColor: '#1E1E1E', borderRadius: 12, padding: 16, marginTop: 12, borderWidth: 1, borderColor: '#333' },
+  billingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  billingLabel: { fontSize: 14, color: '#888' },
+  billingValue: { fontSize: 14, color: '#fff', fontWeight: '600' },
+  autoRenewBtn: { backgroundColor: '#f44336', borderRadius: 8, padding: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 8 },
+  autoRenewBtnResume: { backgroundColor: '#4CAF50' },
+  autoRenewBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
