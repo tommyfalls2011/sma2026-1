@@ -655,6 +655,8 @@ export default function AntennaCalculator() {
             gamma_bar_pos: gammaBarPos,
             gamma_element_gap: gammaRodInsertion,
             gamma_cap_pf: gammaCapPf !== null ? (parseFloat(gammaCapPf) || undefined) : undefined,
+            gamma_tube_od: gammaTubeOd !== null ? (parseFloat(gammaTubeOd) || undefined) : undefined,
+            gamma_tube_length: gammaTubeLength || undefined,
           } : {}),
           ...(inputs.feed_type === 'hairpin' ? {
             hairpin_rod_dia: parseFloat(hairpinRodDia) || undefined,
