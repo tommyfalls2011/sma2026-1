@@ -8,12 +8,14 @@ from models import (
     CalculationRecord, StackingOptimizeRequest, StackingOptimizeResult,
     HeightOptimizeRequest, HeightOptimizeOutput,
     GammaDesignerRequest, HairpinDesignerRequest,
+    GammaFineTuneRequest, GammaFineTuneOutput,
 )
 from services.physics import (
     calculate_antenna_parameters, auto_tune_antenna,
     calculate_stacking_gain, calculate_stacked_beamwidth,
     convert_spacing_to_meters, convert_height_to_meters,
     design_gamma_match, design_hairpin_match,
+    gamma_fine_tune,
 )
 
 router = APIRouter()
