@@ -2098,8 +2098,20 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     auto_rod = hw["rod_od"]
     auto_tube = hw["tube_od"]
     auto_spacing = hw["rod_spacing"]
-    rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
-    tube_od = custom_tube_od if custom_tube_od and custom_tube_od > 0 else auto_tube
+
+    # Hardware escalation ladder for auto-selection
+    HARDWARE_LADDER = [
+        {"rod_od": 0.625, "tube_od": 0.750, "tube_length": 3.0, "label": "5/8\" rod, 3/4\" tube"},
+        {"rod_od": 0.750, "tube_od": 0.875, "tube_length": 3.5, "label": "3/4\" rod, 7/8\" tube"},
+        {"rod_od": 0.875, "tube_od": 1.000, "tube_length": 4.0, "label": "7/8\" rod, 1\" tube"},
+    ]
+
+    if is_custom:
+        rod_od = custom_rod_od if custom_rod_od and custom_rod_od > 0 else auto_rod
+        tube_od = custom_tube_od if custom_tube_od and custom_tube_od > 0 else auto_tube
+    else:
+        rod_od = auto_rod
+        tube_od = auto_tube
     rod_spacing = custom_rod_spacing if custom_rod_spacing and custom_rod_spacing > 0 else auto_spacing
     tube_id = tube_od - 2 * wall
 
