@@ -2887,18 +2887,21 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             "tube": recipe.get("tube_od", 0),
         }
 
-    # Get baseline using FULL evaluation (accurate reference)
+    # Get baseline using FULL evaluation (accurate reference for display)
     baseline = _full_eval(elems)
     original_swr = baseline["swr"]
-    best_swr = original_swr
     steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}\u03a9, Gain={baseline['gain']}dBi")
 
-    if best_swr <= 1.02:
+    if original_swr <= 1.02:
         steps.append("Already near-perfect \u2014 no tuning needed.")
         final = baseline
     else:
         refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
         driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
+
+        # Use FAST eval baseline for apples-to-apples comparison during search
+        fast_baseline = _fast_eval(elems)
+        best_fast_swr = fast_baseline["swr"]
 
         # Pass 1: Reflector length sweep (coarse ±4" then fine ±1")
         orig_refl_len = elems[refl_idx]["length"]
@@ -2907,8 +2910,8 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             test = copy.deepcopy(elems)
             test[refl_idx]["length"] = round(orig_refl_len + delta, 1)
             r = _fast_eval(test)
-            if r["reachable"] and r["swr"] < best_swr:
-                best_swr = r["swr"]
+            if r["reachable"] and r["swr"] < best_fast_swr:
+                best_fast_swr = r["swr"]
                 best_refl_len = test[refl_idx]["length"]
         # Fine sweep around best (±0.5" in 0.25" steps)
         center = best_refl_len
@@ -2919,15 +2922,15 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             test = copy.deepcopy(elems)
             test[refl_idx]["length"] = round(center + d, 2)
             r = _fast_eval(test)
-            if r["reachable"] and r["swr"] < best_swr:
-                best_swr = r["swr"]
+            if r["reachable"] and r["swr"] < best_fast_swr:
+                best_fast_swr = r["swr"]
                 best_refl_len = test[refl_idx]["length"]
         if best_refl_len != orig_refl_len:
             elems[refl_idx]["length"] = best_refl_len
-            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.2f}\" (SWR: {best_swr:.3f})")
+            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.2f}\" (est. SWR: {best_fast_swr:.3f})")
 
         # Early exit check
-        if best_swr <= 1.05:
+        if best_fast_swr <= 1.05:
             steps.append("SWR target reached after reflector tuning.")
         else:
             # Pass 2: Driven position sweep
