@@ -624,7 +624,7 @@ export default function SubscriptionScreen() {
                     {user.auto_renew ? 'Auto-renewing' : 'Manual renewal'}
                   </Text>
                 </View>
-                {user.billing_method === 'stripe' && (
+                {(user.billing_method === 'stripe' || user.billing_method === 'paypal') && (
                   <TouchableOpacity
                     style={[styles.autoRenewBtn, !user.auto_renew && styles.autoRenewBtnResume]}
                     onPress={handleToggleAutoRenew}
@@ -668,7 +668,7 @@ export default function SubscriptionScreen() {
                 {user.auto_renew ? 'Auto-renewing' : 'Manual renewal'}
               </Text>
             </View>
-            {user.billing_method === 'stripe' && (
+            {(user.billing_method === 'stripe' || user.billing_method === 'paypal') && (
               <TouchableOpacity
                 style={[styles.autoRenewBtn, !user.auto_renew && styles.autoRenewBtnResume]}
                 onPress={handleToggleAutoRenew}
