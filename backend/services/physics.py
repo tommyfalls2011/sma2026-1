@@ -1413,11 +1413,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # For hairpin/direct: use feedpoint impedance with reactance model
     z_0 = 50.0  # feedline characteristic impedance
 
-    # Antenna Q from element diameter: thicker = lower Q = wider BW, flatter SWR
-    driven_el = next((e for e in input_data.elements if e.element_type == "driven"), None)
-    avg_elem_dia_in = sum(e.diameter for e in input_data.elements) / n if n > 0 else 0.5
-    driven_len_in = driven_el.length if driven_el else 199.0
-    dia_q_info = compute_diameter_q_factor(avg_elem_dia_in, driven_len_in, wavelength)
+    # Antenna Q from element diameter (dia_q_info computed earlier for bandwidth section)
     # Base Q = 12 for reference 0.5" diameter, scale with q_ratio
     antenna_q = 12.0 * dia_q_info["q_ratio"]
 
