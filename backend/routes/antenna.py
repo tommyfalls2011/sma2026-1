@@ -214,8 +214,8 @@ async def optimize_height(request: HeightOptimizeRequest):
 
 @router.post("/optimize-return-loss")
 async def optimize_return_loss(input_data: AntennaInput):
-    """Sweep element spacings to find the highest return loss (best natural impedance match).
-    Uses DIRECT feed to measure raw impedance — finds spacing closest to 50 ohms naturally."""
+    """Sweep element spacings (including reflector) to find the best match.
+    Uses the user's actual feed type to measure real matched SWR."""
     import math
 
     band_info = BAND_DEFINITIONS.get(input_data.band, BAND_DEFINITIONS["11m_cb"])
@@ -230,7 +230,6 @@ async def optimize_return_loss(input_data: AntennaInput):
     if not driven:
         return {"error": "No driven element found", "best_elements": [], "best_return_loss_db": 0, "best_swr": 99, "sweep_results": []}
 
-    refl_pos = reflector.position if reflector else 0
     original_feed = input_data.feed_type
     sweep_results = []
     best_score = -999
@@ -240,65 +239,112 @@ async def optimize_return_loss(input_data: AntennaInput):
     best_gain = 0
     best_fb = 0
 
-    # Driven sweep: 0.08λ to 0.28λ from reflector
-    driven_min = refl_pos + wavelength_in * 0.08
-    driven_max = refl_pos + wavelength_in * 0.28
-    driven_step = wavelength_in * 0.015
+    # Reflector sweep: 5 positions around original (±0.02λ)
+    refl_positions = [0]
+    if reflector:
+        refl_orig = reflector.position
+        refl_step = wavelength_in * 0.01
+        refl_positions = [refl_orig + i * refl_step for i in range(-2, 3)]
 
-    for driven_pos in [driven_min + i * driven_step for i in range(int((driven_max - driven_min) / driven_step) + 1)]:
-        if directors:
-            dir1_min = driven_pos + wavelength_in * 0.06
-            dir1_max = driven_pos + wavelength_in * 0.22
-            dir1_step = wavelength_in * 0.015
-            dir_positions = [dir1_min + i * dir1_step for i in range(int((dir1_max - dir1_min) / dir1_step) + 1)]
-        else:
-            dir_positions = [0]
+    for refl_pos in refl_positions:
+        # Driven sweep: 0.08λ to 0.28λ from reflector
+        driven_min = refl_pos + wavelength_in * 0.08
+        driven_max = refl_pos + wavelength_in * 0.28
+        driven_step = wavelength_in * 0.02
 
-        for dir1_pos in dir_positions:
-            new_elements = []
-            if reflector:
-                new_elements.append(type(reflector)(element_type="reflector", length=reflector.length, diameter=reflector.diameter, position=reflector.position))
-            new_elements.append(type(driven)(element_type="driven", length=driven.length, diameter=driven.diameter, position=round(driven_pos, 1)))
-
+        for driven_pos in [driven_min + i * driven_step for i in range(int((driven_max - driven_min) / driven_step) + 1)]:
             if directors:
-                new_elements.append(type(directors[0])(element_type="director", length=directors[0].length, diameter=directors[0].diameter, position=round(dir1_pos, 1)))
-                for j in range(1, len(directors)):
-                    orig_gap = directors[j].position - directors[j - 1].position
-                    new_pos = round(new_elements[-1].position + orig_gap, 1)
-                    new_elements.append(type(directors[j])(element_type="director", length=directors[j].length, diameter=directors[j].diameter, position=new_pos))
+                dir1_min = driven_pos + wavelength_in * 0.06
+                dir1_max = driven_pos + wavelength_in * 0.22
+                dir1_step = wavelength_in * 0.02
+                dir_positions = [dir1_min + i * dir1_step for i in range(int((dir1_max - dir1_min) / dir1_step) + 1)]
+            else:
+                dir_positions = [0]
 
-            # Calculate with user's actual feed type (includes matching network)
-            try:
-                matched_input = input_data.model_copy(update={"elements": new_elements})
-                matched_result = calculate_antenna_parameters(matched_input)
-                matched_rl = matched_result.return_loss_db or 0
-                matched_swr = matched_result.swr
-                gain = matched_result.gain_dbi
-                fb = matched_result.fb_ratio
+            for dir1_pos in dir_positions:
+                new_elements = []
+                if reflector:
+                    new_elements.append(type(reflector)(element_type="reflector", length=reflector.length, diameter=reflector.diameter, position=round(refl_pos, 1)))
+                new_elements.append(type(driven)(element_type="driven", length=driven.length, diameter=driven.diameter, position=round(driven_pos, 1)))
 
-                # Score: prioritize matched RL, reward gain and F/B
-                score = matched_rl * 2.5 + gain * 0.5 + fb * 0.3
+                if directors:
+                    new_elements.append(type(directors[0])(element_type="director", length=directors[0].length, diameter=directors[0].diameter, position=round(dir1_pos, 1)))
+                    for j in range(1, len(directors)):
+                        orig_gap = directors[j].position - directors[j - 1].position
+                        new_pos = round(new_elements[-1].position + orig_gap, 1)
+                        new_elements.append(type(directors[j])(element_type="director", length=directors[j].length, diameter=directors[j].diameter, position=new_pos))
 
-                sweep_results.append({
-                    "driven_pos": round(driven_pos, 1),
-                    "dir1_pos": round(dir1_pos, 1) if directors else None,
-                    "matched_return_loss_db": round(matched_rl, 2),
-                    "matched_swr": round(matched_swr, 3),
-                    "gain_dbi": round(gain, 2),
-                    "fb_ratio": round(fb, 1),
-                    "score": round(score, 2),
-                })
-                if score > best_score:
-                    best_score = score
-                    best_rl = matched_rl
-                    best_swr = matched_swr
-                    best_gain = gain
-                    best_fb = fb
-                    best_elements = [{"element_type": e.element_type, "length": e.length, "diameter": e.diameter, "position": e.position} for e in new_elements]
-            except Exception:
-                continue
+                try:
+                    matched_input = input_data.model_copy(update={"elements": new_elements})
+                    matched_result = calculate_antenna_parameters(matched_input)
+                    matched_rl = matched_result.return_loss_db or 0
+                    matched_swr = matched_result.swr
+                    gain = matched_result.gain_dbi
+                    fb = matched_result.fb_ratio
 
-    # Sort by score
+                    score = matched_rl * 2.5 + gain * 0.5 + fb * 0.3
+
+                    sweep_results.append({
+                        "refl_pos": round(refl_pos, 1) if reflector else None,
+                        "driven_pos": round(driven_pos, 1),
+                        "dir1_pos": round(dir1_pos, 1) if directors else None,
+                        "matched_return_loss_db": round(matched_rl, 2),
+                        "matched_swr": round(matched_swr, 3),
+                        "gain_dbi": round(gain, 2),
+                        "fb_ratio": round(fb, 1),
+                        "score": round(score, 2),
+                    })
+                    if score > best_score:
+                        best_score = score
+                        best_rl = matched_rl
+                        best_swr = matched_swr
+                        best_gain = gain
+                        best_fb = fb
+                        best_elements = [{"element_type": e.element_type, "length": e.length, "diameter": e.diameter, "position": e.position} for e in new_elements]
+                except Exception:
+                    continue
+
+    # Fine-tune pass: sweep around best with finer steps
+    if best_elements and reflector:
+        best_refl = next(e for e in best_elements if e["element_type"] == "reflector")["position"]
+        best_drv = next(e for e in best_elements if e["element_type"] == "driven")["position"]
+        fine_step = wavelength_in * 0.005
+        for rd in range(-3, 4):
+            for dd in range(-3, 4):
+                if rd == 0 and dd == 0:
+                    continue
+                rp = round(best_refl + rd * fine_step, 1)
+                dp = round(best_drv + dd * fine_step, 1)
+                if dp <= rp:
+                    continue
+                new_elements = []
+                new_elements.append(type(reflector)(element_type="reflector", length=reflector.length, diameter=reflector.diameter, position=rp))
+                new_elements.append(type(driven)(element_type="driven", length=driven.length, diameter=driven.diameter, position=dp))
+                if directors:
+                    best_dir1 = next(e for e in best_elements if e["element_type"] == "director")["position"]
+                    new_elements.append(type(directors[0])(element_type="director", length=directors[0].length, diameter=directors[0].diameter, position=best_dir1))
+                    for j in range(1, len(directors)):
+                        orig_gap = directors[j].position - directors[j - 1].position
+                        new_pos = round(new_elements[-1].position + orig_gap, 1)
+                        new_elements.append(type(directors[j])(element_type="director", length=directors[j].length, diameter=directors[j].diameter, position=new_pos))
+                try:
+                    matched_input = input_data.model_copy(update={"elements": new_elements})
+                    matched_result = calculate_antenna_parameters(matched_input)
+                    matched_rl = matched_result.return_loss_db or 0
+                    matched_swr = matched_result.swr
+                    gain = matched_result.gain_dbi
+                    fb = matched_result.fb_ratio
+                    score = matched_rl * 2.5 + gain * 0.5 + fb * 0.3
+                    if score > best_score:
+                        best_score = score
+                        best_rl = matched_rl
+                        best_swr = matched_swr
+                        best_gain = gain
+                        best_fb = fb
+                        best_elements = [{"element_type": e.element_type, "length": e.length, "diameter": e.diameter, "position": e.position} for e in new_elements]
+                except Exception:
+                    continue
+
     sweep_sorted = sorted(sweep_results, key=lambda x: -x["score"])
 
     return {
