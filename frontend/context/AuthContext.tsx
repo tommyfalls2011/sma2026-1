@@ -23,6 +23,8 @@ interface User {
   is_active?: boolean;
   status_message?: string;
   max_elements?: number;
+  auto_renew?: boolean;
+  billing_method?: string;
 }
 
 interface TierInfo {
