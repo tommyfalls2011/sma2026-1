@@ -1783,6 +1783,26 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               )}
 
+              {/* Fine-Tune Gamma Button */}
+              {inputs.feed_type === 'gamma' && results && (
+                <TouchableOpacity
+                  onPress={fineTuneGamma}
+                  disabled={fineTuning}
+                  style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a2e1a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#4CAF50', gap: 6, opacity: fineTuning ? 0.6 : 1 }}
+                  data-testid="fine-tune-gamma-btn"
+                >
+                  {fineTuning ? (
+                    <ActivityIndicator size="small" color="#4CAF50" />
+                  ) : (
+                    <Ionicons name="options" size={16} color="#4CAF50" />
+                  )}
+                  <Text style={{ fontSize: 12, color: '#4CAF50', fontWeight: '700' }}>
+                    {fineTuning ? 'Optimizing...' : 'Fine-Tune Gamma'}
+                  </Text>
+                  <Text style={{ fontSize: 9, color: '#888' }}>- Auto-optimize SWR</Text>
+                </TouchableOpacity>
+              )}
+
               {/* Gamma Match Design Panel */}
               {inputs.feed_type === 'gamma' && results && results.matching_info?.gamma_design && (
                 <View style={{ marginTop: 10, backgroundColor: '#1a1a2e', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#FF9800' }}>
