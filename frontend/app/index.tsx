@@ -107,6 +107,7 @@ export default function AntennaCalculator() {
   const [dir2NudgeCount, setDir2NudgeCount] = useState(0); // kept for backward compat
   const [spacingNudgeCount, setSpacingNudgeCount] = useState(0);
   const [rlTuning, setRlTuning] = useState(false);
+  const [fineTuning, setFineTuning] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [rlResult, setRlResult] = useState<any>(null);
 
