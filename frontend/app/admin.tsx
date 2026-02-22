@@ -1989,17 +1989,29 @@ export default function AdminScreen() {
             
             <Text style={styles.modalLabel}>Subscription Tier</Text>
             <View style={styles.tierSelector}>
-              {['trial', 'bronze', 'silver', 'gold', 'subadmin'].map(tier => (
-                <TouchableOpacity
-                  key={tier}
-                  style={[styles.tierOption, newUserTier === tier && { backgroundColor: TIER_COLORS[tier], borderColor: TIER_COLORS[tier] }]}
-                  onPress={() => setNewUserTier(tier)}
-                >
-                  <Text style={[styles.tierOptionText, newUserTier === tier && styles.tierOptionTextActive]}>
-                    {tier}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {[
+                { key: 'trial', label: 'Trial' },
+                { key: 'bronze_monthly', label: 'Bronze Monthly' },
+                { key: 'bronze_yearly', label: 'Bronze Yearly' },
+                { key: 'silver_monthly', label: 'Silver Monthly' },
+                { key: 'silver_yearly', label: 'Silver Yearly' },
+                { key: 'gold_monthly', label: 'Gold Monthly' },
+                { key: 'gold_yearly', label: 'Gold Yearly' },
+                { key: 'subadmin', label: 'Sub-Admin' },
+              ].map(({ key, label }) => {
+                const colorKey = key.replace('_monthly', '').replace('_yearly', '') as keyof typeof TIER_COLORS;
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[styles.tierOption, newUserTier === key && { backgroundColor: TIER_COLORS[colorKey] || '#888', borderColor: TIER_COLORS[colorKey] || '#888' }]}
+                    onPress={() => setNewUserTier(key)}
+                  >
+                    <Text style={[styles.tierOptionText, newUserTier === key && styles.tierOptionTextActive]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
             
             {/* Trial Duration - only show when trial is selected */}
