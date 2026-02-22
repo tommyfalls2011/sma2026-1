@@ -2056,6 +2056,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
             num_elements=num_elements, wavelength_m=wavelength_m,
             reflector_spacing_in=refl_gap_in,
             director_spacings_in=director_spacings_in,
+            cumulative=False,  # Gamma designer receives individual gaps
         )
     swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
 
