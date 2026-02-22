@@ -368,7 +368,7 @@ async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends
 
 @router.post("/subscription/paypal-checkout")
 async def paypal_subscription_checkout(data: dict, request: Request, user: dict = Depends(require_user)):
-    """Create a PayPal order — user gets redirected to PayPal to pay."""
+    """Create a PayPal subscription — user gets redirected to PayPal to approve recurring billing."""
     tier_key = data.get("tier")
     if not tier_key or tier_key not in SUBSCRIPTION_TIERS:
         raise HTTPException(status_code=400, detail="Invalid tier")
@@ -377,65 +377,131 @@ async def paypal_subscription_checkout(data: dict, request: Request, user: dict 
         raise HTTPException(status_code=400, detail="origin_url required")
 
     tier_info = SUBSCRIPTION_TIERS[tier_key]
-    amount = str(tier_info["price"])
 
     access_token = await get_paypal_token()
     if not access_token:
         raise HTTPException(status_code=500, detail="PayPal not configured")
 
-    # Use backend route as return URL so it works for both mobile and web
+    plan_id = await get_paypal_plan_id(tier_key)
+    if not plan_id:
+        raise HTTPException(status_code=500, detail="PayPal billing plan not configured for this tier")
+
     host_url = str(request.base_url).rstrip("/")
-    order_data = {
-        "intent": "CAPTURE",
-        "purchase_units": [{
-            "amount": {"currency_code": "USD", "value": amount},
-            "description": f"SMA Antenna Calc — {tier_info['name']} Subscription",
-        }],
-        "application_context": {
-            "return_url": f"{host_url}/api/subscription/paypal-return",
-            "cancel_url": f"{origin_url}/subscription?payment=cancelled",
-            "brand_name": "SMA Antenna Calculator",
-            "user_action": "PAY_NOW",
+    subscription_data = {
+        "plan_id": plan_id,
+        "subscriber": {
+            "name": {"given_name": user.get("name", "Customer")},
+            "email_address": user["email"],
         },
+        "application_context": {
+            "brand_name": "SMA Antenna Calculator",
+            "return_url": f"{host_url}/api/subscription/paypal-sub-return?origin={origin_url}",
+            "cancel_url": f"{origin_url}/subscription?payment=cancelled",
+            "user_action": "SUBSCRIBE_NOW",
+            "payment_method": {
+                "payer_selected": "PAYPAL",
+                "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED",
+            },
+        },
+        "custom_id": f"{user['id']}|{tier_key}",
     }
 
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(
-            f"{PAYPAL_API_URL}/v2/checkout/orders",
-            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
-            json=order_data,
-        )
+        resp = await client.post(f"{PAYPAL_API_URL}/v1/billing/subscriptions", headers=headers, json=subscription_data)
 
     if resp.status_code not in (200, 201):
+        logger.error(f"PayPal subscription creation failed: {resp.text}")
         raise HTTPException(status_code=500, detail=f"PayPal error: {resp.text}")
 
-    pp_order = resp.json()
-    order_id = pp_order["id"]
-    approve_url = next((l["href"] for l in pp_order.get("links", []) if l["rel"] == "approve"), None)
+    pp_sub = resp.json()
+    sub_id = pp_sub["id"]
+    approve_url = next((l["href"] for l in pp_sub.get("links", []) if l["rel"] == "approve"), None)
     if not approve_url:
         raise HTTPException(status_code=500, detail="No PayPal approval URL")
-
-    # Fix return URL with actual order ID
-    return_url = f"{origin_url}/subscription?paypal_order_id={order_id}&payment=paypal_success"
 
     # Store transaction
     txn = {
         "id": str(uuid.uuid4()),
-        "paypal_order_id": order_id,
+        "paypal_subscription_id": sub_id,
         "user_id": user["id"],
         "user_email": user["email"],
         "tier": tier_key,
         "tier_name": tier_info["name"],
-        "amount": float(amount),
+        "amount": float(tier_info["price"]),
         "payment_method": "paypal",
         "payment_status": "created",
         "status": "initiated",
         "type": "subscription",
+        "billing_mode": "recurring",
         "created_at": datetime.utcnow().isoformat(),
     }
     await db.payment_transactions.insert_one(txn)
 
-    return {"url": approve_url, "order_id": order_id}
+    return {"url": approve_url, "subscription_id": sub_id}
+
+
+@router.get("/subscription/paypal-sub-return", response_class=HTMLResponse)
+async def paypal_subscription_return(subscription_id: str = "", origin: str = ""):
+    """Handle return from PayPal after subscription approval."""
+    if not subscription_id:
+        return HTMLResponse(_paypal_result_page("Error", "No subscription ID received from PayPal.", False))
+
+    access_token = await get_paypal_token()
+    if not access_token:
+        return HTMLResponse(_paypal_result_page("Configuration Error", "PayPal is not configured.", False))
+
+    # Check subscription status
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(f"{PAYPAL_API_URL}/v1/billing/subscriptions/{subscription_id}", headers=headers)
+
+    if resp.status_code != 200:
+        return HTMLResponse(_paypal_result_page("Error", "Could not verify subscription with PayPal.", False))
+
+    sub_data = resp.json()
+    sub_status = sub_data.get("status", "")
+    custom_id = sub_data.get("custom_id", "")
+
+    if sub_status not in ("ACTIVE", "APPROVED"):
+        return HTMLResponse(_paypal_result_page("Subscription Pending", f"Your subscription status is: {sub_status}. It may take a moment to activate.", False))
+
+    # Parse user_id and tier from custom_id
+    parts = custom_id.split("|")
+    if len(parts) != 2:
+        return HTMLResponse(_paypal_result_page("Error", "Invalid subscription data.", False))
+
+    user_id, tier_key = parts
+    tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+    tier_name = tier_info.get("name", tier_key)
+    duration_days = tier_info.get("duration_days", 30)
+    expires = datetime.utcnow() + timedelta(days=duration_days)
+
+    # Upgrade user with recurring billing info
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "subscription_tier": tier_key,
+            "subscription_expires": expires,
+            "is_trial": False,
+            "auto_renew": True,
+            "billing_method": "paypal",
+            "paypal_subscription_id": subscription_id,
+        }},
+    )
+
+    # Update transaction
+    await db.payment_transactions.update_one(
+        {"paypal_subscription_id": subscription_id, "type": "subscription"},
+        {"$set": {
+            "payment_status": "paid",
+            "status": "complete",
+            "billing_mode": "recurring",
+            "updated_at": datetime.utcnow().isoformat(),
+        }},
+    )
+
+    return HTMLResponse(_paypal_result_page("Subscription Active!", f"You've been subscribed to {tier_name} with auto-renewal! Close this page and return to the app.", True))
 
 
 @router.get("/subscription/paypal-return", response_class=HTMLResponse)
