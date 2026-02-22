@@ -2891,139 +2891,202 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             "recipe": recipe,
         }
 
+    # Multi-objective scoring: optimizes impedance + SWR + gain, not just gamma SWR
+    # The gamma match is so effective it always achieves SWR ~1.0, so using only
+    # gamma-matched SWR as the metric causes the optimizer to see no improvement.
+    # Instead, we score based on:
+    #  - Impedance in optimal gain range (18-26 ohms for high-gain Yagis)
+    #  - Gamma-matched SWR (must stay low)
+    #  - Boom length relative to standard (longer = more gain)
+    wavelength_m = 299792458.0 / (freq * 1e6)
+    wavelength_in = wavelength_m / 0.0254
+    std_boom = get_standard_boom_in(n, wavelength_in)
+
+    def _perf_score(fast_result, test_elems):
+        """Performance score (lower is better). Differentiates configs even
+        when gamma-matched SWR is already near-perfect."""
+        swr = fast_result["swr"]
+        z = fast_result["z"]
+        if not fast_result["reachable"] or swr > 3.0:
+            return 999.0
+        # SWR component (0 at perfect, increases with mismatch)
+        swr_term = (swr - 1.0) * 10.0
+        # Impedance component: ideal Z for gamma with best gain ~22 ohms
+        z_ideal = 22.0
+        z_term = abs(z - z_ideal) / z_ideal
+        # Boom component: closer to standard boom = better design
+        positions = [e["position"] for e in test_elems]
+        boom_in = max(positions) - min(positions) if len(positions) > 1 else 0
+        boom_term = abs(boom_in - std_boom) / max(std_boom, 1) if std_boom > 0 else 0
+        return swr_term + z_term * 3.0 + boom_term * 1.0
+
     # Get baseline using FULL evaluation (accurate reference for display)
     baseline = _full_eval(elems)
     original_swr = baseline["swr"]
-    steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}\u03a9, Gain={baseline['gain']}dBi")
+    original_gain = baseline["gain"]
+    steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}\u03a9, Gain={original_gain}dBi")
 
-    if original_swr <= 1.02:
-        steps.append("Already near-perfect \u2014 no tuning needed.")
-        final = baseline
-    else:
-        refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
-        driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
+    # Always run optimization — use perf_score to find improvements
+    refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
+    driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
 
-        # Use FAST eval baseline for apples-to-apples comparison during search
-        fast_baseline = _fast_eval(elems)
-        best_fast_swr = fast_baseline["swr"]
+    fast_baseline = _fast_eval(elems)
+    best_score = _perf_score(fast_baseline, elems)
 
-        # Pass 1: Reflector length sweep (coarse ±4" then fine ±1")
-        orig_refl_len = elems[refl_idx]["length"]
-        best_refl_len = orig_refl_len
-        for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
+    # Pass 1: Reflector length sweep (coarse +/-4" then fine +/-1")
+    orig_refl_len = elems[refl_idx]["length"]
+    best_refl_len = orig_refl_len
+    for delta in [-4, -3, -2, -1, -0.5, 0.5, 1, 2, 3, 4]:
+        test = copy.deepcopy(elems)
+        test[refl_idx]["length"] = round(orig_refl_len + delta, 2)
+        r = _fast_eval(test)
+        sc = _perf_score(r, test)
+        if sc < best_score:
+            best_score = sc
+            best_refl_len = test[refl_idx]["length"]
+    # Fine sweep around best (+/-0.5" in 0.125" steps)
+    center = best_refl_len
+    for delta_q in range(-4, 5):
+        d = delta_q * 0.125
+        if d == 0:
+            continue
+        test = copy.deepcopy(elems)
+        test[refl_idx]["length"] = round(center + d, 3)
+        r = _fast_eval(test)
+        sc = _perf_score(r, test)
+        if sc < best_score:
+            best_score = sc
+            best_refl_len = test[refl_idx]["length"]
+    if best_refl_len != orig_refl_len:
+        elems[refl_idx]["length"] = best_refl_len
+        r = _fast_eval(elems)
+        steps.append(f"Reflector: {orig_refl_len:.2f}\" -> {best_refl_len:.3f}\" (Z={r['z']:.1f}\u03a9)")
+
+    # Pass 2: Driven element position (reflector-to-driven spacing)
+    orig_driven_pos = elems[driven_idx]["position"]
+    best_driven_pos = orig_driven_pos
+    for delta in [-4, -3, -2, -1, -0.5, 0.5, 1, 2, 3, 4]:
+        test = copy.deepcopy(elems)
+        test[driven_idx]["position"] = round(orig_driven_pos + delta, 2)
+        if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
+            continue
+        r = _fast_eval(test)
+        sc = _perf_score(r, test)
+        if sc < best_score:
+            best_score = sc
+            best_driven_pos = test[driven_idx]["position"]
+    # Fine sweep
+    center = best_driven_pos
+    for delta_q in range(-4, 5):
+        d = delta_q * 0.125
+        if d == 0:
+            continue
+        test = copy.deepcopy(elems)
+        test[driven_idx]["position"] = round(center + d, 3)
+        if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
+            continue
+        r = _fast_eval(test)
+        sc = _perf_score(r, test)
+        if sc < best_score:
+            best_score = sc
+            best_driven_pos = test[driven_idx]["position"]
+    if best_driven_pos != orig_driven_pos:
+        elems[driven_idx]["position"] = best_driven_pos
+        r = _fast_eval(elems)
+        steps.append(f"Driven spacing: {orig_driven_pos:.2f}\" -> {best_driven_pos:.3f}\" (Z={r['z']:.1f}\u03a9)")
+
+    # Pass 3: Dir1 position sweep
+    dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
+    if dirs_sorted:
+        dir1_idx = dirs_sorted[0][0]
+        orig_dir1_pos = elems[dir1_idx]["position"]
+        best_dir1_pos = orig_dir1_pos
+        for delta in [-4, -3, -2, -1, -0.5, 0.5, 1, 2, 3, 4]:
             test = copy.deepcopy(elems)
-            test[refl_idx]["length"] = round(orig_refl_len + delta, 1)
+            test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 2)
+            if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
+                continue
             r = _fast_eval(test)
-            if r["reachable"] and r["swr"] < best_fast_swr:
-                best_fast_swr = r["swr"]
-                best_refl_len = test[refl_idx]["length"]
-        # Fine sweep around best (±0.5" in 0.25" steps)
-        center = best_refl_len
-        for delta_q in range(-2, 3):
-            d = delta_q * 0.25
+            sc = _perf_score(r, test)
+            if sc < best_score:
+                best_score = sc
+                best_dir1_pos = test[dir1_idx]["position"]
+        # Fine sweep
+        center = best_dir1_pos
+        for delta_q in range(-4, 5):
+            d = delta_q * 0.125
             if d == 0:
                 continue
             test = copy.deepcopy(elems)
-            test[refl_idx]["length"] = round(center + d, 2)
+            test[dir1_idx]["position"] = round(center + d, 3)
+            if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
+                continue
             r = _fast_eval(test)
-            if r["reachable"] and r["swr"] < best_fast_swr:
-                best_fast_swr = r["swr"]
-                best_refl_len = test[refl_idx]["length"]
-        if best_refl_len != orig_refl_len:
-            elems[refl_idx]["length"] = best_refl_len
-            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.2f}\" (est. SWR: {best_fast_swr:.3f})")
+            sc = _perf_score(r, test)
+            if sc < best_score:
+                best_score = sc
+                best_dir1_pos = test[dir1_idx]["position"]
+        if best_dir1_pos != orig_dir1_pos:
+            elems[dir1_idx]["position"] = best_dir1_pos
+            r = _fast_eval(elems)
+            steps.append(f"Dir1 spacing: {orig_dir1_pos:.2f}\" -> {best_dir1_pos:.3f}\" (Z={r['z']:.1f}\u03a9)")
 
-        # Early exit check
-        if best_fast_swr <= 1.05:
-            steps.append("SWR target reached after reflector tuning.")
-        else:
-            # Pass 2: Driven position sweep
-            orig_driven_pos = elems[driven_idx]["position"]
-            best_driven_pos = orig_driven_pos
-            for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
-                test = copy.deepcopy(elems)
-                test[driven_idx]["position"] = round(orig_driven_pos + delta, 1)
-                if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
-                    continue
-                r = _fast_eval(test)
-                if r["reachable"] and r["swr"] < best_fast_swr:
-                    best_fast_swr = r["swr"]
-                    best_driven_pos = test[driven_idx]["position"]
-            # Fine sweep
-            center = best_driven_pos
-            for delta_q in range(-2, 3):
-                d = delta_q * 0.25
-                if d == 0:
-                    continue
-                test = copy.deepcopy(elems)
-                test[driven_idx]["position"] = round(center + d, 2)
-                if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
-                    continue
-                r = _fast_eval(test)
-                if r["reachable"] and r["swr"] < best_fast_swr:
-                    best_fast_swr = r["swr"]
-                    best_driven_pos = test[driven_idx]["position"]
-            if best_driven_pos != orig_driven_pos:
-                elems[driven_idx]["position"] = best_driven_pos
-                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.2f}\" (est. SWR: {best_fast_swr:.3f})")
+    # Pass 4: Driven length correction using resonance info from full eval
+    full_current = _full_eval(elems)
+    if full_current["rec_driven"] and abs(full_current["rec_driven"] - elems[driven_idx]["length"]) > 0.05:
+        orig_driven_len = elems[driven_idx]["length"]
+        test = copy.deepcopy(elems)
+        test[driven_idx]["length"] = full_current["rec_driven"]
+        r = _fast_eval(test)
+        sc = _perf_score(r, test)
+        if sc < 999.0:
+            elems[driven_idx]["length"] = full_current["rec_driven"]
+            steps.append(f"Driven length: {orig_driven_len:.2f}\" -> {full_current['rec_driven']:.2f}\" (resonance correction)")
 
-            # Pass 3: Dir1 position sweep
-            if best_fast_swr > 1.05:
-                dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
-                if dirs_sorted:
-                    dir1_idx = dirs_sorted[0][0]
-                    orig_dir1_pos = elems[dir1_idx]["position"]
-                    best_dir1_pos = orig_dir1_pos
-                    for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
-                        test = copy.deepcopy(elems)
-                        test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 1)
-                        if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
-                            continue
-                        r = _fast_eval(test)
-                        if r["reachable"] and r["swr"] < best_fast_swr:
-                            best_fast_swr = r["swr"]
-                            best_dir1_pos = test[dir1_idx]["position"]
-                    # Fine sweep
-                    center = best_dir1_pos
-                    for delta_q in range(-2, 3):
-                        d = delta_q * 0.25
-                        if d == 0:
-                            continue
-                        test = copy.deepcopy(elems)
-                        test[dir1_idx]["position"] = round(center + d, 2)
-                        if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
-                            continue
-                        r = _fast_eval(test)
-                        if r["reachable"] and r["swr"] < best_fast_swr:
-                            best_fast_swr = r["swr"]
-                            best_dir1_pos = test[dir1_idx]["position"]
-                    if best_dir1_pos != orig_dir1_pos:
-                        elems[dir1_idx]["position"] = best_dir1_pos
-                        steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.2f}\" (est. SWR: {best_fast_swr:.3f})")
-
-        # Pass 4: Driven length correction using resonance info from full eval
-        full_current = _full_eval(elems)
-        if full_current["rec_driven"] and abs(full_current["rec_driven"] - elems[driven_idx]["length"]) > 0.1:
-            orig_driven_len = elems[driven_idx]["length"]
+    # Pass 5: Director lengths — sweep each director for best score
+    for dir_i, (didx, _de) in enumerate(dirs_sorted):
+        orig_dir_len = elems[didx]["length"]
+        best_dir_len = orig_dir_len
+        for delta in [-3, -2, -1, -0.5, 0.5, 1, 2, 3]:
             test = copy.deepcopy(elems)
-            test[driven_idx]["length"] = full_current["rec_driven"]
+            test[didx]["length"] = round(orig_dir_len + delta, 2)
             r = _fast_eval(test)
-            if r["reachable"] and r["swr"] <= full_current["swr"] + 0.05:
-                elems[driven_idx]["length"] = full_current["rec_driven"]
-                steps.append(f"Driven length: {orig_driven_len:.1f}\" -> {full_current['rec_driven']:.1f}\" (resonance correction)")
+            sc = _perf_score(r, test)
+            if sc < best_score:
+                best_score = sc
+                best_dir_len = test[didx]["length"]
+        # Fine sweep
+        center = best_dir_len
+        for delta_q in range(-4, 5):
+            d = delta_q * 0.125
+            if d == 0:
+                continue
+            test = copy.deepcopy(elems)
+            test[didx]["length"] = round(center + d, 3)
+            r = _fast_eval(test)
+            sc = _perf_score(r, test)
+            if sc < best_score:
+                best_score = sc
+                best_dir_len = test[didx]["length"]
+        if best_dir_len != orig_dir_len:
+            elems[didx]["length"] = best_dir_len
+            label = f"Dir{dir_i+1}" if dir_i < 6 else f"Director"
+            steps.append(f"{label} length: {orig_dir_len:.2f}\" -> {best_dir_len:.3f}\"")
 
-        # Final FULL evaluation on optimized configuration
-        final = _full_eval(elems)
+    # Final FULL evaluation on optimized configuration
+    final = _full_eval(elems)
 
     if len(steps) == 1:
-        steps.append("No improvements found \u2014 antenna is already well-tuned for gamma match.")
+        steps.append("Elements already at optimal positions for gamma match.")
 
-    steps.append(f"Final: SWR={final['swr']}, Z={final['z']:.1f}\u03a9, Gain={final['gain']}dBi, F/B={final['fb']}dB")
+    steps.append(f"Result: SWR={final['swr']}, Z={final['z']:.1f}\u03a9, Gain={final['gain']}dBi, F/B={final['fb']}dB")
 
     return GammaFineTuneOutput(
         optimized_elements=elems,
         original_swr=original_swr,
         optimized_swr=final["swr"],
+        original_gain=original_gain,
+        optimized_gain=final["gain"],
         feedpoint_impedance=final["z"],
         optimization_steps=steps,
         hardware={"rod_od": final["rod"], "tube_od": final["tube"]},
