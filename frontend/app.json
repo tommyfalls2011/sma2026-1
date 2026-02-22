@@ -2,7 +2,7 @@
   "expo": {
     "name": "SMA Antenna Analyzer",
     "slug": "sma-antenna-analyzer",
-    "version": "4.3.0",
+    "version": "4.3.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "sma-antenna-analyzer",
@@ -11,7 +11,7 @@
     "description": "Professional antenna design and analysis tool for ham radio operators. Calculate SWR, gain, radiation patterns, and optimize antenna configurations.",
     "android": {
       "package": "com.smaantennaanalyzer.app",
-      "versionCode": 19,
+      "versionCode": 20,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#121212"
