@@ -261,6 +261,67 @@ def calculate_boom_correction(boom_dia_m: float, avg_element_dia_m: float, wavel
     return {"enabled": True, "boom_mount": mount, "boom_grounded": mount == "bonded", "swr_factor": round(swr_penalty, 4), "gain_adj_db": round(gain_adj, 2), "fb_adj_db": round(fb_adj, 2), "impedance_shift_ohm": round(impedance_shift, 1), "bandwidth_mult": round(bandwidth_mult, 4), "correction_per_side_in": round(correction_per_side_in, 3), "correction_total_in": round(2 * correction_per_side_in, 3), "boom_to_element_ratio": round(dia_ratio, 2), "correction_multiplier": k, "corrected_elements": [], "description": desc, "practical_notes": notes}
 
 
+# ── Element Diameter Q-Factor Model ──
+
+def compute_diameter_q_factor(avg_diameter_in: float, driven_length_in: float,
+                                wavelength_m: float, ref_diameter_in: float = 0.5) -> dict:
+    """Compute antenna Q-factor ratio from element diameter using the thickness parameter.
+
+    The thickness parameter Ω = 2·ln(2·L/a) determines Q.
+    Thicker elements → lower Ω → lower Q → wider bandwidth, flatter SWR.
+
+    Returns multipliers relative to a reference diameter (default 0.5").
+    """
+    dia_m = avg_diameter_in * 0.0254
+    ref_dia_m = ref_diameter_in * 0.0254
+    length_m = driven_length_in * 0.0254
+    half_len = length_m / 2
+
+    if dia_m <= 0 or ref_dia_m <= 0 or half_len <= 0:
+        return {"q_ratio": 1.0, "bandwidth_mult": 1.0, "swr_curve_exponent": 1.6,
+                "omega": 10.0, "description": "Default"}
+
+    radius = dia_m / 2
+    ref_radius = ref_dia_m / 2
+
+    # Thickness parameter Ω = 2·ln(2L/a) — fundamental antenna theory
+    omega = 2 * math.log(max(2 * half_len / radius, 2.0))
+    omega_ref = 2 * math.log(max(2 * half_len / ref_radius, 2.0))
+
+    # Q ∝ Ω — higher Ω = higher Q = narrower bandwidth
+    q_ratio = omega / omega_ref if omega_ref > 0 else 1.0
+
+    # Bandwidth multiplier: BW ∝ 1/Q
+    bandwidth_mult = omega_ref / omega if omega > 0 else 1.0
+    # Clamp to realistic range (0.6x to 1.8x relative to reference)
+    bandwidth_mult = max(0.6, min(1.8, bandwidth_mult))
+
+    # SWR curve exponent: controls V-shape (high) vs U-shape (low)
+    # Reference 0.5" → exponent 1.6 (moderate V)
+    # 1.25" → exponent ~1.2 (flatter U)
+    # 0.25" → exponent ~2.0 (sharp V)
+    base_exponent = 1.6
+    swr_curve_exponent = base_exponent * q_ratio
+    swr_curve_exponent = max(1.0, min(2.5, swr_curve_exponent))
+
+    # Description
+    if bandwidth_mult > 1.15:
+        desc = f"Fat elements ({avg_diameter_in:.3f}\") — wide bandwidth, shallow SWR curve"
+    elif bandwidth_mult < 0.9:
+        desc = f"Thin elements ({avg_diameter_in:.3f}\") — narrow bandwidth, sharp SWR curve"
+    else:
+        desc = f"Standard elements ({avg_diameter_in:.3f}\") — typical bandwidth"
+
+    return {
+        "q_ratio": round(q_ratio, 4),
+        "bandwidth_mult": round(bandwidth_mult, 4),
+        "swr_curve_exponent": round(swr_curve_exponent, 3),
+        "omega": round(omega, 2),
+        "omega_ref": round(omega_ref, 2),
+        "description": desc,
+    }
+
+
 # ── SWR Calculation ──
 
 def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: float, taper_enabled: bool = False, height_wavelengths: float = 1.0) -> float:
