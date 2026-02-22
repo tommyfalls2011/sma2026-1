@@ -9,6 +9,7 @@ from config import (
 from models import (
     AntennaInput, AntennaOutput, AutoTuneRequest, AutoTuneOutput,
     ElementDimension, TaperConfig, CoronaBallConfig, CalculationRecord,
+    GammaFineTuneRequest, GammaFineTuneOutput,
 )
 
 
