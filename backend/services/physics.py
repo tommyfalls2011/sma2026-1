@@ -305,9 +305,9 @@ def compute_diameter_q_factor(avg_diameter_in: float, driven_length_in: float,
     swr_curve_exponent = max(1.0, min(2.5, swr_curve_exponent))
 
     # Description
-    if bandwidth_mult > 1.15:
+    if bandwidth_mult > 1.10:
         desc = f"Fat elements ({avg_diameter_in:.3f}\") — wide bandwidth, shallow SWR curve"
-    elif bandwidth_mult < 0.9:
+    elif bandwidth_mult < 0.95:
         desc = f"Thin elements ({avg_diameter_in:.3f}\") — narrow bandwidth, sharp SWR curve"
     else:
         desc = f"Standard elements ({avg_diameter_in:.3f}\") — typical bandwidth"
