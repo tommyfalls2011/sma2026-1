@@ -343,9 +343,9 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         wavelength_in = 11802.71 / operating_freq_mhz
         gamma_rod_length = hw["rod_length"]
-        tube_length = hw["tube_length"]
+        tube_length = gamma_tube_length if gamma_tube_length and gamma_tube_length > 0 else hw["tube_length"]
         teflon_sleeve_in = hw["teflon_length"]
-        max_insertion = hw["max_insertion"]
+        max_insertion = tube_length - 0.5
 
         if gamma_element_gap is not None:
             rod_insertion_in = max(0, min(gamma_element_gap, max_insertion))
