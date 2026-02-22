@@ -2672,9 +2672,152 @@ def design_hairpin_match(num_elements: int, frequency_mhz: float,
 
 # ── Gamma Fine-Tune: Optimize elements for best gamma match ──
 
+def _fast_gamma_swr(test_elems, n, freq, dia, hw):
+    """Fast analytical gamma SWR estimate — avoids the 200-step sweep.
+
+    Computes feedpoint impedance and resonant freq analytically, then evaluates
+    apply_matching_network at the analytically-optimal (bar, insertion) point.
+    Returns estimated SWR and metadata.  ~100x faster than design_gamma_match.
+    """
+    refl = next(e for e in test_elems if e["element_type"] == "reflector")
+    driven = next(e for e in test_elems if e["element_type"] == "driven")
+    dirs = sorted([e for e in test_elems if e["element_type"] == "director"], key=lambda x: x["position"])
+    refl_sp = abs(driven["position"] - refl["position"])
+    dir_sp = [abs(d["position"] - driven["position"]) for d in dirs]
+
+    wavelength_m = 299792458.0 / (freq * 1e6)
+
+    # Fast impedance + resonant freq (pure math, no sweeps)
+    r_feed = compute_feedpoint_impedance(
+        num_elements=n, wavelength_m=wavelength_m,
+        reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
+        reflector_length_in=refl["length"], cumulative=False,
+    )
+    res_freq = compute_element_resonant_freq(
+        driven_length_in=driven["length"], frequency_mhz=freq,
+        wavelength_m=wavelength_m, num_elements=n,
+        reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
+    )
+
+    # Correct driven length to resonance (same logic as design_gamma_match)
+    driven_len = driven["length"]
+    if res_freq > 0 and abs(res_freq - freq) > 0.01:
+        driven_len = driven_len * (res_freq / freq)
+        res_freq = freq
+    half_len = driven_len / 2.0
+
+    rod_od = hw["rod_od"]
+    tube_od = hw["tube_od"]
+    wall = hw["wall"]
+    tube_id = tube_od - 2 * wall
+    rod_spacing = hw["rod_spacing"]
+    tube_length = hw["tube_length"]
+    max_insertion = tube_length - 0.5
+    omega = 2.0 * math.pi * freq * 1e6
+
+    if tube_id <= rod_od:
+        return {"swr": 99.0, "reachable": False, "z": r_feed}
+
+    cap_per_inch = 1.413 * 2.1 / math.log(tube_id / rod_od)
+
+    # Z0 of gamma section
+    geo_mean = math.sqrt(dia * rod_od)
+    z0_gamma = 276.0 * math.log10(2.0 * rod_spacing / geo_mean) if rod_spacing > geo_mean / 2 else 300.0
+    coupling_mult = z0_gamma / 73.0
+    swr_unmatched = max(50.0 / max(r_feed, 1), r_feed / 50.0)
+
+    # Ideal bar for 50Ω match
+    k_ideal = math.sqrt(50.0 / max(r_feed, 5.0))
+    bar_ideal = half_len * (k_ideal - 1.0) / coupling_mult
+    bar_min = max(1.0, tube_length * 0.6) if r_feed > 30 else tube_length + 1.0
+    bar_ideal = max(bar_min, min(bar_ideal, hw["rod_length"]))
+
+    # Evaluate at ideal bar to get stub + antenna reactance
+    _, info = apply_matching_network(
+        swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+        gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+        gamma_bar_pos=bar_ideal, gamma_element_gap=0.001,
+        gamma_tube_od=tube_od, operating_freq_mhz=freq,
+        num_elements=n, driven_element_half_length_in=half_len,
+        driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
+    )
+    x_stub = info.get("x_stub", 0)
+    x_ant = info.get("x_antenna", 0)
+    k_at_bar = info.get("step_up_ratio", 1.0)
+    total_pos_x = x_ant * k_at_bar + x_stub
+
+    # Analytical optimal insertion
+    reachable = True
+    if total_pos_x > 0:
+        c_needed = 1e12 / (omega * total_pos_x)
+        ins_needed = c_needed / cap_per_inch
+        if ins_needed > max_insertion:
+            ins_needed = max_insertion
+            reachable = False
+        elif ins_needed < 0:
+            ins_needed = 0.001
+            reachable = False
+    else:
+        ins_needed = max_insertion
+        reachable = False
+
+    # Evaluate SWR at optimal point
+    swr_val, _ = apply_matching_network(
+        swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+        gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+        gamma_bar_pos=bar_ideal, gamma_element_gap=ins_needed,
+        gamma_tube_od=tube_od, operating_freq_mhz=freq,
+        num_elements=n, driven_element_half_length_in=half_len,
+        driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
+    )
+
+    # Try a few bar offsets around ideal to refine (5 extra evals, cheap)
+    for bar_delta in [-2, -1, 1, 2]:
+        test_bar = bar_ideal + bar_delta
+        if test_bar < bar_min or test_bar > hw["rod_length"]:
+            continue
+        _, ti = apply_matching_network(
+            swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+            gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+            gamma_bar_pos=test_bar, gamma_element_gap=0.001,
+            gamma_tube_od=tube_od, operating_freq_mhz=freq,
+            num_elements=n, driven_element_half_length_in=half_len,
+            driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
+        )
+        xs = ti.get("x_stub", 0)
+        xa = ti.get("x_antenna", 0)
+        kb = ti.get("step_up_ratio", 1.0)
+        tpx = xa * kb + xs
+        if tpx <= 0:
+            continue
+        cn = 1e12 / (omega * tpx)
+        ins_n = cn / cap_per_inch
+        if ins_n > max_insertion:
+            ins_n = max_insertion
+        elif ins_n < 0:
+            ins_n = 0.001
+        s, _ = apply_matching_network(
+            swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
+            gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
+            gamma_bar_pos=test_bar, gamma_element_gap=ins_n,
+            gamma_tube_od=tube_od, operating_freq_mhz=freq,
+            num_elements=n, driven_element_half_length_in=half_len,
+            driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
+        )
+        if s < swr_val:
+            swr_val = s
+            reachable = True
+
+    return {"swr": max(1.0, swr_val), "reachable": reachable or swr_val < 2.0, "z": r_feed}
+
+
 def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
     """Optimize element lengths and positions for the best gamma SWR.
-    
+
+    Uses a fast analytical estimator during the search (~100x faster than
+    calling design_gamma_match for each candidate), then runs the full gamma
+    designer once on the final optimized configuration.
+
     Priority order (based on measured sensitivity):
     1. Reflector length (biggest lever)
     2. Driven position relative to reflector
@@ -2682,17 +2825,21 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
     4. Driven length correction (resonance match)
     """
     import copy
-    
+
     band_info = BAND_DEFINITIONS.get(request.band, BAND_DEFINITIONS["11m_cb"])
     freq = request.frequency_mhz or band_info["center"]
     n = request.num_elements
     dia = request.element_diameter or 0.5
-    
+    hw = get_gamma_hardware_defaults(n)
+
     elems = copy.deepcopy(request.elements)
     steps = []
-    
-    def _calc_and_gamma(test_elems):
-        """Run calculate + gamma designer, return SWR and details."""
+
+    def _fast_eval(test_elems):
+        return _fast_gamma_swr(test_elems, n, freq, dia, hw)
+
+    def _full_eval(test_elems):
+        """Full calculate + gamma designer — used only for baseline and final."""
         calc_input = AntennaInput(
             num_elements=n,
             elements=[ElementDimension(
@@ -2715,13 +2862,13 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
         gd = calc_out.matching_info.get("gamma_design", {}) if calc_out.matching_info else {}
         fz = gd.get("feedpoint_impedance_ohms", 50)
         res_freq = calc_out.matching_info.get("element_resonant_freq_mhz", freq) if calc_out.matching_info else freq
-        
+
         refl = next(e for e in test_elems if e["element_type"] == "reflector")
         driven = next(e for e in test_elems if e["element_type"] == "driven")
         dirs = sorted([e for e in test_elems if e["element_type"] == "director"], key=lambda x: x["position"])
         refl_sp = abs(driven["position"] - refl["position"])
         dir_sp = [abs(d["position"] - driven["position"]) for d in dirs]
-        
+
         gd_result = design_gamma_match(
             num_elements=n, driven_element_length_in=driven["length"],
             frequency_mhz=freq, driven_element_dia=dia,
@@ -2739,99 +2886,133 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             "rod": recipe.get("rod_od", 0),
             "tube": recipe.get("tube_od", 0),
         }
-    
-    # Get baseline
-    baseline = _calc_and_gamma(elems)
+
+    # Get baseline using FULL evaluation (accurate reference)
+    baseline = _full_eval(elems)
     original_swr = baseline["swr"]
     best_swr = original_swr
-    steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}Ω, Gain={baseline['gain']}dBi")
-    
+    steps.append(f"Baseline: SWR={original_swr}, Z={baseline['z']:.1f}\u03a9, Gain={baseline['gain']}dBi")
+
     if best_swr <= 1.02:
-        steps.append("Already near-perfect — no tuning needed.")
+        steps.append("Already near-perfect \u2014 no tuning needed.")
         final = baseline
     else:
         refl_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "reflector")
         driven_idx = next(i for i, e in enumerate(elems) if e["element_type"] == "driven")
-        
-        # Pass 1: Coarse reflector length sweep (±4" in 2" steps)
+
+        # Pass 1: Reflector length sweep (coarse ±4" then fine ±1")
         orig_refl_len = elems[refl_idx]["length"]
         best_refl_len = orig_refl_len
-        for delta in [-4, -2, 2, 4]:
+        for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
             test = copy.deepcopy(elems)
             test[refl_idx]["length"] = round(orig_refl_len + delta, 1)
-            r = _calc_and_gamma(test)
+            r = _fast_eval(test)
             if r["reachable"] and r["swr"] < best_swr:
                 best_swr = r["swr"]
                 best_refl_len = test[refl_idx]["length"]
-        # Fine reflector sweep around best (±1" in 0.5" steps)
+        # Fine sweep around best (±0.5" in 0.25" steps)
         center = best_refl_len
-        for delta in [-1, -0.5, 0.5, 1]:
+        for delta_q in range(-2, 3):
+            d = delta_q * 0.25
+            if d == 0:
+                continue
             test = copy.deepcopy(elems)
-            test[refl_idx]["length"] = round(center + delta, 1)
-            r = _calc_and_gamma(test)
+            test[refl_idx]["length"] = round(center + d, 2)
+            r = _fast_eval(test)
             if r["reachable"] and r["swr"] < best_swr:
                 best_swr = r["swr"]
                 best_refl_len = test[refl_idx]["length"]
         if best_refl_len != orig_refl_len:
             elems[refl_idx]["length"] = best_refl_len
-            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.1f}\" (SWR: {best_swr})")
-        
-        # Pass 2: Driven position sweep (±4" in 2" steps, then ±1")
-        if best_swr > 1.02:
+            steps.append(f"Reflector length: {orig_refl_len:.1f}\" -> {best_refl_len:.2f}\" (SWR: {best_swr:.3f})")
+
+        # Early exit check
+        if best_swr <= 1.05:
+            steps.append("SWR target reached after reflector tuning.")
+        else:
+            # Pass 2: Driven position sweep
             orig_driven_pos = elems[driven_idx]["position"]
             best_driven_pos = orig_driven_pos
-            for delta in [-4, -2, 2, 4, -1, 1]:
+            for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
                 test = copy.deepcopy(elems)
                 test[driven_idx]["position"] = round(orig_driven_pos + delta, 1)
                 if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
                     continue
-                r = _calc_and_gamma(test)
+                r = _fast_eval(test)
+                if r["reachable"] and r["swr"] < best_swr:
+                    best_swr = r["swr"]
+                    best_driven_pos = test[driven_idx]["position"]
+            # Fine sweep
+            center = best_driven_pos
+            for delta_q in range(-2, 3):
+                d = delta_q * 0.25
+                if d == 0:
+                    continue
+                test = copy.deepcopy(elems)
+                test[driven_idx]["position"] = round(center + d, 2)
+                if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
+                    continue
+                r = _fast_eval(test)
                 if r["reachable"] and r["swr"] < best_swr:
                     best_swr = r["swr"]
                     best_driven_pos = test[driven_idx]["position"]
             if best_driven_pos != orig_driven_pos:
                 elems[driven_idx]["position"] = best_driven_pos
-                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.1f}\" (SWR: {best_swr})")
-        
-        # Pass 3: Dir1 position sweep (±4" in 2" steps, then ±1")
-        dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
-        if dirs_sorted and best_swr > 1.02:
-            dir1_idx = dirs_sorted[0][0]
-            orig_dir1_pos = elems[dir1_idx]["position"]
-            best_dir1_pos = orig_dir1_pos
-            for delta in [-4, -2, 2, 4, -1, 1]:
-                test = copy.deepcopy(elems)
-                test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 1)
-                if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
-                    continue
-                r = _calc_and_gamma(test)
-                if r["reachable"] and r["swr"] < best_swr:
-                    best_swr = r["swr"]
-                    best_dir1_pos = test[dir1_idx]["position"]
-            if best_dir1_pos != orig_dir1_pos:
-                elems[dir1_idx]["position"] = best_dir1_pos
-                steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.1f}\" (SWR: {best_swr})")
-        
-        # Pass 4: Apply driven length correction
-        current = _calc_and_gamma(elems)
-        if current["rec_driven"] and abs(current["rec_driven"] - elems[driven_idx]["length"]) > 0.1:
+                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.2f}\" (SWR: {best_swr:.3f})")
+
+            # Pass 3: Dir1 position sweep
+            if best_swr > 1.05:
+                dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
+                if dirs_sorted:
+                    dir1_idx = dirs_sorted[0][0]
+                    orig_dir1_pos = elems[dir1_idx]["position"]
+                    best_dir1_pos = orig_dir1_pos
+                    for delta in [-4, -3, -2, -1, 1, 2, 3, 4]:
+                        test = copy.deepcopy(elems)
+                        test[dir1_idx]["position"] = round(orig_dir1_pos + delta, 1)
+                        if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
+                            continue
+                        r = _fast_eval(test)
+                        if r["reachable"] and r["swr"] < best_swr:
+                            best_swr = r["swr"]
+                            best_dir1_pos = test[dir1_idx]["position"]
+                    # Fine sweep
+                    center = best_dir1_pos
+                    for delta_q in range(-2, 3):
+                        d = delta_q * 0.25
+                        if d == 0:
+                            continue
+                        test = copy.deepcopy(elems)
+                        test[dir1_idx]["position"] = round(center + d, 2)
+                        if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
+                            continue
+                        r = _fast_eval(test)
+                        if r["reachable"] and r["swr"] < best_swr:
+                            best_swr = r["swr"]
+                            best_dir1_pos = test[dir1_idx]["position"]
+                    if best_dir1_pos != orig_dir1_pos:
+                        elems[dir1_idx]["position"] = best_dir1_pos
+                        steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.2f}\" (SWR: {best_swr:.3f})")
+
+        # Pass 4: Driven length correction using resonance info from full eval
+        full_current = _full_eval(elems)
+        if full_current["rec_driven"] and abs(full_current["rec_driven"] - elems[driven_idx]["length"]) > 0.1:
             orig_driven_len = elems[driven_idx]["length"]
             test = copy.deepcopy(elems)
-            test[driven_idx]["length"] = current["rec_driven"]
-            r = _calc_and_gamma(test)
-            if r["reachable"] and r["swr"] <= best_swr + 0.05:
-                elems[driven_idx]["length"] = current["rec_driven"]
-                best_swr = r["swr"]
-                steps.append(f"Driven length: {orig_driven_len:.1f}\" -> {current['rec_driven']:.1f}\" (resonance correction, SWR: {best_swr})")
-        
-        # Final result
-        final = _calc_and_gamma(elems)
-    
+            test[driven_idx]["length"] = full_current["rec_driven"]
+            r = _fast_eval(test)
+            if r["reachable"] and r["swr"] <= full_current["swr"] + 0.05:
+                elems[driven_idx]["length"] = full_current["rec_driven"]
+                steps.append(f"Driven length: {orig_driven_len:.1f}\" -> {full_current['rec_driven']:.1f}\" (resonance correction)")
+
+        # Final FULL evaluation on optimized configuration
+        final = _full_eval(elems)
+
     if len(steps) == 1:
-        steps.append("No improvements found — antenna is already well-tuned for gamma match.")
-    
-    steps.append(f"Final: SWR={final['swr']}, Z={final['z']:.1f}Ω, Gain={final['gain']}dBi, F/B={final['fb']}dB")
-    
+        steps.append("No improvements found \u2014 antenna is already well-tuned for gamma match.")
+
+    steps.append(f"Final: SWR={final['swr']}, Z={final['z']:.1f}\u03a9, Gain={final['gain']}dBi, F/B={final['fb']}dB")
+
     return GammaFineTuneOutput(
         optimized_elements=elems,
         original_swr=original_swr,
