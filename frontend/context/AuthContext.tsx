@@ -301,18 +301,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const getMaxElements = (): number => {
     if (!user) return 3;
-    // Admin and subadmin get 20 elements
     if (user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') return 20;
-    const tierKey = user.subscription_tier === 'trial' ? 'trial' : `${user.subscription_tier}_monthly`;
-    return user.max_elements || tiers?.[tierKey]?.max_elements || 3;
+    if (user.max_elements) return user.max_elements;
+    const tier = user.subscription_tier || 'trial';
+    // Handle both short ("gold") and full ("gold_monthly") tier names
+    const tierKey = tier === 'trial' ? 'trial'
+      : (tier.endsWith('_monthly') || tier.endsWith('_yearly')) ? tier
+      : `${tier}_monthly`;
+    return tiers?.[tierKey]?.max_elements || 3;
   };
 
   const isFeatureAvailable = (feature: string): boolean => {
-    if (!user || !tiers) return true; // Non-logged-in users see all features (gated by login elsewhere)
-    // Admin/subadmin get everything
+    if (!user || !tiers) return true;
     if (user.subscription_tier === 'admin' || user.subscription_tier === 'subadmin') return true;
-    // Tier data uses keys like 'bronze_monthly', but user.subscription_tier is 'bronze'
-    const tierKey = user.subscription_tier === 'trial' ? 'trial' : `${user.subscription_tier}_monthly`;
+    const tier = user.subscription_tier || 'trial';
+    const tierKey = tier === 'trial' ? 'trial'
+      : (tier.endsWith('_monthly') || tier.endsWith('_yearly')) ? tier
+      : `${tier}_monthly`;
     const tierInfo = tiers[tierKey];
     if (!tierInfo) return true;
     return tierInfo.features.includes('all') || tierInfo.features.includes(feature);
