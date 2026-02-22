@@ -73,7 +73,7 @@
     "total_duration": "2.13s"
   },
   "testing_environment": {
-    "url": "https://swr-optimizer.preview.emergentagent.com",
+    "url": "https://element-tuner.preview.emergentagent.com",
     "endpoint": "POST /api/gamma-fine-tune"
   }
 }

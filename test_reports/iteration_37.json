@@ -99,7 +99,7 @@
     }
   },
   "testing_environment": {
-    "url": "https://swr-optimizer.preview.emergentagent.com",
+    "url": "https://element-tuner.preview.emergentagent.com",
     "framework": "Expo web (React Native)",
     "backend": "FastAPI with MongoDB",
     "paypal_mode": "LIVE (real PayPal API - api-m.paypal.com)",

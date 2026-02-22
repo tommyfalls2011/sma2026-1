@@ -69,7 +69,7 @@
     "lines_changed": "Lines 238-270 (applyElementPreset function), Lines 2268-2420 (preset buttons)"
   },
   "testing_environment": {
-    "url": "https://swr-optimizer.preview.emergentagent.com",
+    "url": "https://element-tuner.preview.emergentagent.com",
     "framework": "React Native Web (Expo)",
     "element_count_tested": 3,
     "band_tested": "11m CB (27.1 MHz) - Ch19 Truckers"

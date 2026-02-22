@@ -1,7 +1,7 @@
 """Post-fix sweep: high-power combos 5-20 elements with corrected tube length."""
 import requests
 
-API_URL = "https://swr-optimizer.preview.emergentagent.com"
+API_URL = "https://element-tuner.preview.emergentagent.com"
 
 def build_yagi(n):
     elements = [{"element_type": "reflector", "length": 216.0, "diameter": 0.5, "position": 0},

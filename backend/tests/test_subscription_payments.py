@@ -7,7 +7,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://swr-optimizer.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://element-tuner.preview.emergentagent.com').rstrip('/')
 
 # Test credentials from problem statement
 ADMIN_EMAIL = "fallstommy@gmail.com"
@@ -254,7 +254,7 @@ class TestSubscriptionPayments:
         
         res = requests.post(f"{BASE_URL}/api/subscription/stripe-checkout", json={
             "tier": "bronze_monthly",
-            "origin_url": "https://swr-optimizer.preview.emergentagent.com"
+            "origin_url": "https://element-tuner.preview.emergentagent.com"
         }, headers=headers)
         
         assert res.status_code == 200, f"Stripe checkout failed: {res.text}"

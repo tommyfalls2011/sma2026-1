@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "https://swr-optimizer.preview.emergentagent.com"
+API_URL = "https://element-tuner.preview.emergentagent.com"
 
 def build_yagi(num_elements):
     """Build a standard Yagi antenna with given element count."""
