@@ -49,6 +49,7 @@ export default function SubscriptionScreen() {
   const [pendingRequest, setPendingRequest] = useState<any>(null);
   const [stripePolling, setStripePolling] = useState(false);
   const [stripeSuccess, setStripeSuccess] = useState(false);
+  const [cancellingAutoRenew, setCancellingAutoRenew] = useState(false);
 
   useEffect(() => {
     if (user?.is_trial && user?.trial_started) {
