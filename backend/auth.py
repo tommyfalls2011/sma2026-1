@@ -80,12 +80,14 @@ def check_subscription_active(user: dict) -> tuple:
                 return False, SUBSCRIPTION_TIERS["trial"], "Trial expired"
         return True, SUBSCRIPTION_TIERS["trial"], "Trial active"
     expires = user.get("subscription_expires")
+    # Map short tier names (gold, silver, bronze) to full tier keys (gold_monthly, silver_monthly, etc.)
+    tier_key = tier if tier in SUBSCRIPTION_TIERS else f"{tier}_monthly"
     if expires:
         if isinstance(expires, str):
             expires = datetime.fromisoformat(expires.replace('Z', '+00:00'))
         if datetime.utcnow() > expires.replace(tzinfo=None):
-            return False, SUBSCRIPTION_TIERS.get(tier), "Subscription expired - please renew"
-    return True, SUBSCRIPTION_TIERS.get(tier, SUBSCRIPTION_TIERS["trial"]), "Active"
+            return False, SUBSCRIPTION_TIERS.get(tier_key), "Subscription expired - please renew"
+    return True, SUBSCRIPTION_TIERS.get(tier_key, SUBSCRIPTION_TIERS["trial"]), "Active"
 
 
 async def load_settings_from_db():
