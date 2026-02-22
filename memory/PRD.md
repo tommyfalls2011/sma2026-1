@@ -110,6 +110,9 @@ Full-stack antenna calculator app (React Native/Expo + FastAPI + MongoDB) for CB
 
 ## P0 - Completed
 - Auto-recurring monthly billing (Stripe subscriptions) - DONE
+- Fixed tier double-suffix bug (gold_monthly → gold_monthly_monthly → 3 elements) - DONE
+- Added max_elements to login response - DONE
+- Admin panel: monthly/yearly tier selection for users - DONE
 
 ## P1 - Next Priority
 - Activate Stripe with live keys once account verified
