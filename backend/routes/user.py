@@ -179,6 +179,73 @@ async def get_paypal_token():
     return None
 
 
+# ── Stripe Recurring Subscription Helpers ──
+
+def _init_stripe():
+    """Initialize stripe SDK with the correct API key and base."""
+    key = os.environ.get("STRIPE_API_KEY", "")
+    stripe.api_key = key
+    if "sk_test_emergent" in key:
+        stripe.api_base = "https://integrations.emergentagent.com/stripe"
+    return key
+
+
+async def ensure_stripe_prices():
+    """Create or retrieve Stripe recurring Prices for each tier. Cache in DB."""
+    key = _init_stripe()
+    if not key:
+        return {}
+
+    # Check DB cache first
+    cached = await db.stripe_prices.find_one({"type": "recurring_prices"}, {"_id": 0})
+    if cached and cached.get("prices"):
+        return cached["prices"]
+
+    prices = {}
+    tier_configs = {
+        "bronze_monthly": {"amount": 3999, "interval": "month", "name": "Bronze Monthly"},
+        "bronze_yearly": {"amount": 40000, "interval": "year", "name": "Bronze Yearly"},
+        "silver_monthly": {"amount": 5999, "interval": "month", "name": "Silver Monthly"},
+        "silver_yearly": {"amount": 67500, "interval": "year", "name": "Silver Yearly"},
+        "gold_monthly": {"amount": 9999, "interval": "month", "name": "Gold Monthly"},
+        "gold_yearly": {"amount": 105000, "interval": "year", "name": "Gold Yearly"},
+    }
+
+    for tier_key, cfg in tier_configs.items():
+        try:
+            # Use the current price from SUBSCRIPTION_TIERS if available
+            tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
+            amount_cents = int(tier_info.get("price", cfg["amount"] / 100) * 100)
+            price = stripe.Price.create(
+                unit_amount=amount_cents,
+                currency="usd",
+                recurring={"interval": cfg["interval"]},
+                product_data={"name": f"SMA Antenna Calc - {cfg['name']}"},
+            )
+            prices[tier_key] = price.id
+            logger.info(f"Created Stripe recurring price for {tier_key}: {price.id}")
+        except Exception as e:
+            logger.error(f"Failed to create Stripe price for {tier_key}: {e}")
+
+    if prices:
+        await db.stripe_prices.update_one(
+            {"type": "recurring_prices"},
+            {"$set": {"type": "recurring_prices", "prices": prices, "updated_at": datetime.utcnow().isoformat()}},
+            upsert=True,
+        )
+    return prices
+
+
+async def get_stripe_price_id(tier_key: str) -> str:
+    """Get the Stripe Price ID for a given tier."""
+    cached = await db.stripe_prices.find_one({"type": "recurring_prices"}, {"_id": 0})
+    if cached and cached.get("prices", {}).get(tier_key):
+        return cached["prices"][tier_key]
+    # Try to create them
+    prices = await ensure_stripe_prices()
+    return prices.get(tier_key, "")
+
+
 @router.post("/subscription/upgrade")
 async def upgrade_subscription(upgrade: SubscriptionUpdate, user: dict = Depends(require_user)):
     """Legacy endpoint for manual payment methods — creates pending request."""
