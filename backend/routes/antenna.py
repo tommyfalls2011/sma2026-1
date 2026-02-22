@@ -380,16 +380,18 @@ async def optimize_return_loss(input_data: AntennaInput):
                 director_spacings_in=dir_sp,
                 driven_element_dia=best_drv_el.get("diameter", 0.5),
             )
-            if gd and gd.get("swr_at_null"):
-                gamma_swr = gd["swr_at_null"]
-                gamma_recipe = {
-                    "swr_at_null": gd["swr_at_null"],
-                    "ideal_bar_position": gd.get("ideal_bar_position"),
-                    "optimal_insertion": gd.get("optimal_insertion"),
-                    "rod_od": gd.get("rod_od"),
-                    "tube_od": gd.get("tube_od"),
-                    "tube_length": gd.get("tube_length"),
-                }
+            if gd:
+                recipe = gd.get("recipe", {})
+                if recipe and recipe.get("swr_at_null"):
+                    gamma_swr = recipe["swr_at_null"]
+                    gamma_recipe = {
+                        "swr_at_null": recipe["swr_at_null"],
+                        "ideal_bar_position": recipe.get("ideal_bar_position"),
+                        "optimal_insertion": recipe.get("optimal_insertion"),
+                        "rod_od": recipe.get("rod_od"),
+                        "tube_od": recipe.get("tube_od"),
+                        "tube_length": recipe.get("tube_length"),
+                    }
         except Exception:
             pass
 
