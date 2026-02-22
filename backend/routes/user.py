@@ -803,14 +803,31 @@ async def cancel_subscription(user: dict = Depends(require_user)):
 @router.post("/subscription/cancel-auto-renew")
 async def cancel_auto_renew(user: dict = Depends(require_user)):
     """Cancel auto-renewal but keep the subscription active until expiration."""
-    stripe_sub_id = user.get("stripe_subscription_id")
-    if stripe_sub_id:
-        try:
-            _init_stripe()
-            # Cancel at period end (keeps active until expiration)
-            stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=True)
-        except Exception as e:
-            logger.warning(f"Failed to modify Stripe subscription {stripe_sub_id}: {e}")
+    billing_method = user.get("billing_method", "")
+
+    if billing_method == "stripe":
+        stripe_sub_id = user.get("stripe_subscription_id")
+        if stripe_sub_id:
+            try:
+                _init_stripe()
+                stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=True)
+            except Exception as e:
+                logger.warning(f"Failed to modify Stripe subscription {stripe_sub_id}: {e}")
+    elif billing_method == "paypal":
+        paypal_sub_id = user.get("paypal_subscription_id")
+        if paypal_sub_id:
+            try:
+                access_token = await get_paypal_token()
+                if access_token:
+                    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+                    async with httpx.AsyncClient(timeout=15) as client:
+                        await client.post(
+                            f"{PAYPAL_API_URL}/v1/billing/subscriptions/{paypal_sub_id}/suspend",
+                            headers=headers,
+                            json={"reason": "User cancelled auto-renewal"},
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to suspend PayPal subscription {paypal_sub_id}: {e}")
 
     await db.users.update_one(
         {"id": user["id"]},
@@ -822,14 +839,33 @@ async def cancel_auto_renew(user: dict = Depends(require_user)):
 @router.post("/subscription/resume-auto-renew")
 async def resume_auto_renew(user: dict = Depends(require_user)):
     """Re-enable auto-renewal for a subscription set to cancel at period end."""
-    stripe_sub_id = user.get("stripe_subscription_id")
-    if stripe_sub_id:
-        try:
-            _init_stripe()
-            stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=False)
-        except Exception as e:
-            logger.warning(f"Failed to resume Stripe subscription {stripe_sub_id}: {e}")
-            raise HTTPException(status_code=500, detail="Failed to resume auto-renewal")
+    billing_method = user.get("billing_method", "")
+
+    if billing_method == "stripe":
+        stripe_sub_id = user.get("stripe_subscription_id")
+        if stripe_sub_id:
+            try:
+                _init_stripe()
+                stripe.Subscription.modify(stripe_sub_id, cancel_at_period_end=False)
+            except Exception as e:
+                logger.warning(f"Failed to resume Stripe subscription {stripe_sub_id}: {e}")
+                raise HTTPException(status_code=500, detail="Failed to resume auto-renewal")
+    elif billing_method == "paypal":
+        paypal_sub_id = user.get("paypal_subscription_id")
+        if paypal_sub_id:
+            try:
+                access_token = await get_paypal_token()
+                if access_token:
+                    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+                    async with httpx.AsyncClient(timeout=15) as client:
+                        await client.post(
+                            f"{PAYPAL_API_URL}/v1/billing/subscriptions/{paypal_sub_id}/activate",
+                            headers=headers,
+                            json={"reason": "User re-enabled auto-renewal"},
+                        )
+            except Exception as e:
+                logger.warning(f"Failed to activate PayPal subscription {paypal_sub_id}: {e}")
+                raise HTTPException(status_code=500, detail="Failed to resume auto-renewal")
 
     await db.users.update_one(
         {"id": user["id"]},
