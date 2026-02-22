@@ -1691,6 +1691,20 @@ export default function AntennaCalculator() {
                   <Text style={[styles.orientationBtnText, inputs.feed_type === 'hairpin' && styles.orientationBtnTextActive]}>Hairpin</Text>
                 </TouchableOpacity>
               </View>
+              {/* Matching Recommendation */}
+              {results?.matching_recommendation && (
+                <View style={{ marginTop: 6, padding: 8, borderRadius: 6, backgroundColor: '#1a1a1a', borderLeftWidth: 3, borderLeftColor: results.matching_recommendation.best === 'hairpin' ? '#4CAF50' : results.matching_recommendation.best === 'gamma' ? '#FF9800' : '#2196F3' }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: results.matching_recommendation.best === 'hairpin' ? '#4CAF50' : results.matching_recommendation.best === 'gamma' ? '#FF9800' : '#2196F3' }}>
+                    <Ionicons name="bulb-outline" size={10} /> Best: {results.matching_recommendation.best === 'hairpin' ? 'Hairpin' : results.matching_recommendation.best === 'gamma' ? 'Gamma' : 'Direct Feed'}
+                  </Text>
+                  <Text style={{ fontSize: 9, color: '#aaa', marginTop: 2 }}>{results.matching_recommendation.best_reason}</Text>
+                  {results.matching_recommendation.avoid && inputs.feed_type === results.matching_recommendation.avoid && (
+                    <Text style={{ fontSize: 9, color: '#f44336', marginTop: 3, fontWeight: '600' }}>
+                      <Ionicons name="warning-outline" size={9} /> {results.matching_recommendation.avoid_reason}
+                    </Text>
+                  )}
+                </View>
+              )}
 
               {/* Gamma Designer Button */}
               {inputs.feed_type === 'gamma' && (
