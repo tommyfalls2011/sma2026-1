@@ -239,12 +239,13 @@ async def optimize_return_loss(input_data: AntennaInput):
     best_gain = 0
     best_fb = 0
 
-    # Reflector sweep: 5 positions around original (±0.02λ)
+    # Reflector sweep: 5 positions around original (±0.02λ), clamped >= 0
     refl_positions = [0]
     if reflector:
         refl_orig = reflector.position
         refl_step = wavelength_in * 0.01
-        refl_positions = [refl_orig + i * refl_step for i in range(-2, 3)]
+        refl_positions = [max(0, refl_orig + i * refl_step) for i in range(-2, 3)]
+        refl_positions = sorted(set(round(p, 1) for p in refl_positions))
 
     for refl_pos in refl_positions:
         # Driven sweep: 0.08λ to 0.28λ from reflector
