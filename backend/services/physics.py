@@ -319,6 +319,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            gamma_rod_dia: float = None, gamma_rod_spacing: float = None,
                            gamma_bar_pos: float = None, gamma_element_gap: float = None,
                            gamma_cap_pf: float = None, gamma_tube_od: float = None,
+                           gamma_tube_length: float = None,
                            hairpin_rod_dia: float = None, hairpin_rod_spacing: float = None,
                            hairpin_length_in: float = None, hairpin_boom_gap: float = None,
                            operating_freq_mhz: float = 27.185,
