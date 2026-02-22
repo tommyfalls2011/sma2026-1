@@ -277,6 +277,35 @@ export default function SubscriptionScreen() {
     return user.subscription_tier.replace('_monthly', '').replace('_yearly', '');
   };
 
+  const handleToggleAutoRenew = async () => {
+    if (!user || cancellingAutoRenew) return;
+    setCancellingAutoRenew(true);
+    const endpoint = user.auto_renew ? 'cancel-auto-renew' : 'resume-auto-renew';
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/subscription/${endpoint}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        await refreshUser();
+        showAlert('Success', data.message);
+      } else {
+        const data = await res.json();
+        showAlert('Error', data.detail || 'Failed to update auto-renewal');
+      }
+    } catch (e) {
+      showAlert('Error', 'Network error. Please try again.');
+    }
+    setCancellingAutoRenew(false);
+  };
+
+  const formatExpiryDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
   const getDisplayTiers = () => {
     if (!tiers) return [];
     const baseTiers = ['bronze', 'silver', 'gold'];
