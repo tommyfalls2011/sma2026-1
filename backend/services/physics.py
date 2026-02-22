@@ -1847,7 +1847,7 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                     if director_spacing > max_dir:
                         director_spacing = round(max_dir, 1)
                 current_position += director_spacing
-                director_length = round(driven_length * (0.95 - i * 0.02), 1)
+                director_length = round(driven_length * (0.95 - i * profile['driven_taper']), 1)
                 elements.append({"element_type": "director", "length": director_length, "diameter": 0.5, "position": round(current_position, 1)})
                 preset_label = dir_presets.get(str(i), '') or ''
                 notes.append(f"Director {i+1}: {director_length}\" at {round(current_position, 1)}\" ({dir_lambda:.3f}\u03bb{' ' + preset_label if preset_label else ''})")
