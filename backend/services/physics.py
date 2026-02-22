@@ -343,6 +343,17 @@ def calculate_swr_from_elements(elements: List[ElementDimension], wavelength: fl
     elif deviation < 0.04: base_swr = 1.4 + (deviation - 0.02) * 30
     elif deviation < 0.08: base_swr = 2.0 + (deviation - 0.04) * 25
     else: base_swr = 3.0 + (deviation - 0.08) * 20
+
+    # Element diameter effect on SWR sensitivity
+    # Thicker elements have lower Q → less sensitive to length deviations
+    avg_dia_in = sum(e.diameter for e in elements) / len(elements) if elements else 0.5
+    driven_len_in = driven.length
+    dia_q = compute_diameter_q_factor(avg_dia_in, driven_len_in, wavelength)
+    # Scale the deviation-based SWR by Q ratio: higher Q = more SWR sensitivity
+    q_swr_factor = dia_q["q_ratio"]
+    # Only scale the deviation component (above 1.0)
+    base_swr = 1.0 + (base_swr - 1.0) * q_swr_factor
+
     if reflector:
         reflector_length_m = convert_element_to_meters(reflector.length, "inches")
         ideal_reflector = driven_length_m * 1.05
