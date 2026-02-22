@@ -8,6 +8,8 @@ import uuid
 import os
 import httpx
 import base64
+import stripe
+import logging
 
 from config import db, ADMIN_EMAIL, SUBSCRIPTION_TIERS, PAYMENT_CONFIG
 from models import (
@@ -22,6 +24,8 @@ from auth import (
 )
 from services.email_service import send_email, email_wrapper
 from emergentintegrations.payments.stripe.checkout import StripeCheckout, CheckoutSessionRequest
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
