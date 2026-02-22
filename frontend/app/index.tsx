@@ -103,6 +103,8 @@ export default function AntennaCalculator() {
   
   // Fine-tune nudge for element positions (±10% total range, 0.5% per step)
   const [drivenNudgeCount, setDrivenNudgeCount] = useState(0); // -10 to +10 steps
+  const [reflectorNudgeCount, setReflectorNudgeCount] = useState(0);
+  const [reflectorPreset, setReflectorPreset] = useState<string | false>(false);
   const [dir1NudgeCount, setDir1NudgeCount] = useState(0); // kept for backward compat
   const [dir2NudgeCount, setDir2NudgeCount] = useState(0); // kept for backward compat
   const [spacingNudgeCount, setSpacingNudgeCount] = useState(0);
