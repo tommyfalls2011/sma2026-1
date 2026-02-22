@@ -2888,6 +2888,7 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             "rec_driven": recipe.get("recommended_driven_length_in", None),
             "rod": recipe.get("rod_od", 0),
             "tube": recipe.get("tube_od", 0),
+            "recipe": recipe,
         }
 
     # Get baseline using FULL evaluation (accurate reference for display)
