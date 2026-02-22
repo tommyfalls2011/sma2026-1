@@ -1,131 +1,75 @@
 # SMA Antenna Analyzer - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack antenna calculator (React/Expo frontend + FastAPI backend) for CB radio Yagi antennas. Calculates impedance, SWR, and gamma match tuning for 2-20 element Yagi antennas at 27.185 MHz.
+Full-stack antenna calculator app (React Native/Expo + FastAPI + MongoDB) for CB/ham radio Yagi antenna design with subscription-based features.
 
-## Core Architecture
-- **Frontend**: React/Expo Web on port 3000
-- **Backend**: FastAPI on port 8001
-- **Database**: MongoDB (via MONGO_URL for main app, STORE_MONGO_URL for store)
-- **Payments**: Stripe (automated), PayPal (automated via Orders API), CashApp (manual admin approval)
-- **Deployment**: Railway (production), GitHub Releases (APK distribution)
+## Core Features
+- Antenna calculation engine (2-20 elements, multiple bands)
+- Gamma Match Designer with position-aware impedance model
+- Hairpin Match Designer
+- Auto-Tune with Build Style presets (Tight/Normal/Far/Broadband)
+- Matching Recommendation Engine (Hairpin/Direct/Gamma based on Z)
+- Element spacing controls with per-director presets
+- Subscription tiers (Trial/Bronze/Silver/Gold/Admin)
+- Payment system (PayPal automated, Stripe checkout, CashApp manual)
+- Admin panel (users, designs, payments, redeploy, notifications)
+- System health monitoring
+- Design save/load with full state persistence
+
+## Architecture
+- Frontend: React Native/Expo (app.json v4.2.9, versionCode 18)
+- Backend: FastAPI on port 8001
+- Database: MongoDB
+- Deployment: Railway
 
 ## What's Been Implemented
 
-### Session Feb 20 2026 — PayPal "Detail Not Found" Fix:
-- Root cause: PayPal redirect went to backend URL with no handler → 404
-- Added `GET /api/subscription/paypal-return` — server-side handler that captures PayPal payment and shows styled HTML success page
-- Works for both mobile (APK) and web — no client-side capture needed
-- **VERIFIED WORKING ON PRODUCTION** (`helpful-adaptation-production.up.railway.app`)
+### Session Feb 21 2026:
+- Director labeling fix (#1, #2, #3 instead of array index)
+- Fixed stray `)}` rendering bug in spacing section
+- Full design save/load (gamma, hairpin, coax, locks, presets, build style)
+- Gold tier access fix (short tier name mapping in check_subscription_active)
+- Tap-and-hold auto-repeat for gamma/hairpin +/- buttons
+- Build Style Selector (Tight/Normal/Far/Broadband) for Auto-Tune
+- Position-aware impedance model (compute_feedpoint_impedance uses actual spacings)
+- Matching Recommendation Engine (Z-based: Hairpin <35R, Direct 35-55R, Gamma >55R)
+- Admin Design Copy/Send feature ($15 tune service)
+- Version 4.2.9 / versionCode 18
 
-### Session Feb 20 2026 — Director Controls Dir1-Dir18:
-- Extended individual director spacing controls from Dir1-Dir2 to Dir1-Dir18
-- Each director gets V.Close/Close/Normal/Far/V.Far presets + Closer/Farther nudge
-- Dynamic rendering — only shows controls for directors that exist based on element count
-- Each director has unique color for identification
-- Changed global spacing nudge from ±10% (0.5%/step) to ±30% (1.5%/step)
-
-### Session Feb 20 2026 — Payment Credentials in MongoDB:
-- PayPal/Stripe credentials stored in MongoDB via `payment_credentials` collection
-- Backend reads from DB first, falls back to env vars
-- Admin endpoints: `GET/POST /api/admin/payment-credentials`
-- PayPal LIVE credentials already saved to DB
-
-### Session Feb 20 2026 — Real PayPal Checkout Integration:
-- PayPal Orders API v2 with LIVE credentials (api-m.paypal.com)
-- `POST /api/subscription/paypal-checkout` — creates PayPal order, returns approval URL
-- `POST /api/subscription/paypal-capture/{order_id}` — captures payment + auto-upgrades
-- `GET /api/subscription/paypal-return` — handles PayPal redirect, captures, shows success page
-- Frontend redirects to PayPal.com for real payment
-
-### Session Feb 20 2026 — Payment System Fix + Stripe Integration:
-- PayPal/CashApp manual upgrades create PENDING requests requiring admin approval
-- Stripe Checkout for subscription payments via `emergentintegrations` library
-- Admin panel "Payments" tab for approving/rejecting pending requests
-- Stripe webhook handler for subscription payments
-
-### Session Feb 20 2026 — System Status Monitor + Railway Deploy:
-- `/api/health` checks API, MongoDB, and production Railway status
-- System Status page at `/system-status` with green/orange/red indicators
-- Status dot in main page header, auto-refreshes every 5 minutes
-- Railway Remote Redeploy button in Admin Panel → Updates tab
-- System Notification feature for "back online" banners
-
-### Session Feb 20 2026 — Hairpin & Prior Work:
-- Hairpin Match Designer with complex impedance + reflection coefficient physics
-- Gamma Match Designer with auto-design
-- E-commerce store with Stripe Checkout
-- User auth, subscription tiers, admin panel
-- Email system via Resend, App update system
-
-### Session Feb 21 2026 — Dynamic Director Adjustments:
-- Director spacing controls now only appear when element count >= 5 (3+ directors)
-- Hides unused director adjustments — e.g., 8 elements shows exactly 6 director controls
-- Added safety check: if directors.length < 3, returns null even if num_elements >= 5
-
-## IN PROGRESS / NEXT PRIORITY
-
-### Auto-Recurring Monthly Billing (P0 — User Requested)
-- **Description**: Add auto-renew checkbox so customers can choose recurring monthly billing
-- **Requirements**:
-  - Checkbox/toggle on subscription page: "Auto-renew monthly"
-  - **Stripe**: Use `mode="subscription"` with Stripe Checkout (recurring Price objects)
-  - **PayPal**: Use PayPal Subscriptions API v1 (create Product → Plan → Subscription)
-  - **CashApp**: No auto-recurring available, stays manual
-  - Customers can cancel auto-renew from subscription page
-- **Status**: NOT STARTED — research done, Stripe 14.3.0 + PayPal REST API ready
-- **Implementation approach**:
-  - Stripe: Create Checkout Session with `mode="subscription"` and inline recurring price
-  - PayPal: Create Billing Plan per tier, then create Subscription on checkout
-  - Store subscription IDs in `payment_transactions` for cancellation
-  - Webhook handlers for `invoice.paid` (Stripe) and `BILLING.SUBSCRIPTION.*` (PayPal)
-
-## Pending/Known Issues
-- Stripe is on TEST key (`sk_test_emergent`) — user's Stripe account is being verified for live key
-- Frontend initial gammaBarPos=18: Consider auto-running designer on element count change
-
-## Prioritized Backlog
-- P0: Auto-recurring monthly billing (Stripe + PayPal)
-- P2: Complete Hairpin Match UI/Physics refinements (tuning instructions, Z0 natural log)
-- P2: Air gap dielectric model
-- P2: Improve .easignore
-- P3: iOS Version
-
-## Key Files
-- `backend/routes/user.py` — Auth, subscription (upgrade, PayPal checkout/capture/return, Stripe checkout)
-- `backend/routes/admin.py` — Admin panel (pricing, users, pending upgrades, payment credentials, railway deploy, system notifications)
-- `backend/routes/public.py` — Health check, system notification, bands, app-update
-- `backend/routes/store.py` — E-commerce store
-- `backend/server.py` — FastAPI app, Stripe webhook handler
-- `backend/services/physics.py` — All physics calculations
-- `frontend/app/index.tsx` — Main UI (Dir1-Dir18 controls, spacing 30%)
-- `frontend/app/subscription.tsx` — Subscription page (3 payment methods)
-- `frontend/app/admin.tsx` — Admin panel (Payments, Updates, Railway, Notifications)
-- `frontend/app/system-status.tsx` — System Status page
-- `frontend/components/StatusIndicator.tsx` — Status dot + health hook
+### Previous Sessions:
+- Payment system overhaul (PayPal, Stripe, CashApp)
+- Admin panel (payments, redeploy, notifications)
+- System health monitor
+- DB-driven config (settings collection)
+- Antenna director controls (18 elements, 30% spacing presets)
 
 ## Key API Endpoints
-- `POST /api/calculate` — Main antenna calculation
-- `POST /api/gamma-designer` — Auto-tune gamma
-- `POST /api/hairpin-designer` — Hairpin match designer
-- `POST /api/subscription/paypal-checkout` — Create PayPal order
-- `GET /api/subscription/paypal-return` — Handle PayPal redirect + capture
-- `POST /api/subscription/paypal-capture/{order_id}` — Manual PayPal capture
-- `POST /api/subscription/stripe-checkout` — Stripe Checkout session
-- `GET /api/subscription/stripe-status/{session_id}` — Check Stripe payment
-- `POST /api/subscription/upgrade` — Manual upgrade (CashApp, creates pending)
-- `GET /api/admin/pending-upgrades` — List pending upgrades
-- `POST /api/admin/pending-upgrades/{id}/approve` — Approve upgrade
-- `GET/POST /api/admin/payment-credentials` — Manage payment credentials
-- `POST /api/admin/railway/redeploy` — Trigger Railway deployment
-- `POST/DELETE /api/admin/system-notification` — Manage system notifications
-- `GET /api/health` — System health check
+- POST /api/calculate - Main antenna calculation
+- POST /api/auto-tune - Auto-tune with build style support
+- POST /api/gamma-designer - Gamma match design
+- POST /api/hairpin-designer - Hairpin match design
+- POST /api/admin/designs/copy - Copy design between users
+- GET /api/health - System health check
+- POST /api/auth/login - User authentication
+- GET /api/subscription/status - Subscription status
+
+## DB Schema
+- users: { id, email, subscription_tier, subscription_expires, is_admin }
+- saved_designs: { id, user_id, name, design_data, spacing_state }
+- settings: { key, value } - API credentials
+- pending_upgrades: { userId, tier, method, status }
+- system_notifications: { message, active }
 
 ## Credentials
-- Store Admin: fallstommy@gmail.com / admin123
-- Stripe: sk_test_emergent (test key)
-- PayPal LIVE: Client ID=AUVD5nPm9yfpeWXU0e9ACFKhLeFqhGotQS4rnSCzJ0Ti744CasbNBDKzNMw_qhDYZuIJHvqRJ6fo6DAw (stored in MongoDB)
-- Railway API Token: 086c1c3a-ecf2-462c-900f-8af3eedcb61a
-- Railway Service ID: 68ad02fd-b6a1-407a-bf15-a6e741240be5
-- Railway Env ID: 9374bfaa-4fa4-485d-ba89-f142028a5f4b
-- Production URL: https://helpful-adaptation-production.up.railway.app
+- Admin: fallstommy@gmail.com / admin123
+
+## P0 - Next Priority
+- Auto-recurring monthly billing (Stripe + PayPal subscriptions)
+
+## P1 - Upcoming
+- Activate Stripe with live keys
+
+## P2 - Future
+- Refactor subscription.tsx and admin.tsx into smaller components
+- Series-capacitor dielectric model (air gap)
+- iOS version
