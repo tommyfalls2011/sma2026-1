@@ -883,6 +883,24 @@ export default function AntennaCalculator() {
         setDir1NudgeCount(0);
         setSpacingNudgeCount(0);
 
+        // Apply gamma recipe settings so main page SWR matches
+        const recipe = data.gamma_recipe;
+        if (recipe) {
+          if (recipe.ideal_bar_position) setGammaBarPos(recipe.ideal_bar_position);
+          if (recipe.optimal_insertion) setGammaRodInsertion(recipe.optimal_insertion);
+          if (recipe.rod_od) setGammaRodDia(String(recipe.rod_od));
+          if (recipe.tube_od) setGammaTubeOd(String(recipe.tube_od));
+          if (recipe.tube_length) setGammaTubeLength(recipe.tube_length);
+          // Apply recommended driven length if corrected
+          if (recipe.driven_length_corrected && recipe.recommended_driven_length_in) {
+            const drivenIdx = newElements.findIndex((e: any) => e.element_type === 'driven');
+            if (drivenIdx >= 0) {
+              newElements[drivenIdx] = { ...newElements[drivenIdx], length: recipe.recommended_driven_length_in.toFixed(3) };
+              setInputs(prev => ({ ...prev, elements: newElements }));
+            }
+          }
+        }
+
         const stepsText = data.optimization_steps.slice(0, 5).join('\n');
         Alert.alert(
           'Fine-Tune Complete',
