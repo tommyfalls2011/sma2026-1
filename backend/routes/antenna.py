@@ -348,15 +348,57 @@ async def optimize_return_loss(input_data: AntennaInput):
 
     sweep_sorted = sorted(sweep_results, key=lambda x: -x["score"])
 
+    # Run gamma designer on winning config for accurate matched SWR
+    gamma_swr = None
+    gamma_recipe = None
+    if best_elements and original_feed == "gamma":
+        try:
+            from services.physics import compute_feedpoint_impedance, estimate_resonant_freq
+            best_drv_el = next(e for e in best_elements if e["element_type"] == "driven")
+            best_refl_el = next((e for e in best_elements if e["element_type"] == "reflector"), None)
+            best_dir_els = sorted([e for e in best_elements if e["element_type"] == "director"], key=lambda x: x["position"])
+            wavelength_m = 299792458.0 / (center_freq * 1e6)
+            refl_sp = abs(best_drv_el["position"] - best_refl_el["position"]) if best_refl_el else 36
+            dir_sp = [abs(d["position"] - best_drv_el["position"]) for d in best_dir_els]
+            fz = compute_feedpoint_impedance(
+                num_elements=len(best_elements), wavelength_m=wavelength_m,
+                reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
+                reflector_length_in=best_refl_el["length"] if best_refl_el else 213.5,
+            )
+            res_freq = estimate_resonant_freq(driven_length_in=best_drv_el["length"], frequency_mhz=center_freq)
+            gd = design_gamma_match(
+                num_elements=len(best_elements),
+                driven_element_length_in=best_drv_el["length"],
+                frequency_mhz=center_freq,
+                feedpoint_impedance=fz,
+                element_resonant_freq_mhz=res_freq,
+                reflector_spacing_in=refl_sp,
+                director_spacings_in=dir_sp,
+                driven_element_dia=best_drv_el.get("diameter", 0.5),
+            )
+            if gd and gd.get("swr_at_null"):
+                gamma_swr = gd["swr_at_null"]
+                gamma_recipe = {
+                    "swr_at_null": gd["swr_at_null"],
+                    "ideal_bar_position": gd.get("ideal_bar_position"),
+                    "optimal_insertion": gd.get("optimal_insertion"),
+                    "rod_od": gd.get("rod_od"),
+                    "tube_od": gd.get("tube_od"),
+                    "tube_length": gd.get("tube_length"),
+                }
+        except Exception:
+            pass
+
     return {
         "best_elements": best_elements or [],
         "best_return_loss_db": round(best_rl, 2),
-        "best_swr": round(best_swr, 3),
+        "best_swr": round(gamma_swr if gamma_swr else best_swr, 3),
         "best_gain": round(best_gain, 2),
         "best_fb": round(best_fb, 1),
         "feed_type": original_feed,
         "sweep_count": len(sweep_results),
         "sweep_results": sweep_sorted[:20],
+        "gamma_recipe": gamma_recipe,
     }
 
 
