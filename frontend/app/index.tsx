@@ -906,7 +906,7 @@ export default function AntennaCalculator() {
           'Fine-Tune Complete',
           `SWR: ${data.original_swr} -> ${data.optimized_swr}\nZ: ${data.feedpoint_impedance}\u03a9\n\n${stepsText}`
         );
-        setTimeout(() => calculateAntenna(), 100);
+        // useEffect auto-recalculates when state updates commit
       } else {
         Alert.alert('Error', 'Fine-tune failed');
       }
