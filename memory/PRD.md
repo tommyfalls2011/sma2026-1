@@ -8,60 +8,48 @@ app.json: 4.3.4, versionCode: 23
 
 ## Completed This Session (Feb 22, 2026)
 
+### Element Diameter Q-Factor Model (NEW)
+- Added `compute_diameter_q_factor()` using antenna thickness parameter Omega = 2*ln(2L/a)
+- `calculate_swr_from_elements()` now scales SWR sensitivity by Q ratio
+- Bandwidth calculation uses Q-based `bandwidth_mult` instead of crude binary thresholds
+- `antenna_q` computed as `12.0 * q_ratio` instead of hardcoded 12.0
+- SWR curve exponent varies with diameter: fat=1.38 (U-shape), standard=1.60, thin=1.77 (V-shape)
+- `calculate_taper_effects()` uses actual start/end diameters for equivalent Q computation
+- New `element_q_info` field in AntennaOutput with q_ratio, bandwidth_mult, description
+- Verified: 1.25"→BW 0.946MHz, SWR 1.94 | 0.5"→BW 0.816MHz, SWR 2.37 | 0.25"→BW 0.739MHz, SWR 2.71
+
 ### Fine-Tune Gamma FIXED
-- Root cause: optimizer used gamma-matched SWR as sole metric, but gamma match always achieves ~1.0
-- Fix: multi-objective `_perf_score()` scoring that optimizes impedance (target Z=22 ohms), SWR, and boom length
-- Elements now MOVE on all antenna configurations (3-20 elements)
-- Fixed `cumulative` parameter bug in `_fast_gamma_swr`
-- Added director length optimization (Pass 5)
-- Added `original_gain` and `optimized_gain` to response
+- Multi-objective `_perf_score()` scoring (impedance + SWR + boom length)
+- Elements now MOVE on all configurations. Fixed cumulative parameter bug.
 
 ### Reflector Spacing Controls Added
-- New "Reflector Spacing" section in Element Spacing UI
-- 5 presets: V.Close (0.10λ), Close (0.14λ), Normal (0.18λ), Far (0.22λ), V.Far (0.28λ)
-- Closer/Farther nudge buttons with percentage display
-- Resets on auto-tune, fine-tune, and RL tune
+- 5 presets (V.Close→V.Far) + Closer/Farther nudge buttons in Element Spacing UI
 
 ### Return Loss Tune Fixed
-- Added reflector position sweep (±0.02λ in 5 steps)
-- Added fine-tune pass around winner (±0.005λ)
-- Gamma designer now runs on winning configuration for accurate matched SWR
-- SWR improved from ~2:1 (broken) to ~1.0:1 (perfect)
-- Returns gamma_recipe with bar position, insertion, rod/tube specs
-- Frontend applies gamma recipe from RL tune result
-
-## Previous Session Completions
-- Fine-Tune Gamma backend - fast analytical estimator
-- Custom tube length bug fix
-- Gamma Designer to Main Page SWR sync
-- Fine-tune returns gamma recipe
-- Auto-recalc dependency fix
-- Live recurring subscriptions (Stripe/PayPal)
-- Admin panel
-- Build styles with auto-tune
+- Reflector position sweep, gamma designer on winner, returns gamma recipe
+- SWR improved from ~2:1 to ~1.0:1
 
 ## Architecture
 ```
 backend/
-  routes/server.py      - Stripe/PayPal recurring logic, webhooks (LIVE)
-  routes/user.py        - Auth, subscription, designs
-  routes/antenna.py     - Calculator, auto-tune, fine-tune, RL tune (with reflector sweep + gamma designer), gamma/hairpin designers
-  services/physics.py   - Core physics: _perf_score, _fast_gamma_swr (fixed cumulative), gamma_fine_tune (multi-objective), apply_matching_network
-  models.py             - GammaFineTuneOutput with original_gain/optimized_gain
+  services/physics.py   - compute_diameter_q_factor(), antenna_q = 12*q_ratio,
+                          Q-aware calculate_swr_from_elements(), taper_effects with real diameters,
+                          _perf_score multi-objective optimizer
+  routes/antenna.py     - RL tune with reflector sweep + gamma designer
+  models.py             - AntennaOutput.element_q_info, GammaFineTuneOutput with gains
 frontend/
-  app/index.tsx         - Reflector spacing presets/nudge, Fine-Tune button, RL tune with gamma recipe apply
-  components/GammaDesigner.tsx - onApply passes tubeOd + tubeLength
+  app/index.tsx         - Reflector spacing presets/nudge, Fine-Tune, RL tune with gamma recipe
 ```
 
 ## Key API Endpoints
-- POST /api/gamma-fine-tune - Multi-objective optimizer, always moves elements
-- POST /api/optimize-return-loss - Sweeps reflector+driven+dir1, runs gamma designer, returns recipe
-- POST /api/gamma-designer - Full gamma match designer with auto-hardware escalation
-- POST /api/calculate - Full antenna calculation (accepts gamma_tube_length)
-- POST /api/auto-tune - Auto-tune antenna geometry by build style
+- POST /api/calculate - Full calculation with Q-factor model, element_q_info in response
+- POST /api/gamma-fine-tune - Multi-objective optimizer
+- POST /api/optimize-return-loss - Reflector sweep + gamma designer
+- POST /api/gamma-designer - Full gamma match designer
+- POST /api/auto-tune - Auto-tune by build style
 
 ## Backlog
-- P1: Add power-aware hardware selector (auto-size tube/rod gap based on transmit power)
+- P1: Add power-aware hardware selector
 - P2: More accurate series-capacitor dielectric model
-- P2: Refactor subscription.tsx and admin.tsx into smaller components
+- P2: Refactor subscription.tsx and admin.tsx
 - P3: Build iOS version
