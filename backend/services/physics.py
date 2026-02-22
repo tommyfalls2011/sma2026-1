@@ -2088,7 +2088,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     best_bar_opt = bar_ideal_clamped
     best_ins_opt = optimal_insertion if null_reachable else max_insertion
     # Sweep from bar_min out to rod length in fine steps
-    steps = 80
+    steps = 200
     for i in range(steps + 1):
         test_bar = bar_min + (gamma_rod_length - bar_min) * i / steps
         if test_bar <= 0:
