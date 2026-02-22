@@ -365,7 +365,11 @@ async def optimize_return_loss(input_data: AntennaInput):
                 reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
                 reflector_length_in=best_refl_el["length"] if best_refl_el else 213.5,
             )
-            res_freq = compute_element_resonant_freq(driven_length_in=best_drv_el["length"], frequency_mhz=center_freq)
+            res_freq = compute_element_resonant_freq(
+                driven_length_in=best_drv_el["length"], frequency_mhz=center_freq,
+                wavelength_m=wavelength_m, num_elements=len(best_elements),
+                reflector_spacing_in=refl_sp, director_spacings_in=dir_sp,
+            )
             gd = design_gamma_match(
                 num_elements=len(best_elements),
                 driven_element_length_in=best_drv_el["length"],
