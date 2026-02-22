@@ -2126,6 +2126,31 @@ export default function AntennaCalculator() {
                 {tuning ? <ActivityIndicator size="small" color="#fff" /> : <><Ionicons name="flash" size={14} color="#fff" /><Text style={styles.autoTuneBtnText}>Auto-Tune</Text></>}
               </TouchableOpacity>
             </View>
+            {/* Build Style Selector */}
+            <View style={{ marginTop: 6, marginBottom: 2 }}>
+              <Text style={{ fontSize: 10, color: '#666', marginBottom: 3 }}>Build Style (Auto-Tune)</Text>
+              <View style={{ flexDirection: 'row', gap: 4 }}>
+                {([
+                  { key: 'tight', label: 'Tight', color: '#f44336', desc: 'Close spacing, max gain' },
+                  { key: 'normal', label: 'Normal', color: '#4CAF50', desc: 'Balanced' },
+                  { key: 'far', label: 'Far (DL6WU)', color: '#2196F3', desc: 'Wide spacing, clean pattern' },
+                  { key: 'broadband', label: 'Broadband', color: '#FF9800', desc: 'Stable across band' },
+                ] as const).map(s => (
+                  <TouchableOpacity
+                    key={s.key}
+                    onPress={() => setBuildStyle(s.key)}
+                    style={{
+                      flex: 1, paddingVertical: 6, borderRadius: 6, alignItems: 'center',
+                      backgroundColor: buildStyle === s.key ? s.color : '#252525',
+                      borderWidth: 1, borderColor: buildStyle === s.key ? s.color : '#333',
+                    }}
+                    data-testid={`build-style-${s.key}`}
+                  >
+                    <Text style={{ color: buildStyle === s.key ? '#fff' : '#888', fontSize: 10, fontWeight: '700' }}>{s.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
             <View style={{ zIndex: 1 }}>
               {inputs.elements.map((elem, idx) => {
                 let dirNum: number | undefined;
