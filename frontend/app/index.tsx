@@ -204,6 +204,7 @@ export default function AntennaCalculator() {
     const MAX = 45;
     let currentCount: number;
     if (type === 'driven') currentCount = drivenNudgeCount;
+    else if (type === 'reflector') currentCount = reflectorNudgeCount;
     else {
       const dirIdx = parseInt(type.replace('dir', '')) - 1; // dir1 -> 0, dir2 -> 1, etc.
       currentCount = dirNudgeCounts[dirIdx] || 0;
@@ -213,6 +214,8 @@ export default function AntennaCalculator() {
     if (type === 'driven') {
       setDrivenNudgeCount(newCount);
       setDir1NudgeCount(newCount); // keep synced for backward compat
+    } else if (type === 'reflector') {
+      setReflectorNudgeCount(newCount);
     } else {
       const dirIdx = parseInt(type.replace('dir', '')) - 1;
       setDirNudgeCounts(prev => ({ ...prev, [dirIdx]: newCount }));
@@ -224,6 +227,18 @@ export default function AntennaCalculator() {
       let targetIdx: number = -1;
       if (type === 'driven') {
         targetIdx = e.findIndex(el => el.element_type === 'driven');
+      } else if (type === 'reflector') {
+        // For reflector, we adjust the driven-to-reflector gap by moving the driven element
+        // Moving reflector "closer" means bringing driven closer to reflector (less gap)
+        const drivenIdx = e.findIndex(el => el.element_type === 'driven');
+        if (drivenIdx >= 0) {
+          const pos = parseFloat(e[drivenIdx].position) || 1;
+          const reflPos = parseFloat(e.find(el => el.element_type === 'reflector')?.position || '0');
+          const gap = Math.abs(pos - reflPos);
+          const step = gap * (STEP / 100);
+          e[drivenIdx] = { ...e[drivenIdx], position: (pos + direction * step).toFixed(3) };
+        }
+        return { ...prev, elements: e };
       } else {
         const dirIdx = parseInt(type.replace('dir', '')) - 1;
         const directors = e.map((el, i) => ({ el, i })).filter(x => x.el.element_type === 'director');
