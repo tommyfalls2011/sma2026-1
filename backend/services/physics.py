@@ -2942,8 +2942,8 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
                 if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
                     continue
                 r = _fast_eval(test)
-                if r["reachable"] and r["swr"] < best_swr:
-                    best_swr = r["swr"]
+                if r["reachable"] and r["swr"] < best_fast_swr:
+                    best_fast_swr = r["swr"]
                     best_driven_pos = test[driven_idx]["position"]
             # Fine sweep
             center = best_driven_pos
@@ -2956,15 +2956,15 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
                 if test[driven_idx]["position"] <= elems[refl_idx]["position"]:
                     continue
                 r = _fast_eval(test)
-                if r["reachable"] and r["swr"] < best_swr:
-                    best_swr = r["swr"]
+                if r["reachable"] and r["swr"] < best_fast_swr:
+                    best_fast_swr = r["swr"]
                     best_driven_pos = test[driven_idx]["position"]
             if best_driven_pos != orig_driven_pos:
                 elems[driven_idx]["position"] = best_driven_pos
-                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.2f}\" (SWR: {best_swr:.3f})")
+                steps.append(f"Driven position: {orig_driven_pos:.1f}\" -> {best_driven_pos:.2f}\" (est. SWR: {best_fast_swr:.3f})")
 
             # Pass 3: Dir1 position sweep
-            if best_swr > 1.05:
+            if best_fast_swr > 1.05:
                 dirs_sorted = sorted([(i, e) for i, e in enumerate(elems) if e["element_type"] == "director"], key=lambda x: x[1]["position"])
                 if dirs_sorted:
                     dir1_idx = dirs_sorted[0][0]
@@ -2976,8 +2976,8 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
                         if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
                             continue
                         r = _fast_eval(test)
-                        if r["reachable"] and r["swr"] < best_swr:
-                            best_swr = r["swr"]
+                        if r["reachable"] and r["swr"] < best_fast_swr:
+                            best_fast_swr = r["swr"]
                             best_dir1_pos = test[dir1_idx]["position"]
                     # Fine sweep
                     center = best_dir1_pos
@@ -2990,12 +2990,12 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
                         if test[dir1_idx]["position"] <= elems[driven_idx]["position"]:
                             continue
                         r = _fast_eval(test)
-                        if r["reachable"] and r["swr"] < best_swr:
-                            best_swr = r["swr"]
+                        if r["reachable"] and r["swr"] < best_fast_swr:
+                            best_fast_swr = r["swr"]
                             best_dir1_pos = test[dir1_idx]["position"]
                     if best_dir1_pos != orig_dir1_pos:
                         elems[dir1_idx]["position"] = best_dir1_pos
-                        steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.2f}\" (SWR: {best_swr:.3f})")
+                        steps.append(f"Dir1 position: {orig_dir1_pos:.1f}\" -> {best_dir1_pos:.2f}\" (est. SWR: {best_fast_swr:.3f})")
 
         # Pass 4: Driven length correction using resonance info from full eval
         full_current = _full_eval(elems)
