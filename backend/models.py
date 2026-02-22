@@ -248,6 +248,29 @@ class AutoTuneOutput(BaseModel):
     predicted_fb_ratio: float
     optimization_notes: List[str]
 
+
+class GammaFineTuneRequest(BaseModel):
+    num_elements: int = Field(..., ge=2, le=20)
+    elements: List[dict]
+    band: str = Field(default="11m_cb")
+    frequency_mhz: Optional[float] = Field(default=None)
+    height_from_ground: float = Field(default=54)
+    height_unit: str = Field(default="inches")
+    boom_diameter: float = Field(default=1.5)
+    boom_unit: str = Field(default="inches")
+    boom_grounded: bool = Field(default=False)
+    boom_mount: str = Field(default="insulated")
+    element_diameter: Optional[float] = Field(default=0.5)
+
+
+class GammaFineTuneOutput(BaseModel):
+    optimized_elements: List[dict]
+    original_swr: float
+    optimized_swr: float
+    feedpoint_impedance: float
+    optimization_steps: List[str]
+    hardware: dict
+
 class CalculationRecord(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = Field(default_factory=datetime.utcnow)
