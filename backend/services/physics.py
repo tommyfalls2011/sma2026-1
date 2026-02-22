@@ -2321,6 +2321,7 @@ def design_hairpin_match(num_elements: int, frequency_mhz: float,
         r_feed = compute_feedpoint_impedance(
             num_elements=num_elements, wavelength_m=wavelength_m,
             reflector_spacing_in=refl_gap_in, director_spacings_in=director_spacings_in,
+            cumulative=False,  # Hairpin designer receives individual gaps
         )
 
     if r_feed >= 50.0:
