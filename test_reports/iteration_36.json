@@ -87,7 +87,7 @@
     }
   },
   "testing_environment": {
-    "url": "https://design-engine-7.preview.emergentagent.com",
+    "url": "https://swr-optimizer.preview.emergentagent.com",
     "framework": "Expo web (React Native)",
     "backend": "FastAPI with MongoDB",
     "stripe_key": "sk_test_emergent (test mode)"

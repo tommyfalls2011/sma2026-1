@@ -83,7 +83,7 @@ class TestPayPalCheckout:
             headers={"Authorization": f"Bearer {test_user_token}"},
             json={
                 "tier": "bronze_monthly",
-                "origin_url": "https://design-engine-7.preview.emergentagent.com"
+                "origin_url": "https://swr-optimizer.preview.emergentagent.com"
             }
         )
         
@@ -131,7 +131,7 @@ class TestPayPalCapture:
             headers={"Authorization": f"Bearer {test_user_token}"},
             json={
                 "tier": "silver_monthly",
-                "origin_url": "https://design-engine-7.preview.emergentagent.com"
+                "origin_url": "https://swr-optimizer.preview.emergentagent.com"
             }
         )
         
@@ -171,7 +171,7 @@ class TestStripeCheckout:
             headers={"Authorization": f"Bearer {test_user_token}"},
             json={
                 "tier": "bronze_monthly",
-                "origin_url": "https://design-engine-7.preview.emergentagent.com"
+                "origin_url": "https://swr-optimizer.preview.emergentagent.com"
             }
         )
         

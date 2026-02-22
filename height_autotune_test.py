@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any
 
 # Backend URL from frontend/.env
-BASE_URL = "https://design-engine-7.preview.emergentagent.com/api"
+BASE_URL = "https://swr-optimizer.preview.emergentagent.com/api"
 
 def test_height_optimizer_fix():
     """

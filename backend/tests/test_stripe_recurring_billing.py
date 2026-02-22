@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://design-engine-7.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://swr-optimizer.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_CREDS = {"email": "fallstommy@gmail.com", "password": "admin123"}
@@ -184,7 +184,7 @@ class TestStripeCheckoutSubscriptionMode:
         res = requests.post(
             f"{BASE_URL}/api/subscription/stripe-checkout",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={"tier": "bronze_monthly", "origin_url": "https://design-engine-7.preview.emergentagent.com"},
+            json={"tier": "bronze_monthly", "origin_url": "https://swr-optimizer.preview.emergentagent.com"},
             timeout=30
         )
         assert res.status_code == 200
@@ -238,7 +238,7 @@ class TestStripeStatusEndpoint:
         create_res = requests.post(
             f"{BASE_URL}/api/subscription/stripe-checkout",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={"tier": "silver_monthly", "origin_url": "https://design-engine-7.preview.emergentagent.com"},
+            json={"tier": "silver_monthly", "origin_url": "https://swr-optimizer.preview.emergentagent.com"},
             timeout=30
         )
         assert create_res.status_code == 200
@@ -424,7 +424,7 @@ class TestIntegrationFlow:
         checkout_res = requests.post(
             f"{BASE_URL}/api/subscription/stripe-checkout",
             headers={"Authorization": f"Bearer {admin_token}"},
-            json={"tier": "gold_monthly", "origin_url": "https://design-engine-7.preview.emergentagent.com"},
+            json={"tier": "gold_monthly", "origin_url": "https://swr-optimizer.preview.emergentagent.com"},
             timeout=30
         )
         assert checkout_res.status_code == 200
