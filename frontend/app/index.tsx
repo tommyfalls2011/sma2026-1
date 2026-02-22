@@ -2817,7 +2817,7 @@ export default function AntennaCalculator() {
                       <Text style={{ color: '#00BCD4', fontSize: 18, fontWeight: '700' }}>{rlResult.best_return_loss_db} dB</Text>
                     </View>
                     <View>
-                      <Text style={{ color: '#888', fontSize: 10 }}>Raw SWR</Text>
+                      <Text style={{ color: '#888', fontSize: 10 }}>Matched SWR</Text>
                       <Text style={{ color: '#4CAF50', fontSize: 18, fontWeight: '700' }}>{rlResult.best_swr}:1</Text>
                     </View>
                     <View>
