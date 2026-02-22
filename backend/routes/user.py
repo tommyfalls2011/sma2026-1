@@ -564,37 +564,56 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
 
 @router.get("/subscription/stripe-status/{session_id}")
 async def stripe_subscription_status(session_id: str, user: dict = Depends(require_user)):
-    stripe_cred = await get_payment_credentials("stripe")
-    stripe_key = stripe_cred.get("api_key", "") if stripe_cred else ""
-    if not stripe_key:
+    key = _init_stripe()
+    if not key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
-    stripe_checkout = StripeCheckout(api_key=stripe_key)
     try:
-        status = await stripe_checkout.get_checkout_status(session_id)
+        session = stripe.checkout.Session.retrieve(session_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Session not found")
+
+    payment_status = session.payment_status  # 'paid', 'unpaid', 'no_payment_required'
+    stripe_sub_id = getattr(session, "subscription", None)
+
     txn = await db.payment_transactions.find_one({"session_id": session_id, "type": "subscription"}, {"_id": 0})
-    if status.payment_status == "paid" and txn and txn.get("payment_status") != "paid":
+    if payment_status == "paid" and txn and txn.get("payment_status") != "paid":
         tier_key = txn.get("tier", "")
         tier_info = SUBSCRIPTION_TIERS.get(tier_key, {})
         duration_days = tier_info.get("duration_days", 30)
         expires = datetime.utcnow() + timedelta(days=duration_days)
-        # Upgrade the user
-        await db.users.update_one(
-            {"id": txn["user_id"]},
-            {"$set": {"subscription_tier": tier_key, "subscription_expires": expires, "is_trial": False}},
-        )
+
+        # Store Stripe subscription ID on user for future management
+        update_fields = {
+            "subscription_tier": tier_key,
+            "subscription_expires": expires,
+            "is_trial": False,
+            "auto_renew": True,
+            "billing_method": "stripe",
+        }
+        if stripe_sub_id:
+            update_fields["stripe_subscription_id"] = stripe_sub_id
+        await db.users.update_one({"id": txn["user_id"]}, {"$set": update_fields})
+
         # Mark transaction as paid
+        txn_update = {
+            "payment_status": "paid",
+            "status": "complete",
+            "billing_mode": "recurring",
+            "updated_at": datetime.utcnow().isoformat(),
+        }
+        if stripe_sub_id:
+            txn_update["stripe_subscription_id"] = stripe_sub_id
         await db.payment_transactions.update_one(
             {"session_id": session_id, "type": "subscription"},
-            {"$set": {"payment_status": "paid", "status": "complete", "updated_at": datetime.utcnow().isoformat()}},
+            {"$set": txn_update},
         )
     return {
-        "status": "complete" if status.payment_status == "paid" else "pending",
-        "payment_status": status.payment_status,
-        "amount_total": status.amount_total / 100 if status.amount_total else 0,
+        "status": "complete" if payment_status == "paid" else "pending",
+        "payment_status": payment_status,
+        "amount_total": session.amount_total / 100 if session.amount_total else 0,
         "tier": txn.get("tier") if txn else None,
         "tier_name": txn.get("tier_name") if txn else None,
+        "auto_renew": True,
     }
 
 
