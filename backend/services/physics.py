@@ -1823,6 +1823,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         resonant_freq_mhz=curve_resonant_freq,
         elevation_pattern=elevation_pattern,
         smith_chart_data=smith_chart_data,
+        element_q_info=dia_q_info,
     )
 
 
