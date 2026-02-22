@@ -743,12 +743,21 @@ export default function AntennaCalculator() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           num_elements: inputs.num_elements,
+          elements: inputs.elements.map(e => ({
+            element_type: e.element_type,
+            length: parseFloat(e.length) || 0,
+            diameter: parseFloat(e.diameter) || 0.5,
+            position: parseFloat(e.position) || 0,
+          })),
           height_from_ground: parseFloat(inputs.height_from_ground) || 54,
           height_unit: inputs.height_unit,
           boom_diameter: parseFloat(inputs.boom_diameter) || 1.5,
           boom_unit: inputs.boom_unit,
           band: inputs.band,
           frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+          feed_type: inputs.feed_type,
+          boom_mount: inputs.boom_mount,
+          antenna_orientation: inputs.antenna_orientation,
           taper: inputs.taper.enabled ? inputs.taper : null,
           corona_balls: inputs.corona_balls.enabled ? inputs.corona_balls : null,
           use_reflector: inputs.use_reflector,
@@ -764,6 +773,8 @@ export default function AntennaCalculator() {
           far_dir1: farDir1,
           close_dir2: closeDir2,
           far_dir2: farDir2,
+          dir_presets: dirPresets,
+          dir_nudge_counts: dirNudgeCounts,
         }),
       });
       if (response.ok) {
