@@ -385,7 +385,23 @@ export default function AntennaCalculator() {
   const [updateDismissed, setUpdateDismissed] = useState(false);
   const [updateDebug, setUpdateDebug] = useState('');
 
-  // Check for updates on launch — tries own backend first, falls back to Gist
+  // Long-press repeat helper: fires action on press, then repeats while held
+  const repeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const repeatPress = useCallback((action: () => void) => ({
+    onPressIn: () => {
+      action();
+      const startTime = Date.now();
+      repeatTimerRef.current = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        // Speed up after 500ms held
+        if (elapsed > 500) action();
+        if (elapsed > 1500) action(); // Double speed after 1.5s
+      }, 80);
+    },
+    onPressOut: () => {
+      if (repeatTimerRef.current) { clearInterval(repeatTimerRef.current); repeatTimerRef.current = null; }
+    },
+  }), []);
   useEffect(() => {
     const compareVersions = (local: string, remote: string): boolean => {
       // Returns true if remote > local (e.g. "3.3.0" > "3.2.5")
