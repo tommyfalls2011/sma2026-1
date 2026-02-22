@@ -2711,7 +2711,7 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
             coax_type="RG-213", coax_length_ft=100,
             transmit_power_watts=500,
         )
-        calc_out = calculate_antenna(calc_input)
+        calc_out = calculate_antenna_parameters(calc_input)
         gd = calc_out.matching_info.get("gamma_design", {}) if calc_out.matching_info else {}
         fz = gd.get("feedpoint_impedance_ohms", 50)
         res_freq = calc_out.matching_info.get("element_resonant_freq_mhz", freq) if calc_out.matching_info else freq
