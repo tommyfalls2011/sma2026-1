@@ -840,6 +840,58 @@ export default function AntennaCalculator() {
     setTuning(false);
   };
 
+  // Fine-Tune Gamma: optimize element lengths/positions for best gamma SWR
+  const fineTuneGamma = async () => {
+    setFineTuning(true);
+    try {
+      const elementsForApi = inputs.elements.map(e => ({
+        element_type: e.element_type,
+        length: parseFloat(e.length) || 0,
+        diameter: parseFloat(e.diameter) || 0.5,
+        position: parseFloat(e.position) || 0,
+      }));
+      const response = await fetch(`${BACKEND_URL}/api/gamma-fine-tune`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          num_elements: inputs.num_elements,
+          elements: elementsForApi,
+          band: inputs.band,
+          frequency_mhz: parseFloat(inputs.frequency_mhz) || null,
+          height_from_ground: parseFloat(inputs.height_from_ground) || 54,
+          height_unit: inputs.height_unit,
+          boom_diameter: parseFloat(inputs.boom_diameter) || 1.5,
+          boom_unit: inputs.boom_unit,
+          boom_grounded: inputs.boom_grounded,
+          boom_mount: inputs.boom_mount,
+          element_diameter: parseFloat(inputs.elements[0]?.diameter || '0.5') || 0.5,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const newElements = data.optimized_elements.map((e: any, idx: number) => ({
+          element_type: e.element_type,
+          length: parseFloat(e.length).toFixed(3),
+          diameter: inputs.elements[idx]?.diameter || '0.5',
+          position: parseFloat(e.position).toFixed(3),
+        }));
+        setInputs(prev => ({ ...prev, elements: newElements }));
+        setDrivenNudgeCount(0);
+        setDir1NudgeCount(0);
+        setSpacingNudgeCount(0);
+
+        const stepsText = data.optimization_steps.slice(0, 5).join('\n');
+        Alert.alert(
+          'Fine-Tune Complete',
+          `SWR: ${data.original_swr} -> ${data.optimized_swr}\nZ: ${data.feedpoint_impedance}\u03a9\n\n${stepsText}`
+        );
+        setTimeout(() => calculateAntenna(), 100);
+      } else {
+        Alert.alert('Error', 'Fine-tune failed');
+      }
+    } catch (err) { Alert.alert('Error', 'Fine-tune request failed'); }
+    setFineTuning(false);
+  };
+
   // Optimize height from ground (10' to 100')
   const optimizeHeight = async () => {
     setOptimizingHeight(true);
