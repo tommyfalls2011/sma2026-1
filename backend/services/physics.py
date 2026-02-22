@@ -838,7 +838,8 @@ def calculate_wind_load(elements: list, boom_dia_in: float, boom_length_in: floa
 
 def calculate_taper_effects(taper: TaperConfig, num_elements: int) -> dict:
     if not taper or not taper.enabled:
-        return {"gain_bonus": 0, "bandwidth_mult": 1.0, "swr_mult": 1.0, "fb_bonus": 0, "fs_bonus": 0}
+        return {"gain_bonus": 0, "bandwidth_mult": 1.0, "swr_mult": 1.0, "fb_bonus": 0, "fs_bonus": 0,
+                "equivalent_diameter_in": 0}
     num_tapers = taper.num_tapers
     sections = taper.sections
     base_gain_bonus = 0.15 * num_tapers
@@ -846,20 +847,37 @@ def calculate_taper_effects(taper: TaperConfig, num_elements: int) -> dict:
     swr_mult = 1.0 - (0.02 * num_tapers)
     fb_bonus = 0.8 * num_tapers
     fs_bonus = 0.5 * num_tapers
+    equivalent_dia = 0
     if sections:
         total_taper_ratio = 0
         max_start_dia = 0
         min_end_dia = 999
+        total_weighted_dia = 0
+        total_length = 0
         for section in sections:
             if section.start_diameter > 0:
                 ratio = section.end_diameter / section.start_diameter
                 total_taper_ratio += (1 - ratio)
                 max_start_dia = max(max_start_dia, section.start_diameter)
                 min_end_dia = min(min_end_dia, section.end_diameter)
+                # Geometric mean diameter for this section (RF-equivalent)
+                section_eq_dia = math.sqrt(section.start_diameter * section.end_diameter)
+                section_len = section.length if hasattr(section, 'length') and section.length else 1.0
+                total_weighted_dia += section_eq_dia * section_len
+                total_length += section_len
+        # Overall equivalent diameter: weighted geometric mean across all sections
+        equivalent_dia = total_weighted_dia / total_length if total_length > 0 else 0
+        # Diameter ratio drives real bandwidth improvement
+        # A taper from 1.25" to 0.5" has equivalent dia ~0.79"
+        # Compare to straight 0.5" element → bandwidth improvement
+        if equivalent_dia > 0 and min_end_dia > 0 and min_end_dia < 999:
+            # BW bonus from equivalent thicker diameter vs tip diameter
+            dia_bw_ratio = math.log(equivalent_dia / min_end_dia) / math.log(2) if equivalent_dia > min_end_dia else 0
+            bandwidth_mult += 0.15 * dia_bw_ratio * num_tapers
+            swr_mult -= 0.04 * dia_bw_ratio * num_tapers
         avg_taper = total_taper_ratio / len(sections) if sections else 0
         if max_start_dia >= 1.0:
             base_gain_bonus += 0.2
-            bandwidth_mult += 0.05
         if 0.2 <= avg_taper <= 0.7:
             taper_quality = 1.0 - abs(avg_taper - 0.45) / 0.45
             base_gain_bonus += 0.4 * taper_quality * num_tapers
@@ -872,7 +890,8 @@ def calculate_taper_effects(taper: TaperConfig, num_elements: int) -> dict:
                 base_gain_bonus += 0.3
                 bandwidth_mult += 0.08
     element_scale = min(1.5, num_elements / 3.0)
-    return {"gain_bonus": round(base_gain_bonus * element_scale, 2), "bandwidth_mult": round(bandwidth_mult, 2), "swr_mult": round(max(0.7, swr_mult), 2), "fb_bonus": round(fb_bonus * element_scale, 1), "fs_bonus": round(fs_bonus * element_scale, 1), "num_tapers": num_tapers, "sections": [s.dict() for s in sections] if sections else []}
+    return {"gain_bonus": round(base_gain_bonus * element_scale, 2), "bandwidth_mult": round(bandwidth_mult, 2), "swr_mult": round(max(0.7, swr_mult), 2), "fb_bonus": round(fb_bonus * element_scale, 1), "fs_bonus": round(fs_bonus * element_scale, 1), "num_tapers": num_tapers, "sections": [s.dict() for s in sections] if sections else [],
+            "equivalent_diameter_in": round(equivalent_dia, 3)}
 
 def calculate_corona_effects(corona: CoronaBallConfig) -> dict:
     if not corona or not corona.enabled:
