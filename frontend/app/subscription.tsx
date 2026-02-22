@@ -533,7 +533,7 @@ export default function SubscriptionScreen() {
                     <Ionicons name="card" size={28} color="#635BFF" />
                     <View style={styles.paymentInfo}>
                       <Text style={styles.paymentName}>Credit / Debit Card</Text>
-                      <Text style={styles.paymentEmail}>Powered by Stripe — instant activation</Text>
+                      <Text style={styles.paymentEmail}>Powered by Stripe — auto-recurring billing</Text>
                     </View>
                     {selectedPayment === 'stripe' && <Ionicons name="checkmark-circle" size={22} color="#4CAF50" />}
                   </View>
