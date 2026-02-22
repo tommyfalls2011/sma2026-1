@@ -604,12 +604,93 @@ export default function SubscriptionScreen() {
 
         {/* Already at max tier */}
         {(userTierBase === 'gold' || user.subscription_tier === 'admin') && (
-          <View style={styles.maxTierCard}>
+          <View style={styles.maxTierCard} data-testid="max-tier-card">
             <Ionicons name="trophy" size={48} color="#FFD700" />
             <Text style={styles.maxTierTitle}>You have full access!</Text>
             <Text style={styles.maxTierDesc}>
               Enjoy all features with your {tiers?.[user.subscription_tier]?.name || 'Premium'} subscription.
             </Text>
+            {user.subscription_tier !== 'admin' && user.subscription_expires && (
+              <View style={styles.billingManagement} data-testid="billing-management">
+                <View style={styles.billingRow}>
+                  <Text style={styles.billingLabel}>
+                    {user.auto_renew ? 'Next billing date:' : 'Expires on:'}
+                  </Text>
+                  <Text style={styles.billingValue}>{formatExpiryDate(user.subscription_expires)}</Text>
+                </View>
+                <View style={styles.billingRow}>
+                  <Text style={styles.billingLabel}>Billing:</Text>
+                  <Text style={[styles.billingValue, { color: user.auto_renew ? '#4CAF50' : '#FF9800' }]}>
+                    {user.auto_renew ? 'Auto-renewing' : 'Manual renewal'}
+                  </Text>
+                </View>
+                {user.billing_method === 'stripe' && (
+                  <TouchableOpacity
+                    style={[styles.autoRenewBtn, !user.auto_renew && styles.autoRenewBtnResume]}
+                    onPress={handleToggleAutoRenew}
+                    disabled={cancellingAutoRenew}
+                    data-testid="toggle-auto-renew-btn"
+                  >
+                    {cancellingAutoRenew ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name={user.auto_renew ? 'close-circle-outline' : 'refresh-circle'}
+                          size={18}
+                          color="#fff"
+                        />
+                        <Text style={styles.autoRenewBtnText}>
+                          {user.auto_renew ? 'Cancel Auto-Renewal' : 'Resume Auto-Renewal'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Show billing management for non-gold paid users too */}
+        {userTierBase !== 'gold' && user.subscription_tier !== 'admin' && user.subscription_tier !== 'trial' && !user.is_trial && user.subscription_expires && (
+          <View style={styles.billingManagementStandalone} data-testid="billing-management-standalone">
+            <Text style={styles.sectionTitle}>Billing Management</Text>
+            <View style={styles.billingRow}>
+              <Text style={styles.billingLabel}>
+                {user.auto_renew ? 'Next billing date:' : 'Expires on:'}
+              </Text>
+              <Text style={styles.billingValue}>{formatExpiryDate(user.subscription_expires)}</Text>
+            </View>
+            <View style={styles.billingRow}>
+              <Text style={styles.billingLabel}>Billing:</Text>
+              <Text style={[styles.billingValue, { color: user.auto_renew ? '#4CAF50' : '#FF9800' }]}>
+                {user.auto_renew ? 'Auto-renewing' : 'Manual renewal'}
+              </Text>
+            </View>
+            {user.billing_method === 'stripe' && (
+              <TouchableOpacity
+                style={[styles.autoRenewBtn, !user.auto_renew && styles.autoRenewBtnResume]}
+                onPress={handleToggleAutoRenew}
+                disabled={cancellingAutoRenew}
+                data-testid="toggle-auto-renew-btn-standalone"
+              >
+                {cancellingAutoRenew ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={user.auto_renew ? 'close-circle-outline' : 'refresh-circle'}
+                      size={18}
+                      color="#fff"
+                    />
+                    <Text style={styles.autoRenewBtnText}>
+                      {user.auto_renew ? 'Cancel Auto-Renewal' : 'Resume Auto-Renewal'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
