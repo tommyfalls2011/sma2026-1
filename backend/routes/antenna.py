@@ -334,6 +334,14 @@ async def gamma_designer_endpoint(req: GammaDesignerRequest):
     return result
 
 
+# ── Gamma Fine-Tune ──
+@router.post("/gamma-fine-tune")
+async def gamma_fine_tune_endpoint(req: GammaFineTuneRequest):
+    result = gamma_fine_tune(req)
+    return result
+
+
+
 @router.post("/hairpin-designer")
 async def hairpin_designer_endpoint(req: HairpinDesignerRequest):
     result = design_hairpin_match(
