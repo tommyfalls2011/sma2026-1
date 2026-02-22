@@ -490,18 +490,46 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
         raise HTTPException(status_code=400, detail="origin_url required")
     tier_info = SUBSCRIPTION_TIERS[tier_key]
     amount = float(tier_info["price"])
-    stripe_cred = await get_payment_credentials("stripe")
-    stripe_key = stripe_cred.get("api_key", "") if stripe_cred else ""
-    if not stripe_key:
+
+    # Use Stripe subscription mode for recurring billing
+    key = _init_stripe()
+    if not key:
         raise HTTPException(status_code=500, detail="Stripe not configured")
-    host_url = str(request.base_url).rstrip("/")
-    webhook_url = f"{host_url}/api/webhook/stripe"
-    stripe_checkout = StripeCheckout(api_key=stripe_key, webhook_url=webhook_url)
+
+    price_id = await get_stripe_price_id(tier_key)
+    if not price_id:
+        raise HTTPException(status_code=500, detail="Stripe recurring price not configured for this tier")
+
     success_url = f"{origin_url}/subscription?session_id={{CHECKOUT_SESSION_ID}}&payment=success"
     cancel_url = f"{origin_url}/subscription?payment=cancelled"
-    session_request = CheckoutSessionRequest(
-        amount=amount,
-        currency="usd",
+
+    # Find or create Stripe customer for this user
+    customer_id = user.get("stripe_customer_id")
+    if not customer_id:
+        customer = stripe.Customer.create(
+            email=user["email"],
+            name=user.get("name", ""),
+            metadata={"user_id": user["id"]},
+        )
+        customer_id = customer.id
+        await db.users.update_one({"id": user["id"]}, {"$set": {"stripe_customer_id": customer_id}})
+
+    # If user already has an active Stripe subscription, cancel the old one first
+    old_sub_id = user.get("stripe_subscription_id")
+    if old_sub_id:
+        try:
+            stripe.Subscription.cancel(old_sub_id)
+        except Exception:
+            pass  # Old sub may already be cancelled
+
+    host_url = str(request.base_url).rstrip("/")
+    webhook_url = f"{host_url}/api/webhook/stripe"
+
+    session = stripe.checkout.Session.create(
+        customer=customer_id,
+        payment_method_types=["card"],
+        line_items=[{"price": price_id, "quantity": 1}],
+        mode="subscription",
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={
@@ -510,13 +538,14 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
             "tier": tier_key,
             "tier_name": tier_info["name"],
             "type": "subscription",
+            "webhook_url": webhook_url,
         },
     )
-    session = await stripe_checkout.create_checkout_session(session_request)
+
     # Record the pending transaction
     txn = {
         "id": str(uuid.uuid4()),
-        "session_id": session.session_id,
+        "session_id": session.id,
         "user_id": user["id"],
         "user_email": user["email"],
         "tier": tier_key,
@@ -526,10 +555,11 @@ async def stripe_subscription_checkout(data: dict, request: Request, user: dict 
         "payment_status": "pending",
         "status": "initiated",
         "type": "subscription",
+        "billing_mode": "recurring",
         "created_at": datetime.utcnow().isoformat(),
     }
     await db.payment_transactions.insert_one(txn)
-    return {"url": session.url, "session_id": session.session_id}
+    return {"url": session.url, "session_id": session.id}
 
 
 @router.get("/subscription/stripe-status/{session_id}")
