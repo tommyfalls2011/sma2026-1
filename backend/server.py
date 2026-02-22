@@ -231,6 +231,12 @@ logger = logging.getLogger(__name__)
 async def startup_load_settings():
     await load_settings_from_db()
     await seed_store_products()
+    # Initialize Stripe recurring prices for subscription billing
+    try:
+        await ensure_stripe_prices()
+        logger.info("Stripe recurring prices initialized")
+    except Exception as e:
+        logger.warning(f"Failed to initialize Stripe prices (non-fatal): {e}")
 
 
 @app.on_event("shutdown")
