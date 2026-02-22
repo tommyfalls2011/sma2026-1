@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="16" time="7.342" timestamp="2026-02-22T01:52:24.692774+00:00" hostname="agent-env-8bfb249f-7af6-4ce1-986f-1dfdb5551c68"><testcase classname="tests.test_stripe_recurring_billing.TestStripeRecurringBillingSetup" name="test_health_check" time="0.416" /><testcase classname="tests.test_stripe_recurring_billing.TestLoginAutoRenewFields" name="test_admin_login_returns_auto_renew_fields" time="0.130" /><testcase classname="tests.test_stripe_recurring_billing.TestLoginAutoRenewFields" name="test_gold_user_login_returns_auto_renew_true" time="0.161" /><testcase classname="tests.test_stripe_recurring_billing.TestAuthMeEndpoint" name="test_auth_me_returns_auto_renew_fields" time="0.295" /><testcase classname="tests.test_stripe_recurring_billing.TestAuthMeEndpoint" name="test_auth_me_gold_user_has_auto_renew" time="0.240" /><testcase classname="tests.test_stripe_recurring_billing.TestSubscriptionStatus" name="test_subscription_status_returns_required_fields" time="0.243" /><testcase classname="tests.test_stripe_recurring_billing.TestStripeCheckoutSubscriptionMode" name="test_stripe_checkout_returns_url_and_session_id" time="0.931" /><testcase classname="tests.test_stripe_recurring_billing.TestStripeCheckoutSubscriptionMode" name="test_stripe_checkout_invalid_tier" time="0.278" /><testcase classname="tests.test_stripe_recurring_billing.TestStripeCheckoutSubscriptionMode" name="test_stripe_checkout_missing_origin_url" time="0.236" /><testcase classname="tests.test_stripe_recurring_billing.TestStripeStatusEndpoint" name="test_stripe_status_returns_auto_renew_field" time="1.049" /><testcase classname="tests.test_stripe_recurring_billing.TestStripeStatusEndpoint" name="test_stripe_status_invalid_session" time="0.409" /><testcase classname="tests.test_stripe_recurring_billing.TestCancelAutoRenew" name="test_cancel_auto_renew_endpoint_exists" time="0.540" /><testcase classname="tests.test_stripe_recurring_billing.TestResumeAutoRenew" name="test_resume_auto_renew_endpoint_exists" time="0.480"><failure message="requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)">/root/.venv/lib/python3.11/site-packages/requests/models.py:976: in json
+    return complexjson.loads(self.text, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/json/decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_stripe_recurring_billing.py:331: in test_resume_auto_renew_endpoint_exists
+    print(f"Resume auto-renew returned {res.status_code}: {res.json()}")
+                                                           ^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/models.py:980: in json
+    raise RequestsJSONDecodeError(e.msg, e.doc, e.pos)
+E   requests.exceptions.JSONDecodeError: Expecting value: line 1 column 1 (char 0)</failure></testcase><testcase classname="tests.test_stripe_recurring_billing.TestCancelSubscription" name="test_cancel_subscription_endpoint_exists" time="0.295" /><testcase classname="tests.test_stripe_recurring_billing.TestSubscriptionTiers" name="test_tiers_endpoint_returns_all_tiers" time="0.197" /><testcase classname="tests.test_stripe_recurring_billing.TestIntegrationFlow" name="test_full_checkout_flow" time="1.318" /></testsuite></testsuites>
