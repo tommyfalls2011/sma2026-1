@@ -1823,15 +1823,15 @@ def auto_tune_antenna(request: AutoTuneRequest) -> AutoTuneOutput:
                     elif close_d1 == 'close' or close_d1 is True: return 0.10
                     elif far_d1 == 'vfar': return 0.22
                     elif far_d1 == 'far' or far_d1 is True: return 0.18
-                    return 0.13
+                    return profile['dir_base']  # Use build style
                 elif dir_idx == 1:
                     if close_d2 == 'vclose': return 0.08
                     elif close_d2 == 'close' or close_d2 is True: return 0.12
                     elif far_d2 == 'vfar': return 0.28
                     elif far_d2 == 'far' or far_d2 is True: return 0.22
-                    return 0.16
-                # Directors 3+ use graduated default spacing
-                return 0.16 + (dir_idx - 2) * 0.02
+                    return profile['dir_base'] + profile['dir_increment']
+                # Directors 3+ use graduated spacing from build style
+                return profile['dir_base'] + dir_idx * profile['dir_increment']
 
             for i in range(num_directors):
                 dir_lambda = get_dir_lambda(i)
