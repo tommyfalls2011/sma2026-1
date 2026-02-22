@@ -127,6 +127,8 @@ export default function AntennaCalculator() {
   const [gammaCapPf, setGammaCapPf] = useState<string | null>(null);
   const [gammaBarPos, setGammaBarPos] = useState(18); // shorting bar position in inches from feedpoint center
   const [gammaRodInsertion, setGammaRodInsertion] = useState(8.0); // rod insertion into tube in inches
+  const [gammaTubeOd, setGammaTubeOd] = useState<string | null>(null);
+  const [gammaTubeLength, setGammaTubeLength] = useState<number | null>(null);
   const [originalDrivenLength, setOriginalDrivenLength] = useState<string | null>(null);
 
   // Apply feed type shortening to driven element
