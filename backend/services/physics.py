@@ -1308,14 +1308,14 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     beamwidth_h = round(max(min(beamwidth_h, 120), 15), 1)
     beamwidth_v = round(max(min(beamwidth_v, 120), 25), 1)
 
-    # Bandwidth
+    # Bandwidth — Q-factor model based on element diameter
     if n <= 3: bandwidth_percent = 6
     elif n <= 5: bandwidth_percent = 5
     else: bandwidth_percent = 5 / (1 + 0.04 * (n - 5))
     bandwidth_percent *= taper_effects["bandwidth_mult"]
     bandwidth_percent *= corona_effects.get("bandwidth_effect", 1.0)
-    if avg_element_dia > 0.006: bandwidth_percent *= 1.2
-    elif avg_element_dia > 0.004: bandwidth_percent *= 1.1
+    # Apply diameter-based Q-factor bandwidth multiplier
+    bandwidth_percent *= dia_q_info["bandwidth_mult"]
     bandwidth_mhz = round(center_freq * bandwidth_percent / 100, 3)
     if boom_correction["enabled"]:
         bandwidth_mhz = round(bandwidth_mhz * boom_correction["bandwidth_mult"], 3)
