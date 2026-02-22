@@ -110,15 +110,17 @@ Full-stack antenna calculator app (React Native/Expo + FastAPI + MongoDB) for CB
 
 ## P0 - Completed
 - Auto-recurring monthly billing (Stripe subscriptions) - DONE
+- Auto-recurring monthly billing (PayPal subscriptions) - DONE
 - Fixed tier double-suffix bug (gold_monthly → gold_monthly_monthly → 3 elements) - DONE
 - Added max_elements to login response - DONE
 - Admin panel: monthly/yearly tier selection for users - DONE
+- Stripe live key activated - DONE
+- Stripe webhook configured - DONE
 
 ## P1 - Next Priority
-- Activate Stripe with live keys once account verified
-- PayPal recurring subscriptions (PayPal currently still one-time payments)
+- Set up PayPal webhook for auto-renewal notifications (IPN/webhook for PAYMENT.SALE.COMPLETED)
+- Refactor subscription.tsx and admin.tsx into smaller components
 
 ## P2 - Future
-- Refactor subscription.tsx and admin.tsx into smaller components
 - Series-capacitor dielectric model (air gap)
 - iOS version
