@@ -980,6 +980,7 @@ export default function AntennaCalculator() {
             coaxType, coaxLengthFt, transmitPowerWatts,
             gammaRodDia, gammaRodSpacing, gammaCapPf, gammaBarPos, gammaRodInsertion,
             hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap,
+            buildStyle,
           }
         })
       });
