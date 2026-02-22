@@ -172,6 +172,11 @@ class AutoTuneRequest(BaseModel):
     close_dir2: Union[str, bool] = Field(default=False)
     far_dir2: Union[str, bool] = Field(default=False)
     element_diameter: Optional[float] = Field(default=0.5)
+    build_style: str = Field(default="normal")
+    dir_presets: Optional[dict] = Field(default=None)
+    dir_nudge_counts: Optional[dict] = Field(default=None)
+    elements: Optional[List[dict]] = Field(default=None)
+    boom_mount: str = Field(default="bonded")
 
 class AntennaOutput(BaseModel):
     swr: float
