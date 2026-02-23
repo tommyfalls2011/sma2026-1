@@ -38,7 +38,8 @@
             "enableShrinkResourcesInReleaseBuilds": true,
             "extraCMakeArgs": [
               "-DCMAKE_CXX_FLAGS=-Wno-error=deprecated-declarations"
-            ]
+            ],
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ],
@@ -71,6 +72,9 @@
     "updates": {
       "url": "https://u.expo.dev/6e765fe6-aa21-4fce-accc-6815d4db4bfc"
     },
-    "owner": "tommyfalls2011"
+    "owner": "tommyfalls2011",
+    "ios": {
+      "bundleIdentifier": "com.smaantennaanalyzer.app"
+    }
   }
 }
