@@ -6,6 +6,9 @@ import os
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# ── App Version (keep in sync with frontend/app.json) ──
+APP_VERSION = "4.3.5"
+
 # ── Database ──
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
