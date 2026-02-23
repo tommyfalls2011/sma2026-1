@@ -65,11 +65,17 @@ async def get_bands():
 
 @router.get("/app-update")
 async def get_app_update():
+    from config import APP_VERSION
     update_col = db["app_update"]
     doc = await update_col.find_one({}, {"_id": 0})
     if doc:
+        # Auto-sync: if backend APP_VERSION is newer than DB version, update DB
+        db_ver = doc.get("version", "0.0.0")
+        if APP_VERSION > db_ver:
+            doc["version"] = APP_VERSION
+            await update_col.update_one({}, {"$set": {"version": APP_VERSION}})
         return doc
-    return {"version": "4.1.5", "buildDate": "2026-02-22T00:00:00", "releaseNotes": "v4.1.5 - Realistic Gamma/Hairpin feed physics, interactive match sliders, real-time SWR tuning, resonant frequency display, auto-scaling performance bars", "apkUrl": "https://expo.dev/artifacts/eas/fMxBwpXxnCqFhEqxvFH87W.apk", "forceUpdate": False}
+    return {"version": APP_VERSION, "buildDate": "2026-02-23T00:00:00", "releaseNotes": f"v{APP_VERSION}", "apkUrl": "", "forceUpdate": False}
 
 
 @router.put("/app-update")
