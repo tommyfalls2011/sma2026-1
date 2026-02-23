@@ -14,7 +14,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://element-tuner.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://physics-engine-6.preview.emergentagent.com').rstrip('/')
 
 # Standard 5-element Yagi test payload
 STANDARD_5_ELEMENT = {
