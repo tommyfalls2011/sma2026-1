@@ -588,36 +588,63 @@ export default function AntennaCalculator() {
     await AsyncStorage.setItem('tutorial_enabled', val ? 'true' : 'false');
   };
 
-  // Refresh/Reset - resets all options but keeps current element count
+  // Refresh/Reset - resets ALL state back to defaults
   const handleRefresh = () => {
-    const currentCount = inputs.num_elements;
-    const currentBand = inputs.band;
-    const currentFreq = inputs.frequency_mhz;
+    // Reset inputs to factory defaults
+    setInputs({
+      band: '11m_cb',
+      frequency_mhz: '27.185',
+      num_elements: 2,
+      boom_diameter: '1.5',
+      boom_unit: 'inches',
+      height_from_ground: '54',
+      height_unit: 'ft',
+      elements: [],
+      feed_type: 'gamma',
+      antenna_orientation: 'horizontal',
+      use_reflector: true,
+      dual_active: false,
+      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
+      taper: { enabled: false, num_tapers: 1, center_length: '36', sections: [{ length: '50', start_diameter: '0.625', end_diameter: '0.5' }] },
+      stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
+      corona_balls: { enabled: false, diameter: '1.0' },
+      ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
+    });
     
-    // Reset spacing
+    // Reset spacing state
     setSpacingMode('normal');
     setSpacingLevel('1.0');
+    setSpacingNudgeCount(0);
+    setCloseDriven(false); setFarDriven(false);
+    setCloseDir1(false); setFarDir1(false);
+    setCloseDir2(false); setFarDir2(false);
+    setDrivenNudgeCount(0); setDir1NudgeCount(0); setDir2NudgeCount(0);
+    setDirPresets({}); setDirNudgeCounts({});
+    setReflectorNudgeCount(0); setReflectorPreset(false);
     
     // Reset locks
     setBoomLockEnabled(false);
     setMaxBoomLength('120');
     setSpacingLockEnabled(false);
     
-    // Reset options but keep elements, band, freq
-    setInputs(prev => ({
-      ...prev,
-      height_from_ground: '54', height_unit: 'ft',
-      boom_diameter: '1.5', boom_unit: 'inches',
-      band: currentBand, frequency_mhz: currentFreq,
-      stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
-      taper: { enabled: false, num_tapers: 1, center_length: '36', sections: [{ length: '50', start_diameter: '0.625', end_diameter: '0.5' }] },
-      corona_balls: { enabled: false, diameter: '1.0' },
-      ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
-      use_reflector: true,
-      antenna_orientation: 'horizontal',
-      dual_active: false,
-      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
-    }));
+    // Reset gamma match
+    setGammaRodDia(null); setGammaRodSpacing(null);
+    setGammaCapPf(null); setGammaBarPos(null);
+    setGammaRodInsertion(null);
+    setGammaTubeOd(null); setGammaTubeLength(null);
+    setOriginalDrivenLength(null);
+    
+    // Reset hairpin
+    setHairpinRodDia(null); setHairpinRodSpacing(null);
+    setHairpinLengthIn(null); setHairpinBoomGap(null);
+    
+    // Reset coax, power, display options
+    setCoaxType('rg213'); setCoaxLengthFt('50');
+    setTransmitPowerWatts('500');
+    setElementUnit('inches');
+    setGainMode('dBd');
+    setBuildStyle('normal');
+    setSwrSpan(null);
     
     // Clear results
     setResults(null);
