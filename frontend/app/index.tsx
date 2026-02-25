@@ -328,6 +328,9 @@ export default function AntennaCalculator() {
   const [showScaleModal, setShowScaleModal] = useState(false);
   const [scaleTargetFreq, setScaleTargetFreq] = useState('');
 
+  // SWR Span state
+  const [swrSpan, setSwrSpan] = useState<number | null>(null); // null = default (channel-based)
+
   // Return Loss Tune — sweep spacings to find best match
   const runReturnLossTune = async () => {
     setRlTuning(true);
