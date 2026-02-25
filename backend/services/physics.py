@@ -3092,22 +3092,24 @@ def gamma_fine_tune(request: GammaFineTuneRequest) -> GammaFineTuneOutput:
     std_boom = get_standard_boom_in(n, wavelength_in)
 
     def _perf_score(fast_result, test_elems):
-        """Performance score (lower is better). Differentiates configs even
-        when gamma-matched SWR is already near-perfect."""
+        """Performance score (lower is better). Prioritizes SWR near 1:1."""
         swr = fast_result["swr"]
         z = fast_result["z"]
-        if not fast_result["reachable"] or swr > 3.0:
+        if not fast_result["reachable"] or swr > 5.0:
             return 999.0
-        # SWR component (0 at perfect, increases with mismatch)
-        swr_term = (swr - 1.0) * 10.0
-        # Impedance component: ideal Z for gamma with best gain ~22 ohms
-        z_ideal = 22.0
-        z_term = abs(z - z_ideal) / z_ideal
-        # Boom component: closer to standard boom = better design
+        # SWR is the PRIMARY metric — heavily weighted
+        swr_term = (swr - 1.0) * 25.0
+        # Impedance: acceptable range 18-35 ohms for gamma match
+        # Penalty increases outside this range but less aggressive
+        if 18 <= z <= 35:
+            z_term = 0.0  # no penalty in ideal range
+        else:
+            z_term = min(abs(z - 26.5), 20) / 26.5
+        # Boom component: closer to standard boom = better
         positions = [e["position"] for e in test_elems]
         boom_in = max(positions) - min(positions) if len(positions) > 1 else 0
         boom_term = abs(boom_in - std_boom) / max(std_boom, 1) if std_boom > 0 else 0
-        return swr_term + z_term * 3.0 + boom_term * 1.0
+        return swr_term + z_term * 1.5 + boom_term * 0.5
 
     # Get baseline using FULL evaluation (accurate reference for display)
     baseline = _full_eval(elems)
