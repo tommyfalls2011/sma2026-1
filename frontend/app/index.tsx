@@ -719,7 +719,7 @@ export default function AntennaCalculator() {
       });
       if (response.ok) setResults(await response.json());
     } catch (err) { console.error(err); }
-  }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, gammaTubeOd, gammaTubeLength, hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts]);
+  }, [inputs, elementUnit, gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, gammaTubeOd, gammaTubeLength, gammaCapPf, hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts, swrSpan]);
 
   // Initial calculation on mount
   useEffect(() => { calculateAntenna(); }, []);
