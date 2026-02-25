@@ -3170,8 +3170,7 @@ export default function AntennaCalculator() {
                     }}
                     onPress={() => { 
                       setSwrSpan(opt.value);
-                      // Force immediate recalculate with new span
-                      setTimeout(() => calculateAntenna(), 350);
+                      calculateAntenna(opt.value);
                     }}
                   >
                     <Text style={{ fontSize: 10, color: swrSpan === opt.value ? '#fff' : '#888', fontWeight: '600' }}>
