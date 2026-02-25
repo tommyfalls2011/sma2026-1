@@ -2931,37 +2931,37 @@ def _fast_gamma_swr(test_elems, n, freq, dia, hw):
     # Analytical optimal insertion
     reachable = True
     if total_pos_x > 0:
-        c_needed = 1e12 / (omega * total_pos_x)
-        ins_needed = c_needed / cap_per_inch
+        c_needed_pf = 1e12 / (omega * total_pos_x)
+        ins_needed = c_needed_pf / cap_per_inch
         if ins_needed > max_insertion:
-            ins_needed = max_insertion
+            c_needed_pf = max_insertion * cap_per_inch
             reachable = False
         elif ins_needed < 0:
-            ins_needed = 0.001
+            c_needed_pf = 0.5
             reachable = False
     else:
-        ins_needed = max_insertion
+        c_needed_pf = max_insertion * cap_per_inch
         reachable = False
 
-    # Evaluate SWR at optimal point
+    # Evaluate SWR at optimal point — pass cap directly for accuracy
     swr_val, _ = apply_matching_network(
         swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
         gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
-        gamma_bar_pos=bar_ideal, gamma_element_gap=ins_needed,
+        gamma_bar_pos=bar_ideal, gamma_cap_pf=c_needed_pf,
         gamma_tube_od=tube_od, operating_freq_mhz=freq,
         num_elements=n, driven_element_half_length_in=half_len,
         driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
     )
 
     # Try a few bar offsets around ideal to refine (5 extra evals, cheap)
-    for bar_delta in [-2, -1, 1, 2]:
+    for bar_delta in [-2, -1, -0.5, 0.5, 1, 2]:
         test_bar = bar_ideal + bar_delta
         if test_bar < bar_min or test_bar > hw["rod_length"]:
             continue
         _, ti = apply_matching_network(
             swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
             gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
-            gamma_bar_pos=test_bar, gamma_element_gap=0.001,
+            gamma_bar_pos=test_bar, gamma_cap_pf=0.001,
             gamma_tube_od=tube_od, operating_freq_mhz=freq,
             num_elements=n, driven_element_half_length_in=half_len,
             driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
@@ -2972,16 +2972,16 @@ def _fast_gamma_swr(test_elems, n, freq, dia, hw):
         tpx = xa * kb + xs
         if tpx <= 0:
             continue
-        cn = 1e12 / (omega * tpx)
-        ins_n = cn / cap_per_inch
+        cn_pf = 1e12 / (omega * tpx)
+        ins_n = cn_pf / cap_per_inch
         if ins_n > max_insertion:
-            ins_n = max_insertion
+            cn_pf = max_insertion * cap_per_inch
         elif ins_n < 0:
-            ins_n = 0.001
+            cn_pf = 0.5
         s, _ = apply_matching_network(
             swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
             gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
-            gamma_bar_pos=test_bar, gamma_element_gap=ins_n,
+            gamma_bar_pos=test_bar, gamma_cap_pf=cn_pf,
             gamma_tube_od=tube_od, operating_freq_mhz=freq,
             num_elements=n, driven_element_half_length_in=half_len,
             driven_element_dia_in=dia, element_resonant_freq_mhz=res_freq,
