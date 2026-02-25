@@ -3149,8 +3149,6 @@ export default function AntennaCalculator() {
               {results.boom_correction_info?.enabled && <View style={[styles.bonusCard, { borderLeftWidth: 2, borderLeftColor: '#FF9800' }]}><Text style={styles.bonusText}><Ionicons name="flash" size={12} color="#FF9800" /> {results.boom_correction_info.boom_mount === 'bonded' ? 'Bonded' : 'Insulated'}: {results.boom_correction_info.gain_adj_db}dB gain, {results.boom_correction_info.fb_adj_db}dB F/B | Shorten elements by {results.boom_correction_info.correction_total_in}" each</Text></View>}
               {results.dual_polarity_info && <View style={[styles.bonusCard, { borderLeftWidth: 2, borderLeftColor: '#FF9800' }]}><Text style={styles.bonusText}><Ionicons name="swap-horizontal" size={12} color="#FF9800" /> Dual Pol: {results.dual_polarity_info.description} | +{results.dual_polarity_info.coupling_bonus_db}dB coupling | +{results.dual_polarity_info.fb_bonus_db}dB F/B</Text></View>}
               
-              <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} resonantFreq={results.resonant_freq_mhz} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
-              
               {/* SWR Span Control */}
               <View data-testid="swr-span-control" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 6, gap: 4, flexWrap: 'wrap' }}>
                 <Text style={{ fontSize: 10, color: '#888', fontWeight: '600', marginRight: 2 }}>SPAN:</Text>
@@ -3178,6 +3176,8 @@ export default function AntennaCalculator() {
                   </TouchableOpacity>
                 ))}
               </View>
+
+              <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} resonantFreq={results.resonant_freq_mhz} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
               
               <View style={styles.mainResults}>
                 <View style={styles.mainResultItem}>
