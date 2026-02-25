@@ -324,6 +324,10 @@ export default function AntennaCalculator() {
   const [designName, setDesignName] = useState('');
   const [savedDesigns, setSavedDesigns] = useState<any[]>([]);
 
+  // Frequency Scale state
+  const [showScaleModal, setShowScaleModal] = useState(false);
+  const [scaleTargetFreq, setScaleTargetFreq] = useState('');
+
   // Return Loss Tune — sweep spacings to find best match
   const runReturnLossTune = async () => {
     setRlTuning(true);
