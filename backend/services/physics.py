@@ -1659,7 +1659,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
                 except: step_up = math.sqrt(50.0 / max(yagi_feedpoint_r, 5.0))
             k_sq = step_up ** 2
             bar_pos_in = matching_info.get("bar_position_inches", 13.0)
-            cap_pf = matching_info.get("insertion_cap_pf", 50.0)
+            cap_pf = matching_info.get("cap_pf_used", matching_info.get("insertion_cap_pf", 50.0))
             # Use pre-computed z0_gamma from apply_matching_network (actual hardware)
             z0_g = matching_info.get("z0_gamma", 300.0)
             freq_hz = freq * 1e6
