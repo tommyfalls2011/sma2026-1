@@ -487,7 +487,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
         antenna_q_match = max(5.0, min(60.0, antenna_q_base * eq_mult))
         if element_resonant_freq_mhz > 0 and abs(element_resonant_freq_mhz - operating_freq_mhz) > 0.01:
             fr_ratio = operating_freq_mhz / element_resonant_freq_mhz
-            x_antenna = antenna_q * feedpoint_r * (fr_ratio - 1.0 / fr_ratio)
+            x_antenna = antenna_q_match * feedpoint_r * (fr_ratio - 1.0 / fr_ratio)
         else:
             x_antenna = 0.0
 
