@@ -2162,6 +2162,46 @@ export default function AntennaCalculator() {
                   <Text style={{ fontSize: 9, color: '#666' }}>Gamma Rod (inner) + Tube (outer) + Teflon (PTFE, 60kV/mm) = variable series capacitor. Rod connects to coax center conductor, slides in/out of tube to set capacitance.</Text>
                   <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Shorting Bar: Al/Cu strap bridging tube to element, sets impedance tap point.</Text>
                   <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Grounding: Coax shield connects directly to boom/element center (RF voltage null point).</Text>
+
+                  {/* Power Advisory */}
+                  {(() => {
+                    const powerW = parseFloat(transmitPowerWatts) || 500;
+                    if (powerW < 100) return null;
+                    const gd = results.matching_info.gamma_design;
+                    const capPfVal = gammaCapPf !== null ? parseFloat(gammaCapPf) || gd.capacitance_pf : gd.capacitance_pf;
+                    const freqHz = (parseFloat(inputs.frequency_mhz) || 27.185) * 1e6;
+                    const swr = results.swr || 2.0;
+                    // Voltage at antenna feedpoint: V = sqrt(P * R * SWR) — worst-case
+                    const vFeed = Math.sqrt(powerW * 50 * swr);
+                    // Capacitor voltage (reactive component adds to it)
+                    const xCap = capPfVal > 0 ? 1 / (2 * Math.PI * freqHz * capPfVal * 1e-12) : 0;
+                    const iAnt = Math.sqrt(powerW / 50);
+                    const vCap = iAnt * xCap * Math.sqrt(swr);
+                    // Current through gamma rod
+                    const rodCurrent = iAnt * Math.sqrt(swr);
+                    // Thresholds
+                    const warnings: { text: string; color: string; level: string }[] = [];
+                    if (vCap > 500) warnings.push({ text: `Cap voltage: ${vCap.toFixed(0)}V RMS — use vacuum/doorknob cap rated ${Math.ceil(vCap * 2.5 / 100) * 100}V+`, color: vCap > 2000 ? '#f44336' : '#FF9800', level: vCap > 2000 ? 'HIGH' : 'MODERATE' });
+                    if (rodCurrent > 5) warnings.push({ text: `Rod current: ${rodCurrent.toFixed(1)}A — use ${rodCurrent > 15 ? '1/2"+ copper tube' : '3/8"+ aluminum rod'}`, color: rodCurrent > 15 ? '#f44336' : '#FF9800', level: rodCurrent > 15 ? 'HIGH' : 'MODERATE' });
+                    if (vFeed > 300) warnings.push({ text: `Feedpoint voltage: ${vFeed.toFixed(0)}V — ensure teflon sleeve has adequate dielectric clearance`, color: vFeed > 1000 ? '#f44336' : '#FF9800', level: vFeed > 1000 ? 'HIGH' : 'MODERATE' });
+                    if (powerW >= 1500) warnings.push({ text: `${powerW}W — use silver-plated contacts, oversized conductors, forced-air cooling on long TX`, color: '#FF9800', level: 'ADVISORY' });
+                    if (warnings.length === 0) return null;
+                    const worstColor = warnings.some(w => w.color === '#f44336') ? '#f44336' : '#FF9800';
+                    return (
+                      <View data-testid="power-advisory-panel" style={{ marginTop: 8, backgroundColor: '#1a1010', borderRadius: 6, padding: 10, borderWidth: 1, borderColor: worstColor }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                          <Ionicons name="flash-outline" size={14} color={worstColor} />
+                          <Text style={{ fontSize: 11, color: worstColor, fontWeight: '700', marginLeft: 4 }}>Power Advisory @ {powerW}W</Text>
+                        </View>
+                        {warnings.map((w, i) => (
+                          <View key={i} style={{ flexDirection: 'row', marginBottom: 3, alignItems: 'flex-start' }}>
+                            <Text style={{ fontSize: 8, color: w.color, fontWeight: '800', marginRight: 4, marginTop: 1 }}>{w.level}</Text>
+                            <Text style={{ fontSize: 10, color: '#ccc', flex: 1 }}>{w.text}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    );
+                  })()}
                 </View>
               )}
 
