@@ -546,6 +546,7 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                 "net_reactance": round(net_reactance, 2),
                 "z_matched_r": round(z_r_matched, 2), "z_matched_x": round(z_x_matched, 2),
                 "reflection_coefficient": round(gamma_mag, 6),
+                "antenna_q_used": round(antenna_q_match, 2),
                 "technical_notes": {
                     "mechanism": "Teflon-sleeve coaxial capacitor in series with shorted bar",
                     "tube": f"{round(tube_length, 1)}\" tube at feedpoint, rod slides in with {round(teflon_sleeve_in, 0):.0f}\" teflon sleeve",
