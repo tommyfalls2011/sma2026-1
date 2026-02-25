@@ -1148,6 +1148,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     driven_half_length_in = driven_el.length / 2.0 if driven_el else 101.5
     driven_dia_in = driven_el.diameter if driven_el else 0.5
 
+    # Compute element diameter Q-factor (needed by matching network AND bandwidth)
+    avg_elem_dia_in = sum(e.diameter for e in input_data.elements) / n if n > 0 else 0.5
+    driven_len_in = driven_el.length if driven_el else 199.0
+    dia_q_info = compute_diameter_q_factor(avg_elem_dia_in, driven_len_in, wavelength)
+
     matched_swr, matching_info = apply_matching_network(
         swr, feed_type, feedpoint_r=yagi_feedpoint_r,
         gamma_rod_dia=input_data.gamma_rod_dia,
