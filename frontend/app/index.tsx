@@ -1296,7 +1296,7 @@ export default function AntennaCalculator() {
     const ratio = currentFreq / targetFreq;
     // Find matching band or use custom
     const matchBand = BANDS.find(b => Math.abs(b.center - targetFreq) / b.center < 0.05);
-    // Scale all elements: lengths and positions
+    // Scale all elements: lengths and positions (spacings)
     const scaledElements = inputs.elements.map((e: any) => ({
       ...e,
       length: (parseFloat(e.length) * ratio).toFixed(2),
@@ -1329,21 +1329,38 @@ export default function AntennaCalculator() {
       stacking: scaledStacking,
       height_from_ground: scaledHeight,
     }));
+    // Scale spacing override values if they have numeric values
+    const scaleOverride = (val: string | false): string | false => {
+      if (val === false || !val) return false;
+      const num = parseFloat(val);
+      return isNaN(num) ? val : (num * ratio).toFixed(2);
+    };
+    setCloseDriven(scaleOverride(closeDriven));
+    setFarDriven(scaleOverride(farDriven));
+    setCloseDir1(scaleOverride(closeDir1));
+    setFarDir1(scaleOverride(farDir1));
+    setCloseDir2(scaleOverride(closeDir2));
+    setFarDir2(scaleOverride(farDir2));
+    // Scale boom lock length if enabled
+    if (boomLockEnabled) setMaxBoomLength((parseFloat(maxBoomLength) * ratio).toFixed(1));
     // Scale gamma match settings proportionally
     if (gammaBarPos) setGammaBarPos(Math.round(gammaBarPos * ratio * 10) / 10);
     if (gammaRodInsertion) setGammaRodInsertion(Math.round(gammaRodInsertion * ratio * 10) / 10);
     if (gammaTubeLength) setGammaTubeLength(Math.round(gammaTubeLength * ratio * 10) / 10);
     if (gammaRodSpacing !== null) setGammaRodSpacing((parseFloat(gammaRodSpacing) * ratio).toFixed(2));
-    // Scale hairpin length
+    // Scale hairpin settings proportionally
     if (hairpinLengthIn) setHairpinLengthIn((parseFloat(hairpinLengthIn) * ratio).toFixed(2));
     if (hairpinRodSpacing) setHairpinRodSpacing((parseFloat(hairpinRodSpacing) * ratio).toFixed(2));
-    // Reset nudge counts since positions changed
+    if (hairpinBoomGap) setHairpinBoomGap(Math.round(hairpinBoomGap * ratio * 100) / 100);
+    // Reset nudge counts and presets since positions changed
     setSpacingNudgeCount(0);
     setDrivenNudgeCount(0);
     setDir1NudgeCount(0);
     setDir2NudgeCount(0);
     setReflectorNudgeCount(0);
     setReflectorPreset(false);
+    setDirPresets({});
+    setDirNudgeCounts({});
     // Clear cap value - it needs to be recalculated at new frequency
     setGammaCapPf(null);
     setShowScaleModal(false);
