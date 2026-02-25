@@ -1109,7 +1109,9 @@ export default function AntennaCalculator() {
             elementUnit, gainMode,
             coaxType, coaxLengthFt, transmitPowerWatts,
             gammaRodDia, gammaRodSpacing, gammaCapPf, gammaBarPos, gammaRodInsertion,
+            gammaTubeOd, gammaTubeLength, originalDrivenLength,
             hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap,
+            reflectorNudgeCount, reflectorPreset,
             buildStyle,
           }
         })
