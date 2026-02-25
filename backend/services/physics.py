@@ -2382,14 +2382,14 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         total_pos_x = xa * k_at_bar + xs  # antenna X * K + stub
         if total_pos_x <= 0:
             continue
-        # Analytical null insertion for this bar
+        # Analytical null cap for this bar
         c_need = 1e12 / (omega * total_pos_x)
         ins_need = c_need / cap_per_inch
         if ins_need <= max_insertion:
-            test_ins = ins_need
+            test_cap = c_need
         else:
-            test_ins = max_insertion
-        s, _ = _eval(test_bar, test_ins)
+            test_cap = max_insertion * cap_per_inch
+        s, _ = _eval(test_bar, test_cap)
         if s < best_swr_opt:
             best_swr_opt = s
             best_bar_opt = test_bar
