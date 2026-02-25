@@ -3168,7 +3168,11 @@ export default function AntennaCalculator() {
                       backgroundColor: swrSpan === opt.value ? '#2196F3' : '#1a1a1a',
                       borderWidth: 1, borderColor: swrSpan === opt.value ? '#2196F3' : '#333',
                     }}
-                    onPress={() => { setSwrSpan(opt.value); }}
+                    onPress={() => { 
+                      setSwrSpan(opt.value);
+                      // Force immediate recalculate with new span
+                      setTimeout(() => calculateAntenna(), 350);
+                    }}
                   >
                     <Text style={{ fontSize: 10, color: swrSpan === opt.value ? '#fff' : '#888', fontWeight: '600' }}>
                       {opt.value ? `${opt.value} MHz` : opt.label}
