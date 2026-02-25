@@ -2436,7 +2436,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     bar_sweep = []
     for b_pct in range(0, 105, 5):
         b = bar_min + (gamma_rod_length - bar_min) * b_pct / 100.0
-        s, info_b = _eval(b, optimal_insertion)
+        s, info_b = _eval(b, optimal_cap_pf)
         bar_sweep.append({
             "bar_inches": round(b, 2), "k": info_b.get("step_up_ratio", 1.0),
             "r_matched": info_b.get("z_matched_r", 0), "x_net": info_b.get("net_reactance", 0),
@@ -2448,10 +2448,11 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     for i_pct in range(0, 105, 5):
         ins = max_insertion * i_pct / 100.0
         if ins <= 0:
-            ins = 0.001  # avoid zero-cap singularity
-        s, info_i = _eval(bar_ideal_clamped, ins)
+            ins = 0.001
+        cap_at_ins = ins * cap_per_inch
+        s, info_i = _eval(bar_ideal_clamped, cap_at_ins)
         ins_sweep.append({
-            "insertion_inches": round(ins, 2), "cap_pf": info_i.get("insertion_cap_pf", 0),
+            "insertion_inches": round(ins, 2), "cap_pf": round(cap_at_ins, 2),
             "x_net": info_i.get("net_reactance", 0), "swr": max(1.0, s),
         })
 
