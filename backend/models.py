@@ -145,6 +145,7 @@ class AntennaInput(BaseModel):
     coax_type: str = Field(default="ldf5-50a")
     coax_length_ft: float = Field(default=100.0, ge=0)
     transmit_power_watts: float = Field(default=500.0, ge=0)
+    swr_span_mhz: Optional[float] = Field(default=None, ge=0.1, le=20.0)
 
 class AutoTuneRequest(BaseModel):
     num_elements: int = Field(..., ge=2, le=20)
