@@ -69,7 +69,7 @@ export default function AdminScreen() {
   const [cashappTag, setCashappTag] = useState('');
   
   // Feature toggles per tier
-  const ALL_FEATURES = ['auto_tune', 'optimize_height', 'save_designs', 'csv_export', 'stacking', 'taper', 'corona_balls', 'ground_radials', 'gamma_match', 'hairpin_match', 'smith_chart', 'polar_pattern', 'elevation_pattern', 'dual_polarity', 'coax_loss', 'wind_load', 'pdf_export', 'spacing_control', 'return_loss_tune', 'reflected_power'];
+  const ALL_FEATURES = ['auto_tune', 'optimize_height', 'save_designs', 'csv_export', 'stacking', 'taper', 'corona_balls', 'ground_radials', 'gamma_match', 'hairpin_match', 'smith_chart', 'polar_pattern', 'elevation_pattern', 'dual_polarity', 'coax_loss', 'wind_load', 'pdf_export', 'spacing_control', 'return_loss_tune', 'reflected_power', 'scale_design', 'fine_tune_gamma', 'power_advisory'];
   const FEATURE_LABELS: Record<string, string> = {
     auto_tune: 'Auto-Tune', optimize_height: 'Optimize Height', save_designs: 'Save Designs',
     csv_export: 'CSV Export', stacking: 'Stacking', taper: 'Tapered Elements',
@@ -78,7 +78,9 @@ export default function AdminScreen() {
     polar_pattern: 'Polar Pattern', elevation_pattern: 'Elevation Pattern',
     dual_polarity: 'Dual Polarity', coax_loss: 'Coax Loss Calc', wind_load: 'Wind Load',
     pdf_export: 'PDF Export', spacing_control: 'Spacing Control',
-    return_loss_tune: 'Return Loss Tune', reflected_power: 'Reflected Power'
+    return_loss_tune: 'Return Loss Tune', reflected_power: 'Reflected Power',
+    scale_design: 'Scale Design', fine_tune_gamma: 'Fine-Tune Gamma',
+    power_advisory: 'Power Advisory'
   };
   const [bronzeFeatures, setBronzeFeatures] = useState<string[]>(['basic_calc', 'swr_meter', 'band_selection']);
   const [silverFeatures, setSilverFeatures] = useState<string[]>(['basic_calc', 'swr_meter', 'band_selection', 'auto_tune', 'save_designs']);
