@@ -1238,6 +1238,76 @@ export default function AntennaCalculator() {
     ]);
   };
 
+  // Scale design to a new frequency
+  const scaleDesignToFrequency = () => {
+    const targetFreq = parseFloat(scaleTargetFreq);
+    const currentFreq = parseFloat(inputs.frequency_mhz) || 27.185;
+    if (!targetFreq || targetFreq <= 0 || targetFreq > 1000) {
+      Alert.alert('Error', 'Enter a valid target frequency (MHz)');
+      return;
+    }
+    if (Math.abs(targetFreq - currentFreq) < 0.001) {
+      Alert.alert('Info', 'Target frequency is the same as current');
+      return;
+    }
+    const ratio = currentFreq / targetFreq;
+    // Find matching band or use custom
+    const matchBand = BANDS.find(b => Math.abs(b.center - targetFreq) / b.center < 0.05);
+    // Scale all elements: lengths and positions
+    const scaledElements = inputs.elements.map((e: any) => ({
+      ...e,
+      length: (parseFloat(e.length) * ratio).toFixed(2),
+      position: (parseFloat(e.position) * ratio).toFixed(2),
+      // diameter stays the same - user picks their tubing
+    }));
+    // Scale taper sections if enabled
+    const scaledTaper = inputs.taper.enabled ? {
+      ...inputs.taper,
+      center_length: (parseFloat(inputs.taper.center_length) * ratio).toFixed(2),
+      sections: inputs.taper.sections.map((s: any) => ({
+        ...s,
+        length: (parseFloat(s.length) * ratio).toFixed(2),
+      })),
+    } : inputs.taper;
+    // Scale stacking spacing
+    const scaledStacking = inputs.stacking.enabled ? {
+      ...inputs.stacking,
+      spacing: (parseFloat(inputs.stacking.spacing) * ratio).toFixed(2),
+      h_spacing: inputs.stacking.h_spacing ? (parseFloat(inputs.stacking.h_spacing) * ratio).toFixed(2) : inputs.stacking.h_spacing,
+    } : inputs.stacking;
+    // Scale height
+    const scaledHeight = (parseFloat(inputs.height_from_ground) * ratio).toFixed(1);
+    setInputs(prev => ({
+      ...prev,
+      elements: scaledElements,
+      frequency_mhz: targetFreq.toString(),
+      band: matchBand ? matchBand.id : prev.band,
+      taper: scaledTaper,
+      stacking: scaledStacking,
+      height_from_ground: scaledHeight,
+    }));
+    // Scale gamma match settings proportionally
+    if (gammaBarPos) setGammaBarPos(Math.round(gammaBarPos * ratio * 10) / 10);
+    if (gammaRodInsertion) setGammaRodInsertion(Math.round(gammaRodInsertion * ratio * 10) / 10);
+    if (gammaTubeLength) setGammaTubeLength(Math.round(gammaTubeLength * ratio * 10) / 10);
+    if (gammaRodSpacing !== null) setGammaRodSpacing((parseFloat(gammaRodSpacing) * ratio).toFixed(2));
+    // Scale hairpin length
+    if (hairpinLengthIn) setHairpinLengthIn((parseFloat(hairpinLengthIn) * ratio).toFixed(2));
+    if (hairpinRodSpacing) setHairpinRodSpacing((parseFloat(hairpinRodSpacing) * ratio).toFixed(2));
+    // Reset nudge counts since positions changed
+    setSpacingNudgeCount(0);
+    setDrivenNudgeCount(0);
+    setDir1NudgeCount(0);
+    setDir2NudgeCount(0);
+    setReflectorNudgeCount(0);
+    setReflectorPreset(false);
+    // Clear cap value - it needs to be recalculated at new frequency
+    setGammaCapPf(null);
+    setShowScaleModal(false);
+    setScaleTargetFreq('');
+    Alert.alert('Scaled!', `Design scaled from ${currentFreq.toFixed(3)} MHz to ${targetFreq.toFixed(3)} MHz (ratio: ${ratio.toFixed(4)}x)`);
+  };
+
   // Generate timestamp for filenames
   const getTimestamp = () => {
     const now = new Date();
