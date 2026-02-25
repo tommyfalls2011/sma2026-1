@@ -1778,7 +1778,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               </>
             )}
-            <TouchableOpacity data-testid="scale-design-btn" style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00897B', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowScaleModal(true)}>
+            <TouchableOpacity data-testid="scale-design-btn" style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00897B', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => { if (checkFeature('scale_design', 'Scale Design')) setShowScaleModal(true); }}>
               <Ionicons name="resize-outline" size={14} color="#fff" />
               <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Scale</Text>
             </TouchableOpacity>
