@@ -3151,6 +3151,34 @@ export default function AntennaCalculator() {
               
               <SwrMeter data={results.swr_curve} centerFreq={results.center_frequency} resonantFreq={results.resonant_freq_mhz} usable15={results.usable_bandwidth_1_5} usable20={results.usable_bandwidth_2_0} channelSpacing={results.band_info?.channel_spacing_khz} />
               
+              {/* SWR Span Control */}
+              <View data-testid="swr-span-control" style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 6, gap: 4, flexWrap: 'wrap' }}>
+                <Text style={{ fontSize: 10, color: '#888', fontWeight: '600', marginRight: 2 }}>SPAN:</Text>
+                {[
+                  { label: 'Band', value: null },
+                  { label: '1', value: 1 },
+                  { label: '2', value: 2 },
+                  { label: '5', value: 5 },
+                  { label: '10', value: 10 },
+                  { label: '20', value: 20 },
+                ].map(opt => (
+                  <TouchableOpacity
+                    key={opt.label}
+                    data-testid={`swr-span-${opt.label.toLowerCase()}`}
+                    style={{
+                      paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4,
+                      backgroundColor: swrSpan === opt.value ? '#2196F3' : '#1a1a1a',
+                      borderWidth: 1, borderColor: swrSpan === opt.value ? '#2196F3' : '#333',
+                    }}
+                    onPress={() => { setSwrSpan(opt.value); }}
+                  >
+                    <Text style={{ fontSize: 10, color: swrSpan === opt.value ? '#fff' : '#888', fontWeight: '600' }}>
+                      {opt.value ? `${opt.value} MHz` : opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              
               <View style={styles.mainResults}>
                 <View style={styles.mainResultItem}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
