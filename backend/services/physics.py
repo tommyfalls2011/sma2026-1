@@ -477,7 +477,14 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
 
         # Antenna reactance at operating frequency (driven element may not be resonant here)
         # X_ant = Q * R * (f/f_res - f_res/f)  — capacitive if element resonates above operating freq
-        antenna_q = 12.0  # typical Yagi Q
+        # Q depends on element diameter, count, and spacing
+        antenna_q_base = 12.0 * dia_q_info["q_ratio"] if dia_q_info else 12.0
+        # Element count effect on Q
+        if num_elements <= 2: eq_mult = 0.7
+        elif num_elements <= 3: eq_mult = 1.0
+        elif num_elements <= 5: eq_mult = 1.0 + 0.2 * (num_elements - 3)
+        else: eq_mult = 1.4 + 0.15 * (num_elements - 5)
+        antenna_q_match = max(5.0, min(60.0, antenna_q_base * eq_mult))
         if element_resonant_freq_mhz > 0 and abs(element_resonant_freq_mhz - operating_freq_mhz) > 0.01:
             fr_ratio = operating_freq_mhz / element_resonant_freq_mhz
             x_antenna = antenna_q * feedpoint_r * (fr_ratio - 1.0 / fr_ratio)
