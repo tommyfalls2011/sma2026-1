@@ -1712,9 +1712,11 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
         g_mag = min(g_mag, 0.999)
         sc_swr = (1 + g_mag) / (1 - g_mag) if g_mag < 1.0 else 99.0
         sc_swr = round(max(1.0, min(sc_swr, 10.0)), 2)
-        swr_curve.append({"frequency": sc_pt["freq"], "swr": sc_swr, "channel": idx - 30})
-    usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * channel_spacing, 3)
-    usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * channel_spacing, 3)
+        swr_curve.append({"frequency": sc_pt["freq"], "swr": sc_swr, "channel": sweep_freqs[idx][1]})
+    # Calculate usable bandwidth using actual frequency step between adjacent points
+    freq_step = abs(sweep_freqs[1][0] - sweep_freqs[0][0]) if len(sweep_freqs) > 1 else channel_spacing
+    usable_1_5 = round(sum(1 for p in swr_curve if p["swr"] <= 1.5) * freq_step, 3)
+    usable_2_0 = round(sum(1 for p in swr_curve if p["swr"] <= 2.0) * freq_step, 3)
 
     # Derive gamma-tuned resonant frequency from actual SWR curve minimum
     if swr_curve:
