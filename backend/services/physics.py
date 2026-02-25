@@ -1639,14 +1639,15 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     smith_res_freq = element_resonant_freq if element_resonant_freq > 0 else center_freq
 
     # ── Smith Chart Data: full-physics impedance sweep across frequency ──
-    # Computed FIRST so we can derive the SWR curve from actual impedance
+    # Use the same antenna_q that apply_matching_network used for consistency
+    smith_q = matching_info.get("antenna_q_used", antenna_q) if matching_info else antenna_q
     smith_chart_data = []
     for i in range(-30, 31):
         freq = center_freq + (i * channel_spacing)
         sc_r = yagi_feedpoint_r
         if smith_res_freq > 0:
             fr = freq / smith_res_freq
-            sc_x = antenna_q * yagi_feedpoint_r * (fr - 1.0 / fr)
+            sc_x = smith_q * yagi_feedpoint_r * (fr - 1.0 / fr)
         else:
             sc_x = 0.0
         if feed_type == "gamma" and matching_info and "tuning_quality" in matching_info:
