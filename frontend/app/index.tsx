@@ -3615,6 +3615,60 @@ export default function AntennaCalculator() {
         </View>
       </Modal>
       
+      {/* Scale Design Modal */}
+      <Modal visible={showScaleModal} transparent animationType="fade" onRequestClose={() => setShowScaleModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}><Ionicons name="resize-outline" size={18} color="#00897B" /> Scale to Frequency</Text>
+              <TouchableOpacity onPress={() => setShowScaleModal(false)}><Ionicons name="close" size={24} color="#888" /></TouchableOpacity>
+            </View>
+            <View style={{ backgroundColor: '#1a2a2a', borderRadius: 8, padding: 12, marginBottom: 12, borderLeftWidth: 3, borderLeftColor: '#00897B' }}>
+              <Text style={{ fontSize: 12, color: '#00897B', fontWeight: '700', marginBottom: 4 }}>Current Design</Text>
+              <Text style={{ fontSize: 14, color: '#fff', fontWeight: '600' }}>{inputs.frequency_mhz} MHz ({inputs.band})</Text>
+              <Text style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{inputs.elements.length} elements</Text>
+            </View>
+            <Text style={styles.modalLabel}>Target Frequency (MHz)</Text>
+            <TextInput 
+              data-testid="scale-target-freq-input"
+              style={styles.modalInput} 
+              value={scaleTargetFreq} 
+              onChangeText={setScaleTargetFreq} 
+              placeholder="e.g. 144.200" 
+              placeholderTextColor="#555"
+              keyboardType="decimal-pad"
+              autoFocus
+            />
+            {scaleTargetFreq && parseFloat(scaleTargetFreq) > 0 && (
+              <View style={{ backgroundColor: '#1a1a2a', borderRadius: 8, padding: 10, marginTop: 8, borderLeftWidth: 3, borderLeftColor: '#2196F3' }}>
+                <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '700' }}>Preview</Text>
+                <Text style={{ fontSize: 12, color: '#ccc', marginTop: 4 }}>Scale ratio: {(parseFloat(inputs.frequency_mhz) / parseFloat(scaleTargetFreq)).toFixed(4)}x</Text>
+                <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>
+                  Driven: {inputs.elements.find((e: any) => e.element_type === 'driven')?.length}" → {((parseFloat(inputs.elements.find((e: any) => e.element_type === 'driven')?.length || '0')) * (parseFloat(inputs.frequency_mhz) / parseFloat(scaleTargetFreq))).toFixed(2)}"
+                </Text>
+                {(() => { const matchBand = BANDS.find(b => Math.abs(b.center - parseFloat(scaleTargetFreq)) / b.center < 0.05); return matchBand ? <Text style={{ fontSize: 12, color: '#4CAF50', marginTop: 2 }}>Band: {matchBand.name}</Text> : <Text style={{ fontSize: 12, color: '#FF9800', marginTop: 2 }}>Band: Custom (no matching band)</Text>; })()}
+              </View>
+            )}
+            <View style={styles.modalInfo}>
+              <Ionicons name="information-circle-outline" size={14} color="#888" />
+              <Text style={styles.modalInfoText}>Scales all element lengths, spacings, height, and match settings proportionally. Diameters are kept — pick tubing for the new band.</Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <Text style={{ fontSize: 11, color: '#666', fontWeight: '600' }}>Quick:</Text>
+              {[{ label: 'CB 27', freq: '27.185' }, { label: '10m', freq: '28.5' }, { label: '6m', freq: '51.0' }, { label: '2m', freq: '146.0' }].filter(q => Math.abs(parseFloat(q.freq) - parseFloat(inputs.frequency_mhz)) > 0.5).slice(0, 3).map(q => (
+                <TouchableOpacity key={q.freq} style={{ backgroundColor: '#252525', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: '#444' }} onPress={() => setScaleTargetFreq(q.freq)}>
+                  <Text style={{ fontSize: 11, color: '#ccc', fontWeight: '600' }}>{q.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity data-testid="scale-design-confirm-btn" style={[styles.modalSaveBtn, { backgroundColor: '#00897B', marginTop: 12 }]} onPress={scaleDesignToFrequency}>
+              <Ionicons name="resize-outline" size={16} color="#fff" />
+              <Text style={styles.modalSaveBtnText}>Scale Design</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Tutorial / Intro Modal */}
       <Modal visible={showTutorial} transparent animationType="fade" onRequestClose={() => setShowTutorial(false)}>
         <View style={styles.modalOverlay}>
