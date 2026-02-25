@@ -1648,8 +1648,8 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     swr_span = getattr(input_data, 'swr_span_mhz', None)
     if swr_span and swr_span > 0:
         half_span = swr_span / 2.0
-        # Generate ~61 points across the span for smooth curve
-        num_points = 61
+        # Generate 201 points across the span for smooth, high-res curve
+        num_points = 201
         sweep_step = swr_span / (num_points - 1)
         sweep_freqs = [(center_freq - half_span + i * sweep_step, i - num_points // 2) for i in range(num_points)]
     else:
