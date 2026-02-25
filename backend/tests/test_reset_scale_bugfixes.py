@@ -319,7 +319,7 @@ class TestHairpinFeedScaling:
         data = response.json()
         
         assert 5 < data["gain_dbi"] < 15
-        assert 1 < data["swr"] < 10
+        assert 1 <= data["swr"] < 10  # SWR can be 1.0 which is perfect match
 
 
 if __name__ == "__main__":
