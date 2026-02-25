@@ -2309,8 +2309,15 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     id_rod_ratio = tube_id / rod_od
     gamma_rod_length = hw["rod_length"]
     teflon_sleeve = custom_teflon_length if custom_teflon_length and custom_teflon_length > 0 else tube_length + 1.0
-    # bar_min: allow shorter bar for high-Z antennas (near 50Ω) where less transformation is needed
-    bar_min = max(1.0, tube_length * 0.6) if r_feed > 30 else teflon_sleeve
+    # bar_min: minimum bar position considering teflon sleeve and frequency
+    # VHF/UHF antennas have shorter elements — teflon and bar_min must scale
+    wavelength_in = 11811.024 / frequency_mhz  # inches
+    # Scale teflon with frequency: HF=full sleeve, VHF=shorter (min 0.75")
+    effective_teflon = min(teflon_sleeve, max(0.75, wavelength_in * 0.015))
+    if r_feed > 30:
+        bar_min = max(0.5, effective_teflon * 0.6)
+    else:
+        bar_min = effective_teflon
 
     # Helper: call apply_matching_network() for a given bar + cap_pf
     def _eval(bar: float, cap_pf: float) -> tuple:
