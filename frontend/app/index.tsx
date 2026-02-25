@@ -590,25 +590,25 @@ export default function AntennaCalculator() {
 
   // Refresh/Reset - resets ALL state back to defaults
   const handleRefresh = () => {
-    // Reset inputs to factory defaults
+    // Reset inputs to factory defaults (must match initial useState values exactly)
     setInputs({
-      band: '11m_cb',
-      frequency_mhz: '27.185',
       num_elements: 2,
-      boom_diameter: '1.5',
-      boom_unit: 'inches',
-      height_from_ground: '54',
-      height_unit: 'ft',
-      elements: [],
-      feed_type: 'gamma',
-      antenna_orientation: 'horizontal',
-      use_reflector: true,
-      dual_active: false,
-      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
-      taper: { enabled: false, num_tapers: 1, center_length: '36', sections: [{ length: '50', start_diameter: '0.625', end_diameter: '0.5' }] },
+      elements: [
+        { element_type: 'reflector', length: '216', diameter: '0.5', position: '0' },
+        { element_type: 'driven', length: '204', diameter: '0.5', position: '48' },
+      ],
+      height_from_ground: '54', height_unit: 'ft', boom_diameter: '1.5', boom_unit: 'inches', band: '11m_cb', frequency_mhz: '27.185',
       stacking: { enabled: false, orientation: 'vertical', layout: 'line', num_antennas: 2, spacing: '20', spacing_unit: 'ft', h_spacing: '20', h_spacing_unit: 'ft' },
+      taper: { enabled: false, num_tapers: 1, center_length: '36', sections: [{ length: '50', start_diameter: '0.625', end_diameter: '0.5' }] },
       corona_balls: { enabled: false, diameter: '1.0' },
       ground_radials: { enabled: false, ground_type: 'average', wire_diameter: '0.5', num_radials: 8 },
+      use_reflector: true,
+      antenna_orientation: 'horizontal',
+      dual_active: false,
+      dual_selected_beam: 'horizontal' as 'horizontal' | 'vertical',
+      feed_type: 'gamma',
+      boom_grounded: true,
+      boom_mount: 'bonded' as 'bonded' | 'insulated' | 'nonconductive',
     });
     
     // Reset spacing state
@@ -627,24 +627,36 @@ export default function AntennaCalculator() {
     setMaxBoomLength('120');
     setSpacingLockEnabled(false);
     
-    // Reset gamma match
-    setGammaRodDia(null); setGammaRodSpacing(null);
-    setGammaCapPf(null); setGammaBarPos(null);
-    setGammaRodInsertion(null);
-    setGammaTubeOd(null); setGammaTubeLength(null);
+    // Reset gamma match to initial defaults
+    setGammaRodDia(null);
+    setGammaRodSpacing('3.5');
+    setGammaCapPf(null);
+    setGammaBarPos(18);
+    setGammaRodInsertion(8.0);
+    setGammaTubeOd(null);
+    setGammaTubeLength(null);
     setOriginalDrivenLength(null);
     
-    // Reset hairpin
-    setHairpinRodDia(null); setHairpinRodSpacing(null);
-    setHairpinLengthIn(null); setHairpinBoomGap(null);
+    // Reset hairpin to initial defaults
+    setHairpinRodDia('0.25');
+    setHairpinRodSpacing('1.0');
+    setHairpinLengthIn('');
+    setHairpinBoomGap(1.0);
     
-    // Reset coax, power, display options
-    setCoaxType('rg213'); setCoaxLengthFt('50');
+    // Reset coax, power, display options to initial defaults
+    setCoaxType('ldf5-50a');
+    setCoaxLengthFt('100');
     setTransmitPowerWatts('500');
     setElementUnit('inches');
-    setGainMode('dBd');
+    setGainMode('realworld');
     setBuildStyle('normal');
     setSwrSpan(null);
+    
+    // Reset tuning/debug UI state
+    setRlResult(null);
+    setRlTuning(false);
+    setFineTuning(false);
+    setShowDebugPanel(false);
     
     // Clear results
     setResults(null);
