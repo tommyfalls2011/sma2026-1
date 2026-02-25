@@ -658,7 +658,7 @@ export default function AntennaCalculator() {
   };
 
   // Calculate on ANY input change
-  const calculateAntenna = useCallback(async () => {
+  const calculateAntenna = useCallback(async (overrideSpan?: number | null) => {
     for (const elem of inputs.elements) {
       if (!elem.length || parseFloat(elem.length) <= 0 || !elem.diameter || parseFloat(elem.diameter) <= 0) return;
     }
