@@ -1772,6 +1772,10 @@ export default function AntennaCalculator() {
                   {loadingDesigns ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="folder-open-outline" size={14} color="#fff" />}
                   <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Load</Text>
                 </TouchableOpacity>
+                <TouchableOpacity data-testid="scale-design-btn" style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#00897B', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowScaleModal(true)}>
+                  <Ionicons name="resize-outline" size={14} color="#fff" />
+                  <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Scale</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FF9800', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, gap: 4 }} onPress={() => setShowTutorial(true)}>
                   <Ionicons name="help-circle-outline" size={14} color="#fff" />
                   <Text style={{ fontSize: 10, color: '#fff', fontWeight: '600' }}>Help</Text>
