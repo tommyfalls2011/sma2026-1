@@ -2164,7 +2164,7 @@ export default function AntennaCalculator() {
                   <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>Grounding: Coax shield connects directly to boom/element center (RF voltage null point).</Text>
 
                   {/* Power Advisory */}
-                  {(() => {
+                  {isFeatureAvailable('power_advisory') && (() => {
                     const powerW = parseFloat(transmitPowerWatts) || 500;
                     if (powerW < 100) return null;
                     const gd = results.matching_info.gamma_design;
