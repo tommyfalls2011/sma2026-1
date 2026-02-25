@@ -3,7 +3,7 @@ import requests
 import json
 import time
 
-API_URL = "https://physics-engine-6.preview.emergentagent.com"
+API_URL = "https://gamma-tuning-lab.preview.emergentagent.com"
 
 def build_yagi(num_elements):
     """Build a standard Yagi antenna with given element count."""
