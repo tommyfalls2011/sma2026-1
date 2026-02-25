@@ -714,6 +714,7 @@ export default function AntennaCalculator() {
           coax_type: coaxType,
           coax_length_ft: parseFloat(coaxLengthFt) || 100,
           transmit_power_watts: parseFloat(transmitPowerWatts) || 500,
+          ...(swrSpan ? { swr_span_mhz: swrSpan } : {}),
         }),
       });
       if (response.ok) setResults(await response.json());
