@@ -1939,7 +1939,7 @@ export default function AntennaCalculator() {
               {/* Fine-Tune Gamma Button */}
               {inputs.feed_type === 'gamma' && results && (
                 <TouchableOpacity
-                  onPress={fineTuneGamma}
+                  onPress={() => { if (checkFeature('fine_tune_gamma', 'Fine-Tune Gamma')) fineTuneGamma(); }}
                   disabled={fineTuning}
                   style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1a2e1a', borderRadius: 8, padding: 10, borderWidth: 1, borderColor: '#4CAF50', gap: 6, opacity: fineTuning ? 0.6 : 1 }}
                   data-testid="fine-tune-gamma-btn"
