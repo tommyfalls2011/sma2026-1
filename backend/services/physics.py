@@ -2312,13 +2312,13 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # bar_min: allow shorter bar for high-Z antennas (near 50Ω) where less transformation is needed
     bar_min = max(1.0, tube_length * 0.6) if r_feed > 30 else teflon_sleeve
 
-    # Helper: call apply_matching_network() for a given bar + insertion
-    def _eval(bar: float, insertion: float) -> tuple:
+    # Helper: call apply_matching_network() for a given bar + cap_pf
+    def _eval(bar: float, cap_pf: float) -> tuple:
         matched_swr, info = apply_matching_network(
             swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
             gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
-            gamma_bar_pos=bar, gamma_element_gap=insertion,
-            gamma_cap_pf=None, gamma_tube_od=tube_od,
+            gamma_bar_pos=bar, gamma_cap_pf=cap_pf if cap_pf > 0 else 0.001,
+            gamma_tube_od=tube_od,
             gamma_tube_length=tube_length,
             operating_freq_mhz=frequency_mhz,
             num_elements=num_elements,
