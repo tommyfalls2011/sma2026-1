@@ -16,8 +16,14 @@ export const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, c
   const minFreq = Math.min(...data.map((d: any) => d.frequency));
   const maxFreq = Math.max(...data.map((d: any) => d.frequency));
   const freqRange = maxFreq - minFreq;
+  
+  // Adaptive Y-axis: auto-scale based on data range
+  const maxSwr = Math.max(...data.map((d: any) => d.swr));
+  const yMax = maxSwr <= 3.0 ? 3.0 : maxSwr <= 5.0 ? 5.0 : 10.0;
+  const yGridLines = yMax <= 3.0 ? [1.0, 1.5, 2.0, 3.0] : yMax <= 5.0 ? [1.0, 1.5, 2.0, 3.0, 5.0] : [1.0, 2.0, 3.0, 5.0, 10.0];
+  
   const xScale = (freq: number) => padding.left + ((freq - minFreq) / freqRange) * chartWidth;
-  const yScale = (swr: number) => padding.top + chartHeight - ((Math.min(swr, 3) - 1) / 2) * chartHeight;
+  const yScale = (swr: number) => padding.top + chartHeight - ((Math.min(swr, yMax) - 1) / (yMax - 1)) * chartHeight;
 
   const createSwrPath = () => {
     let p = '';
