@@ -1,0 +1,76 @@
+{
+  "summary": "Backend testing complete for SWR span control feature. All 13 tests passed (100%). Verified that swr_span_mhz parameter correctly controls the frequency range of SWR curve: 5MHz span generates 61 points from 24.685-29.685 MHz, 10MHz span from 22.185-32.185 MHz, 20MHz span from 17.185-37.185 MHz. Default (no span) uses channel-based sweep of 0.6MHz (±30 channels). Y-axis max SWR correctly reaches 10 for wide spans.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_swr_span_feature.py",
+    "/app/test_reports/pytest/pytest_swr_span_feature.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "models.py line 148: swr_span_mhz field correctly defined as Optional[float] with ge=0.1, le=20.0 validation",
+    "physics.py lines 1647-1656: Sweep range logic correctly handles swr_span_mhz - generates 61 points when provided, otherwise uses ±30 channels at channel_spacing intervals",
+    "physics.py lines 1651-1654: span calculation uses half_span = swr_span/2, num_points=61, sweep_step = swr_span/(num_points-1) for evenly-spaced points",
+    "physics.py lines 1710-1715: SWR curve derived from Smith Chart impedance data with values capped at 10.0",
+    "SwrMeter.tsx lines 21-23: Y-axis auto-scaling based on maxSwr (<=3→yMax=3, <=5→yMax=5, else yMax=10)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_swr_span_feature.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "N/A - Backend only testing requested"
+  },
+  "seed_data_creation": "None - tests use inline payload data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "SWR span feature verified working. Key test data: swr_span_mhz=5→61 points spanning 5MHz (24.685-29.685), swr_span_mhz=10→10MHz span (22.185-32.185), swr_span_mhz=20→20MHz span (17.185-37.185) with max SWR=10. Default (no span) uses channel-based 0.6MHz sweep with channel indices -30 to +30. Validation correctly rejects span<0.1 or span>20.",
+  "verified_features": {
+    "swr_span_mhz=5.0 returns 61 points spanning 5MHz": {
+      "status": "VERIFIED",
+      "evidence": "61 points from 24.685 to 29.685 MHz (span 5.0 MHz, ±2.5MHz from center 27.185)"
+    },
+    "swr_span_mhz=10.0 returns points spanning 10MHz": {
+      "status": "VERIFIED",
+      "evidence": "61 points from 22.185 to 32.185 MHz (span 10.0 MHz)"
+    },
+    "Default (no swr_span_mhz) uses channel-based sweep": {
+      "status": "VERIFIED",
+      "evidence": "61 points from 26.885 to 27.485 MHz (span 0.6 MHz), channel indices -30 to +30"
+    },
+    "swr_span_mhz=20.0 returns points with SWR up to 10": {
+      "status": "VERIFIED",
+      "evidence": "61 points from 17.185 to 37.185 MHz, min SWR 1.18, max SWR 10.0"
+    },
+    "SWR curve center matches matched_swr": {
+      "status": "VERIFIED",
+      "evidence": "Curve min SWR 1.16 close to matched_swr 1.256 (within tolerance)"
+    },
+    "/api/health endpoint": {
+      "status": "VERIFIED",
+      "evidence": "Returns 200 with api=up, database=up"
+    },
+    "Validation: swr_span_mhz < 0.1 rejected": {
+      "status": "VERIFIED",
+      "evidence": "Returns 422 validation error for swr_span_mhz=0.05"
+    },
+    "Validation: swr_span_mhz > 20.0 rejected": {
+      "status": "VERIFIED",
+      "evidence": "Returns 422 validation error for swr_span_mhz=25.0"
+    }
+  },
+  "test_run_info": {
+    "tests_executed": 13,
+    "tests_passed": 13,
+    "tests_failed": 0,
+    "pytest_file": "/app/backend/tests/test_swr_span_feature.py",
+    "junit_report": "/app/test_reports/pytest/pytest_swr_span_feature.xml"
+  }
+}
