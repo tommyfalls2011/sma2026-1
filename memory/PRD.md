@@ -4,52 +4,56 @@
 Full-stack antenna calculator app with payment processing (Stripe/PayPal), admin panel, and RF physics engine for amateur radio operators designing Yagi antennas with gamma/hairpin matching.
 
 ## Current Version
-app.json: 4.3.4, versionCode: 23
+app.json: 4.3.8, versionCode: 27
 
-## Completed This Session (Feb 22, 2026)
+## Completed This Session (Feb 25, 2026)
 
-### Element Diameter Q-Factor Model (NEW)
-- Added `compute_diameter_q_factor()` using antenna thickness parameter Omega = 2*ln(2L/a)
-- `calculate_swr_from_elements()` now scales SWR sensitivity by Q ratio
-- Bandwidth calculation uses Q-based `bandwidth_mult` instead of crude binary thresholds
-- `antenna_q` computed as `12.0 * q_ratio` instead of hardcoded 12.0
-- SWR curve exponent varies with diameter: fat=1.38 (U-shape), standard=1.60, thin=1.77 (V-shape)
-- `calculate_taper_effects()` uses actual start/end diameters for equivalent Q computation
-- New `element_q_info` field in AntennaOutput with q_ratio, bandwidth_mult, description
-- Verified: 1.25"→BW 0.946MHz, SWR 1.94 | 0.5"→BW 0.816MHz, SWR 2.37 | 0.25"→BW 0.739MHz, SWR 2.71
+### Save/Load Bug Fix
+- Added missing gamma settings to save: gammaTubeOd, gammaTubeLength, originalDrivenLength
+- Added missing reflector settings: reflectorNudgeCount, reflectorPreset
+- Load function now restores all gamma tube and reflector settings
 
-### Fine-Tune Gamma FIXED
-- Multi-objective `_perf_score()` scoring (impedance + SWR + boom length)
-- Elements now MOVE on all configurations. Fixed cumulative parameter bug.
+### Frequency Scale Feature (NEW)
+- Scale button in action toolbar (always visible, no login required)
+- Modal with target frequency input, live preview (ratio, scaled driven length, band match)
+- Quick-select buttons for common bands (CB 27, 10m, 6m, 2m)
+- Scales: element lengths, positions, height, gamma match settings, hairpin settings, taper sections, stacking spacing
+- Diameters preserved (user picks tubing for new band)
+- Resets nudge counts and clears gamma cap (needs recalculation at new frequency)
 
-### Reflector Spacing Controls Added
-- 5 presets (V.Close→V.Far) + Closer/Farther nudge buttons in Element Spacing UI
+### Power-Aware Advisory Panel (NEW - P1)
+- Advisory panel in gamma match design section
+- Calculates: capacitor voltage, rod current, feedpoint voltage based on power and SWR
+- Thresholds: vCap>500V, rodCurrent>5A, vFeed>300V, power>=1500W
+- Color-coded severity: HIGH (red) / MODERATE (orange) / ADVISORY (orange)
+- Hardware recommendations (vacuum/doorknob caps, copper tube sizing, silver-plated contacts)
 
-### Return Loss Tune Fixed
-- Reflector position sweep, gamma designer on winner, returns gamma recipe
-- SWR improved from ~2:1 to ~1.0:1
+## Previous Session Work (Feb 22, 2026)
+- Element Diameter Q-Factor Model
+- Fine-Tune Gamma FIXED (multi-objective optimization)
+- Reflector Spacing Controls Added
+- Return Loss Tune Fixed
 
 ## Architecture
 ```
 backend/
-  services/physics.py   - compute_diameter_q_factor(), antenna_q = 12*q_ratio,
-                          Q-aware calculate_swr_from_elements(), taper_effects with real diameters,
-                          _perf_score multi-objective optimizer
-  routes/antenna.py     - RL tune with reflector sweep + gamma designer
-  models.py             - AntennaOutput.element_q_info, GammaFineTuneOutput with gains
+  services/physics.py   - Q-factor, SWR, optimization algorithms
+  routes/user.py        - Save/load designs, RL tune, auth, subscriptions
+  routes/antenna.py     - Calculate, gamma designer, fine-tune
+  models.py             - SavedDesign with spacing_state (now includes gamma tube + reflector fields)
 frontend/
-  app/index.tsx         - Reflector spacing presets/nudge, Fine-Tune, RL tune with gamma recipe
+  app/index.tsx         - Scale modal, power advisory, save/load with full gamma state
 ```
 
 ## Key API Endpoints
-- POST /api/calculate - Full calculation with Q-factor model, element_q_info in response
+- POST /api/calculate - Full calculation with Q-factor model
 - POST /api/gamma-fine-tune - Multi-objective optimizer
 - POST /api/optimize-return-loss - Reflector sweep + gamma designer
 - POST /api/gamma-designer - Full gamma match designer
-- POST /api/auto-tune - Auto-tune by build style
+- POST /api/designs/save - Save design (now with full gamma/reflector state)
+- GET /api/designs/{id} - Load design (restores all settings)
 
 ## Backlog
-- P1: Add power-aware hardware selector
 - P2: More accurate series-capacitor dielectric model
-- P2: Refactor subscription.tsx and admin.tsx
-- P3: Build iOS version
+- P2: Refactor subscription.tsx and admin.tsx into smaller components
+- P2: Fix SWR mismatch between gamma designer and main calculate models
