@@ -2407,18 +2407,16 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         ins_opt = c_opt / cap_per_inch
         null_reachable = ins_opt <= max_insertion
         if null_reachable:
-            optimal_insertion = ins_opt
             c_needed_pf = c_opt
+            best_cap_opt = c_opt
     else:
         null_reachable = False
 
-    # Convert optimal_insertion to cap_pf for _eval calls
-    if null_reachable and optimal_insertion > 0:
-        optimal_cap_pf = optimal_insertion * cap_per_inch
-    elif c_needed_pf > 0:
-        optimal_cap_pf = c_needed_pf
-    else:
-        optimal_cap_pf = max_insertion * cap_per_inch
+    # Convert best_cap_opt to optimal_insertion for reporting
+    optimal_insertion = best_cap_opt / cap_per_inch if cap_per_inch > 0 else 0
+
+    # Use best_cap_opt for all _eval calls
+    optimal_cap_pf = best_cap_opt
 
     # Get authoritative values at the design point
     matched_swr, null_info = _eval(bar_ideal_clamped, optimal_cap_pf)
