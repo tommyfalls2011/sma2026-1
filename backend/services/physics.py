@@ -2549,12 +2549,12 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                 bar_min = max(1.0, up_tube_len * 0.6) if r_feed > 30 else up_teflon
 
                 # Redo _eval with new hardware
-                def _eval(bar: float, insertion: float) -> tuple:
+                def _eval(bar: float, cap_pf: float) -> tuple:
                     return apply_matching_network(
                         swr=swr_unmatched, feed_type='gamma', feedpoint_r=r_feed,
                         gamma_rod_dia=rod_od, gamma_rod_spacing=rod_spacing,
-                        gamma_bar_pos=bar, gamma_element_gap=insertion,
-                        gamma_cap_pf=None, gamma_tube_od=tube_od,
+                        gamma_bar_pos=bar, gamma_cap_pf=cap_pf if cap_pf > 0 else 0.001,
+                        gamma_tube_od=tube_od,
                         operating_freq_mhz=frequency_mhz,
                         num_elements=num_elements,
                         driven_element_half_length_in=half_len,
@@ -2569,8 +2569,11 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                     optimal_insertion = up_ins_need
                     c_needed_pf = up_c
 
+                # Convert to cap_pf
+                optimal_cap_pf = optimal_insertion * cap_per_inch if optimal_insertion > 0 else c_needed_pf
+
                 # Get final values
-                matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
+                matched_swr, null_info = _eval(bar_ideal_clamped, optimal_cap_pf)
                 swr_val = matched_swr
                 rl_val = round(-20 * math.log10(max(null_info.get("reflection_coefficient", 0.001), 1e-8)), 2)
                 rl_val = min(rl_val, 80.0)
@@ -2583,7 +2586,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                 bar_sweep = []
                 for b_pct in range(0, 105, 5):
                     b = bar_min + (gamma_rod_length - bar_min) * b_pct / 100.0
-                    s, info_b = _eval(b, optimal_insertion)
+                    s, info_b = _eval(b, optimal_cap_pf)
                     bar_sweep.append({
                         "bar_inches": round(b, 2), "k": info_b.get("step_up_ratio", 1.0),
                         "r_matched": info_b.get("z_matched_r", 0), "x_net": info_b.get("net_reactance", 0),
@@ -2594,9 +2597,10 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
                     ins = max_insertion * i_pct / 100.0
                     if ins <= 0:
                         ins = 0.001
-                    s, info_i = _eval(bar_ideal_clamped, ins)
+                    cap_at_ins = ins * cap_per_inch
+                    s, info_i = _eval(bar_ideal_clamped, cap_at_ins)
                     ins_sweep.append({
-                        "insertion_inches": round(ins, 2), "cap_pf": info_i.get("insertion_cap_pf", 0),
+                        "insertion_inches": round(ins, 2), "cap_pf": round(cap_at_ins, 2),
                         "x_net": info_i.get("net_reactance", 0), "swr": max(1.0, s),
                     })
 
