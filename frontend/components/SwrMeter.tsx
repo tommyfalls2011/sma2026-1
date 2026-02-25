@@ -103,13 +103,29 @@ export const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, c
           </G>
         ))}
 
-        {/* Channel markers */}
-        {markers.map((pt: any) => (
-          <G key={pt.channel}>
-            <Line x1={xScale(pt.frequency)} y1={height - padding.bottom} x2={xScale(pt.frequency)} y2={height - padding.bottom + 3} stroke={pt.channel === 0 ? '#2196F3' : '#444'} strokeWidth={pt.channel === 0 ? 1.5 : 0.8} />
-            <SvgText x={xScale(pt.frequency)} y={height - padding.bottom + 12} fill={pt.channel === 0 ? '#2196F3' : '#555'} fontSize="7" textAnchor="middle">{pt.channel === 0 ? 'CTR' : pt.channel > 0 ? `+${pt.channel}` : pt.channel}</SvgText>
-          </G>
-        ))}
+        {/* Channel / Frequency markers */}
+        {(() => {
+          const spanMhz = maxFreq - minFreq;
+          if (spanMhz > 1.0) {
+            // Wide span: show frequency markers instead of channels
+            const step = spanMhz <= 2 ? 0.5 : spanMhz <= 5 ? 1.0 : spanMhz <= 10 ? 2.0 : 5.0;
+            const startFreq = Math.ceil(minFreq / step) * step;
+            const freqMarkers = [];
+            for (let f = startFreq; f <= maxFreq; f += step) freqMarkers.push(f);
+            return freqMarkers.map(f => (
+              <G key={f}>
+                <Line x1={xScale(f)} y1={height - padding.bottom} x2={xScale(f)} y2={height - padding.bottom + 3} stroke={Math.abs(f - centerFreq) < 0.01 ? '#2196F3' : '#444'} strokeWidth={Math.abs(f - centerFreq) < 0.01 ? 1.5 : 0.8} />
+                <SvgText x={xScale(f)} y={height - padding.bottom + 12} fill={Math.abs(f - centerFreq) < 0.01 ? '#2196F3' : '#555'} fontSize="7" textAnchor="middle">{f.toFixed(spanMhz > 5 ? 0 : 1)}</SvgText>
+              </G>
+            ));
+          }
+          return markers.map((pt: any) => (
+            <G key={pt.channel}>
+              <Line x1={xScale(pt.frequency)} y1={height - padding.bottom} x2={xScale(pt.frequency)} y2={height - padding.bottom + 3} stroke={pt.channel === 0 ? '#2196F3' : '#444'} strokeWidth={pt.channel === 0 ? 1.5 : 0.8} />
+              <SvgText x={xScale(pt.frequency)} y={height - padding.bottom + 12} fill={pt.channel === 0 ? '#2196F3' : '#555'} fontSize="7" textAnchor="middle">{pt.channel === 0 ? 'CTR' : pt.channel > 0 ? `+${pt.channel}` : pt.channel}</SvgText>
+            </G>
+          ));
+        })()}
 
         {/* Center freq vertical */}
         <Line x1={xScale(centerFreq)} y1={padding.top} x2={xScale(centerFreq)} y2={height - padding.bottom} stroke="#2196F3" strokeWidth="1.5" strokeDasharray="3,3" />
