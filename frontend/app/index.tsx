@@ -740,7 +740,7 @@ export default function AntennaCalculator() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => calculateAntenna(), 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-  }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, gammaCapPf, gammaTubeOd, gammaTubeLength, hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts]);
+  }, [JSON.stringify(inputs), gammaRodDia, gammaRodSpacing, gammaBarPos, gammaRodInsertion, gammaCapPf, gammaTubeOd, gammaTubeLength, hairpinRodDia, hairpinRodSpacing, hairpinLengthIn, hairpinBoomGap, coaxType, coaxLengthFt, transmitPowerWatts, swrSpan]);
 
   const optimizeStacking = async () => {
     setOptimizingStacking(true);
