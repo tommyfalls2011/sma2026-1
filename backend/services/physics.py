@@ -1414,8 +1414,59 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     z_0 = 50.0  # feedline characteristic impedance
 
     # Antenna Q from element diameter (dia_q_info computed earlier for bandwidth section)
-    # Base Q = 12 for reference 0.5" diameter, scale with q_ratio
-    antenna_q = 12.0 * dia_q_info["q_ratio"]
+    # Real Yagi Q depends on: element diameter, number of elements, spacing, matching network
+    # Base Q from diameter model
+    base_q = 12.0 * dia_q_info["q_ratio"]
+    
+    # Element count effect: more directors = higher Q = narrower bandwidth
+    # 2-element: Q factor 0.7 (wide), 3-element: 1.0, 5-element: 1.4, 10+: 2.0+
+    if n <= 2:
+        element_count_q_mult = 0.7
+    elif n <= 3:
+        element_count_q_mult = 1.0
+    elif n <= 5:
+        element_count_q_mult = 1.0 + 0.2 * (n - 3)
+    else:
+        element_count_q_mult = 1.4 + 0.15 * (n - 5)
+    
+    # Spacing effect: tighter spacing = higher mutual coupling = higher Q
+    if driven_elem and reflector_elem:
+        spacing_wl = abs(convert_element_to_meters(driven_elem.position - reflector_elem.position, "inches")) / wavelength
+        if spacing_wl < 0.12:
+            spacing_q_mult = 1.5  # very tight — high Q, sharp curve
+        elif spacing_wl < 0.18:
+            spacing_q_mult = 1.2
+        elif spacing_wl < 0.25:
+            spacing_q_mult = 1.0  # typical
+        else:
+            spacing_q_mult = 0.8  # wide spacing — lower Q, broader curve
+    else:
+        spacing_q_mult = 1.0
+    
+    # Matching network Q contribution
+    # Gamma match: the rod/cap circuit adds its own Q — longer insertion = higher circuit Q
+    # Hairpin: inherently broadband (low Q addition)
+    matching_q_mult = 1.0
+    if feed_type == "gamma" and matching_info:
+        # Gamma rod insertion controls selectivity
+        gamma_bar = matching_info.get("bar_position_inches", 13.0)
+        gamma_cap = matching_info.get("insertion_cap_pf", 50.0)
+        # Longer bar position relative to driven element = higher circuit Q
+        if driven_elem:
+            bar_fraction = gamma_bar / max(driven_elem.length / 2, 1.0)
+            # bar_fraction near 0.15 = typical, near 0.3+ = high Q
+            matching_q_mult = 1.0 + max(0, bar_fraction - 0.12) * 3.0
+        # Very small cap values = high reactance = sharp tuning
+        if gamma_cap > 0 and gamma_cap < 20:
+            matching_q_mult *= 1.3
+        elif gamma_cap > 100:
+            matching_q_mult *= 0.85
+    elif feed_type == "hairpin":
+        matching_q_mult = 0.75  # hairpin is broadband
+    
+    antenna_q = base_q * element_count_q_mult * spacing_q_mult * matching_q_mult
+    # Clamp to physically realistic range: 5 (very wideband) to 60 (very sharp)
+    antenna_q = max(5.0, min(60.0, antenna_q))
 
     if feed_type == "gamma" and matching_info and "z_matched_r" in matching_info:
         # Physics-based impedance from unified gamma match model
