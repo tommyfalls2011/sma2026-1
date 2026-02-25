@@ -96,7 +96,7 @@ export const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, c
         )}
 
         {/* Grid lines */}
-        {[1.0, 1.5, 2.0, 3.0].map(swr => (
+        {yGridLines.map(swr => (
           <G key={swr}>
             <Line x1={padding.left} y1={yScale(swr)} x2={width - padding.right} y2={yScale(swr)} stroke={swr === 1.0 ? '#00BCD4' : swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : '#282828'} strokeWidth={swr <= 2.0 ? 1 : 0.6} strokeDasharray={swr > 2.0 ? '3,3' : '0'} />
             <SvgText x={padding.left - 4} y={yScale(swr) + 3} fill={swr === 1.0 ? '#00BCD4' : swr === 1.5 ? '#4CAF50' : swr === 2.0 ? '#FFC107' : '#444'} fontSize="8" textAnchor="end">{swr.toFixed(1)}</SvgText>
