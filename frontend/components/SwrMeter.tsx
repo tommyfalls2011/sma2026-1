@@ -156,7 +156,7 @@ export const SwrMeter = ({ data, centerFreq, resonantFreq, usable15, usable20, c
         )}
 
         {/* Bottom frequency label */}
-        <SvgText x={width / 2} y={height - 2} fill="#2196F3" fontSize="13" fontWeight="bold" textAnchor="middle">{centerFreq.toFixed(3)} MHz{showResonant ? `  |  Res: ${resonantFreq.toFixed(3)}` : ''}</SvgText>
+        <SvgText x={width / 2} y={height - 2} fill="#2196F3" fontSize="13" fontWeight="bold" textAnchor="middle">{centerFreq.toFixed(3)} MHz{freqRange > 1 ? ` (${freqRange.toFixed(1)} MHz span)` : ''}{showResonant && freqRange <= 1 ? `  |  Res: ${resonantFreq.toFixed(3)}` : ''}</SvgText>
       </Svg>
 
       {/* Legend with bandwidth values */}
