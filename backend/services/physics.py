@@ -398,7 +398,8 @@ def apply_matching_network(swr: float, feed_type: str, feedpoint_r: float = 25.0
                            num_elements: int = 3,
                            driven_element_half_length_in: float = 101.5,
                            driven_element_dia_in: float = 0.5,
-                           element_resonant_freq_mhz: float = 27.185) -> tuple:
+                           element_resonant_freq_mhz: float = 27.185,
+                           dia_q_info: dict = None) -> tuple:
     if feed_type == "gamma":
         hw = get_gamma_hardware_defaults(num_elements)
         wall = hw["wall"]
