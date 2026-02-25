@@ -2367,7 +2367,7 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     # ALWAYS sweep to find the global best — the R-ideal bar is not always SWR-optimal.
     best_swr_opt = 999.0
     best_bar_opt = bar_ideal_clamped
-    best_cap_opt = optimal_cap_initial if null_reachable else max_insertion * cap_per_inch
+    best_cap_opt = c_needed_pf if null_reachable else max_insertion * cap_per_inch
     # Sweep from bar_min out to rod length in fine steps
     steps = 200
     for i in range(steps + 1):
@@ -2393,9 +2393,8 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
         if s < best_swr_opt:
             best_swr_opt = s
             best_bar_opt = test_bar
-            best_ins_opt = test_ins
+            best_cap_opt = test_cap
     optimized_bar = best_bar_opt
-    optimal_insertion = best_ins_opt
     bar_ideal_clamped = optimized_bar
     # Re-check null reachability at optimized bar
     _, stub_opt = _eval(optimized_bar, 0.001)
