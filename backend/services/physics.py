@@ -2413,8 +2413,16 @@ def design_gamma_match(num_elements: int, driven_element_length_in: float,
     else:
         null_reachable = False
 
+    # Convert optimal_insertion to cap_pf for _eval calls
+    if null_reachable and optimal_insertion > 0:
+        optimal_cap_pf = optimal_insertion * cap_per_inch
+    elif c_needed_pf > 0:
+        optimal_cap_pf = c_needed_pf
+    else:
+        optimal_cap_pf = max_insertion * cap_per_inch
+
     # Get authoritative values at the design point
-    matched_swr, null_info = _eval(bar_ideal_clamped, optimal_insertion)
+    matched_swr, null_info = _eval(bar_ideal_clamped, optimal_cap_pf)
 
     swr_val = matched_swr
     rl_val = round(-20 * math.log10(max(null_info.get("reflection_coefficient", 0.001), 1e-8)), 2)
