@@ -1342,11 +1342,7 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     beamwidth_h = round(max(min(beamwidth_h, 120), 15), 1)
     beamwidth_v = round(max(min(beamwidth_v, 120), 25), 1)
 
-    # Compute element diameter Q-factor (used for bandwidth AND return loss sections)
-    driven_el = next((e for e in input_data.elements if e.element_type == "driven"), None)
-    avg_elem_dia_in = sum(e.diameter for e in input_data.elements) / n if n > 0 else 0.5
-    driven_len_in = driven_el.length if driven_el else 199.0
-    dia_q_info = compute_diameter_q_factor(avg_elem_dia_in, driven_len_in, wavelength)
+    # dia_q_info already computed before apply_matching_network
 
     # Bandwidth — Q-factor model based on element diameter
     if n <= 3: bandwidth_percent = 6
