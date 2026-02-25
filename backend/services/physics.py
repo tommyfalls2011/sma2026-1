@@ -1643,9 +1643,20 @@ def calculate_antenna_parameters(input_data: AntennaInput) -> AntennaOutput:
     # ── Smith Chart Data: full-physics impedance sweep across frequency ──
     # Use the same antenna_q that apply_matching_network used for consistency
     smith_q = matching_info.get("antenna_q_used", antenna_q) if matching_info else antenna_q
+    
+    # Determine sweep range: use swr_span_mhz if provided, otherwise default ±30 channels
+    swr_span = getattr(input_data, 'swr_span_mhz', None)
+    if swr_span and swr_span > 0:
+        half_span = swr_span / 2.0
+        # Generate ~61 points across the span for smooth curve
+        num_points = 61
+        sweep_step = swr_span / (num_points - 1)
+        sweep_freqs = [(center_freq - half_span + i * sweep_step, i - num_points // 2) for i in range(num_points)]
+    else:
+        sweep_freqs = [(center_freq + i * channel_spacing, i) for i in range(-30, 31)]
+    
     smith_chart_data = []
-    for i in range(-30, 31):
-        freq = center_freq + (i * channel_spacing)
+    for freq, ch_idx in sweep_freqs:
         sc_r = yagi_feedpoint_r
         if smith_res_freq > 0:
             fr = freq / smith_res_freq
