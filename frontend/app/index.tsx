@@ -1200,6 +1200,13 @@ export default function AntennaCalculator() {
           if (s.hairpinRodSpacing !== undefined) setHairpinRodSpacing(s.hairpinRodSpacing);
           if (s.hairpinLengthIn !== undefined) setHairpinLengthIn(s.hairpinLengthIn);
           if (s.hairpinBoomGap !== undefined) setHairpinBoomGap(s.hairpinBoomGap);
+          // Gamma tube settings
+          if (s.gammaTubeOd !== undefined) setGammaTubeOd(s.gammaTubeOd);
+          if (s.gammaTubeLength !== undefined) setGammaTubeLength(s.gammaTubeLength);
+          if (s.originalDrivenLength !== undefined) setOriginalDrivenLength(s.originalDrivenLength);
+          // Reflector settings
+          if (s.reflectorNudgeCount !== undefined) setReflectorNudgeCount(s.reflectorNudgeCount);
+          if (s.reflectorPreset !== undefined) setReflectorPreset(s.reflectorPreset);
           // Build style
           if (s.buildStyle) setBuildStyle(s.buildStyle);
         }
