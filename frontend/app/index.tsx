@@ -1294,33 +1294,56 @@ export default function AntennaCalculator() {
       Alert.alert('Info', 'Target frequency is the same as current');
       return;
     }
+
+    let scaleFactor: number;
     const ratio = currentFreq / targetFreq;
+
+    if (scaleMethod === 'proportional') {
+      // Proportional: preserve element ratios, compute ideal driven for target frequency
+      const driven = inputs.elements.find((e: any) => e.element_type === 'driven');
+      if (!driven) {
+        Alert.alert('Error', 'No driven element found in design');
+        return;
+      }
+      const drivenLength = parseFloat(driven.length) || 204;
+      const drivenDia = parseFloat(driven.diameter) || 0.5;
+      // Compute ideal driven length at target freq using diameter-adjusted shortening
+      const wavelengthTarget = 11803 / targetFreq;
+      const dRatio = drivenDia / wavelengthTarget;
+      const drivenPct = 0.935 - 0.5 * dRatio; // empirical shortening factor
+      const idealDriven = (wavelengthTarget / 2) * drivenPct;
+      scaleFactor = idealDriven / drivenLength;
+    } else {
+      // Ratio: simple frequency ratio scaling
+      scaleFactor = ratio;
+    }
+
     // Find matching band or use custom
     const matchBand = BANDS.find(b => Math.abs(b.center - targetFreq) / b.center < 0.05);
     // Scale all elements: lengths and positions (spacings)
     const scaledElements = inputs.elements.map((e: any) => ({
       ...e,
-      length: (parseFloat(e.length) * ratio).toFixed(2),
-      position: (parseFloat(e.position) * ratio).toFixed(2),
+      length: (parseFloat(e.length) * scaleFactor).toFixed(2),
+      position: (parseFloat(e.position) * scaleFactor).toFixed(2),
       // diameter stays the same - user picks their tubing
     }));
     // Scale taper sections if enabled
     const scaledTaper = inputs.taper.enabled ? {
       ...inputs.taper,
-      center_length: (parseFloat(inputs.taper.center_length) * ratio).toFixed(2),
+      center_length: (parseFloat(inputs.taper.center_length) * scaleFactor).toFixed(2),
       sections: inputs.taper.sections.map((s: any) => ({
         ...s,
-        length: (parseFloat(s.length) * ratio).toFixed(2),
+        length: (parseFloat(s.length) * scaleFactor).toFixed(2),
       })),
     } : inputs.taper;
     // Scale stacking spacing
     const scaledStacking = inputs.stacking.enabled ? {
       ...inputs.stacking,
-      spacing: (parseFloat(inputs.stacking.spacing) * ratio).toFixed(2),
-      h_spacing: inputs.stacking.h_spacing ? (parseFloat(inputs.stacking.h_spacing) * ratio).toFixed(2) : inputs.stacking.h_spacing,
+      spacing: (parseFloat(inputs.stacking.spacing) * scaleFactor).toFixed(2),
+      h_spacing: inputs.stacking.h_spacing ? (parseFloat(inputs.stacking.h_spacing) * scaleFactor).toFixed(2) : inputs.stacking.h_spacing,
     } : inputs.stacking;
     // Scale height
-    const scaledHeight = (parseFloat(inputs.height_from_ground) * ratio).toFixed(1);
+    const scaledHeight = (parseFloat(inputs.height_from_ground) * scaleFactor).toFixed(1);
     setInputs(prev => ({
       ...prev,
       elements: scaledElements,
@@ -1334,7 +1357,7 @@ export default function AntennaCalculator() {
     const scaleOverride = (val: string | false): string | false => {
       if (val === false || !val) return false;
       const num = parseFloat(val);
-      return isNaN(num) ? val : (num * ratio).toFixed(2);
+      return isNaN(num) ? val : (num * scaleFactor).toFixed(2);
     };
     setCloseDriven(scaleOverride(closeDriven));
     setFarDriven(scaleOverride(farDriven));
@@ -1343,16 +1366,16 @@ export default function AntennaCalculator() {
     setCloseDir2(scaleOverride(closeDir2));
     setFarDir2(scaleOverride(farDir2));
     // Scale boom lock length if enabled
-    if (boomLockEnabled) setMaxBoomLength((parseFloat(maxBoomLength) * ratio).toFixed(1));
+    if (boomLockEnabled) setMaxBoomLength((parseFloat(maxBoomLength) * scaleFactor).toFixed(1));
     // Scale gamma match settings proportionally
-    if (gammaBarPos) setGammaBarPos(Math.round(gammaBarPos * ratio * 10) / 10);
-    if (gammaRodInsertion) setGammaRodInsertion(Math.round(gammaRodInsertion * ratio * 10) / 10);
-    if (gammaTubeLength) setGammaTubeLength(Math.round(gammaTubeLength * ratio * 10) / 10);
-    if (gammaRodSpacing !== null) setGammaRodSpacing((parseFloat(gammaRodSpacing) * ratio).toFixed(2));
+    if (gammaBarPos) setGammaBarPos(Math.round(gammaBarPos * scaleFactor * 10) / 10);
+    if (gammaRodInsertion) setGammaRodInsertion(Math.round(gammaRodInsertion * scaleFactor * 10) / 10);
+    if (gammaTubeLength) setGammaTubeLength(Math.round(gammaTubeLength * scaleFactor * 10) / 10);
+    if (gammaRodSpacing !== null) setGammaRodSpacing((parseFloat(gammaRodSpacing) * scaleFactor).toFixed(2));
     // Scale hairpin settings proportionally
-    if (hairpinLengthIn) setHairpinLengthIn((parseFloat(hairpinLengthIn) * ratio).toFixed(2));
-    if (hairpinRodSpacing) setHairpinRodSpacing((parseFloat(hairpinRodSpacing) * ratio).toFixed(2));
-    if (hairpinBoomGap) setHairpinBoomGap(Math.round(hairpinBoomGap * ratio * 100) / 100);
+    if (hairpinLengthIn) setHairpinLengthIn((parseFloat(hairpinLengthIn) * scaleFactor).toFixed(2));
+    if (hairpinRodSpacing) setHairpinRodSpacing((parseFloat(hairpinRodSpacing) * scaleFactor).toFixed(2));
+    if (hairpinBoomGap) setHairpinBoomGap(Math.round(hairpinBoomGap * scaleFactor * 100) / 100);
     // Reset nudge counts and presets since positions changed
     setSpacingNudgeCount(0);
     setDrivenNudgeCount(0);
@@ -1366,7 +1389,8 @@ export default function AntennaCalculator() {
     setGammaCapPf(null);
     setShowScaleModal(false);
     setScaleTargetFreq('');
-    Alert.alert('Scaled!', `Design scaled from ${currentFreq.toFixed(3)} MHz to ${targetFreq.toFixed(3)} MHz (ratio: ${ratio.toFixed(4)}x)`);
+    const methodLabel = scaleMethod === 'proportional' ? 'Proportional' : 'Ratio';
+    Alert.alert('Scaled!', `Design scaled to ${targetFreq.toFixed(3)} MHz using ${methodLabel} method (factor: ${scaleFactor.toFixed(4)}x)`);
   };
 
   // Generate timestamp for filenames
