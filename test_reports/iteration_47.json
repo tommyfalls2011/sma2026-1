@@ -1,5 +1,5 @@
 {
-  "summary": "Testing iteration for Scale Method feature (Proportional vs Ratio). Backend: 16/16 tests passed (100%) - verified both scaling methods produce valid antenna calculations. Frontend: Unable to fully test UI due to ngrok tunnel conflict preventing external access. Code review confirms correct implementation of dual-method scaling with proper UI toggles.",
+  "summary": "Testing iteration for Scale Method feature (Proportional vs Ratio). Backend: 16/16 tests passed (100%) - verified both scaling methods produce valid antenna calculations. Frontend: Unable to test UI due to persistent ngrok tunnel conflict (ERR_NGROK_334). Code review confirms correct implementation of dual-method scaling with proper UI toggles - scaleMethod state, toggle buttons with data-testids, preview section with method-specific calculations, and info text updates.",
   "backend_issues": {
     "critical": [],
     "minor": []
