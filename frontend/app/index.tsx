@@ -327,6 +327,7 @@ export default function AntennaCalculator() {
   // Frequency Scale state
   const [showScaleModal, setShowScaleModal] = useState(false);
   const [scaleTargetFreq, setScaleTargetFreq] = useState('');
+  const [scaleMethod, setScaleMethod] = useState<'ratio' | 'proportional'>('proportional');
 
   // SWR Span state
   const [swrSpan, setSwrSpan] = useState<number | null>(null); // null = default (channel-based)
