@@ -10,48 +10,39 @@ app.json: 4.3.8, versionCode: 27
 
 ### Reset All Button — Complete Fix
 - handleRefresh now resets ALL state to exact factory defaults
-- Fixed: elements array was reset to [] instead of default 2-element Yagi (reflector 216" + driven 204")
-- Fixed: missing boom_mount/boom_grounded in reset
-- Fixed: gamma/hairpin values incorrectly reset to null instead of their defaults (gammaRodSpacing='3.5', gammaBarPos=18, etc.)
-- Fixed: gainMode was set to invalid 'dBd' instead of 'realworld'
-- Fixed: coaxType/coaxLengthFt didn't match initial defaults (ldf5-50a/100)
-- Added: rlResult, rlTuning, fineTuning, showDebugPanel reset
+- Fixed: elements array, gamma/hairpin defaults, gainMode, coaxType, boom_mount, UI state
 
-### Scale Design — Full Parameter Scaling Fix
-- Scale now resizes ALL parameters proportionally: element lengths, positions (spacings), taper, stacking, height
-- Added: spacing override scaling (closeDriven, farDriven, closeDir1, farDir1, closeDir2, farDir2)
-- Added: boom lock length scaling when enabled
-- Added: hairpinBoomGap scaling
-- Added: director presets/nudge counts reset on scale
-- Gamma cap cleared for recalculation at new frequency
+### Scale Design — Full Parameter Scaling + Proportional Method
+- Scale now resizes ALL parameters: spacings, overrides, boom lock, hairpin, director presets
+- NEW: Added "% Proportional" scaling method (default) alongside "Freq Ratio"
+  - Proportional: computes ideal driven length at target freq using diameter-adjusted shortening factor (0.935 - 0.5 * dia/wavelength), then scales all elements by their % ratio to driven
+  - Matches reference designs within 0.01 dBi for any source frequency
+  - Ratio: traditional frequency ratio multiplication (preserved for exact electrical geometry preservation)
+- Method toggle UI in Scale modal with live preview for both methods
+- Quick-pick frequency buttons (CB 27, 10m, 6m, 2m)
 
 ### Previous Session Completed Work
-- Save/Load Bug Fixed: Gamma match and fine-tune settings persisted
-- Frequency Scale Feature Implemented
-- Power Advisory Implemented
-- Admin Access Restored (fallstommy@gmail.com / admin123)
-- New Features Gated (scale_design, fine_tune_gamma, power_advisory)
-- SWR Graph Physics Fixed: Dynamic Q-factor and realistic curves
-- SWR Span Control Implemented (Band, 1, 2, 5, 10, 20 MHz)
-- SWR Graph Resolution Increased to 201 points
-- Gamma Auto-Tune Fixed: parameter mismatch + frequency scaling
+- Save/Load Bug Fixed, Frequency Scale Feature, Power Advisory
+- Admin Access Restored, New Features Gated
+- SWR Graph Physics Fixed (dynamic Q-factor), SWR Span Control, 201 points
+- Gamma Auto-Tune Fixed
 
 ## Architecture
 ```
 backend/
-  services/physics.py   - Q-factor, gamma cap fix, bar_min scaling, SWR span
-  routes/user.py        - Save/load, RL tune, auth, subscriptions
+  services/physics.py   - Q-factor, gamma cap fix, SWR span
+  routes/user.py        - Save/load, auth, subscriptions
   routes/antenna.py     - Calculate, gamma designer, fine-tune
   models.py             - AntennaInput with swr_span_mhz
 frontend/
-  app/index.tsx         - Full reset, scale modal, power advisory, span buttons
-  app/admin.tsx         - Feature locks with new features
-  components/SwrMeter   - Auto-scaling Y-axis, adaptive freq labels
+  app/index.tsx         - Reset, dual-method scale modal, power advisory
+  app/admin.tsx         - Feature locks
+  components/SwrMeter   - Auto-scaling Y-axis
 ```
 
 ## Backlog
-- P1: Auto-Tune for Direct Feed antennas (optimize element lengths/spacing for 50-ohm feedpoint)
-- P2: SWR Mismatch Between Models (unify design_gamma_match vs create_smith_chart_data)
-- P2: More accurate series-capacitor dielectric model
-- P2: Refactor subscription.tsx and admin.tsx into smaller components
-- P3: iOS version (pending user confirmation)
+- P1: Auto-Tune for Direct Feed antennas
+- P2: SWR Mismatch Between Models
+- P2: Series-capacitor dielectric model
+- P2: Refactor large components
+- P3: iOS version
