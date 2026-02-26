@@ -3784,6 +3784,18 @@ export default function AntennaCalculator() {
               <Text style={{ fontSize: 14, color: '#fff', fontWeight: '600' }}>{inputs.frequency_mhz} MHz ({inputs.band})</Text>
               <Text style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{inputs.elements.length} elements</Text>
             </View>
+            {/* Scale Method Toggle */}
+            <Text style={{ fontSize: 11, color: '#888', fontWeight: '600', marginBottom: 4 }}>Scale Method</Text>
+            <View data-testid="scale-method-toggle" style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+              <TouchableOpacity data-testid="scale-method-proportional" onPress={() => setScaleMethod('proportional')} style={{ flex: 1, backgroundColor: scaleMethod === 'proportional' ? '#00897B' : '#252525', borderRadius: 6, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: scaleMethod === 'proportional' ? '#00897B' : '#444' }}>
+                <Text style={{ fontSize: 12, color: scaleMethod === 'proportional' ? '#fff' : '#888', fontWeight: '700' }}>% Proportional</Text>
+                <Text style={{ fontSize: 9, color: scaleMethod === 'proportional' ? '#b2dfdb' : '#555', marginTop: 2 }}>Ideal driven + ratios</Text>
+              </TouchableOpacity>
+              <TouchableOpacity data-testid="scale-method-ratio" onPress={() => setScaleMethod('ratio')} style={{ flex: 1, backgroundColor: scaleMethod === 'ratio' ? '#2196F3' : '#252525', borderRadius: 6, paddingVertical: 8, alignItems: 'center', borderWidth: 1, borderColor: scaleMethod === 'ratio' ? '#2196F3' : '#444' }}>
+                <Text style={{ fontSize: 12, color: scaleMethod === 'ratio' ? '#fff' : '#888', fontWeight: '700' }}>Freq Ratio</Text>
+                <Text style={{ fontSize: 9, color: scaleMethod === 'ratio' ? '#bbdefb' : '#555', marginTop: 2 }}>Direct frequency scale</Text>
+              </TouchableOpacity>
+            </View>
             <Text style={styles.modalLabel}>Target Frequency (MHz)</Text>
             <TextInput 
               data-testid="scale-target-freq-input"
@@ -3796,18 +3808,44 @@ export default function AntennaCalculator() {
               autoFocus
             />
             {scaleTargetFreq && parseFloat(scaleTargetFreq) > 0 && (
-              <View style={{ backgroundColor: '#1a1a2a', borderRadius: 8, padding: 10, marginTop: 8, borderLeftWidth: 3, borderLeftColor: '#2196F3' }}>
-                <Text style={{ fontSize: 11, color: '#2196F3', fontWeight: '700' }}>Preview</Text>
-                <Text style={{ fontSize: 12, color: '#ccc', marginTop: 4 }}>Scale ratio: {(parseFloat(inputs.frequency_mhz) / parseFloat(scaleTargetFreq)).toFixed(4)}x</Text>
-                <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>
-                  Driven: {inputs.elements.find((e: any) => e.element_type === 'driven')?.length}" → {((parseFloat(inputs.elements.find((e: any) => e.element_type === 'driven')?.length || '0')) * (parseFloat(inputs.frequency_mhz) / parseFloat(scaleTargetFreq))).toFixed(2)}"
-                </Text>
+              <View style={{ backgroundColor: '#1a1a2a', borderRadius: 8, padding: 10, marginTop: 8, borderLeftWidth: 3, borderLeftColor: scaleMethod === 'proportional' ? '#00897B' : '#2196F3' }}>
+                <Text style={{ fontSize: 11, color: scaleMethod === 'proportional' ? '#00897B' : '#2196F3', fontWeight: '700' }}>Preview ({scaleMethod === 'proportional' ? '% Proportional' : 'Freq Ratio'})</Text>
+                {(() => {
+                  const tgtF = parseFloat(scaleTargetFreq);
+                  const srcF = parseFloat(inputs.frequency_mhz) || 27.185;
+                  const driven = inputs.elements.find((e: any) => e.element_type === 'driven');
+                  const drvLen = parseFloat(driven?.length || '204');
+                  const drvDia = parseFloat(driven?.diameter || '0.5');
+                  let sf: number;
+                  if (scaleMethod === 'proportional') {
+                    const wl = 11803 / tgtF;
+                    const dR = drvDia / wl;
+                    const pct = 0.935 - 0.5 * dR;
+                    sf = (wl / 2 * pct) / drvLen;
+                  } else {
+                    sf = srcF / tgtF;
+                  }
+                  const reflLen = parseFloat(inputs.elements.find((e: any) => e.element_type === 'reflector')?.length || '0');
+                  const dirLen = parseFloat(inputs.elements.find((e: any) => e.element_type === 'director')?.length || '0');
+                  const drvPos = parseFloat(driven?.position || '0');
+                  const lastEl = inputs.elements[inputs.elements.length - 1];
+                  const boomLen = parseFloat(lastEl?.position || '0');
+                  return (
+                    <>
+                      <Text style={{ fontSize: 12, color: '#ccc', marginTop: 4 }}>Scale factor: {sf.toFixed(4)}x</Text>
+                      {reflLen > 0 && <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>Reflector: {reflLen}" → {(reflLen * sf).toFixed(1)}"</Text>}
+                      <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>Driven: {drvLen}" → {(drvLen * sf).toFixed(1)}"</Text>
+                      {dirLen > 0 && <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>Director: {dirLen}" → {(dirLen * sf).toFixed(1)}"</Text>}
+                      <Text style={{ fontSize: 12, color: '#ccc', marginTop: 2 }}>Boom: {boomLen}" → {(boomLen * sf).toFixed(1)}"</Text>
+                    </>
+                  );
+                })()}
                 {(() => { const matchBand = BANDS.find(b => Math.abs(b.center - parseFloat(scaleTargetFreq)) / b.center < 0.05); return matchBand ? <Text style={{ fontSize: 12, color: '#4CAF50', marginTop: 2 }}>Band: {matchBand.name}</Text> : <Text style={{ fontSize: 12, color: '#FF9800', marginTop: 2 }}>Band: Custom (no matching band)</Text>; })()}
               </View>
             )}
             <View style={styles.modalInfo}>
               <Ionicons name="information-circle-outline" size={14} color="#888" />
-              <Text style={styles.modalInfoText}>Scales all element lengths, spacings, height, and match settings proportionally. Diameters are kept — pick tubing for the new band.</Text>
+              <Text style={styles.modalInfoText}>{scaleMethod === 'proportional' ? 'Computes ideal driven length at target freq, then scales all elements by their % of driven. Best accuracy for band changes.' : 'Multiplies all dimensions by frequency ratio. Preserves exact electrical geometry.'}</Text>
             </View>
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
               <Text style={{ fontSize: 11, color: '#666', fontWeight: '600' }}>Quick:</Text>
@@ -3817,7 +3855,7 @@ export default function AntennaCalculator() {
                 </TouchableOpacity>
               ))}
             </View>
-            <TouchableOpacity data-testid="scale-design-confirm-btn" style={[styles.modalSaveBtn, { backgroundColor: '#00897B', marginTop: 12 }]} onPress={scaleDesignToFrequency}>
+            <TouchableOpacity data-testid="scale-design-confirm-btn" style={[styles.modalSaveBtn, { backgroundColor: scaleMethod === 'proportional' ? '#00897B' : '#2196F3', marginTop: 12 }]} onPress={scaleDesignToFrequency}>
               <Ionicons name="resize-outline" size={16} color="#fff" />
               <Text style={styles.modalSaveBtnText}>Scale Design</Text>
             </TouchableOpacity>
