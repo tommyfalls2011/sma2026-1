@@ -1,16 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SMA - Swing Master Amps | CB Amplifiers</title>
-    <meta name="description" content="Hand-built CB amplifiers. 2-pill, 4-pill, and 6-pill amps. US shipping. Swing Master Amps." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/js/index-Bjz-3YrI.js"></script>
-    <link rel="stylesheet" crossorigin href="/css/index-BJ9_GFt_.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMA - Swing Master Amps | CB Amplifiers</title>
+  <meta name="description" content="Hand-built CB amplifiers. 2-pill, 4-pill, and 6-pill amps. US shipping. Swing Master Amps.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="22" height="22"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>SMA</span>
+    </div>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="#products">Shop</a>
+      <a href="amps.html">Amp Configurator</a>
+      <a href="antenna.html">Antenna Workbench</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <button class="nav-toggle" data-testid="nav-toggle" onclick="document.getElementById('nav-links').classList.toggle('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" data-testid="hero-section">
+    <span class="hero-badge">Hand-Built in North Carolina</span>
+    <h1>Swing Master <span>Amps</span></h1>
+    <p class="hero-subtitle">Premium CB Amplifiers</p>
+    <p class="hero-desc">Hand-built CB amplifiers from North Carolina. Quality you can trust on the airwaves. Every amp hand-assembled and tested before shipping.</p>
+    <a href="#products" class="hero-cta" data-testid="shop-cta">View Our Amps</a>
+  </section>
+
+  <!-- Products -->
+  <section class="section" id="products" data-testid="products-section">
+    <h2 class="section-title">Our Amplifiers</h2>
+    <div class="product-grid" data-testid="product-grid">
+      <div class="product-card" data-testid="product-card-2pill">
+        <div class="product-body">
+          <div class="product-top">
+            <span class="pill-badge">2-Pill</span>
+            <span class="product-price">$275</span>
+          </div>
+          <h3>2-Pill Amp</h3>
+          <p>Entry-level power with reliable output. Perfect for getting started.</p>
+          <div class="product-specs">
+            <span><strong>Power:</strong> 400W PEP</span>
+            <span><strong>Transistors:</strong> 2SC2879</span>
+            <span><strong>Input:</strong> 5-15W</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card" data-testid="product-card-4pill">
+        <div class="product-body">
+          <div class="product-top">
+            <span class="pill-badge">4-Pill</span>
+            <span class="product-price">$475</span>
+          </div>
+          <h3>4-Pill Amp</h3>
+          <p>Our most popular configuration. Great balance of power and efficiency.</p>
+          <div class="product-specs">
+            <span><strong>Power:</strong> 800W PEP</span>
+            <span><strong>Transistors:</strong> 2SC2879</span>
+            <span><strong>Input:</strong> 5-25W</span>
+          </div>
+        </div>
+      </div>
+      <div class="product-card" data-testid="product-card-6pill">
+        <div class="product-body">
+          <div class="product-top">
+            <span class="pill-badge">6-Pill</span>
+            <span class="product-price">$650</span>
+          </div>
+          <h3>6-Pill Amp</h3>
+          <p>Maximum power for serious operators. Built for the big signal.</p>
+          <div class="product-specs">
+            <span><strong>Power:</strong> 1200W PEP</span>
+            <span><strong>Transistors:</strong> 2SC2879</span>
+            <span><strong>Input:</strong> 5-35W</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section features-bg" id="features" data-testid="features-section">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h4>Hand-Built Quality</h4>
+        <p>Every amp is hand-assembled and individually tested before shipping</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <h4>Real Power</h4>
+        <p>Clean, reliable output you can count on. No inflated specs.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h4>Built to Last</h4>
+        <p>Premium components and solid construction for years of service</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apps -->
+  <section class="section" id="apps" data-testid="apps-section">
+    <h2 class="section-title">Our Tools</h2>
+    <div class="apps-grid">
+      <a href="amps.html" class="app-card" data-testid="app-card-amps">
+        <div class="app-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <h3>Amp Configurator</h3>
+        <p>Explore and configure CB amplifiers. Pick your pill count, choose transistors, and see live specs and pricing.</p>
+        <span class="app-link">Open Configurator</span>
+      </a>
+      <a href="antenna.html" class="app-card" data-testid="app-card-antenna">
+        <div class="app-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </div>
+        <h3>Antenna Workbench</h3>
+        <p>Design and analyze Yagi antenna configurations. Full physics engine with SWR, gain, and pattern analysis.</p>
+        <span class="app-link">Open Workbench</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="section features-bg" id="contact" data-testid="contact-section">
+    <h2 class="section-title">Get In Touch</h2>
+    <div class="contact-info">
+      <p>Contact us for pricing, custom builds, and availability</p>
+      <p class="contact-location">North Carolina, USA</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="18" height="18"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        SMA
+      </div>
+      <p>&copy; 2026 Swing Master Amps. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
 </html>

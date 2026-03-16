@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antenna Workbench | SMA - Swing Master Amps</title>
+  <meta name="description" content="SMA Antenna Workbench - Design and analyze Yagi antennas with a full physics engine. SWR, gain, pattern analysis, gamma match, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .antenna-hero {
+      padding: 80px 40px 60px;
+      text-align: center;
+      background: linear-gradient(180deg, #0f0f0f 0%, #081018 50%, #0a0a0a 100%);
+      position: relative;
+    }
+    .antenna-hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent);
+    }
+    .antenna-hero h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .antenna-hero h1 span { color: #3b82f6; }
+    .antenna-hero .subtitle {
+      font-size: 1.3rem;
+      color: #3b82f6;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .antenna-hero .desc {
+      font-size: 1.05rem;
+      color: #888;
+      max-width: 640px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+    }
+    .antenna-badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 20px;
+      background: rgba(59,130,246,0.08);
+      border: 1px solid rgba(59,130,246,0.2);
+      color: #3b82f6;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .antenna-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 36px;
+      background: #3b82f6;
+      color: #fff;
+      border-radius: 4px;
+      font-family: 'Oswald', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: background 0.2s, transform 0.2s;
+      margin: 0 8px;
+    }
+    .antenna-cta:hover { background: #2563eb; transform: translateY(-1px); }
+    .antenna-cta.secondary {
+      background: transparent;
+      border: 1px solid #333;
+      color: #e5e5e5;
+    }
+    .antenna-cta.secondary:hover { border-color: #3b82f6; color: #3b82f6; }
+
+    .feature-showcase {
+      padding: 80px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .feature-showcase h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 48px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .showcase-card {
+      background: #141414;
+      border: 1px solid #1f1f1f;
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.3s, transform 0.2s;
+    }
+    .showcase-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
+    .showcase-card .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(59,130,246,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3b82f6;
+      margin-bottom: 16px;
+    }
+    .showcase-card h3 {
+      font-family: 'Oswald', sans-serif;
+      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    .showcase-card p {
+      color: #888;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .bands-section {
+      padding: 60px 40px;
+      background: #0f0f0f;
+    }
+    .bands-section h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+    }
+    .bands-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .band-tag {
+      padding: 8px 20px;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 6px;
+      color: #3b82f6;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .version-info {
+      text-align: center;
+      padding: 40px;
+      color: #555;
+      font-size: 0.85rem;
+    }
+    .version-info span { color: #3b82f6; font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .antenna-hero { padding: 60px 20px 50px; }
+      .antenna-hero h1 { font-size: 2.2rem; }
+      .antenna-hero .subtitle { font-size: 1.05rem; }
+      .feature-showcase { padding: 50px 20px; }
+      .bands-section { padding: 40px 20px; }
+      .showcase-grid { grid-template-columns: 1fr; }
+      .antenna-cta { display: block; text-align: center; margin: 8px 0; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="22" height="22"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span>SMA</span>
+    </div>
+    <div class="nav-links" id="nav-links">
+      <a href="index.html">Home</a>
+      <a href="amps.html">Amp Configurator</a>
+      <a href="antenna.html" class="active">Antenna Workbench</a>
+      <a href="index.html#contact">Contact</a>
+    </div>
+    <button class="nav-toggle" data-testid="nav-toggle-antenna" onclick="document.getElementById('nav-links').classList.toggle('open')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section class="antenna-hero" data-testid="antenna-hero">
+    <span class="antenna-badge">Full Physics Engine</span>
+    <h1>Antenna <span>Workbench</span></h1>
+    <p class="subtitle">Yagi Antenna Design & Analysis</p>
+    <p class="desc">Design, analyze, and optimize Yagi antennas for CB and amateur radio. Full NEC-based physics engine with SWR, gain, radiation patterns, and impedance matching.</p>
+    <div>
+      <a href="https://play.google.com/store/apps/details?id=com.sma.antenna" class="antenna-cta" data-testid="download-app-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Get The App
+      </a>
+      <a href="index.html" class="antenna-cta secondary" data-testid="back-home-btn">Back to Home</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <div class="feature-showcase" data-testid="antenna-features">
+    <h2>What You Can Do</h2>
+    <div class="showcase-grid">
+      <div class="showcase-card" data-testid="feature-elements">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+        </div>
+        <h3>2-20 Element Designs</h3>
+        <p>Build from simple 2-element beams to massive 20-element long-boom Yagis. Reflectors, driven elements, and directors.</p>
+      </div>
+      <div class="showcase-card" data-testid="feature-swr">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <h3>SWR Analysis</h3>
+        <p>Real-time SWR curves with 201-point frequency sweep. See usable bandwidth at 1.5:1 and 2.0:1 thresholds.</p>
+      </div>
+      <div class="showcase-card" data-testid="feature-patterns">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+        </div>
+        <h3>Radiation Patterns</h3>
+        <p>Polar plots for azimuth and elevation. Front/back ratio, beamwidth, and takeoff angle visualization.</p>
+      </div>
+      <div class="showcase-card" data-testid="feature-gamma">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Gamma & Hairpin Match</h3>
+        <p>Built-in gamma match and hairpin match designers. Full impedance calculations with Smith chart visualization.</p>
+      </div>
+      <div class="showcase-card" data-testid="feature-autotune">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <h3>Auto-Tune & Optimization</h3>
+        <p>One-click optimization of element lengths and spacings. Fine-tune for best SWR, gain, or front/back ratio.</p>
+      </div>
+      <div class="showcase-card" data-testid="feature-stacking">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+        </div>
+        <h3>Stacking & Arrays</h3>
+        <p>Model stacked arrays with automatic spacing optimization. Vertical, horizontal, and quad configurations.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bands -->
+  <section class="bands-section" data-testid="bands-section">
+    <h2>Supported Bands</h2>
+    <div class="bands-grid">
+      <span class="band-tag">17m (18.1 MHz)</span>
+      <span class="band-tag">15m (21.2 MHz)</span>
+      <span class="band-tag">12m (24.9 MHz)</span>
+      <span class="band-tag">11m CB (27.1 MHz)</span>
+      <span class="band-tag">10m (28.5 MHz)</span>
+      <span class="band-tag">6m (51 MHz)</span>
+      <span class="band-tag">2m (146 MHz)</span>
+      <span class="band-tag">1.25m (223 MHz)</span>
+      <span class="band-tag">70cm (435 MHz)</span>
+    </div>
+  </section>
+
+  <!-- Version -->
+  <div class="version-info" data-testid="version-info">
+    <p>SMA Antenna Workbench <span>v4.3.8</span> &middot; Physics engine by SMA</p>
+    <p style="margin-top:8px">Available on Android &middot; Web access coming soon</p>
+  </div>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="18" height="18"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        SMA
+      </div>
+      <p>&copy; 2026 Swing Master Amps. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+</html>
