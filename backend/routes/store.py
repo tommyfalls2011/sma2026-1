@@ -63,6 +63,42 @@ async def store_login(data: dict):
     return {"token": token, "user": {"id": member["id"], "name": member["name"], "email": email, "is_admin": member.get("is_admin", False)}}
 
 
+@router.post("/store/forgot-password")
+async def store_forgot_password(data: dict):
+    email = data.get("email", "").strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+    member = await store_db.store_members.find_one({"email": email})
+    if member:
+        token = uuid.uuid4().hex[:8].upper()
+        await store_db.store_password_resets.insert_one({
+            "email": email,
+            "token": token,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "used": False
+        })
+        # In production, send email. For now, log it.
+        print(f"[Store] Password reset token for {email}: {token}")
+    return {"message": "If that email exists, a reset code has been generated."}
+
+
+@router.post("/store/reset-password")
+async def store_reset_password(data: dict):
+    token = data.get("token", "").strip()
+    new_password = data.get("new_password", "")
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="Token and new_password required")
+    reset = await store_db.store_password_resets.find_one({"token": token, "used": False})
+    if not reset:
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
+    await store_db.store_members.update_one(
+        {"email": reset["email"]},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    await store_db.store_password_resets.update_one({"token": token}, {"$set": {"used": True}})
+    return {"message": "Password has been reset successfully"}
+
+
 @router.get("/store/me")
 async def store_me(credentials: HTTPAuthorizationCredentials = Depends(security)):
     payload = pyjwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
