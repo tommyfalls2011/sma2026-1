@@ -69,17 +69,16 @@ async def store_forgot_password(data: dict):
     if not email:
         raise HTTPException(status_code=400, detail="Email required")
     member = await store_db.store_members.find_one({"email": email})
-    if member:
-        token = uuid.uuid4().hex[:8].upper()
-        await store_db.store_password_resets.insert_one({
-            "email": email,
-            "token": token,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "used": False
-        })
-        # In production, send email. For now, log it.
-        print(f"[Store] Password reset token for {email}: {token}")
-    return {"message": "If that email exists, a reset code has been generated."}
+    if not member:
+        raise HTTPException(status_code=404, detail="Email not found")
+    token = uuid.uuid4().hex[:8].upper()
+    await store_db.store_password_resets.insert_one({
+        "email": email,
+        "token": token,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "used": False
+    })
+    return {"message": "Reset token generated", "token": token}
 
 
 @router.post("/store/reset-password")
